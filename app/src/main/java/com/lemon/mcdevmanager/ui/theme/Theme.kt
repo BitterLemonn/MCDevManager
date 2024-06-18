@@ -103,15 +103,15 @@ fun MCDevManagerTheme(
         error = error.value
     )
 
-    val view = LocalView.current
-    if (!view.isInEditMode) {
-        SideEffect {
-            val window = (view.context as Activity).window
-            window.statusBarColor = appColors.primaryColor.toArgb()
-            WindowCompat.setDecorFitsSystemWindows(window, false)
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
-        }
-    }
+//    val view = LocalView.current
+//    if (!view.isInEditMode) {
+//        SideEffect {
+//            val window = (view.context as Activity).window
+//            window.statusBarColor = appColors.primaryColor.toArgb()
+//            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
+//            WindowCompat.setDecorFitsSystemWindows(window, false)
+//        }
+//    }
 
     CompositionLocalProvider(LocalAppColors provides appColors, content = content)
 }

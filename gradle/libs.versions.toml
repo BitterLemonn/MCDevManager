@@ -1,5 +1,5 @@
 [versions]
-accompanistInsets = "0.30.0"
+accompanistPermissions = "0.35.1-alpha"
 agp = "8.3.1"
 converterKotlinxSerialization = "2.11.0"
 kotlin = "1.9.0"
@@ -9,19 +9,22 @@ junitVersion = "1.1.5"
 espressoCore = "3.5.1"
 kotlinxSerializationJson = "1.7.0"
 lifecycleRuntimeKtx = "2.7.0"
-activityCompose = "1.7.0"
+activityCompose = "1.9.0"
 composeBom = "2023.08.00"
 navigationCompose = "2.7.7"
-retrofit = "2.9.0"
+retrofit = "2.11.0"
 roomGradlePlugin = "2.7.0-alpha04"
+webkit = "1.11.0"
 
 [libraries]
-accompanist-insets = { module = "com.google.accompanist:accompanist-insets", version.ref = "accompanistInsets" }
+accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
+accompanist-systemuicontroller = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "accompanistPermissions" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomGradlePlugin" }
 androidx-room-gradle-plugin = { module = "androidx.room:room-gradle-plugin", version.ref = "roomGradlePlugin" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomGradlePlugin" }
+androidx-webkit = { module = "androidx.webkit:webkit", version.ref = "webkit" }
 converter-kotlinx-serialization = { module = "com.squareup.retrofit2:converter-kotlinx-serialization", version.ref = "converterKotlinxSerialization" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
