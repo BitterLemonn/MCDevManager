@@ -81,4 +81,10 @@ dependencies {
 
     // navigation
     implementation(libs.androidx.navigation.compose)
+
+    // webview
+    implementation(libs.androidx.webkit)
+    implementation("com.github.delight-im:Android-AdvancedWebView:v3.2.1")
+    // permission
+    implementation (libs.accompanist.permissions)
 }
