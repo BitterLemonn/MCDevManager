@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
+    kotlin("plugin.serialization") version "1.7.0"
 }
 
 android {
@@ -83,8 +84,9 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
 
     // webview
-    implementation(libs.androidx.webkit)
     implementation("com.github.delight-im:Android-AdvancedWebView:v3.2.1")
     // permission
-    implementation (libs.accompanist.permissions)
+    implementation(libs.accompanist.permissions)
+    // logger
+    implementation(libs.logger)
 }
