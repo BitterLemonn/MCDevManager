@@ -29,6 +29,7 @@ import androidx.navigation.NavController
 import com.lemon.mcdevmanager.R
 import com.lemon.mcdevmanager.ui.widget.BottomDialog
 import com.lemon.mcdevmanager.ui.widget.BottomNameInput
+import kotlinx.coroutines.delay
 
 @Composable
 fun LoginPage(
@@ -70,8 +71,11 @@ fun LoginPage(
                             override fun onPageFinished(view: WebView?, url: String?) {
                                 Log.d("TAG", "onPageFinished: $url")
                                 if (url == "https://mcdev.webapp.163.com/#/square") {
-                                    getCookies(url)
-                                    isLoginSuccess = true
+                                    if (getCookies(url).isNotBlank()){
+                                        isLoginSuccess = true
+                                    }else{
+                                        // TODO 显示等待
+                                    }
                                 }
                             }
                         }
@@ -112,16 +116,18 @@ fun LoginPage(
         }
 
         // 登录成功后弹出输入名称框
-        BottomNameInput(hint = "请输入助记名称", label = "名称", isShow = isLoginSuccess, onConfirm = {
-            // TODO 跳转到主页
+        BottomNameInput(hint = "请输入助记名称", label = "名称", isShow = isLoginSuccess, onConfirm = {name ->
+            val token = getCookies("https://mcdev.webapp.163.com/#/square")
+            if(token.isNotBlank()){
+
+            }
         })
     }
 }
 
-private fun getCookies(url: String?) {
+private fun getCookies(url: String?): String {
     val cookieManager = CookieManager.getInstance()
     val cookies = cookieManager.getCookie(url)
-//    Log.e("TAG", "getCookies: $cookies")
     val keyMap = mutableMapOf<String, String>()
     cookies.split(";").forEach {
         Log.e("TAG", "getCookies: $it")
@@ -129,7 +135,7 @@ private fun getCookies(url: String?) {
         val value = it.split("=")[1].trim()
         keyMap[key] = value
     }
-
+    return keyMap["NTES_SESS"] ?: ""
 }
 
 @Composable

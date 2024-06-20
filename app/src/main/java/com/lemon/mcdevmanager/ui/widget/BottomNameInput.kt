@@ -59,14 +59,14 @@ fun BottomNameInput(
         }
         AnimatedVisibility(
             visible = isShow,
-            modifier = Modifier.align(Alignment.BottomCenter).imePadding(),
-            enter = slideIn { fullSize -> IntOffset(0, fullSize.height) },
-            exit = slideOut { fullSize -> IntOffset(0, fullSize.height) }
+            modifier = Modifier.align(Alignment.TopCenter).imePadding(),
+            enter = slideIn { fullSize -> IntOffset(0, -fullSize.height) },
+            exit = slideOut { fullSize -> IntOffset(0, -fullSize.height) }
         ) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth(),
-                shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+                shape = RoundedCornerShape(bottomEnd = 16.dp, bottomStart = 16.dp),
                 colors = CardDefaults.cardColors(containerColor = AppTheme.colors.card)
             ) {
                 Column(Modifier.fillMaxWidth()) {
@@ -119,7 +119,7 @@ fun BottomNameInput(
                     ) {
                         Text(text = "确定", modifier = Modifier.padding(4.dp), color = TextWhite)
                     }
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(32.dp))
                 }
             }
         }
