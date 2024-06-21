@@ -1,5 +1,7 @@
 package com.lemon.mcdevmanager.utils
 
+import com.lemon.mcdevmanager.data.netease.login.BaseLoginBean
+import com.lemon.mcdevmanager.data.netease.login.TicketBean
 import com.orhanobut.logger.Logger
 import retrofit2.HttpException
 import java.net.ConnectException
@@ -10,26 +12,73 @@ object UnifiedExceptionHandler {
     suspend fun <T> handleSuspend(function: suspend () -> ResponseData<T>): NetworkState<T> {
         return try {
             val result = function.invoke()
-            when (result.code) {
-                200 -> result.data?.let { NetworkState.Success(result.data) }
-                    ?: NetworkState.Success(msg = result.message)
-                else ->
-                    NetworkState.Error(result.message ?: "未知错误，请联系管理员")
+            parseData(result)
+        } catch (e: SocketTimeoutException) {
+            Logger.e("$TAG:链接超时\n$e")
+            return NetworkState.Error(
+                "网络好像被末影人搬走了",
+                SocketTimeoutException("网络好像被末影人搬走了")
+            )
+        } catch (e: ConnectException) {
+            Logger.e("$TAG:无法连接到服务器\n$e")
+            return NetworkState.Error(
+                "服务器掉进深暗之域了",
+                ConnectException("服务器掉进深暗之域了")
+            )
+        } catch (e: HttpException) {
+            if (e.code() == 401) {
+                Logger.e("$TAG:Token失效\n$e")
+                return NetworkState.Error("登录过期啦!", LoginException("登录过期啦!"))
+            } else return NetworkState.Error("未知错误，请联系管理员", e)
+        } catch (e: Exception) {
+            e.message?.let { Logger.e("$TAG:$it") } ?: Logger.e(e::class.toString())
+            return NetworkState.Error("未知错误，请联系管理员", e)
+        }
+    }
+
+    suspend fun <T> handleSuspendWithNeteaseData(function: suspend () -> T): NetworkState<String> {
+        return try {
+            when (val result = function.invoke()){
+                is TicketBean -> {
+                    val uniData = ResponseData(result.ret, result.tk, null)
+                    parseData(uniData)
+                }
+                is BaseLoginBean -> {
+                    val uniData = ResponseData(result.ret, null, null)
+                    parseData(uniData)
+                }
+                else -> NetworkState.Error("函数调用错误，非网易登录接口请使用handleSuspend")
             }
         } catch (e: SocketTimeoutException) {
-            Logger.e("$TAG:链接超时")
-            return NetworkState.Error("网络好像被末影人搬走了", SocketTimeoutException("网络好像被末影人搬走了"))
+            Logger.e("$TAG:链接超时\n$e")
+            return NetworkState.Error(
+                "网络好像被末影人搬走了",
+                SocketTimeoutException("网络好像被末影人搬走了")
+            )
         } catch (e: ConnectException) {
-            Logger.e("$TAG:无法连接到服务器")
-            return NetworkState.Error("服务器掉进深暗之域了", ConnectException("服务器掉进深暗之域了"))
-        }catch (e: HttpException){
+            Logger.e("$TAG:无法连接到服务器\n$e")
+            return NetworkState.Error(
+                "服务器掉进深暗之域了",
+                ConnectException("服务器掉进深暗之域了")
+            )
+        } catch (e: HttpException) {
             if (e.code() == 401) {
-                Logger.e("$TAG:Token失效")
+                Logger.e("$TAG:Token失效\n$e")
                 return NetworkState.Error("登录过期啦!", LoginException("登录过期啦!"))
-            }else return NetworkState.Error("未知错误，请联系管理员", e)
+            } else return NetworkState.Error("未知错误，请联系管理员", e)
         } catch (e: Exception) {
-            e.message?.let { Logger.e("$TAG:$it") }?:Logger.e(e::class.toString())
+            e.message?.let { Logger.e("$TAG:$it") } ?: Logger.e(e::class.toString())
             return NetworkState.Error("未知错误，请联系管理员", e)
+        }
+    }
+
+    private fun <T> parseData(result: ResponseData<T>): NetworkState<T> {
+        return when (result.code) {
+            200 -> result.data?.let { NetworkState.Success(result.data) }
+                ?: NetworkState.Success(msg = result.message)
+
+            else ->
+                NetworkState.Error(result.message ?: "未知错误，请联系管理员")
         }
     }
 
@@ -41,5 +90,5 @@ object UnifiedExceptionHandler {
 //        else handleSuspend { function.invoke() }
 //    }
 
-    class LoginException(message: String): Exception(message)
+    class LoginException(message: String) : Exception(message)
 }
