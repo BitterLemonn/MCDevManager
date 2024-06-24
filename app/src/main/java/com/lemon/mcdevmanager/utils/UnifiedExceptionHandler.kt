@@ -52,7 +52,7 @@ object UnifiedExceptionHandler {
                 }
 
                 is PowerBean -> {
-                    val uniData = ResponseData(result.ret, dataJsonToString(result.pVInfo.args), null)
+                    val uniData = ResponseData(result.ret, dataJsonToString(result.pVInfo), null)
                     parseData(uniData)
                 }
 
@@ -96,7 +96,7 @@ object UnifiedExceptionHandler {
                 ?: NetworkState.Success(msg = result.code.toString())
 
             else ->
-                NetworkState.Error(result.message ?: "未知错误，请联系管理员")
+                NetworkState.Error(result.code.toString())
         }
     }
 

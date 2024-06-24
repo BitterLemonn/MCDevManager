@@ -92,6 +92,8 @@ dependencies {
     implementation(libs.logger)
     // sm4
     implementation(libs.bcprov.jdk15on)
+    // murmurhash 3
+    implementation (libs.google.guava)
     // j2v8 js引擎
-    implementation(libs.eclipsesource.j2v8)
+    implementation ("com.eclipsesource.j2v8:j2v8:6.2.0@aar")
 }

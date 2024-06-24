@@ -23,12 +23,13 @@ data class PowerBean(
 
 @Serializable
 data class PVInfo(
-    @SerialName("args")
-    private val _args: PVArgs
-) {
-    val args: String
-        get() = dataJsonToString(_args)
-}
+    val sid: String,
+    val hashFunc: String,
+    val needCheck: Boolean,
+    val args: PVArgs,
+    val maxTime: Int,
+    val minTime: Int
+)
 
 @Serializable
 data class PVArgs(

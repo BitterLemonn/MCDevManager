@@ -3,7 +3,7 @@ accompanistPermissions = "0.35.1-alpha"
 agp = "8.3.1"
 bcprovJdk15on = "1.68"
 converterKotlinxSerialization = "2.11.0"
-j2v8Version = "6.2.0"
+guavaVersion = "30.1-jre"
 kotlin = "1.9.0"
 coreKtx = "1.13.1"
 junit = "4.13.2"
@@ -17,20 +17,17 @@ logger = "2.2.0"
 navigationCompose = "2.7.7"
 retrofit = "2.11.0"
 roomGradlePlugin = "2.7.0-alpha04"
-webkit = "1.11.0"
 
 [libraries]
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
-accompanist-systemuicontroller = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "accompanistPermissions" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomGradlePlugin" }
 androidx-room-gradle-plugin = { module = "androidx.room:room-gradle-plugin", version.ref = "roomGradlePlugin" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomGradlePlugin" }
-androidx-webkit = { module = "androidx.webkit:webkit", version.ref = "webkit" }
 bcprov-jdk15on = { module = "org.bouncycastle:bcprov-jdk15on", version.ref = "bcprovJdk15on" }
 converter-kotlinx-serialization = { module = "com.squareup.retrofit2:converter-kotlinx-serialization", version.ref = "converterKotlinxSerialization" }
-eclipsesource-j2v8 = { module = "com.eclipsesource.j2v8:j2v8", version.ref = "j2v8Version" }
+google-guava = { module = "com.google.guava:guava", version.ref = "guavaVersion" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }

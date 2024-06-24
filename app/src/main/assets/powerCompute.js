@@ -194,9 +194,7 @@ function _typeof(obj) {
 	} : function(obj) {
 		return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
 	}), _typeof(obj));
-}
-
-!(function(e) {
+}!(function(e) {
 	"use strict";
 	var r, n = /^-?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i,
 		t = Math.ceil,
@@ -888,7 +886,7 @@ function sequFun(data, type) {
 			})
 		};
 	}
-	postMessage({
+	return {
 		maxTime: data.maxTime,
 		hashFunc: data.hashFunc,
 		sid: data.sid,
@@ -899,7 +897,7 @@ function sequFun(data, type) {
 			pow: result,
 			n: n
 		})
-	});
+	};
 }
 
 function reduceFun(data, type) {
@@ -953,7 +951,7 @@ function reduceFun(data, type) {
 			})
 		};
 	}
-	postMessage({
+	return {
 		maxTime: data.maxTime,
 		hashFunc: data.hashFunc,
 		sid: data.sid,
@@ -965,7 +963,7 @@ function reduceFun(data, type) {
 			n1: n1,
 			n2: n2
 		})
-	});
+	};
 }
 
 function powSign(key, seed) {
@@ -1049,7 +1047,7 @@ function vdfAsync(data) {
 	}
 	encodedParams = encodedParams.join("&");
 	var sign = powSign(encodedParams, count);
-	postMessage({
+	return {
 		maxTime: data.maxTime,
 		puzzle: puzzle,
 		spendTime: time,
@@ -1060,7 +1058,7 @@ function vdfAsync(data) {
 			t: count,
 			sign: sign
 		})
-	});
+	};
 };
 
 function vdfCb(startTime, count, bigx, puzzle, data, cb) {
@@ -1139,6 +1137,7 @@ function vdfSync(data, cb) {
 		}
 	}, 50);
 };
+
 function vdfFun(data, type, cb) {
 	if (type === "sync") {
 		vdfSync(data, cb);
@@ -1146,7 +1145,6 @@ function vdfFun(data, type, cb) {
 		return vdfAsync(data);
 	}
 };
-
 (typeof addEventListener !== "undefined") && addEventListener("message", function(event) {
 	if (!event.data || !event.data.hashFunc) {
 		return;
