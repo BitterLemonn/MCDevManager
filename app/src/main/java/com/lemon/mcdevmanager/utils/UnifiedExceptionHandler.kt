@@ -1,6 +1,8 @@
 package com.lemon.mcdevmanager.utils
 
 import com.lemon.mcdevmanager.data.netease.login.BaseLoginBean
+import com.lemon.mcdevmanager.data.netease.login.CapIdBean
+import com.lemon.mcdevmanager.data.netease.login.PowerBean
 import com.lemon.mcdevmanager.data.netease.login.TicketBean
 import com.orhanobut.logger.Logger
 import retrofit2.HttpException
@@ -38,15 +40,27 @@ object UnifiedExceptionHandler {
 
     suspend fun <T> handleSuspendWithNeteaseData(function: suspend () -> T): NetworkState<String> {
         return try {
-            when (val result = function.invoke()){
+            when (val result = function.invoke()) {
                 is TicketBean -> {
                     val uniData = ResponseData(result.ret, result.tk, null)
                     parseData(uniData)
                 }
+
                 is BaseLoginBean -> {
                     val uniData = ResponseData(result.ret, null, null)
                     parseData(uniData)
                 }
+
+                is PowerBean -> {
+                    val uniData = ResponseData(result.ret, dataJsonToString(result.pVInfo.args), null)
+                    parseData(uniData)
+                }
+
+                is CapIdBean -> {
+                    val uniData = ResponseData(result.ret, result.capId, null)
+                    parseData(uniData)
+                }
+
                 else -> NetworkState.Error("函数调用错误，非网易登录接口请使用handleSuspend")
             }
         } catch (e: SocketTimeoutException) {
@@ -73,9 +87,13 @@ object UnifiedExceptionHandler {
     }
 
     private fun <T> parseData(result: ResponseData<T>): NetworkState<T> {
+        Logger.d("解析数据：$result")
         return when (result.code) {
             200 -> result.data?.let { NetworkState.Success(result.data) }
                 ?: NetworkState.Success(msg = result.message)
+
+            201 -> result.data?.let { NetworkState.Success(result.data) }
+                ?: NetworkState.Success(msg = result.code.toString())
 
             else ->
                 NetworkState.Error(result.message ?: "未知错误，请联系管理员")

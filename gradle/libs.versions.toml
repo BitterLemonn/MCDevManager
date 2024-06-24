@@ -1,7 +1,9 @@
 [versions]
 accompanistPermissions = "0.35.1-alpha"
 agp = "8.3.1"
+bcprovJdk15on = "1.68"
 converterKotlinxSerialization = "2.11.0"
+j2v8Version = "6.2.0"
 kotlin = "1.9.0"
 coreKtx = "1.13.1"
 junit = "4.13.2"
@@ -26,7 +28,9 @@ androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref =
 androidx-room-gradle-plugin = { module = "androidx.room:room-gradle-plugin", version.ref = "roomGradlePlugin" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomGradlePlugin" }
 androidx-webkit = { module = "androidx.webkit:webkit", version.ref = "webkit" }
+bcprov-jdk15on = { module = "org.bouncycastle:bcprov-jdk15on", version.ref = "bcprovJdk15on" }
 converter-kotlinx-serialization = { module = "com.squareup.retrofit2:converter-kotlinx-serialization", version.ref = "converterKotlinxSerialization" }
+eclipsesource-j2v8 = { module = "com.eclipsesource.j2v8:j2v8", version.ref = "j2v8Version" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }

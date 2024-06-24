@@ -1,39 +1,35 @@
 package com.lemon.mcdevmanager.api
 
+import com.lemon.mcdevmanager.data.AddCookiesInterceptor
 import com.lemon.mcdevmanager.data.CommonInterceptor
+import com.lemon.mcdevmanager.data.common.JSONConverter
 import com.lemon.mcdevmanager.data.common.NETEASE_LOGIN_LINK
 import com.lemon.mcdevmanager.data.netease.login.BaseLoginBean
+import com.lemon.mcdevmanager.data.netease.login.CapIdBean
+import com.lemon.mcdevmanager.data.netease.login.EncParams
+import com.lemon.mcdevmanager.data.netease.login.PowerBean
 import com.lemon.mcdevmanager.data.netease.login.TicketBean
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
+import retrofit2.http.Body
 import retrofit2.http.POST
 
 interface LoginApi {
 
-    @POST("/powGetP")
-    suspend fun getPower():
-    @POST("/gt")
-    suspend fun getTicket(
-        un: String,
-        pd: String = "x19_developer",
-        pkid: String = "kBSLIYY"
-    ): TicketBean
+    @POST("/dl/zj/mail/ini")
+    suspend fun init(@Body encParams: EncParams): CapIdBean
 
-    @POST("/l")
-    suspend fun safeLogin(
-        un: String,
-        pw: String,
-        tk: String,
-        d: Int = 10,
-        l: Int = 0,
-        pd: String = "x19_developer",
-        pkid: String = "kBSLIYY",
-        t: Long = System.currentTimeMillis()
-    ): BaseLoginBean
+    @POST("/dl/zj/mail/powGetP")
+    suspend fun getPower(@Body encParams: EncParams): PowerBean
+
+    @POST("/dl/zj/mail/gt")
+    suspend fun getTicket(@Body encParams: EncParams): TicketBean
+
+    @POST("/dl/zj/mail/l")
+    suspend fun safeLogin(@Body encParams: EncParams): BaseLoginBean
 
     companion object {
         /**
@@ -42,12 +38,13 @@ interface LoginApi {
          */
         fun create(): LoginApi {
             val client = OkHttpClient.Builder()
+                .addInterceptor(AddCookiesInterceptor())
                 .addInterceptor(CommonInterceptor())
                 .build()
             return Retrofit.Builder()
                 .baseUrl(NETEASE_LOGIN_LINK)
                 .addConverterFactory(
-                    Json.asConverterFactory(
+                    JSONConverter.asConverterFactory(
                         MediaType.parse("application/json; charset=UTF8")!!
                     )
                 )
@@ -79,11 +76,11 @@ interface LoginApi {
 //    }
 //}
 
-{
-    "puzzle": "woVmIfMmB3qI6a7ywfvS+/7oyCpQ0cGCf+o2wYqut+j3zufDvPpmjOHM+NZOLVOP3bcqkTlGepqK\r\nnNAlfyVyXB0tKojilUbXDZdJFVwohU0cFhXdhf1COMxsfJUX1UoyCZpXB9w7kRSLUSSnx6XgbgSH\r\niio9gFtjsFtEZoCFkmOkQ1GfAzg0NdrQ1DUwl0RpuSKemGPAyJ+oecEQHJ8A54Fql32U13OR/PUf\r\nJBR+QnA=",
-    "spendTime": 1000,
-    "runTimes": 388717,
-    "sid": "1c2f7e7d-6a49-4c42-ba9d-f3221ab6c919",
-    "args": "{\"x\":\"6d47cf031d55eb0279dfdc485be638e04b\",\"t\":388717,\"sign\":3617411971}"
-}
+//{
+//    "puzzle": "woVmIfMmB3qI6a7ywfvS+/7oyCpQ0cGCf+o2wYqut+j3zufDvPpmjOHM+NZOLVOP3bcqkTlGepqK\r\nnNAlfyVyXB0tKojilUbXDZdJFVwohU0cFhXdhf1COMxsfJUX1UoyCZpXB9w7kRSLUSSnx6XgbgSH\r\niio9gFtjsFtEZoCFkmOkQ1GfAzg0NdrQ1DUwl0RpuSKemGPAyJ+oecEQHJ8A54Fql32U13OR/PUf\r\nJBR+QnA=",
+//    "spendTime": 1000,
+//    "runTimes": 388717,
+//    "sid": "1c2f7e7d-6a49-4c42-ba9d-f3221ab6c919",
+//    "args": "{\"x\":\"6d47cf031d55eb0279dfdc485be638e04b\",\"t\":388717,\"sign\":3617411971}"
+//}
 

@@ -60,6 +60,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(project(":mvi-core"))
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -89,4 +90,8 @@ dependencies {
     implementation(libs.accompanist.permissions)
     // logger
     implementation(libs.logger)
+    // sm4
+    implementation(libs.bcprov.jdk15on)
+    // j2v8 js引擎
+    implementation(libs.eclipsesource.j2v8)
 }
