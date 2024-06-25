@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
     kotlin("plugin.serialization") version "1.7.0"
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -10,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId = "com.lemon.mcdevmanager"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -70,9 +71,9 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 
     // room
-    implementation(libs.androidx.room.gradle.plugin)
     annotationProcessor(libs.androidx.room.compiler)
     implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.compiler)
 
     // kotlin Serialization
     implementation(libs.kotlinx.serialization.json)
@@ -92,9 +93,6 @@ dependencies {
 
     // sm4
     implementation(libs.bcprov.jdk15on)
-
-    // murmurhash 3
-    implementation (libs.google.guava)
 
     // j2v8 js引擎
     implementation ("com.eclipsesource.j2v8:j2v8:6.2.0@aar")

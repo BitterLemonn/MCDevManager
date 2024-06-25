@@ -21,13 +21,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.lemon.mcdevmanager.R
 import com.lemon.mcdevmanager.data.common.LOGIN_PAGE
+import com.lemon.mcdevmanager.data.common.SPLASH_PAGE
 import com.lemon.mcdevmanager.ui.theme.TextWhite
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -44,7 +44,9 @@ fun SplashPage(
                 delay(1000)
             }
             // TODO 判断是否获取到缓存
-            navController.navigate(LOGIN_PAGE)
+            navController.navigate(LOGIN_PAGE) {
+                popUpTo(SPLASH_PAGE) { inclusive = true }
+            }
         }
     }
     Box(

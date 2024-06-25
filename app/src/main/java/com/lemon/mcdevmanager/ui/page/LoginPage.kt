@@ -1,5 +1,10 @@
 package com.lemon.mcdevmanager.ui.page
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -51,6 +56,8 @@ import androidx.navigation.NavController
 import com.eclipsesource.v8.V8
 import com.eclipsesource.v8.V8Object
 import com.lemon.mcdevmanager.R
+import com.lemon.mcdevmanager.data.common.LOGIN_PAGE
+import com.lemon.mcdevmanager.data.common.MAIN_PAGE
 import com.lemon.mcdevmanager.data.netease.login.PVArgs
 import com.lemon.mcdevmanager.data.netease.login.PVInfo
 import com.lemon.mcdevmanager.data.netease.login.PVResultStrBean
@@ -58,6 +65,7 @@ import com.lemon.mcdevmanager.ui.theme.AppTheme
 import com.lemon.mcdevmanager.ui.theme.TextWhite
 import com.lemon.mcdevmanager.ui.widget.AppLoadingWidget
 import com.lemon.mcdevmanager.ui.widget.BottomNameInput
+import com.lemon.mcdevmanager.ui.widget.SNACK_ERROR
 import com.lemon.mcdevmanager.utils.dataJsonToString
 import com.lemon.mcdevmanager.viewModel.LoginViewAction
 import com.lemon.mcdevmanager.viewModel.LoginViewEvent
@@ -79,86 +87,21 @@ fun LoginPage(
     val states = viewState.value
 
     var isLoginSuccess by remember { mutableStateOf(false) }
-    var needComputePower by remember { mutableStateOf(false) }
-
-    var pvInfo by remember {
-        mutableStateOf(
-            PVInfo(
-                sid = "",
-                hashFunc = "",
-                needCheck = false,
-                args = PVArgs(
-                    mod = "",
-                    t = 0,
-                    puzzle = "",
-                    x = ""
-                ),
-                maxTime = 0,
-                minTime = 0
-            )
-        )
-    }
 
     LaunchedEffect(key1 = Unit) {
+        val script =
+            context.assets.open("powerCompute.js").bufferedReader().use { it.readText() }
+        viewModel.dispatch(LoginViewAction.UpdatePowerScript(script))
         viewModel.viewEvent.observeEvent(lifecycleOwner) { event ->
             when (event) {
-                is LoginViewEvent.LoginFailed -> showToast("登录失败", event.message)
-                is LoginViewEvent.LoginSuccess -> {
-                    isLoginSuccess = true
-                }
-
-                is LoginViewEvent.ComputePower -> {
-                    needComputePower = true
-                    pvInfo = event.pvInfo
+                is LoginViewEvent.LoginFailed -> showToast(event.message, SNACK_ERROR)
+                is LoginViewEvent.LoginSuccess -> isLoginSuccess = true
+                is LoginViewEvent.RouteToNext -> navController.navigate(MAIN_PAGE) {
+                    popUpTo(LOGIN_PAGE) { inclusive = true }
                 }
 
                 else -> {}
             }
-        }
-    }
-
-    SideEffect {
-        if (needComputePower) {
-            Logger.d("开始计算power")
-            val script =
-                context.assets.open("powerCompute.js").bufferedReader().use { it.readText() }
-            val e = """
-                    var e = {
-                        sid: "${pvInfo.sid}",
-                        hashFunc: "${pvInfo.hashFunc}",
-                        needCheck: ${pvInfo.needCheck},
-                        args: ${dataJsonToString(pvInfo.args)},
-                        maxTime: ${pvInfo.maxTime},
-                        minTime: ${pvInfo.minTime}
-                    };
-                """.trimIndent()
-            val runPow = """
-                var e = vdfFun(e);
-            """.trimIndent()
-            val runtime = V8.createV8Runtime()
-            runtime.executeVoidScript(script)
-            runtime.executeVoidScript(e)
-            runtime.executeVoidScript(runPow)
-            val result = runtime.executeScript("e") as V8Object
-
-            val maxTime = result.getInteger("maxTime")
-            val args = result.getString("args")
-            val puzzle = result.getString("puzzle")
-            val runTimes = result.getInteger("runTimes")
-            val sid = result.getString("sid")
-            val spendTime = result.getInteger("spendTime")
-            val pvResultStrBean = PVResultStrBean(
-                maxTime = maxTime,
-                args = args,
-                puzzle = puzzle,
-                runTimes = runTimes,
-                sid = sid,
-                spendTime = spendTime
-            )
-            viewModel.dispatch(LoginViewAction.ComputePower(pvResultStrBean))
-            result.release()
-            runtime.release()
-            needComputePower = false
         }
     }
 
@@ -181,7 +124,7 @@ fun LoginPage(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(20.dp),
-                        color = TextWhite,
+                        color = AppTheme.colors.textColor,
                         fontFamily = FontFamily(Font(R.font.minecraft_ae)),
                         letterSpacing = 20.sp,
                         textAlign = TextAlign.Center
@@ -200,10 +143,8 @@ fun LoginPage(
                             .width(120.dp)
                             .aspectRatio(1f),
                         colorFilter = ColorFilter.lighting(
-                            multiply =
-                            if (isSystemInDarkTheme()) Color(0xFFAAAAAA)
-                            else Color(0xFFFFFFFF),
-                            add = Color.Transparent
+                            multiply = if (isSystemInDarkTheme()) Color(0xFFAAAAAA)
+                            else Color(0xFFFFFFFF), add = Color.Transparent
                         )
                     )
                     OutlinedTextField(
@@ -228,15 +169,13 @@ fun LoginPage(
                             unfocusedContainerColor = AppTheme.colors.card
                         ),
                         keyboardOptions = KeyboardOptions.Default.copy(
-                            keyboardType = KeyboardType.Email,
-                            imeAction = ImeAction.Next
+                            keyboardType = KeyboardType.Email, imeAction = ImeAction.Next
                         ),
                         singleLine = true
                     )
                     OutlinedTextField(
                         value = states.password,
                         onValueChange = {
-                            Logger.d("password: $it")
                             viewModel.dispatch(LoginViewAction.UpdatePassword(it))
                         },
                         label = {
@@ -256,15 +195,12 @@ fun LoginPage(
                             unfocusedContainerColor = AppTheme.colors.card
                         ),
                         keyboardOptions = KeyboardOptions.Default.copy(
-                            keyboardType = KeyboardType.Password,
-                            imeAction = ImeAction.Done
+                            keyboardType = KeyboardType.Password, imeAction = ImeAction.Done
                         ),
-                        keyboardActions = KeyboardActions(
-                            onDone = {
-                                viewModel.dispatch(LoginViewAction.Login)
-                                keyboardController?.hide()
-                            }
-                        ),
+                        keyboardActions = KeyboardActions(onDone = {
+                            viewModel.dispatch(LoginViewAction.Login)
+                            keyboardController?.hide()
+                        }),
                         singleLine = true,
                         visualTransformation = PasswordVisualTransformation()
                     )
@@ -279,8 +215,7 @@ fun LoginPage(
                             .padding(horizontal = 20.dp),
                         shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = AppTheme.colors.primaryColor,
-                            contentColor = TextWhite
+                            containerColor = AppTheme.colors.primaryColor, contentColor = TextWhite
                         )
                     ) {
                         Text(text = "登录", fontSize = 16.sp, modifier = Modifier.padding(10.dp))
@@ -299,8 +234,7 @@ fun LoginPage(
         }
 
         // 登录成功后弹出输入名称框
-        BottomNameInput(
-            hint = "请输入助记名称",
+        BottomNameInput(hint = "请输入助记名称",
             label = "名称",
             isShow = isLoginSuccess,
             onConfirm = { name ->
@@ -308,7 +242,14 @@ fun LoginPage(
             })
     }
 
-    if (states.isLoading) AppLoadingWidget()
+    AnimatedVisibility(
+        visible = states.isStartLogin,
+        modifier = Modifier.fillMaxSize(),
+        enter = fadeIn(),
+        exit = fadeOut()
+    ) {
+        AppLoadingWidget()
+    }
 }
 
 @Composable

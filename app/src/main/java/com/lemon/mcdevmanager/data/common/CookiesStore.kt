@@ -24,4 +24,8 @@ object CookiesStore {
         if (cookies.isEmpty()) return ""
         return cookies.map { "${it.key}=${it.value}" }.joinToString("; ")
     }
+
+    fun clearCookies() {
+        cookies.clear()
+    }
 }

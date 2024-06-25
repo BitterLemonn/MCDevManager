@@ -10,6 +10,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,7 +36,9 @@ import com.lemon.mcdevmanager.R
 fun AppLoadingWidget() {
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
-    
+
+    var imageLoaded by remember { mutableStateOf(false) }
+
     val imageLoader = ImageLoader.Builder(context)
         .components {
             if (Build.VERSION.SDK_INT >= 28) {
@@ -68,20 +74,24 @@ fun AppLoadingWidget() {
                     .align(Alignment.Center),
                 colorFilter = ColorFilter.lighting(
                     multiply = if (isSystemInDarkTheme()) Color(0xFF9B9B9B)
-                    else Color.Transparent,
+                    else Color.White,
                     add = Color.Transparent
+                ),
+                onSuccess = {
+                    imageLoaded = true
+                }
+            )
+            if (imageLoaded)
+                Text(
+                    text = "Loading...",
+                    color = Color.White,
+                    fontFamily = FontFamily(Font(R.font.minecraft_ae)),
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 10.dp),
+                    fontSize = 16.sp,
                 )
-            )
-            Text(
-                text = "Loading...",
-                color = Color.White,
-                fontFamily = FontFamily(Font(R.font.minecraft_ae)),
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 10.dp),
-                fontSize = 16.sp,
-            )
         }
     }
 }

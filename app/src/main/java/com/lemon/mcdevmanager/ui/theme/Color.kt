@@ -23,6 +23,10 @@ val CardDark = Color(0xFF313131)
 val BackgroundLight = Color(0xFFF1F1F1)
 val BackgroundDark = Color(0xFF121212)
 
+val IconLight = Color(0xFFFFFFFF)
+val IconDark = Color(0xFFCCCCCC)
+
+
 val InfoLight = Color(0xFF2196F3)
 val InfoNight = Color(0xFF40739B)
 

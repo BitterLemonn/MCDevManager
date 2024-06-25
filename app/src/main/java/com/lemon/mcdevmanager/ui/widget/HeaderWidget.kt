@@ -28,7 +28,9 @@ import com.lemon.mcdevmanager.ui.theme.TitleFontSize
 
 @Composable
 fun HeaderWidget(
-    title: String, onBack: (() -> Unit)?, rightAction: @Composable (() -> Unit)? = null
+    title: String,
+    leftAction: @Composable (() -> Unit)? = null,
+    rightAction: @Composable (() -> Unit)? = null
 ) {
     Box(
         modifier = Modifier
@@ -47,21 +49,14 @@ fun HeaderWidget(
                     .align(Alignment.Center)
             )
         }
-        if (onBack != null) {
+        if (leftAction != null) {
             Box(
                 modifier = Modifier
-                    .fillMaxHeight()
-                    .aspectRatio(1f)
+                    .size(35.dp)
                     .align(Alignment.CenterStart)
                     .padding(5.dp)
             ) {
-                Image(
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Inside,
-                    contentDescription = "Back",
-                    colorFilter = ColorFilter.tint(AppTheme.colors.textColor),
-                    painter = painterResource(id = R.drawable.ic_back)
-                )
+                leftAction()
             }
         }
     }
@@ -72,9 +67,24 @@ fun HeaderWidget(
 private fun HeaderWidgetPreview() {
     HeaderWidget(
         title = "Title",
-        onBack = {},
+        leftAction = {
+            Image(
+                painter = painterResource(id = R.drawable.ic_back),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(30.dp)
+                    .aspectRatio(1f)
+                    .fillMaxHeight(),
+                contentScale = ContentScale.Crop,
+                colorFilter = ColorFilter.tint(AppTheme.colors.textColor)
+            )
+        },
         rightAction = {
-            Box(modifier = Modifier.size(30.dp).background(Color.Red))
+            Box(
+                modifier = Modifier
+                    .size(30.dp)
+                    .background(Color.Red)
+            )
         }
     )
 }

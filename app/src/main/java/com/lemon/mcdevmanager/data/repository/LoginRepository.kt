@@ -7,7 +7,6 @@ import com.lemon.mcdevmanager.data.netease.login.EncParams
 import com.lemon.mcdevmanager.data.netease.login.GetCapIdRequestBean
 import com.lemon.mcdevmanager.data.netease.login.GetPowerRequestBean
 import com.lemon.mcdevmanager.data.netease.login.LoginRequestBean
-import com.lemon.mcdevmanager.data.netease.login.PVResultBean
 import com.lemon.mcdevmanager.data.netease.login.PVResultStrBean
 import com.lemon.mcdevmanager.data.netease.login.TicketRequestBean
 import com.lemon.mcdevmanager.utils.NetworkState
@@ -15,7 +14,6 @@ import com.lemon.mcdevmanager.utils.UnifiedExceptionHandler
 import com.lemon.mcdevmanager.utils.dataJsonToString
 import com.lemon.mcdevmanager.utils.rsaEncrypt
 import com.lemon.mcdevmanager.utils.sm4Encrypt
-import com.orhanobut.logger.Logger
 
 class LoginRepository {
 
