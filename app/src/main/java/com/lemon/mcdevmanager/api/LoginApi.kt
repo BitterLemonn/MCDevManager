@@ -11,6 +11,7 @@ import com.lemon.mcdevmanager.data.netease.login.PowerBean
 import com.lemon.mcdevmanager.data.netease.login.TicketBean
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
@@ -46,7 +47,7 @@ interface LoginApi {
                 .baseUrl(NETEASE_LOGIN_LINK)
                 .addConverterFactory(
                     JSONConverter.asConverterFactory(
-                        MediaType.parse("application/json; charset=UTF8")!!
+                        "application/json; charset=UTF8".toMediaTypeOrNull()!!
                     )
                 )
                 .client(client)

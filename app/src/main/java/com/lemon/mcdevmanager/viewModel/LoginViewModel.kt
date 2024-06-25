@@ -107,10 +107,6 @@ class LoginViewModel : ViewModel() {
                 emit("")
             }.catch {
                 _viewEvent.setEvent(LoginViewEvent.LoginFailed(it.message ?: "登录失败"))
-            }.onStart {
-                _viewState.setState { copy(isLoading = true) }
-            }.onCompletion {
-                _viewState.setState { copy(isLoading = false) }
             }.flowOn(Dispatchers.IO).collect()
         }
     }
@@ -159,8 +155,8 @@ class LoginViewModel : ViewModel() {
 
 data class LoginViewState(
     val isLoading: Boolean = false,
-    val username: String = "873811906@qq.com",
-    val password: String = "27880426Win2"
+    val username: String = "",
+    val password: String = ""
 )
 
 sealed class LoginViewEvent {

@@ -100,13 +100,5 @@ object UnifiedExceptionHandler {
         }
     }
 
-//    suspend fun <T> handleSuspendWithToken(function: suspend () -> ResponseData<T>): NetworkState<T>{
-//        val token = AppContext.profile?.token
-//        Logger.d(function)
-//        return if (token.isNullOrBlank())
-//            NetworkState.Error("用户信息丢失了哦", LoginException("用户信息丢失了哦"))
-//        else handleSuspend { function.invoke() }
-//    }
-
     class LoginException(message: String) : Exception(message)
 }

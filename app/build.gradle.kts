@@ -84,16 +84,23 @@ dependencies {
     // navigation
     implementation(libs.androidx.navigation.compose)
 
-    // webview
-    implementation("com.github.delight-im:Android-AdvancedWebView:v3.2.1")
     // permission
     implementation(libs.accompanist.permissions)
+
     // logger
     implementation(libs.logger)
+
     // sm4
     implementation(libs.bcprov.jdk15on)
+
     // murmurhash 3
     implementation (libs.google.guava)
+
     // j2v8 js引擎
     implementation ("com.eclipsesource.j2v8:j2v8:6.2.0@aar")
+    
+    // coil
+    implementation (libs.coil)
+    implementation(libs.coil.compose)
+    implementation(libs.coil.gif)
 }

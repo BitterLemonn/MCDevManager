@@ -1,7 +1,5 @@
 package com.lemon.mcdevmanager.ui.page
 
-import android.util.Log
-import android.webkit.CookieManager
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -37,21 +35,20 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.eclipsesource.v8.JavaCallback
 import com.eclipsesource.v8.V8
-import com.eclipsesource.v8.V8Array
-import com.eclipsesource.v8.V8Function
 import com.eclipsesource.v8.V8Object
 import com.lemon.mcdevmanager.R
 import com.lemon.mcdevmanager.data.netease.login.PVArgs
@@ -59,6 +56,7 @@ import com.lemon.mcdevmanager.data.netease.login.PVInfo
 import com.lemon.mcdevmanager.data.netease.login.PVResultStrBean
 import com.lemon.mcdevmanager.ui.theme.AppTheme
 import com.lemon.mcdevmanager.ui.theme.TextWhite
+import com.lemon.mcdevmanager.ui.widget.AppLoadingWidget
 import com.lemon.mcdevmanager.ui.widget.BottomNameInput
 import com.lemon.mcdevmanager.utils.dataJsonToString
 import com.lemon.mcdevmanager.viewModel.LoginViewAction
@@ -75,6 +73,7 @@ fun LoginPage(
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     val viewState = viewModel.viewState.collectAsState()
     val states = viewState.value
@@ -237,6 +236,7 @@ fun LoginPage(
                     OutlinedTextField(
                         value = states.password,
                         onValueChange = {
+                            Logger.d("password: $it")
                             viewModel.dispatch(LoginViewAction.UpdatePassword(it))
                         },
                         label = {
@@ -262,14 +262,17 @@ fun LoginPage(
                         keyboardActions = KeyboardActions(
                             onDone = {
                                 viewModel.dispatch(LoginViewAction.Login)
+                                keyboardController?.hide()
                             }
                         ),
-                        singleLine = true
+                        singleLine = true,
+                        visualTransformation = PasswordVisualTransformation()
                     )
                     Spacer(modifier = Modifier.height(30.dp))
                     Button(
                         onClick = {
                             viewModel.dispatch(LoginViewAction.Login)
+                            keyboardController?.hide()
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -301,25 +304,11 @@ fun LoginPage(
             label = "名称",
             isShow = isLoginSuccess,
             onConfirm = { name ->
-                val token = getCookies("https://mcdev.webapp.163.com/#/square")
-                if (token.isNotBlank()) {
 
-                }
             })
     }
-}
 
-private fun getCookies(url: String?): String {
-    val cookieManager = CookieManager.getInstance()
-    val cookies = cookieManager.getCookie(url)
-    val keyMap = mutableMapOf<String, String>()
-    cookies.split(";").forEach {
-        Log.e("TAG", "getCookies: $it")
-        val key = it.split("=")[0].trim()
-        val value = it.split("=")[1].trim()
-        keyMap[key] = value
-    }
-    return keyMap["NTES_SESS"] ?: ""
+    if (states.isLoading) AppLoadingWidget()
 }
 
 @Composable
