@@ -40,7 +40,7 @@ class CommonInterceptor : Interceptor {
     }
 }
 
-class AddCookiesInterceptor() : Interceptor {
+class AddCookiesInterceptor : Interceptor {
     @Throws(IOException::class)
     override fun intercept(chain: Interceptor.Chain): Response {
         val builder = chain.request().newBuilder()
