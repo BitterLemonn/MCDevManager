@@ -1,6 +1,8 @@
 package com.lemon.mcdevmanager.ui.page
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
@@ -10,15 +12,16 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
@@ -45,6 +48,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -78,6 +82,11 @@ fun LoginPage(
 
     var isLoginSuccess by remember { mutableStateOf(false) }
     var isUseCookies by remember { mutableStateOf(false) }
+
+    val animatedUsername by animateDpAsState(
+        targetValue = if (isUseCookies) 0.dp else 60.dp,
+        animationSpec = tween(durationMillis = 150), label = ""
+    )
 
     LaunchedEffect(key1 = Unit) {
         val script = context.assets.open("powerCompute.js").bufferedReader().use { it.readText() }
@@ -137,102 +146,84 @@ fun LoginPage(
                             else Color(0xFFFFFFFF), add = Color.Transparent
                         )
                     )
-                    if (!isUseCookies) {
-                        OutlinedTextField(
-                            value = states.username,
-                            onValueChange = {
-                                viewModel.dispatch(LoginViewAction.UpdateUsername(it))
-                            },
-                            label = {
-                                Text(text = "邮箱")
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(20.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = AppTheme.colors.primaryColor,
-                                focusedTextColor = AppTheme.colors.textColor,
-                                focusedLabelColor = AppTheme.colors.primaryColor,
-                                focusedContainerColor = AppTheme.colors.card,
-                                unfocusedLabelColor = AppTheme.colors.secondaryColor,
-                                unfocusedBorderColor = AppTheme.colors.secondaryColor,
-                                unfocusedTextColor = AppTheme.colors.textColor,
-                                unfocusedContainerColor = AppTheme.colors.card
-                            ),
-                            keyboardOptions = KeyboardOptions.Default.copy(
-                                keyboardType = KeyboardType.Email, imeAction = ImeAction.Next
-                            ),
-                            singleLine = true
-                        )
-                        OutlinedTextField(
-                            value = states.password,
-                            onValueChange = {
-                                viewModel.dispatch(LoginViewAction.UpdatePassword(it))
-                            },
-                            label = {
-                                Text(
-                                    text = "密码",
-                                    modifier = Modifier.background(Color.Transparent)
-                                )
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 20.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = AppTheme.colors.primaryColor,
-                                focusedTextColor = AppTheme.colors.textColor,
-                                focusedLabelColor = AppTheme.colors.primaryColor,
-                                focusedContainerColor = AppTheme.colors.card,
-                                unfocusedLabelColor = AppTheme.colors.secondaryColor,
-                                unfocusedBorderColor = AppTheme.colors.secondaryColor,
-                                unfocusedTextColor = AppTheme.colors.textColor,
-                                unfocusedContainerColor = AppTheme.colors.card
-                            ),
-                            keyboardOptions = KeyboardOptions.Default.copy(
-                                keyboardType = KeyboardType.Password, imeAction = ImeAction.Done
-                            ),
-                            keyboardActions = KeyboardActions(onDone = {
-                                viewModel.dispatch(LoginViewAction.Login)
-                                keyboardController?.hide()
-                            }),
-                            singleLine = true,
-                            visualTransformation = PasswordVisualTransformation()
-                        )
-                    } else {
-                        OutlinedTextField(
-                            value = states.cookies,
-                            onValueChange = {
-                                viewModel.dispatch(LoginViewAction.UpdateCookies(it))
-                            },
-                            label = {
-                                Text(
-                                    text = "Cookies",
-                                    modifier = Modifier.background(Color.Transparent)
-                                )
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 20.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = AppTheme.colors.primaryColor,
-                                focusedTextColor = AppTheme.colors.textColor,
-                                focusedLabelColor = AppTheme.colors.primaryColor,
-                                focusedContainerColor = AppTheme.colors.card,
-                                unfocusedLabelColor = AppTheme.colors.secondaryColor,
-                                unfocusedBorderColor = AppTheme.colors.secondaryColor,
-                                unfocusedTextColor = AppTheme.colors.textColor,
-                                unfocusedContainerColor = AppTheme.colors.card
-                            ),
-                            keyboardOptions = KeyboardOptions.Default.copy(
-                                keyboardType = KeyboardType.Ascii,
-                                imeAction = ImeAction.Done
-                            ),
-                            keyboardActions = KeyboardActions(onDone = {
-                                viewModel.dispatch(LoginViewAction.Login)
-                                keyboardController?.hide()
-                            })
-                        )
+                    AnimatedVisibility(
+                        visible = !isUseCookies,
+                        enter = fadeIn(animationSpec = tween(durationMillis = 150)),
+                        exit = fadeOut(animationSpec = tween(durationMillis = 150))
+                    ) {
+                        Column {
+                            Spacer(modifier = Modifier.height(20.dp))
+                            OutlinedTextField(
+                                value = states.username,
+                                onValueChange = {
+                                    viewModel.dispatch(LoginViewAction.UpdateUsername(it))
+                                },
+                                label = {
+                                    Text(text = "邮箱")
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 20.dp)
+                                    .height(animatedUsername),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = AppTheme.colors.primaryColor,
+                                    focusedTextColor = AppTheme.colors.textColor,
+                                    focusedLabelColor = AppTheme.colors.primaryColor,
+                                    focusedContainerColor = AppTheme.colors.card,
+                                    unfocusedLabelColor = AppTheme.colors.secondaryColor,
+                                    unfocusedBorderColor = AppTheme.colors.secondaryColor,
+                                    unfocusedTextColor = AppTheme.colors.textColor,
+                                    unfocusedContainerColor = AppTheme.colors.card
+                                ),
+                                keyboardOptions = KeyboardOptions.Default.copy(
+                                    keyboardType = KeyboardType.Email, imeAction = ImeAction.Next
+                                ),
+                                singleLine = true
+                            )
+                        }
                     }
+                    Spacer(modifier = Modifier.height(20.dp))
+                    OutlinedTextField(
+                        value = if (isUseCookies) states.cookies else states.password,
+                        onValueChange = {
+                            if (isUseCookies) {
+                                viewModel.dispatch(LoginViewAction.UpdateCookies(it))
+                            } else {
+                                viewModel.dispatch(LoginViewAction.UpdatePassword(it))
+                            }
+                        },
+                        label = {
+                            Text(
+                                text = if (isUseCookies) "Cookies" else "密码",
+                                modifier = Modifier.background(Color.Transparent)
+                            )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = AppTheme.colors.primaryColor,
+                            focusedTextColor = AppTheme.colors.textColor,
+                            focusedLabelColor = AppTheme.colors.primaryColor,
+                            focusedContainerColor = AppTheme.colors.card,
+                            unfocusedLabelColor = AppTheme.colors.secondaryColor,
+                            unfocusedBorderColor = AppTheme.colors.secondaryColor,
+                            unfocusedTextColor = AppTheme.colors.textColor,
+                            unfocusedContainerColor = AppTheme.colors.card
+                        ),
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            keyboardType = if (isUseCookies) KeyboardType.Ascii
+                            else KeyboardType.Password,
+                            imeAction = ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(onDone = {
+                            viewModel.dispatch(LoginViewAction.Login)
+                            keyboardController?.hide()
+                        }),
+                        singleLine = !isUseCookies,
+                        visualTransformation = if (!isUseCookies) PasswordVisualTransformation()
+                        else VisualTransformation.None
+                    )
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
