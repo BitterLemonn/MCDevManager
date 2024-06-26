@@ -1,25 +1,24 @@
 package com.lemon.mcdevmanager.ui.page
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
@@ -27,7 +26,6 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,24 +51,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.eclipsesource.v8.V8
-import com.eclipsesource.v8.V8Object
 import com.lemon.mcdevmanager.R
 import com.lemon.mcdevmanager.data.common.LOGIN_PAGE
-import com.lemon.mcdevmanager.data.common.MAIN_PAGE
-import com.lemon.mcdevmanager.data.netease.login.PVArgs
-import com.lemon.mcdevmanager.data.netease.login.PVInfo
-import com.lemon.mcdevmanager.data.netease.login.PVResultStrBean
 import com.lemon.mcdevmanager.ui.theme.AppTheme
 import com.lemon.mcdevmanager.ui.theme.TextWhite
 import com.lemon.mcdevmanager.ui.widget.AppLoadingWidget
 import com.lemon.mcdevmanager.ui.widget.BottomNameInput
 import com.lemon.mcdevmanager.ui.widget.SNACK_ERROR
-import com.lemon.mcdevmanager.utils.dataJsonToString
 import com.lemon.mcdevmanager.viewModel.LoginViewAction
 import com.lemon.mcdevmanager.viewModel.LoginViewEvent
 import com.lemon.mcdevmanager.viewModel.LoginViewModel
-import com.orhanobut.logger.Logger
 import com.zj.mvi.core.observeEvent
 
 @Composable
@@ -87,16 +77,16 @@ fun LoginPage(
     val states = viewState.value
 
     var isLoginSuccess by remember { mutableStateOf(false) }
+    var isUseCookies by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = Unit) {
-        val script =
-            context.assets.open("powerCompute.js").bufferedReader().use { it.readText() }
+        val script = context.assets.open("powerCompute.js").bufferedReader().use { it.readText() }
         viewModel.dispatch(LoginViewAction.UpdatePowerScript(script))
         viewModel.viewEvent.observeEvent(lifecycleOwner) { event ->
             when (event) {
                 is LoginViewEvent.LoginFailed -> showToast(event.message, SNACK_ERROR)
                 is LoginViewEvent.LoginSuccess -> isLoginSuccess = true
-                is LoginViewEvent.RouteToNext -> navController.navigate(MAIN_PAGE) {
+                is LoginViewEvent.RouteToPath -> navController.navigate(event.path) {
                     popUpTo(LOGIN_PAGE) { inclusive = true }
                 }
 
@@ -147,64 +137,127 @@ fun LoginPage(
                             else Color(0xFFFFFFFF), add = Color.Transparent
                         )
                     )
-                    OutlinedTextField(
-                        value = states.username,
-                        onValueChange = {
-                            viewModel.dispatch(LoginViewAction.UpdateUsername(it))
-                        },
-                        label = {
-                            Text(text = "邮箱")
-                        },
+                    if (!isUseCookies) {
+                        OutlinedTextField(
+                            value = states.username,
+                            onValueChange = {
+                                viewModel.dispatch(LoginViewAction.UpdateUsername(it))
+                            },
+                            label = {
+                                Text(text = "邮箱")
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = AppTheme.colors.primaryColor,
+                                focusedTextColor = AppTheme.colors.textColor,
+                                focusedLabelColor = AppTheme.colors.primaryColor,
+                                focusedContainerColor = AppTheme.colors.card,
+                                unfocusedLabelColor = AppTheme.colors.secondaryColor,
+                                unfocusedBorderColor = AppTheme.colors.secondaryColor,
+                                unfocusedTextColor = AppTheme.colors.textColor,
+                                unfocusedContainerColor = AppTheme.colors.card
+                            ),
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                keyboardType = KeyboardType.Email, imeAction = ImeAction.Next
+                            ),
+                            singleLine = true
+                        )
+                        OutlinedTextField(
+                            value = states.password,
+                            onValueChange = {
+                                viewModel.dispatch(LoginViewAction.UpdatePassword(it))
+                            },
+                            label = {
+                                Text(
+                                    text = "密码",
+                                    modifier = Modifier.background(Color.Transparent)
+                                )
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = AppTheme.colors.primaryColor,
+                                focusedTextColor = AppTheme.colors.textColor,
+                                focusedLabelColor = AppTheme.colors.primaryColor,
+                                focusedContainerColor = AppTheme.colors.card,
+                                unfocusedLabelColor = AppTheme.colors.secondaryColor,
+                                unfocusedBorderColor = AppTheme.colors.secondaryColor,
+                                unfocusedTextColor = AppTheme.colors.textColor,
+                                unfocusedContainerColor = AppTheme.colors.card
+                            ),
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                keyboardType = KeyboardType.Password, imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(onDone = {
+                                viewModel.dispatch(LoginViewAction.Login)
+                                keyboardController?.hide()
+                            }),
+                            singleLine = true,
+                            visualTransformation = PasswordVisualTransformation()
+                        )
+                    } else {
+                        OutlinedTextField(
+                            value = states.cookies,
+                            onValueChange = {
+                                viewModel.dispatch(LoginViewAction.UpdateCookies(it))
+                            },
+                            label = {
+                                Text(
+                                    text = "Cookies",
+                                    modifier = Modifier.background(Color.Transparent)
+                                )
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = AppTheme.colors.primaryColor,
+                                focusedTextColor = AppTheme.colors.textColor,
+                                focusedLabelColor = AppTheme.colors.primaryColor,
+                                focusedContainerColor = AppTheme.colors.card,
+                                unfocusedLabelColor = AppTheme.colors.secondaryColor,
+                                unfocusedBorderColor = AppTheme.colors.secondaryColor,
+                                unfocusedTextColor = AppTheme.colors.textColor,
+                                unfocusedContainerColor = AppTheme.colors.card
+                            ),
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                keyboardType = KeyboardType.Ascii,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(onDone = {
+                                viewModel.dispatch(LoginViewAction.Login)
+                                keyboardController?.hide()
+                            })
+                        )
+                    }
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(20.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = AppTheme.colors.primaryColor,
-                            focusedTextColor = AppTheme.colors.textColor,
-                            focusedLabelColor = AppTheme.colors.primaryColor,
-                            focusedContainerColor = AppTheme.colors.card,
-                            unfocusedLabelColor = AppTheme.colors.secondaryColor,
-                            unfocusedBorderColor = AppTheme.colors.secondaryColor,
-                            unfocusedTextColor = AppTheme.colors.textColor,
-                            unfocusedContainerColor = AppTheme.colors.card
-                        ),
-                        keyboardOptions = KeyboardOptions.Default.copy(
-                            keyboardType = KeyboardType.Email, imeAction = ImeAction.Next
-                        ),
-                        singleLine = true
-                    )
-                    OutlinedTextField(
-                        value = states.password,
-                        onValueChange = {
-                            viewModel.dispatch(LoginViewAction.UpdatePassword(it))
-                        },
-                        label = {
-                            Text(text = "密码", modifier = Modifier.background(Color.Transparent))
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = AppTheme.colors.primaryColor,
-                            focusedTextColor = AppTheme.colors.textColor,
-                            focusedLabelColor = AppTheme.colors.primaryColor,
-                            focusedContainerColor = AppTheme.colors.card,
-                            unfocusedLabelColor = AppTheme.colors.secondaryColor,
-                            unfocusedBorderColor = AppTheme.colors.secondaryColor,
-                            unfocusedTextColor = AppTheme.colors.textColor,
-                            unfocusedContainerColor = AppTheme.colors.card
-                        ),
-                        keyboardOptions = KeyboardOptions.Default.copy(
-                            keyboardType = KeyboardType.Password, imeAction = ImeAction.Done
-                        ),
-                        keyboardActions = KeyboardActions(onDone = {
-                            viewModel.dispatch(LoginViewAction.Login)
-                            keyboardController?.hide()
-                        }),
-                        singleLine = true,
-                        visualTransformation = PasswordVisualTransformation()
-                    )
-                    Spacer(modifier = Modifier.height(30.dp))
+                            .padding(horizontal = 20.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.CenterEnd)
+                                .clickable(
+                                    indication = null,
+                                    interactionSource = remember { MutableInteractionSource() }
+                                ) {
+                                    viewModel.dispatch(LoginViewAction.UpdateCookies(""))
+                                    isUseCookies = !isUseCookies
+                                }
+                                .padding(10.dp)
+                        ) {
+                            Text(
+                                text = if (!isUseCookies) "使用Cookies登录 >" else "使用账号密码登录 >",
+                                color = AppTheme.colors.primaryColor,
+                                fontSize = 14.sp,
+                                letterSpacing = 1.sp
+                            )
+                        }
+                    }
                     Button(
                         onClick = {
                             viewModel.dispatch(LoginViewAction.Login)
@@ -234,11 +287,12 @@ fun LoginPage(
         }
 
         // 登录成功后弹出输入名称框
-        BottomNameInput(hint = "请输入助记名称",
+        BottomNameInput(
+            hint = "请输入助记名称",
             label = "名称",
             isShow = isLoginSuccess,
             onConfirm = { name ->
-
+                viewModel.dispatch(LoginViewAction.SetUser(name))
             })
     }
 

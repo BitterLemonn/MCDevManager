@@ -18,34 +18,56 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.lemon.mcdevmanager.R
 import com.lemon.mcdevmanager.data.common.LOGIN_PAGE
 import com.lemon.mcdevmanager.data.common.SPLASH_PAGE
 import com.lemon.mcdevmanager.ui.theme.TextWhite
+import com.lemon.mcdevmanager.viewModel.SplashViewAction
+import com.lemon.mcdevmanager.viewModel.SplashViewEvent
+import com.lemon.mcdevmanager.viewModel.SplashViewModel
+import com.zj.mvi.core.observeEvent
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun SplashPage(
-    navController: NavController
+    navController: NavController,
+    viewmodel: SplashViewModel = viewModel()
 ) {
     var waitingLast = 0
+    val lifecycleOwner = LocalLifecycleOwner.current
+
     LaunchedEffect(key1 = Unit) {
-        this.launch {
+        this.launch(Dispatchers.IO) {
             while (waitingLast < 5) {
                 waitingLast++
                 delay(1000)
             }
-            // TODO 判断是否获取到缓存
-            navController.navigate(LOGIN_PAGE) {
-                popUpTo(SPLASH_PAGE) { inclusive = true }
+        }
+        viewmodel.dispatch(SplashViewAction.GetDatabase)
+        viewmodel.viewEvents.observeEvent(lifecycleOwner) { event ->
+            when (event) {
+                is SplashViewEvent.RouteToPath -> {
+                    this.launch(Dispatchers.IO) {
+                        while (waitingLast < 5) {
+                            delay(100)
+                        }
+                        withContext(Dispatchers.Main) {
+                            navController.navigate(event.path)
+                        }
+                    }
+                }
             }
         }
     }

@@ -42,22 +42,23 @@ object UnifiedExceptionHandler {
         return try {
             when (val result = function.invoke()) {
                 is TicketBean -> {
-                    val uniData = ResponseData(result.ret, result.tk, null)
+                    val uniData = ResponseData(result.ret.toString(), result.tk)
                     parseData(uniData)
                 }
 
                 is BaseLoginBean -> {
-                    val uniData = ResponseData(result.ret, null, null)
+                    val uniData = ResponseData(result.ret.toString(), null)
                     parseData(uniData)
                 }
 
                 is PowerBean -> {
-                    val uniData = ResponseData(result.ret, dataJsonToString(result.pVInfo), null)
+                    val uniData =
+                        ResponseData(result.ret.toString(), dataJsonToString(result.pVInfo))
                     parseData(uniData)
                 }
 
                 is CapIdBean -> {
-                    val uniData = ResponseData(result.ret, result.capId, null)
+                    val uniData = ResponseData(result.ret.toString(), result.capId)
                     parseData(uniData)
                 }
 
@@ -88,15 +89,15 @@ object UnifiedExceptionHandler {
 
     private fun <T> parseData(result: ResponseData<T>): NetworkState<T> {
         Logger.d("解析数据：$result")
-        return when (result.code) {
-            200 -> result.data?.let { NetworkState.Success(result.data) }
-                ?: NetworkState.Success(msg = result.message)
+        return when (result.status) {
+            "200", "ok", "OK", "Ok" -> result.data?.let { NetworkState.Success(result.data) }
+                ?: NetworkState.Success(msg = result.status)
 
-            201 -> result.data?.let { NetworkState.Success(result.data) }
-                ?: NetworkState.Success(msg = result.code.toString())
+            "201" -> result.data?.let { NetworkState.Success(result.data) }
+                ?: NetworkState.Success(msg = result.status)
 
             else ->
-                NetworkState.Error(result.code.toString())
+                NetworkState.Error(result.status)
         }
     }
 

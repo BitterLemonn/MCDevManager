@@ -5,11 +5,11 @@ import kotlinx.serialization.Serializable
 /**
  * 响应体通用类
  * @param T 响应体包含的数据的类型
- * @param code 响应体返回的状态码
+ * @param status 响应体返回的状态
  * @param message 响应体返回的信息
  */
 @Serializable
-data class ResponseData<T>(val code: Int, val data: T? = null, val message: String?)
+data class ResponseData<T>(val status: String, val data: T? = null)
 
 /**
  * 响应处理包装通用类

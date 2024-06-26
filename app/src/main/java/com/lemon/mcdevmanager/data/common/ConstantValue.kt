@@ -6,7 +6,7 @@ const val LOGIN_PAGE = "LOGIN_PAGE"
 const val MAIN_PAGE = "MAIN_PAGE"
 
 // 网易用户cookie名
-const val USER_COOKIE = "NTES_SESS"
+const val NETEASE_USER_COOKIE = "NTES_SESS"
 
 // 网易登录接口参数
 const val pkid = "kBSLIYY"

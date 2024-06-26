@@ -59,8 +59,6 @@ fun ProfitSmallWidget(
     val normalImageBytes by remember { mutableStateOf(Base64.getDecoder().decode(NORMALImage)) }
     val downImageBytes by remember { mutableStateOf(Base64.getDecoder().decode(DOWNImage)) }
 
-    val state by remember { mutableIntStateOf(if (mainNum > subNum) 1 else if (mainNum < subNum) -1 else 0) }
-
     Box(
         modifier = Modifier.then(modifier)
     ) {
@@ -103,7 +101,7 @@ fun ProfitSmallWidget(
                 Spacer(modifier = Modifier.width(4.dp))
                 AsyncImage(
                     model = ImageRequest.Builder(context).data(
-                        when (state) {
+                        when (if (mainNum > subNum) 1 else if (mainNum < subNum) -1 else 0) {
                             1 -> upImageBytes
                             -1 -> downImageBytes
                             else -> normalImageBytes

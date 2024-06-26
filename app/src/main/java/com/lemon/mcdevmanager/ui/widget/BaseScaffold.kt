@@ -16,8 +16,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.lemon.mcdevmanager.data.common.LOGIN_PAGE
+import com.lemon.mcdevmanager.data.common.MAIN_PAGE
 import com.lemon.mcdevmanager.data.common.SPLASH_PAGE
 import com.lemon.mcdevmanager.ui.page.LoginPage
+import com.lemon.mcdevmanager.ui.page.MainPage
 import com.lemon.mcdevmanager.ui.page.SplashPage
 import com.lemon.mcdevmanager.ui.theme.AppTheme
 
@@ -58,6 +60,12 @@ fun BaseScaffold() {
             }
             composable(route = LOGIN_PAGE) {
                 LoginPage(
+                    navController = navController,
+                    showToast = { msg, flag -> showToast(msg, flag) }
+                )
+            }
+            composable(route = MAIN_PAGE) {
+                MainPage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) }
                 )

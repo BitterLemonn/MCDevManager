@@ -47,11 +47,9 @@ fun MainUserCard(
                 onLoading = {
 
                 })
-            Spacer(modifier = Modifier.width(16.dp))
             Text(
                 text = username,
                 modifier = Modifier
-                    .padding(12.dp)
                     .align(Alignment.CenterVertically),
                 fontSize = 16.sp,
                 color = AppTheme.colors.textColor
