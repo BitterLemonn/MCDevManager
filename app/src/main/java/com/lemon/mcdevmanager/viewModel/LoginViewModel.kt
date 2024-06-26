@@ -63,9 +63,8 @@ class LoginViewModel : ViewModel() {
                 CookiesStore.addCookie(NETEASE_USER_COOKIE, _viewState.value.cookies)
                 _viewEvent.setEvent(LoginViewEvent.LoginSuccess("登录成功"))
             } else {
-                flow {
+                flow<Unit> {
                     initLogic()
-                    emit("")
                 }.catch {
                     _viewEvent.setEvent(LoginViewEvent.LoginFailed(it.message ?: "登录失败"))
                 }.onStart {

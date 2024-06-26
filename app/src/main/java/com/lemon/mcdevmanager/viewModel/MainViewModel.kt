@@ -75,8 +75,28 @@ class MainViewModel : ViewModel() {
         when (val userInfo = repository.getUserInfo()) {
             is NetworkState.Success -> {
                 userInfo.data?.let {
+                    var mainLevel = if (it.level > 20) 5 else it.level / 4
+                    var mod = if (it.level > 20) it.level - 19 else it.level % 4
+                    if (mod == 0) {
+                        mainLevel -= 1
+                        mod = 4
+                    }
+                    val levelText = when (mainLevel) {
+                        1 -> "元气新星"
+                        2 -> "巧手工匠"
+                        3 -> "杰出精英"
+                        4 -> "创造大师"
+                        5 -> "传奇宗师"
+                        else -> "元气新星"
+                    }
                     _viewStates.setState {
-                        copy(username = it.nickname, avatarUrl = it.headImg)
+                        copy(
+                            username = it.nickname,
+                            avatarUrl = it.headImg,
+                            mainLevel = mainLevel,
+                            subLevel = mod,
+                            levelText = "$levelText LV.$mod"
+                        )
                     }
                 } ?: throw Exception("获取用户信息失败")
             }
@@ -125,7 +145,10 @@ data class MainViewState(
     val isLoading: Boolean = false,
 
     val username: String = "开发者",
-    val avatarUrl: String = "https://gss0.baidu.com/-fo3dSag_xI4khGko9WTAnF6hhy/zhidao/pic/item/bd315c6034a85edf3b752e104b540923dd54750c.jpg"
+    val avatarUrl: String = "https://gss0.baidu.com/-fo3dSag_xI4khGko9WTAnF6hhy/zhidao/pic/item/bd315c6034a85edf3b752e104b540923dd54750c.jpg",
+    val mainLevel: Int = 0,
+    val subLevel: Int = 0,
+    val levelText: String = ""
 )
 
 sealed class MainViewEvent {

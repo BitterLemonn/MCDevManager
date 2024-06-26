@@ -45,7 +45,13 @@ fun MainPage(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
-            MainUserCard(username = states.username, avatarUrl = states.avatarUrl)
+            MainUserCard(
+                username = states.username,
+                avatarUrl = states.avatarUrl,
+                mainLevel = states.mainLevel,
+                subLevel = states.subLevel,
+                levelText = states.levelText
+            )
             ProfitWidget(
                 curMonthProfit = states.curMonthProfit,
                 curMonthDl = states.curMonthDl,
