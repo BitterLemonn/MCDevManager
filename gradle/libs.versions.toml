@@ -1,6 +1,6 @@
 [versions]
 accompanistPermissions = "0.35.1-alpha"
-agp = "8.3.1"
+agp = "8.5.0"
 bcprovJdk15on = "1.68"
 coil = "2.2.2"
 coilCompose = "2.6.0"

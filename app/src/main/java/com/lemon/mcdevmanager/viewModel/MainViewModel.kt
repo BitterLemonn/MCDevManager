@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.lemon.mcdevmanager.data.common.CookiesStore
 import com.lemon.mcdevmanager.data.common.NETEASE_USER_COOKIE
 import com.lemon.mcdevmanager.data.database.database.GlobalDataBase
+import com.lemon.mcdevmanager.data.database.entities.OverviewEntity
 import com.lemon.mcdevmanager.data.global.AppContext
 import com.lemon.mcdevmanager.data.repository.MainRepository
 import com.lemon.mcdevmanager.utils.NetworkState
@@ -23,6 +24,10 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.time.Instant
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
 class MainViewModel : ViewModel() {
     private val repository = MainRepository.getInstance()
@@ -47,13 +52,16 @@ class MainViewModel : ViewModel() {
                 getOverviewLogic()
             }.onStart {
                 Logger.d("开始获取概览信息")
+                _viewStates.setState { copy(isLoadingOverview = true) }
                 CookiesStore.clearCookies()
             }.catch {
                 _viewEvents.setEvent(MainViewEvent.ShowToast(it.message ?: "未知错误"))
             }.onCompletion {
                 CookiesStore.clearCookies()
+                _viewStates.setState { copy(isLoadingOverview = false) }
             }.flowOn(Dispatchers.IO).collect()
         }
+
         viewModelScope.launch(Dispatchers.IO) {
             flow<Unit> {
                 val cookie = AppContext.cookiesStore[nickname]
@@ -108,6 +116,36 @@ class MainViewModel : ViewModel() {
     }
 
     private suspend fun getOverviewLogic() {
+        val overviewEntity = withContext(Dispatchers.IO) {
+            GlobalDataBase.database.infoDao().getLatestOverviewByNickname(AppContext.nowNickname)
+        }
+        Logger.d("overviewEntity: $overviewEntity")
+        if (overviewEntity != null) {
+            val instant = Instant.ofEpochMilli(overviewEntity.timestamp)
+            val chinaZoneId = ZoneId.of("Asia/Shanghai")
+            val chinaTime = ZonedDateTime.ofInstant(instant, chinaZoneId)
+
+            var isLoad = false
+            if (chinaTime.hour >= 11 && overviewEntity.yesterdayDownload != 0) isLoad = true
+            else if (chinaTime.hour >= 12) isLoad = true
+            if (isLoad) {
+                _viewStates.setState {
+                    copy(
+                        curMonthProfit = overviewEntity.thisMonthDiamond,
+                        curMonthDl = overviewEntity.thisMonthDownload,
+                        lastMonthProfit = overviewEntity.lastMonthDiamond,
+                        lastMonthDl = overviewEntity.lastMonthDownload,
+                        yesterdayProfit = overviewEntity.yesterdayDiamond,
+                        halfAvgProfit = overviewEntity.days14AverageDiamond,
+                        yesterdayDl = overviewEntity.yesterdayDownload,
+                        halfAvgDl = overviewEntity.days14AverageDownload
+                    )
+                }
+            } else getOverviewByServer()
+        } else getOverviewByServer()
+    }
+
+    private suspend fun getOverviewByServer() {
         when (val overview = repository.getOverview()) {
             is NetworkState.Success -> {
                 overview.data?.let {
@@ -122,6 +160,33 @@ class MainViewModel : ViewModel() {
                             yesterdayDl = it.yesterdayDownload,
                             halfAvgDl = it.days14AverageDownload
                         )
+                    }
+                    // 保存概览信息到数据库
+                    withContext(Dispatchers.IO) {
+                        val overviewEntity = OverviewEntity(
+                            nickname = AppContext.nowNickname,
+                            days14AverageDownload = it.days14AverageDownload,
+                            days14AverageDiamond = it.days14AverageDiamond,
+                            days14TotalDownload = it.days14TotalDownload,
+                            days14TotalDiamond = it.days14TotalDiamond,
+                            lastMonthDiamond = it.lastMonthDiamond,
+                            lastMonthDownload = it.lastMonthDownload,
+                            thisMonthDiamond = it.thisMonthDiamond,
+                            thisMonthDownload = it.thisMonthDownload,
+                            yesterdayDiamond = it.yesterdayDiamond,
+                            yesterdayDownload = it.yesterdayDownload
+                        )
+                        GlobalDataBase.database.infoDao().insertOverview(overviewEntity)
+                    }
+                    // 如果昨日数据为0, 且当前时间在11点之前, 则提示用户数据可能未刷新
+                    if (it.yesterdayDiamond == 0 && it.yesterdayDownload == 0) {
+                        val chinaZoneId = ZoneId.of("Asia/Shanghai")
+                        val currentTimeInChina = ZonedDateTime.now(chinaZoneId)
+                        val currentHourInChina = currentTimeInChina.hour
+
+                        if (currentHourInChina < 11) {
+                            _viewEvents.setEvent(MainViewEvent.MaybeDataNoRefresh)
+                        }
                     }
                 } ?: throw Exception("获取概览信息失败")
             }
@@ -142,7 +207,7 @@ data class MainViewState(
     val halfAvgProfit: Int = 0,
     val yesterdayDl: Int = 0,
     val halfAvgDl: Int = 0,
-    val isLoading: Boolean = false,
+    val isLoadingOverview: Boolean = false,
 
     val username: String = "开发者",
     val avatarUrl: String = "https://gss0.baidu.com/-fo3dSag_xI4khGko9WTAnF6hhy/zhidao/pic/item/bd315c6034a85edf3b752e104b540923dd54750c.jpg",
@@ -154,6 +219,7 @@ data class MainViewState(
 sealed class MainViewEvent {
     data class RouteToPath(val path: String) : MainViewEvent()
     data class ShowToast(val msg: String) : MainViewEvent()
+    data object MaybeDataNoRefresh : MainViewEvent()
 }
 
 sealed class MainViewAction {

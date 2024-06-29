@@ -4,11 +4,13 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.lemon.mcdevmanager.data.database.dao.InfoDao
 import com.lemon.mcdevmanager.data.database.dao.UserDao
+import com.lemon.mcdevmanager.data.database.entities.OverviewEntity
 import com.lemon.mcdevmanager.data.database.entities.UserEntity
 
 @Database(
-    entities = [UserEntity::class],
+    entities = [UserEntity::class, OverviewEntity::class],
     version = 1
 )
 abstract class AppDataBase : RoomDatabase() {
@@ -30,5 +32,7 @@ abstract class AppDataBase : RoomDatabase() {
     }
 
     abstract fun userDao(): UserDao
+
+    abstract fun infoDao(): InfoDao
 
 }
