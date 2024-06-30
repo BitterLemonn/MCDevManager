@@ -101,4 +101,10 @@ dependencies {
     implementation (libs.coil)
     implementation(libs.coil.compose)
     implementation(libs.coil.gif)
+
+    // chart
+    implementation (libs.mpandroidchart)
+
+    // compose extend view
+    implementation(libs.composeviews)
 }

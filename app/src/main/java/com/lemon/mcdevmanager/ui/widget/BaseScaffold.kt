@@ -2,8 +2,6 @@ package com.lemon.mcdevmanager.ui.widget
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -15,9 +13,11 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.lemon.mcdevmanager.data.common.FEEDBACK_PAGE
 import com.lemon.mcdevmanager.data.common.LOGIN_PAGE
 import com.lemon.mcdevmanager.data.common.MAIN_PAGE
 import com.lemon.mcdevmanager.data.common.SPLASH_PAGE
+import com.lemon.mcdevmanager.ui.page.FeedbackPage
 import com.lemon.mcdevmanager.ui.page.LoginPage
 import com.lemon.mcdevmanager.ui.page.MainPage
 import com.lemon.mcdevmanager.ui.page.SplashPage
@@ -66,6 +66,12 @@ fun BaseScaffold() {
             }
             composable(route = MAIN_PAGE) {
                 MainPage(
+                    navController = navController,
+                    showToast = { msg, flag -> showToast(msg, flag) }
+                )
+            }
+            composable(route = FEEDBACK_PAGE) {
+                FeedbackPage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) }
                 )

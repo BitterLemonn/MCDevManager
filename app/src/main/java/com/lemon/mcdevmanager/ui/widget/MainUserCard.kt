@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -26,6 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.lemon.mcdevmanager.R
 import com.lemon.mcdevmanager.ui.theme.AppTheme
 
 @Composable
@@ -39,6 +41,7 @@ fun MainUserCard(
     val context = LocalContext.current
 
     var levelImg by remember { mutableIntStateOf(0) }
+    val isLoadingAvatar by remember { mutableStateOf(true) }
 
     LaunchedEffect(key1 = mainLevel) {
         var levelImgStr = when (mainLevel) {
@@ -83,7 +86,8 @@ fun MainUserCard(
                         .padding(12.dp)
                         .size(32.dp)
                         .clip(CircleShape)
-                        .align(Alignment.CenterVertically)
+                        .align(Alignment.CenterVertically),
+                    placeholder = painterResource(id = R.drawable.img_avatar)
                 )
                 Text(
                     text = username,
@@ -93,9 +97,11 @@ fun MainUserCard(
                 )
             }
             if (mainLevel != 0 && levelImg != 0) {
-                Row(modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .padding(end = 8.dp)) {
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .padding(end = 8.dp)
+                ) {
                     Text(
                         text = levelText,
                         modifier = Modifier.align(Alignment.CenterVertically),

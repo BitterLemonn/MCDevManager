@@ -9,18 +9,20 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.toFontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.lemon.mcdevmanager.R
 import com.lemon.mcdevmanager.ui.theme.AppTheme
 import com.lemon.mcdevmanager.ui.theme.HeaderHeight
@@ -29,8 +31,8 @@ import com.lemon.mcdevmanager.ui.theme.TitleFontSize
 @Composable
 fun HeaderWidget(
     title: String,
-    leftAction: @Composable (() -> Unit)? = null,
-    rightAction: @Composable (() -> Unit)? = null
+    leftAction: @Composable ((Modifier) -> Unit)? = null,
+    rightAction: @Composable ((Modifier) -> Unit)? = null
 ) {
     Box(
         modifier = Modifier
@@ -46,17 +48,20 @@ fun HeaderWidget(
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .align(Alignment.Center)
+                    .align(Alignment.Center),
+                fontFamily = Font(R.font.minecraft_ae).toFontFamily(),
+                letterSpacing = 2.sp,
+                fontWeight = FontWeight.Bold
             )
         }
         if (leftAction != null) {
             Box(
                 modifier = Modifier
-                    .size(35.dp)
+                    .fillMaxHeight()
                     .align(Alignment.CenterStart)
                     .padding(5.dp)
             ) {
-                leftAction()
+                leftAction(Modifier.align(Alignment.Center))
             }
         }
     }
@@ -72,18 +77,11 @@ private fun HeaderWidgetPreview() {
                 painter = painterResource(id = R.drawable.ic_back),
                 contentDescription = null,
                 modifier = Modifier
-                    .size(30.dp)
+                    .fillMaxHeight()
                     .aspectRatio(1f)
-                    .fillMaxHeight(),
+                    .then(it),
                 contentScale = ContentScale.Crop,
                 colorFilter = ColorFilter.tint(AppTheme.colors.textColor)
-            )
-        },
-        rightAction = {
-            Box(
-                modifier = Modifier
-                    .size(30.dp)
-                    .background(Color.Red)
             )
         }
     )

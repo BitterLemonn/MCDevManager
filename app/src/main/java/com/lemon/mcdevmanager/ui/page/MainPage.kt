@@ -1,15 +1,17 @@
 package com.lemon.mcdevmanager.ui.page
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOut
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -24,8 +26,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.lemon.mcdevmanager.R
+import com.lemon.mcdevmanager.data.common.FEEDBACK_PAGE
 import com.lemon.mcdevmanager.data.global.AppContext
+import com.lemon.mcdevmanager.ui.widget.FunctionCard
 import com.lemon.mcdevmanager.ui.widget.MainUserCard
+import com.lemon.mcdevmanager.ui.widget.ProfitCard
 import com.lemon.mcdevmanager.ui.widget.ProfitWidget
 import com.lemon.mcdevmanager.ui.widget.SNACK_ERROR
 import com.lemon.mcdevmanager.ui.widget.TipsCard
@@ -57,8 +62,17 @@ fun MainPage(
         viewModel.dispatch(MainViewAction.LoadData(AppContext.nowNickname))
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .animateContentSize()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .animateContentSize()
+                .verticalScroll(rememberScrollState())
+        ) {
             MainUserCard(
                 username = states.username,
                 avatarUrl = states.avatarUrl,
@@ -89,6 +103,20 @@ fun MainPage(
                     content = "昨日数据可能未更新",
                     dismissText = "知道了"
                 ) { isShowNotice = false }
+            }
+            ProfitCard(
+                realMoney = states.realMoney,
+                taxMoney = states.taxMoney,
+                isLoading = states.isLoadingOverview
+            )
+            FunctionCard(icon = R.drawable.ic_analyze, title = "数据分析") {
+
+            }
+            FunctionCard(icon = R.drawable.ic_feedback, title = "玩家反馈") {
+                navController.navigate(FEEDBACK_PAGE)
+            }
+            FunctionCard(icon = R.drawable.ic_profit, title = "收益管理") {
+
             }
         }
     }

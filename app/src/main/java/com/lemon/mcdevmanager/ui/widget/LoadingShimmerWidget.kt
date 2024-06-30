@@ -10,9 +10,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -22,87 +26,85 @@ import androidx.compose.ui.unit.dp
 import kotlin.math.pow
 import kotlin.math.sqrt
 
-@Composable
-private fun LoadingShimmer(
-    modifier: Modifier = Modifier,
-    xShimmer: Float,
-    yShimmer: Float,
-    gradientWidth: Float,
-    content: @Composable () -> Unit
-) {
-    val colors = if (!isSystemInDarkTheme()) listOf(
-        Color.LightGray.copy(alpha = 0.4f),
-        Color.LightGray.copy(alpha = 0.1f),
-        Color.LightGray.copy(alpha = 0.4f)
-    ) else listOf(
-        Color.DarkGray.copy(alpha = 0.9f),
-        Color.DarkGray.copy(alpha = 0.2f),
-        Color.DarkGray.copy(alpha = 0.9f)
-    )
+fun Modifier.shimmerLoadingAnimation(
+    isLoadingCompleted: Boolean = true,
+    isLightModeActive: Boolean = true,
+    widthOfShadowBrush: Int = 500,
+    angleOfAxisY: Float = 270f,
+    durationMillis: Int = 1000,
+): Modifier {
+    if (isLoadingCompleted) {
+        return this
+    }
+    else {
+        return composed {
+            val shimmerColors = ShimmerAnimationData(isLightMode = isLightModeActive).getColours()
 
-    val brush = Brush.linearGradient(
-        colors = colors,
-        start = Offset(xShimmer - gradientWidth, yShimmer - gradientWidth),
-        end = Offset(xShimmer, yShimmer)
-    )
+            val transition = rememberInfiniteTransition(label = "")
 
-    Box(
-        modifier = Modifier
-            .then(modifier)
-            .background(brush = brush)
-    ) {
-        content()
+            val translateAnimation = transition.animateFloat(
+                initialValue = 0f,
+                targetValue = (durationMillis + widthOfShadowBrush).toFloat(),
+                animationSpec = infiniteRepeatable(
+                    animation = tween(
+                        durationMillis = durationMillis,
+                        easing = LinearEasing,
+                    ),
+                    repeatMode = RepeatMode.Restart,
+                ),
+                label = "Shimmer loading animation",
+            )
+
+            this.background(
+                brush = Brush.linearGradient(
+                    colors = shimmerColors,
+                    start = Offset(x = translateAnimation.value - widthOfShadowBrush, y = 0.0f),
+                    end = Offset(x = translateAnimation.value, y = angleOfAxisY),
+                ),
+            )
+        }
     }
 }
 
-@Composable
-fun ShimmerAnimation(
-    modifier: Modifier = Modifier,
-    animationDuration: Int = 3000,
-    content: @Composable () -> Unit
+data class ShimmerAnimationData(
+    private val isLightMode: Boolean
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "")
-    val diagonalLength = sqrt(
-        LocalConfiguration.current.screenWidthDp.toDouble()
-            .pow(2.0) + LocalConfiguration.current.screenHeightDp.toDouble().pow(2.0)
-    ).toFloat()
-    val gradientWidth = diagonalLength / 2  // 动态计算gradientWidth
-    val xShimmer = infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = diagonalLength,
-        animationSpec = infiniteRepeatable(
-            tween(animationDuration, easing = LinearEasing),
-            RepeatMode.Restart
-        ), label = ""
-    )
+    fun getColours(): List<Color> {
+        return if (isLightMode) {
+            val color = Color.White
 
-    val yShimmer = infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = diagonalLength,
-        animationSpec = infiniteRepeatable(
-            tween(animationDuration, easing = LinearEasing),
-            RepeatMode.Restart
-        ), label = ""
-    )
+            listOf(
+                color.copy(alpha = 0.3f),
+                color.copy(alpha = 0.5f),
+                color.copy(alpha = 1.0f),
+                color.copy(alpha = 0.5f),
+                color.copy(alpha = 0.3f),
+            )
+        } else {
+            val color = Color.Black
 
-    LoadingShimmer(
-        modifier = modifier,
-        xShimmer = xShimmer.value,
-        yShimmer = yShimmer.value,
-        gradientWidth = gradientWidth,
-        content = content
-    )
+            listOf(
+                color.copy(alpha = 0.0f),
+                color.copy(alpha = 0.3f),
+                color.copy(alpha = 0.5f),
+                color.copy(alpha = 0.3f),
+                color.copy(alpha = 0.0f),
+            )
+        }
+    }
 }
+
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun LoadingShimmerPreview() {
-    ShimmerAnimation {
-        Box(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth()
-                .background(Color.Gray)
-        )
-    }
+    Box(
+        modifier = Modifier
+//            .padding(8.dp)
+            .fillMaxWidth()
+            .height(200.dp)
+//            .clip(RoundedCornerShape(8.dp))
+            .background(Color.LightGray)
+            .shimmerLoadingAnimation(false)
+    )
 }

@@ -25,9 +25,11 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.text.DecimalFormat
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.time.temporal.ChronoUnit
 
 class MainViewModel : ViewModel() {
     private val repository = MainRepository.getInstance()
@@ -49,9 +51,9 @@ class MainViewModel : ViewModel() {
                 val cookie = AppContext.cookiesStore[nickname]
                     ?: throw Exception("未找到用户信息, 请重新登录")
                 CookiesStore.addCookie(NETEASE_USER_COOKIE, cookie)
+                getUserInfoLogic()
                 getOverviewLogic()
             }.onStart {
-                Logger.d("开始获取概览信息")
                 _viewStates.setState { copy(isLoadingOverview = true) }
                 CookiesStore.clearCookies()
             }.catch {
@@ -61,49 +63,17 @@ class MainViewModel : ViewModel() {
                 _viewStates.setState { copy(isLoadingOverview = false) }
             }.flowOn(Dispatchers.IO).collect()
         }
-
-        viewModelScope.launch(Dispatchers.IO) {
-            flow<Unit> {
-                val cookie = AppContext.cookiesStore[nickname]
-                    ?: throw Exception("未找到用户信息, 请重新登录")
-                CookiesStore.addCookie(NETEASE_USER_COOKIE, cookie)
-                getUserInfoLogic()
-            }.onStart {
-                Logger.d("开始获取用户信息")
-                CookiesStore.clearCookies()
-            }.catch {
-                _viewEvents.setEvent(MainViewEvent.ShowToast(it.message ?: "未知错误"))
-            }.onCompletion {
-                CookiesStore.clearCookies()
-            }.flowOn(Dispatchers.IO).collect()
-        }
     }
 
     private suspend fun getUserInfoLogic() {
         when (val userInfo = repository.getUserInfo()) {
             is NetworkState.Success -> {
+                getLevelInfoLogic()
                 userInfo.data?.let {
-                    var mainLevel = if (it.level > 20) 5 else it.level / 4
-                    var mod = if (it.level > 20) it.level - 19 else it.level % 4
-                    if (mod == 0) {
-                        mainLevel -= 1
-                        mod = 4
-                    }
-                    val levelText = when (mainLevel) {
-                        1 -> "元气新星"
-                        2 -> "巧手工匠"
-                        3 -> "杰出精英"
-                        4 -> "创造大师"
-                        5 -> "传奇宗师"
-                        else -> "元气新星"
-                    }
                     _viewStates.setState {
                         copy(
                             username = it.nickname,
-                            avatarUrl = it.headImg,
-                            mainLevel = mainLevel,
-                            subLevel = mod,
-                            levelText = "$levelText LV.$mod"
+                            avatarUrl = it.headImg
                         )
                     }
                 } ?: throw Exception("获取用户信息失败")
@@ -115,11 +85,39 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    private suspend fun getLevelInfoLogic() {
+        when (val levelInfo = repository.getLevelInfo()) {
+            is NetworkState.Success -> {
+                levelInfo.data?.let {
+                    val levelText = when (it.currentClass) {
+                        1 -> "元气新星"
+                        2 -> "巧手工匠"
+                        3 -> "杰出精英"
+                        4 -> "创造大师"
+                        5 -> "传奇宗师"
+                        else -> "元气新星"
+                    }
+                    _viewStates.setState {
+                        copy(
+                            mainLevel = it.currentClass,
+                            subLevel = it.currentLevel,
+                            levelText = "$levelText LV. ${it.currentLevel}"
+                        )
+                    }
+                } ?: throw Exception("获取等级信息失败")
+            }
+
+            is NetworkState.Error -> {
+                _viewEvents.setEvent(MainViewEvent.ShowToast(levelInfo.msg))
+            }
+        }
+    }
+
     private suspend fun getOverviewLogic() {
         val overviewEntity = withContext(Dispatchers.IO) {
             GlobalDataBase.database.infoDao().getLatestOverviewByNickname(AppContext.nowNickname)
         }
-        Logger.d("overviewEntity: $overviewEntity")
+
         if (overviewEntity != null) {
             val instant = Instant.ofEpochMilli(overviewEntity.timestamp)
             val chinaZoneId = ZoneId.of("Asia/Shanghai")
@@ -128,6 +126,8 @@ class MainViewModel : ViewModel() {
             var isLoad = false
             if (chinaTime.hour >= 11 && overviewEntity.yesterdayDownload != 0) isLoad = true
             else if (chinaTime.hour >= 12) isLoad = true
+            if (isDifferentDay(overviewEntity.timestamp)) isLoad = false
+
             if (isLoad) {
                 _viewStates.setState {
                     copy(
@@ -143,6 +143,7 @@ class MainViewModel : ViewModel() {
                 }
             } else getOverviewByServer()
         } else getOverviewByServer()
+        computeMoney()
     }
 
     private suspend fun getOverviewByServer() {
@@ -196,6 +197,33 @@ class MainViewModel : ViewModel() {
             }
         }
     }
+
+    private fun computeMoney() {
+        val thisMonthProfit = viewStates.value.curMonthProfit / 100.0
+
+        var realMoney = 0.0
+        realMoney += if (thisMonthProfit > 1500) 1500 * 0.65 else thisMonthProfit * 0.65
+        if (thisMonthProfit > 1500) realMoney +=
+            (if (thisMonthProfit < 50000) (thisMonthProfit - 1500) * 0.7 else 50000 * 0.7) * 0.65
+        if (thisMonthProfit > 50000) realMoney += (thisMonthProfit - 50000) * 0.75 * 0.65
+
+        val taxMoney =
+            if (realMoney < 800) 0.0 else if (realMoney < 4000) (realMoney - 800) * 0.2 else (realMoney * 0.8) * 0.2
+
+        val df = DecimalFormat("0.00")
+        val taxMoneyStr = df.format(taxMoney)
+        val realMoneyStr = df.format(realMoney - taxMoney)
+        _viewStates.setState { copy(realMoney = realMoneyStr, taxMoney = taxMoneyStr) }
+    }
+
+    private fun isDifferentDay(timestamp: Long): Boolean {
+        val chinaZoneId = ZoneId.of("Asia/Shanghai")
+        val timeToCheck = ZonedDateTime.ofInstant(Instant.ofEpochMilli(timestamp), chinaZoneId)
+        val currentTimeInChina = ZonedDateTime.now(chinaZoneId)
+
+        return !timeToCheck.truncatedTo(ChronoUnit.DAYS)
+            .isEqual(currentTimeInChina.truncatedTo(ChronoUnit.DAYS))
+    }
 }
 
 data class MainViewState(
@@ -211,9 +239,13 @@ data class MainViewState(
 
     val username: String = "开发者",
     val avatarUrl: String = "https://gss0.baidu.com/-fo3dSag_xI4khGko9WTAnF6hhy/zhidao/pic/item/bd315c6034a85edf3b752e104b540923dd54750c.jpg",
+
     val mainLevel: Int = 0,
     val subLevel: Int = 0,
-    val levelText: String = ""
+    val levelText: String = "",
+
+    val realMoney: String = "0.00",
+    val taxMoney: String = "0.00"
 )
 
 sealed class MainViewEvent {
