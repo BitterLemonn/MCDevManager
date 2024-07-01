@@ -5,12 +5,17 @@ import com.lemon.mcdevmanager.data.CommonInterceptor
 import com.lemon.mcdevmanager.data.common.JSONConverter
 import com.lemon.mcdevmanager.data.common.NETEASE_MC_DEV_LINK
 import com.lemon.mcdevmanager.data.netease.feedback.FeedbackResponseBean
+import com.lemon.mcdevmanager.data.netease.feedback.ReplyBean
+import com.lemon.mcdevmanager.utils.NoNeedData
 import com.lemon.mcdevmanager.utils.ResponseData
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
+import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.PUT
+import retrofit2.http.Path
 import retrofit2.http.Query
 import java.util.concurrent.TimeUnit
 
@@ -21,6 +26,12 @@ interface FeedbackApi {
         @Query("start") from: Int,
         @Query("span") size: Int
     ): ResponseData<FeedbackResponseBean>
+
+    @PUT("/items/feedback/pe/{id}/reply")
+    suspend fun sendReply(
+        @Path("id") feedbackId: String,
+        @Body content: ReplyBean
+    ): ResponseData<NoNeedData>
 
     companion object {
         /**

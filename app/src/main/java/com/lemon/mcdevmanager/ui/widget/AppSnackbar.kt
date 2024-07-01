@@ -19,7 +19,8 @@ fun AppSnackbar(
     data: SnackbarData
 ) {
     Snackbar(
-        snackbarData = data, actionColor = when (data.visuals.actionLabel) {
+        snackbarData = data,
+        containerColor = when (data.visuals.actionLabel) {
             SNACK_INFO -> AppTheme.colors.info
             SNACK_WARN -> AppTheme.colors.warn
             SNACK_ERROR -> AppTheme.colors.error

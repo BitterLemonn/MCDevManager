@@ -88,7 +88,6 @@ object UnifiedExceptionHandler {
     }
 
     private fun <T> parseData(result: ResponseData<T>): NetworkState<T> {
-        Logger.d("解析数据：$result")
         return when (result.status) {
             "200", "ok", "OK", "Ok" -> result.data?.let { NetworkState.Success(result.data) }
                 ?: NetworkState.Success(msg = result.status)

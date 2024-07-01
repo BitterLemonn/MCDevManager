@@ -144,6 +144,9 @@ class MainViewModel : ViewModel() {
             } else getOverviewByServer()
         } else getOverviewByServer()
         computeMoney()
+
+        if (ZonedDateTime.now().dayOfMonth <= 10)
+            _viewEvents.setEvent(MainViewEvent.ShowLastMonthProfit)
     }
 
     private suspend fun getOverviewByServer() {
@@ -199,21 +202,26 @@ class MainViewModel : ViewModel() {
     }
 
     private fun computeMoney() {
+        val lastMonthProfit = viewStates.value.lastMonthProfit / 100.0
         val thisMonthProfit = viewStates.value.curMonthProfit / 100.0
 
-        var realMoney = 0.0
-        realMoney += if (thisMonthProfit > 1500) 1500 * 0.65 else thisMonthProfit * 0.65
-        if (thisMonthProfit > 1500) realMoney +=
-            (if (thisMonthProfit < 50000) (thisMonthProfit - 1500) * 0.7 else 50000 * 0.7) * 0.65
-        if (thisMonthProfit > 50000) realMoney += (thisMonthProfit - 50000) * 0.75 * 0.65
-
-        val taxMoney =
-            if (realMoney < 800) 0.0 else if (realMoney < 4000) (realMoney - 800) * 0.2 else (realMoney * 0.8) * 0.2
-
+        val realMoney = getRealMoney(thisMonthProfit)
+        val taxMoney = getTaxMoney(realMoney)
+        val lastRealMoney = getRealMoney(lastMonthProfit)
+        val lastTaxMoney = getTaxMoney(lastRealMoney)
         val df = DecimalFormat("0.00")
         val taxMoneyStr = df.format(taxMoney)
         val realMoneyStr = df.format(realMoney - taxMoney)
-        _viewStates.setState { copy(realMoney = realMoneyStr, taxMoney = taxMoneyStr) }
+        val lastTaxMoneyStr = df.format(lastTaxMoney)
+        val lastRealMoneyStr = df.format(lastRealMoney - lastTaxMoney)
+        _viewStates.setState {
+            copy(
+                realMoney = realMoneyStr,
+                taxMoney = taxMoneyStr,
+                lastRealMoney = lastRealMoneyStr,
+                lastTaxMoney = lastTaxMoneyStr
+            )
+        }
     }
 
     private fun isDifferentDay(timestamp: Long): Boolean {
@@ -223,6 +231,18 @@ class MainViewModel : ViewModel() {
 
         return !timeToCheck.truncatedTo(ChronoUnit.DAYS)
             .isEqual(currentTimeInChina.truncatedTo(ChronoUnit.DAYS))
+    }
+
+    private fun getRealMoney(profit: Double): Double {
+        var realMoney = 0.0
+        realMoney += if (profit > 1500) 1500 * 0.65 else profit * 0.65
+        if (profit > 1500) realMoney += (if (profit < 50000) (profit - 1500) * 0.7 else 50000 * 0.7) * 0.65
+        if (profit > 50000) realMoney += (profit - 50000) * 0.75 * 0.65
+        return realMoney
+    }
+
+    private fun getTaxMoney(realMoney: Double): Double {
+        return if (realMoney < 800) 0.0 else if (realMoney < 4000) (realMoney - 800) * 0.2 else (realMoney * 0.8) * 0.2
     }
 }
 
@@ -245,13 +265,17 @@ data class MainViewState(
     val levelText: String = "",
 
     val realMoney: String = "0.00",
-    val taxMoney: String = "0.00"
+    val taxMoney: String = "0.00",
+
+    val lastRealMoney: String = "0.00",
+    val lastTaxMoney: String = "0.00"
 )
 
 sealed class MainViewEvent {
     data class RouteToPath(val path: String) : MainViewEvent()
     data class ShowToast(val msg: String) : MainViewEvent()
     data object MaybeDataNoRefresh : MainViewEvent()
+    data object ShowLastMonthProfit : MainViewEvent()
 }
 
 sealed class MainViewAction {

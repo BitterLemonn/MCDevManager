@@ -33,6 +33,7 @@ import java.text.DecimalFormat
 
 @Composable
 fun ProfitCard(
+    title: String,
     realMoney: String,
     taxMoney: String,
     isLoading: Boolean = true
@@ -60,7 +61,7 @@ fun ProfitCard(
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = "本月收益速算",
+                    text = title,
                     fontSize = 16.sp,
                     modifier = Modifier.align(Alignment.CenterVertically),
                     color = AppTheme.colors.textColor
@@ -133,5 +134,9 @@ fun ProfitCard(
 @Composable
 @Preview(showBackground = true, showSystemUi = true)
 private fun PreviewProfitCard() {
-    ProfitCard(realMoney = "100.0", taxMoney = "20.0")
+    ProfitCard(
+        title = "本月收益速算",
+        realMoney = "100.0",
+        taxMoney = "20.0"
+    )
 }

@@ -49,6 +49,7 @@ fun MainPage(
 
     val states = viewModel.viewStates.collectAsState().value
     var isShowNotice by remember { mutableStateOf(false) }
+    var isShowLastMonthProfit by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = Unit) {
         viewModel.viewEvents.observeEvent(lifecycleOwner) { event ->
@@ -56,6 +57,7 @@ fun MainPage(
                 is MainViewEvent.ShowToast -> showToast(event.msg, SNACK_ERROR)
                 is MainViewEvent.RouteToPath -> navController.navigate(event.path)
                 is MainViewEvent.MaybeDataNoRefresh -> isShowNotice = true
+                is MainViewEvent.ShowLastMonthProfit -> isShowLastMonthProfit = true
             }
         }
 
@@ -71,7 +73,6 @@ fun MainPage(
             modifier = Modifier
                 .fillMaxSize()
                 .animateContentSize()
-                .verticalScroll(rememberScrollState())
         ) {
             MainUserCard(
                 username = states.username,
@@ -80,43 +81,66 @@ fun MainPage(
                 subLevel = states.subLevel,
                 levelText = states.levelText
             )
-            ProfitWidget(
-                curMonthProfit = states.curMonthProfit,
-                curMonthDl = states.curMonthDl,
-                lastMonthProfit = states.lastMonthProfit,
-                lastMonthDl = states.lastMonthDl,
-                yesterdayDl = states.yesterdayDl,
-                yesterdayProfit = states.yesterdayProfit,
-                halfAvgProfit = states.halfAvgProfit,
-                halfAvgDl = states.halfAvgDl,
-                isLoading = states.isLoadingOverview
-            )
-            AnimatedVisibility(
-                visible = isShowNotice,
-                enter = fadeIn(animationSpec = tween(300))
-                        + slideInHorizontally(animationSpec = tween(300)),
-                exit = fadeOut(animationSpec = tween(300)) +
-                        slideOutHorizontally(animationSpec = tween(300))
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .animateContentSize()
+                    .verticalScroll(rememberScrollState())
             ) {
-                TipsCard(
-                    headerIcon = R.drawable.ic_notice,
-                    content = "昨日数据可能未更新",
-                    dismissText = "知道了"
-                ) { isShowNotice = false }
-            }
-            ProfitCard(
-                realMoney = states.realMoney,
-                taxMoney = states.taxMoney,
-                isLoading = states.isLoadingOverview
-            )
-            FunctionCard(icon = R.drawable.ic_analyze, title = "数据分析") {
 
-            }
-            FunctionCard(icon = R.drawable.ic_feedback, title = "玩家反馈") {
-                navController.navigate(FEEDBACK_PAGE)
-            }
-            FunctionCard(icon = R.drawable.ic_profit, title = "收益管理") {
+                ProfitWidget(
+                    curMonthProfit = states.curMonthProfit,
+                    curMonthDl = states.curMonthDl,
+                    lastMonthProfit = states.lastMonthProfit,
+                    lastMonthDl = states.lastMonthDl,
+                    yesterdayDl = states.yesterdayDl,
+                    yesterdayProfit = states.yesterdayProfit,
+                    halfAvgProfit = states.halfAvgProfit,
+                    halfAvgDl = states.halfAvgDl,
+                    isLoading = states.isLoadingOverview
+                )
+                AnimatedVisibility(
+                    visible = isShowNotice,
+                    enter = fadeIn(animationSpec = tween(300))
+                            + slideInHorizontally(animationSpec = tween(300)),
+                    exit = fadeOut(animationSpec = tween(300)) +
+                            slideOutHorizontally(animationSpec = tween(300))
+                ) {
+                    TipsCard(
+                        headerIcon = R.drawable.ic_notice,
+                        content = "昨日数据可能未更新",
+                        dismissText = "知道了"
+                    ) { isShowNotice = false }
+                }
+                ProfitCard(
+                    title = "本月收益速算",
+                    realMoney = states.realMoney,
+                    taxMoney = states.taxMoney,
+                    isLoading = states.isLoadingOverview
+                )
+                AnimatedVisibility(
+                    visible = isShowLastMonthProfit,
+                    enter = fadeIn(animationSpec = tween(300))
+                            + slideInHorizontally(animationSpec = tween(300)),
+                    exit = fadeOut(animationSpec = tween(300)) +
+                            slideOutHorizontally(animationSpec = tween(300))
+                ) {
+                    ProfitCard(
+                        title = "上月收益速算",
+                        realMoney = states.lastRealMoney,
+                        taxMoney = states.lastTaxMoney,
+                        isLoading = states.isLoadingOverview
+                    )
+                }
+                FunctionCard(icon = R.drawable.ic_analyze, title = "数据分析") {
 
+                }
+                FunctionCard(icon = R.drawable.ic_feedback, title = "玩家反馈") {
+                    navController.navigate(FEEDBACK_PAGE)
+                }
+                FunctionCard(icon = R.drawable.ic_profit, title = "收益管理") {
+
+                }
             }
         }
     }

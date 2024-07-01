@@ -7,6 +7,7 @@ import com.lemon.mcdevmanager.data.repository.FeedbackRepository
 import com.lemon.mcdevmanager.utils.NetworkState
 import com.zj.mvi.core.SharedFlowEvents
 import com.zj.mvi.core.setEvent
+import com.zj.mvi.core.setState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -29,6 +30,20 @@ class FeedbackViewModel : ViewModel() {
     fun dispatch(action: FeedbackAction) {
         when (action) {
             is FeedbackAction.LoadFeedback -> loadFeedback()
+            is FeedbackAction.RefreshFeedback -> {
+                _viewStates.setState { copy(feedbackList = emptyList(), nowPage = 1) }
+                loadFeedback()
+            }
+
+            is FeedbackAction.UpdateReplyContent -> {
+                _viewStates.setState { copy(replyContent = action.content) }
+            }
+
+            is FeedbackAction.UpdateReplyId -> {
+                _viewStates.setState { copy(replyId = action.id) }
+            }
+
+            is FeedbackAction.ReplyFeedback -> replyFeedback()
         }
     }
 
@@ -37,9 +52,9 @@ class FeedbackViewModel : ViewModel() {
             flow<Unit> {
                 loadFeedbackLogic()
             }.onStart {
-                _viewStates.value = _viewStates.value.copy(isLoading = true)
+                _viewStates.value = _viewStates.value.copy(isLoadingList = true)
             }.onCompletion {
-                _viewStates.value = _viewStates.value.copy(isLoading = false)
+                _viewStates.value = _viewStates.value.copy(isLoadingList = false)
             }.catch {
                 _viewEvents.setEvent(FeedbackEvent.ShowToast(it.message ?: "获取反馈失败: $it"))
             }.flowOn(Dispatchers.IO).collect()
@@ -60,19 +75,56 @@ class FeedbackViewModel : ViewModel() {
             is NetworkState.Error -> throw Exception(result.msg)
         }
     }
+
+    private fun replyFeedback() {
+        viewModelScope.launch {
+            flow<Unit> {
+                if (_viewStates.value.replyContent.isEmpty()) {
+                    throw Exception("回复内容不能为空")
+                }
+                replyFeedbackLogic()
+            }.onStart {
+                _viewStates.value = _viewStates.value.copy(isLoadingReply = true)
+            }.onCompletion {
+                _viewStates.value = _viewStates.value.copy(isLoadingReply = false)
+            }.catch {
+                _viewEvents.setEvent(FeedbackEvent.ShowToast(it.message ?: "回复反馈失败: $it"))
+            }.flowOn(Dispatchers.IO).collect()
+        }
+    }
+
+    private suspend fun replyFeedbackLogic() {
+        when (val result =
+            repository.sendReply(_viewStates.value.replyId, _viewStates.value.replyContent)) {
+            is NetworkState.Success -> {
+                _viewEvents.setEvent(FeedbackEvent.ShowToast("回复成功"))
+            }
+
+            is NetworkState.Error -> throw Exception(result.msg)
+        }
+    }
 }
 
 sealed class FeedbackAction {
     data object LoadFeedback : FeedbackAction()
+    data object RefreshFeedback : FeedbackAction()
+    data class UpdateReplyContent(val content: String) : FeedbackAction()
+    data class UpdateReplyId(val id: String) : FeedbackAction()
+    data object ReplyFeedback : FeedbackAction()
 }
 
 data class FeedbackViewState(
-    val isLoading: Boolean = false,
+    val isLoadingList: Boolean = false,
     val feedbackList: List<FeedbackBean> = emptyList(),
-    val nowPage: Int = 1
+    val nowPage: Int = 1,
+
+    val replyContent: String = "",
+    val replyId: String = "",
+    val isLoadingReply: Boolean = false
 )
 
 sealed class FeedbackEvent {
     data class ShowToast(val msg: String) : FeedbackEvent()
     data class RouteToPath(val path: String) : FeedbackEvent()
+    data object ReplySuccess : FeedbackEvent()
 }

@@ -22,3 +22,6 @@ sealed class NetworkState<out T> {
     data class Success<T>(val data: T? = null, val msg: String? = null) : NetworkState<T>()
     data class Error<T>(val msg: String, val e: Exception? = null) : NetworkState<T>()
 }
+
+@Serializable
+data object NoNeedData

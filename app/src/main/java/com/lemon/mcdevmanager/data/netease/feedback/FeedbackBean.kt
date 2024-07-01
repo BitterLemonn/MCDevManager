@@ -6,27 +6,27 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class FeedbackBean(
     @SerialName("_id")
-    val id: String,
+    val id: String = "0",
     @SerialName("commit_nickname")
-    val commitNickname: String,
+    val commitNickname: String = "",
     @SerialName("commit_uid")
-    val commitUid: String,
-    val content: String,
+    val commitUid: String = "",
+    val content: String = "",
     @SerialName("create_time")
-    val createTime: Long,
+    val createTime: Long = 0,
     @SerialName("feedback_log_file")
-    val feedbackLogFile: String,
+    val feedbackLogFile: String = "",
     @SerialName("forbid_reply")
-    val forbidReply: Boolean,
+    val forbidReply: Boolean = false,
     @SerialName("have_log_file")
-    val haveLogFile: Boolean,
-    val iid: String,
+    val haveLogFile: Boolean = false,
+    val iid: String = "",
     @SerialName("pic_list")
-    val picList: List<String>,
+    val picList: List<String> = emptyList(),
     val reply: String? = null,
     @SerialName("res_name")
-    val resName: String,
-    val type: String
+    val resName: String = "",
+    val type: String = ""
 )
 
 @Serializable
