@@ -104,10 +104,18 @@ fun FeedbackPage(
 
     var bigImageUrl by remember { mutableStateOf("") }
     var detailItem by remember { mutableStateOf(FeedbackBean()) }
+    var isShowDetail by remember { mutableStateOf(false) }
     val imageLoader = remember { ImageLoader.Builder(context).crossfade(true).build() }
 
     val replyRequester = remember { FocusRequester() }
     var isFocusReply by remember { mutableStateOf(false) }
+
+    fun resetDetail(){
+        isShowDetail = false
+        keyboard?.hide()
+        replyRequester.freeFocus()
+        viewModel.dispatch(FeedbackAction.UpdateReplyContent(""))
+    }
 
     LaunchedEffect(key1 = Unit) {
         viewModel.dispatch(FeedbackAction.LoadFeedback)
@@ -116,10 +124,7 @@ fun FeedbackPage(
                 is FeedbackEvent.ShowToast -> showToast(event.msg, SNACK_ERROR)
                 is FeedbackEvent.RouteToPath -> navController.navigate(event.path)
                 is FeedbackEvent.ReplySuccess -> {
-                    detailItem = FeedbackBean()
-                    keyboard?.hide()
-                    replyRequester.freeFocus()
-                    viewModel.dispatch(FeedbackAction.UpdateReplyContent(""))
+
                     viewModel.dispatch(FeedbackAction.RefreshFeedback)
                 }
             }
@@ -180,6 +185,7 @@ fun FeedbackPage(
                             indication = rememberRipple()
                         ) {
                             detailItem = item
+                            isShowDetail = true
                             if (isFocusReply) keyboard?.show()
                         },
                         modName = item.resName,
@@ -204,7 +210,7 @@ fun FeedbackPage(
 
     // 详情页
     AnimatedVisibility(
-        visible = detailItem.id != "0",
+        visible = isShowDetail,
         enter = expandVertically() + fadeIn(),
         exit = shrinkVertically() + fadeOut()
     ) {
@@ -220,10 +226,7 @@ fun FeedbackPage(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null
                 ) {
-                    detailItem = FeedbackBean()
-                    keyboard?.hide()
-                    Logger.d("free focus: ${replyRequester.freeFocus()}")
-                    viewModel.dispatch(FeedbackAction.UpdateReplyContent(""))
+                    resetDetail()
                 }
                 .verticalScroll(rememberScrollState())
                 .imePadding()
@@ -304,10 +307,10 @@ fun FeedbackPage(
             .fillMaxSize()
             .offset(y = getNavigationBarHeight(context).dp)
             .imePadding()
-            .alpha(if (isFocusReply && detailItem.id != "0") 1f else 0f)
+            .alpha(if (isShowDetail && isFocusReply) 1f else 0f)
     ) {
         OutlinedTextField(
-            enabled = detailItem.id != "0",
+            enabled = isShowDetail,
             value = states.replyContent,
             onValueChange = {
                 viewModel.dispatch(FeedbackAction.UpdateReplyContent(it))

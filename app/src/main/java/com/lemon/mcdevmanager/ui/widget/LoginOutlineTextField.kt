@@ -25,7 +25,8 @@ fun LoginOutlineTextField(
     keyboardType: KeyboardType = KeyboardType.Text,
     imeAction: ImeAction = ImeAction.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
-    visualTransformation: VisualTransformation = VisualTransformation.None
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    singleLine: Boolean = true
 ) {
     OutlinedTextField(
         value = value,
@@ -48,7 +49,7 @@ fun LoginOutlineTextField(
         keyboardOptions = KeyboardOptions.Default.copy(
             keyboardType = keyboardType, imeAction = imeAction
         ),
-        singleLine = true,
+        singleLine = singleLine,
         keyboardActions = keyboardActions,
         visualTransformation = visualTransformation
     )

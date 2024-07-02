@@ -1,6 +1,7 @@
 package com.lemon.mcdevmanager.ui.page
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -66,6 +67,7 @@ import com.lemon.mcdevmanager.ui.widget.SNACK_ERROR
 import com.lemon.mcdevmanager.viewModel.LoginViewAction
 import com.lemon.mcdevmanager.viewModel.LoginViewEvent
 import com.lemon.mcdevmanager.viewModel.LoginViewModel
+import com.orhanobut.logger.Logger
 import com.zj.mvi.core.observeEvent
 
 @Composable
@@ -77,7 +79,6 @@ fun LoginPage(
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
     val keyboardController = LocalSoftwareKeyboardController.current
-
     val states by viewModel.viewState.collectAsState()
 
     var isLoginSuccess by remember { mutableStateOf(false) }
@@ -160,28 +161,21 @@ fun LoginPage(
                                 },
                                 label = { Text("邮箱") },
                                 modifier = Modifier.height(animatedUsername),
-                                keyboardType = KeyboardType.Email,
+                                keyboardType = KeyboardType.Text,
                                 imeAction = ImeAction.Next
                             )
                         }
                     }
                     Spacer(modifier = Modifier.height(20.dp))
+                    // 密码 or Cookies
                     LoginOutlineTextField(
                         value = if (isUseCookies) states.cookies else states.password,
                         onValueChange = {
-                            if (isUseCookies) {
-                                viewModel.dispatch(LoginViewAction.UpdateCookies(it))
-                            } else {
-                                viewModel.dispatch(LoginViewAction.UpdatePassword(it))
-                            }
+                            if (isUseCookies) viewModel.dispatch(LoginViewAction.UpdateCookies(it))
+                            else viewModel.dispatch(LoginViewAction.UpdatePassword(it))
                         },
-                        label = {
-                            Text(
-                                text = if (isUseCookies) "Cookies" else "密码",
-                                modifier = Modifier.background(Color.Transparent)
-                            )
-                        },
-                        keyboardType = if (isUseCookies) KeyboardType.Ascii
+                        label = { Text(text = if (isUseCookies) "Cookies" else "密码") },
+                        keyboardType = if (isUseCookies) KeyboardType.Text
                         else KeyboardType.Password,
                         imeAction = ImeAction.Done,
                         visualTransformation = if (!isUseCookies) PasswordVisualTransformation()
@@ -189,8 +183,10 @@ fun LoginPage(
                         keyboardActions = KeyboardActions(onDone = {
                             viewModel.dispatch(LoginViewAction.Login)
                             keyboardController?.hide()
-                        })
+                        }),
+                        singleLine = !isUseCookies
                     )
+                    // 切换登录方式
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -216,6 +212,7 @@ fun LoginPage(
                             )
                         }
                     }
+                    // 登录按钮
                     Button(
                         onClick = {
                             viewModel.dispatch(LoginViewAction.Login)
@@ -234,6 +231,7 @@ fun LoginPage(
                 }
             }
         } else {
+            // 登录成功
             Box(modifier = Modifier.fillMaxWidth()) {
                 Image(
                     painter = painterResource(id = R.drawable.img_login_bg),

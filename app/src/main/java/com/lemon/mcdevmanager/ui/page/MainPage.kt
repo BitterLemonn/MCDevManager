@@ -200,13 +200,13 @@ fun MainPage(
                         )
                     }
                     FunctionCard(icon = R.drawable.ic_analyze, title = "数据分析") {
-
+                        coroutineScope.launch { showToast("更多功能请期待未来更新", SNACK_INFO) }
                     }
                     FunctionCard(icon = R.drawable.ic_feedback, title = "玩家反馈") {
                         navController.navigate(FEEDBACK_PAGE)
                     }
                     FunctionCard(icon = R.drawable.ic_profit, title = "收益管理") {
-
+                        coroutineScope.launch { showToast("更多功能请期待未来更新", SNACK_INFO) }
                     }
                 }
             }

@@ -218,8 +218,8 @@ class LoginViewModel : ViewModel() {
 
 data class LoginViewState(
     val isStartLogin: Boolean = false,
-    val username: String = "yuchu_liu@126.com",
-    val password: String = "2001413Liuyuchu",
+    val username: String = "",
+    val password: String = "",
     val cookies: String = "",
     val powerScript: String = ""
 )
