@@ -3,7 +3,7 @@ package com.lemon.mcdevmanager.ui.widget
 import android.text.TextUtils
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -63,17 +63,17 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun FeedbackCard(
     modifier: Modifier = Modifier,
-    id: String,
     modName: String,
     modUid: String,
     createTime: Long,
     type: String,
+    nickname: String,
     content: String,
     picList: List<String> = emptyList(),
     reply: String? = null,
     onClickImg: (String) -> Unit = {},
-    onClick: () -> Unit = {},
-    isExpanded: Boolean = false
+    isShowReply: Boolean = false,
+    extraContent: @Composable () -> Unit = {}
 ) {
     var contentStr by remember { mutableStateOf(content) }
     LaunchedEffect(key1 = content) {
@@ -97,13 +97,6 @@ fun FeedbackCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .clickable(
-                enabled = !isExpanded,
-                interactionSource = remember { MutableInteractionSource() },
-                indication = rememberRipple(),
-                onClick = onClick
-            )
             .animateContentSize()
             .then(modifier),
         colors = CardDefaults.cardColors(
@@ -111,136 +104,202 @@ fun FeedbackCard(
         ),
         shape = RoundedCornerShape(8.dp)
     ) {
-        Column(Modifier.fillMaxWidth()) {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 4.dp)
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_mod),
-                    contentDescription = "mod icon",
-                    modifier = Modifier
-                        .padding(start = 16.dp)
-                        .size(24.dp)
-                        .align(Alignment.CenterVertically),
-                    contentScale = ContentScale.Fit,
-                    colorFilter = ColorFilter.lighting(
-                        add = Color.Transparent,
-                        multiply = AppTheme.colors.primaryColor
-                    )
-                )
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.CenterVertically)
-                        .padding(end = 8.dp)
-                ) {
-                    Text(
-                        text = modName,
-                        fontSize = 16.sp,
-                        color = AppTheme.colors.textColor,
-                        modifier = Modifier.padding(start = 8.dp, end = 8.dp, top = 8.dp)
-                    )
-                    Text(
-                        text = modUid,
-                        fontSize = 12.sp,
-                        color = AppTheme.colors.hintColor,
-                        modifier = Modifier.padding(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 8.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.weight(1f))
-                Column(
-                    Modifier
-                        .align(Alignment.CenterVertically)
-                        .padding(end = 8.dp)
-                ) {
-                    Text(
-                        text = ZonedDateTime.ofInstant(
-                            Instant.ofEpochMilli(createTime * 1000),
-                            ZoneId.of("Asia/Shanghai")
-                        ).format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                        fontSize = 12.sp,
-                        color = AppTheme.colors.hintColor,
-                        modifier = Modifier
-                            .padding(start = 8.dp, end = 8.dp, top = 8.dp)
-                            .align(Alignment.End)
-                    )
-                    Text(
-                        text = type,
-                        fontSize = 12.sp,
-                        color = AppTheme.colors.hintColor,
-                        modifier = Modifier
-                            .padding(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 8.dp)
-                            .align(Alignment.End)
-                    )
-                }
-                Image(
-                    painter = painterResource(id = if (TextUtils.isEmpty(reply)) R.drawable.ic_no_reply else R.drawable.ic_replied),
-                    contentDescription = "reply state",
-                    modifier = Modifier
-                        .padding(end = 16.dp)
-                        .size(24.dp)
-                        .align(Alignment.CenterVertically),
-                )
-            }
-            Box(
+        // 工具头
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(bottom = 4.dp)
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_mod),
+                contentDescription = "mod icon",
                 modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 2.dp)
+                    .padding(start = 16.dp)
+                    .size(24.dp)
+                    .align(Alignment.CenterVertically),
+                contentScale = ContentScale.Fit,
+                colorFilter = ColorFilter.lighting(
+                    add = Color.Transparent,
+                    multiply = AppTheme.colors.primaryColor
+                )
+            )
+            Column(
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .padding(end = 8.dp)
+            ) {
+                Text(
+                    text = modName,
+                    fontSize = 16.sp,
+                    color = AppTheme.colors.textColor,
+                    modifier = Modifier.padding(start = 8.dp, end = 8.dp, top = 8.dp)
+                )
+                Text(
+                    text = modUid,
+                    fontSize = 12.sp,
+                    color = AppTheme.colors.hintColor,
+                    modifier = Modifier.padding(
+                        start = 8.dp,
+                        end = 8.dp,
+                        top = 4.dp,
+                        bottom = 8.dp
+                    )
+                )
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            Column(
+                Modifier
+                    .align(Alignment.CenterVertically)
+                    .padding(end = 8.dp)
+            ) {
+                Text(
+                    text = ZonedDateTime.ofInstant(
+                        Instant.ofEpochMilli(createTime * 1000),
+                        ZoneId.of("Asia/Shanghai")
+                    ).format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                    fontSize = 12.sp,
+                    color = AppTheme.colors.hintColor,
+                    modifier = Modifier
+                        .padding(start = 8.dp, end = 8.dp, top = 8.dp)
+                        .align(Alignment.End)
+                )
+                Text(
+                    text = type,
+                    fontSize = 12.sp,
+                    color = AppTheme.colors.hintColor,
+                    modifier = Modifier
+                        .padding(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 8.dp)
+                        .align(Alignment.End)
+                )
+            }
+            Image(
+                painter = painterResource(id = if (TextUtils.isEmpty(reply)) R.drawable.ic_no_reply else R.drawable.ic_replied),
+                contentDescription = "reply state",
+                modifier = Modifier
+                    .padding(end = 16.dp)
+                    .size(24.dp)
+                    .align(Alignment.CenterVertically),
+            )
+        }
+
+        Text(
+            text = nickname,
+            fontSize = 14.sp,
+            color = AppTheme.colors.textColor,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+        Text(
+            text = contentStr,
+            fontSize = 16.sp,
+            letterSpacing = 1.sp,
+            color = AppTheme.colors.textColor,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        )
+        if (picList.isNotEmpty())
+            FlowRow(
+                modifier = Modifier
                     .fillMaxWidth()
-                    .height(1.dp)
-                    .background(AppTheme.colors.hintColor.copy(alpha = 0.35f))
-            )
-            Text(
-                text = contentStr,
-                fontSize = 16.sp,
-                letterSpacing = 1.sp,
-                color = AppTheme.colors.textColor,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-            )
-            if (picList.isNotEmpty()) {
-                FlowRow(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(4.dp)
-                ) {
-                    picList.forEach {
-                        AsyncImage(
-                            model = it,
-                            contentDescription = "feedback image",
-                            imageLoader = ImageLoader(context = LocalContext.current),
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .wrapContentHeight()
-                                .heightIn(max = 160.dp)
-                                .wrapContentWidth()
-                                .clip(RoundedCornerShape(8.dp))
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = rememberRipple()
-                                ) {
-                                    onClickImg(it)
-                                },
-                            contentScale = ContentScale.Fit
-                        )
-                    }
+                    .padding(4.dp)
+            ) {
+                picList.forEach {
+                    AsyncImage(
+                        model = it,
+                        contentDescription = "feedback image",
+                        imageLoader = ImageLoader(context = LocalContext.current),
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .wrapContentHeight()
+                            .heightIn(max = 160.dp)
+                            .wrapContentWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = rememberRipple()
+                            ) {
+                                onClickImg(it)
+                            },
+                        contentScale = ContentScale.Fit
+                    )
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
+        if (isShowReply) {
+            DividedLine()
+            if (!TextUtils.isEmpty(reply))
+                Text(
+                    text = reply!!,
+                    fontSize = 16.sp,
+                    color = AppTheme.colors.textColor,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    letterSpacing = 1.sp
+                )
+            extraContent()
         }
     }
 }
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun PreviewFeedbackCard() {
+private fun PreviewFeedbackCard() {
     FeedbackCard(
-        id = "1",
         modName = "苦柠的奇异饰品",
         modUid = "4668241759157945097",
         createTime = 1716015309,
+        nickname = "苦柠",
         type = "故障问题反馈",
         content = "123123123123123",
         reply = "2222222",
-        isExpanded = true
+        isShowReply = true,
+        extraContent = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .border(1.dp, AppTheme.colors.hintColor, RoundedCornerShape(8.dp))
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = rememberRipple()
+                    ) {}
+            ) {
+                Row(Modifier.fillMaxWidth()) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .align(Alignment.CenterVertically)
+                            .padding(start = 8.dp)
+                    ) {
+                        Text(
+                            text = "赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞赞",
+                            fontSize = 16.sp,
+                            color = AppTheme.colors.textColor,
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .align(Alignment.CenterStart)
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .width(80.dp)
+                            .padding(8.dp)
+                            .align(Alignment.CenterVertically)
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = rememberRipple()
+                            ) { }
+                    ) {
+                        Text(
+                            text = "回复",
+                            fontSize = 16.sp,
+                            color = AppTheme.colors.primaryColor,
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .align(Alignment.Center)
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+        }
     )
 }

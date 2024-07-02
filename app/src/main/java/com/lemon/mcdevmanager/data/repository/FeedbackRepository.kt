@@ -10,6 +10,10 @@ import com.lemon.mcdevmanager.utils.NetworkState
 import com.lemon.mcdevmanager.utils.NoNeedData
 import com.lemon.mcdevmanager.utils.ResponseData
 import com.lemon.mcdevmanager.utils.UnifiedExceptionHandler
+import com.lemon.mcdevmanager.utils.dataJsonToString
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 
 class FeedbackRepository {
     companion object {
@@ -39,8 +43,11 @@ class FeedbackRepository {
         val cookie = AppContext.cookiesStore[AppContext.nowNickname]
         cookie?.let {
             CookiesStore.addCookie(NETEASE_USER_COOKIE, cookie)
+            val realContent = dataJsonToString(ReplyBean(content))
+            val requestBody =
+                realContent.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
             return UnifiedExceptionHandler.handleSuspend {
-                FeedbackApi.create().sendReply(feedbackId, ReplyBean(content))
+                FeedbackApi.create().sendReply(feedbackId, requestBody)
             }
         } ?: return NetworkState.Error("无法获取用户cookie, 请重新登录")
     }

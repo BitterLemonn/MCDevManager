@@ -10,6 +10,7 @@ import com.lemon.mcdevmanager.utils.NoNeedData
 import com.lemon.mcdevmanager.utils.ResponseData
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
+import okhttp3.RequestBody
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import retrofit2.http.Body
@@ -30,7 +31,7 @@ interface FeedbackApi {
     @PUT("/items/feedback/pe/{id}/reply")
     suspend fun sendReply(
         @Path("id") feedbackId: String,
-        @Body content: ReplyBean
+        @Body content: RequestBody
     ): ResponseData<NoNeedData>
 
     companion object {

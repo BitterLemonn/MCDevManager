@@ -98,8 +98,8 @@ class FeedbackViewModel : ViewModel() {
             repository.sendReply(_viewStates.value.replyId, _viewStates.value.replyContent)) {
             is NetworkState.Success -> {
                 _viewEvents.setEvent(FeedbackEvent.ShowToast("回复成功"))
+                _viewEvents.setEvent(FeedbackEvent.ReplySuccess)
             }
-
             is NetworkState.Error -> throw Exception(result.msg)
         }
     }

@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -26,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import com.lemon.mcdevmanager.R
 import com.lemon.mcdevmanager.ui.theme.AppTheme
 import com.lemon.mcdevmanager.ui.theme.HeaderHeight
+import com.lemon.mcdevmanager.ui.theme.TextWhite
 import com.lemon.mcdevmanager.ui.theme.TitleFontSize
 
 @Composable
@@ -43,7 +45,7 @@ fun HeaderWidget(
         Box(modifier = Modifier.fillMaxSize()) {
             Text(
                 text = title,
-                color = AppTheme.colors.textColor,
+                color = TextWhite,
                 fontSize = TitleFontSize,
                 textAlign = TextAlign.Center,
                 modifier = Modifier

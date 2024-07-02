@@ -12,42 +12,49 @@ import androidx.compose.animation.shrinkOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
@@ -68,19 +75,21 @@ import com.lemon.mcdevmanager.R
 import com.lemon.mcdevmanager.data.netease.feedback.FeedbackBean
 import com.lemon.mcdevmanager.ui.theme.AppTheme
 import com.lemon.mcdevmanager.ui.theme.HeaderHeight
+import com.lemon.mcdevmanager.ui.theme.TextWhite
 import com.lemon.mcdevmanager.ui.widget.AppLoadingWidget
 import com.lemon.mcdevmanager.ui.widget.FeedbackCard
 import com.lemon.mcdevmanager.ui.widget.HeaderWidget
 import com.lemon.mcdevmanager.ui.widget.SNACK_ERROR
 import com.lemon.mcdevmanager.ui.widget.SearchBarWidget
+import com.lemon.mcdevmanager.utils.getNavigationBarHeight
 import com.lemon.mcdevmanager.viewModel.FeedbackAction
 import com.lemon.mcdevmanager.viewModel.FeedbackEvent
 import com.lemon.mcdevmanager.viewModel.FeedbackViewModel
 import com.lt.compose_views.refresh_layout.RefreshLayoutState
 import com.lt.compose_views.refresh_layout.VerticalRefreshableLayout
 import com.lt.compose_views.zoom.ImageViewer
+import com.orhanobut.logger.Logger
 import com.zj.mvi.core.observeEvent
-import kotlinx.coroutines.delay
 
 @Composable
 fun FeedbackPage(
@@ -97,6 +106,9 @@ fun FeedbackPage(
     var detailItem by remember { mutableStateOf(FeedbackBean()) }
     val imageLoader = remember { ImageLoader.Builder(context).crossfade(true).build() }
 
+    val replyRequester = remember { FocusRequester() }
+    var isFocusReply by remember { mutableStateOf(false) }
+
     LaunchedEffect(key1 = Unit) {
         viewModel.dispatch(FeedbackAction.LoadFeedback)
         viewModel.viewEvents.observeEvent(lifecycleOwner) { event ->
@@ -104,18 +116,17 @@ fun FeedbackPage(
                 is FeedbackEvent.ShowToast -> showToast(event.msg, SNACK_ERROR)
                 is FeedbackEvent.RouteToPath -> navController.navigate(event.path)
                 is FeedbackEvent.ReplySuccess -> {
-                    viewModel.dispatch(FeedbackAction.RefreshFeedback)
                     detailItem = FeedbackBean()
+                    keyboard?.hide()
+                    replyRequester.freeFocus()
+                    viewModel.dispatch(FeedbackAction.UpdateReplyContent(""))
+                    viewModel.dispatch(FeedbackAction.RefreshFeedback)
                 }
             }
         }
     }
 
-    val topRefreshState = remember {
-        RefreshLayoutState {
-//            viewModel.dispatch(FeedbackAction.LoadFeedback)
-        }
-    }
+    val topRefreshState = remember { RefreshLayoutState {} }
     val bottomRefreshState = remember {
         RefreshLayoutState {
             viewModel.dispatch(FeedbackAction.LoadFeedback)
@@ -142,11 +153,11 @@ fun FeedbackPage(
                         .aspectRatio(1f)
                         .then(it),
                     contentScale = ContentScale.Crop,
-                    colorFilter = ColorFilter.tint(AppTheme.colors.textColor)
+                    colorFilter = ColorFilter.tint(TextWhite)
                 )
             }
         })
-        SearchBarWidget()
+//        SearchBarWidget()
         VerticalRefreshableLayout(
             topRefreshLayoutState = topRefreshState,
             bottomRefreshLayoutState = bottomRefreshState,
@@ -163,19 +174,24 @@ fun FeedbackPage(
                         AppLoadingWidget()
                     }
                 } else itemsIndexed(states.feedbackList) { index, item ->
-                    FeedbackCard(id = item.id,
+                    FeedbackCard(
+                        modifier = Modifier.clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = rememberRipple()
+                        ) {
+                            detailItem = item
+                            if (isFocusReply) keyboard?.show()
+                        },
                         modName = item.resName,
                         modUid = item.iid,
                         createTime = item.createTime,
                         type = item.type,
+                        nickname = item.commitNickname,
                         content = item.content,
                         picList = item.picList,
                         reply = item.reply,
                         onClickImg = { url ->
                             bigImageUrl = url
-                        },
-                        onClick = {
-                            detailItem = item
                         })
 
                     if (index == states.feedbackList.size - 5) {
@@ -186,19 +202,16 @@ fun FeedbackPage(
         }
     }
 
+    // 详情页
     AnimatedVisibility(
         visible = detailItem.id != "0",
         enter = expandVertically() + fadeIn(),
         exit = shrinkVertically() + fadeOut()
     ) {
-        var waitTime by remember { mutableIntStateOf(2) }
         LaunchedEffect(key1 = Unit) {
-            while (waitTime > 0) {
-                waitTime -= 1
-                delay(300)
-            }
             viewModel.dispatch(FeedbackAction.UpdateReplyId(detailItem.id))
         }
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -206,93 +219,146 @@ fun FeedbackPage(
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null
-                ) { detailItem = FeedbackBean() }
+                ) {
+                    detailItem = FeedbackBean()
+                    keyboard?.hide()
+                    Logger.d("free focus: ${replyRequester.freeFocus()}")
+                    viewModel.dispatch(FeedbackAction.UpdateReplyContent(""))
+                }
+                .verticalScroll(rememberScrollState())
                 .imePadding()
         ) {
-            Column(Modifier.fillMaxWidth()) {
-                FeedbackCard(
-                    id = detailItem.id,
-                    modName = detailItem.resName,
-                    modUid = detailItem.iid,
-                    createTime = detailItem.createTime,
-                    type = detailItem.type,
-                    content = "${detailItem.commitNickname}: \n${detailItem.content}",
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .heightIn(max = 600.dp),
-                    picList = detailItem.picList,
-                    reply = detailItem.reply,
-                    onClickImg = {
-                        bigImageUrl = it
-                    },
-                    isExpanded = true
-                )
-                if (waitTime <= 0) {
-                    Card(
-                        modifier = Modifier
+            FeedbackCard(
+                modName = detailItem.resName,
+                modUid = detailItem.iid,
+                createTime = detailItem.createTime,
+                type = detailItem.type,
+                nickname = detailItem.commitNickname,
+                content = detailItem.content,
+                picList = detailItem.picList,
+                reply = detailItem.reply,
+                onClickImg = { url ->
+                    bigImageUrl = url
+                },
+                isShowReply = true,
+                extraContent = {
+                    Row(
+                        Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = CardDefaults.cardColors(containerColor = AppTheme.colors.card)
+                            .padding(8.dp)
+                            .border(1.dp, AppTheme.colors.primaryColor, RoundedCornerShape(8.dp))
                     ) {
-                        if (!TextUtils.isEmpty(detailItem.reply)) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .align(Alignment.CenterVertically)
+                                .padding(start = 8.dp)
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null
+                                ) { replyRequester.requestFocus() }
+                        ) {
                             Text(
-                                text = detailItem.reply!!,
-                                color = AppTheme.colors.textColor,
+                                text = states.replyContent,
                                 fontSize = 16.sp,
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                                color = AppTheme.colors.textColor,
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .align(Alignment.CenterStart)
                             )
                         }
-                        OutlinedTextField(
-                            value = states.replyContent,
-                            onValueChange = {
-                                viewModel.dispatch(FeedbackAction.UpdateReplyContent(it))
-                            },
+                        Box(
                             modifier = Modifier
+                                .width(80.dp)
                                 .padding(8.dp)
-                                .fillMaxWidth(),
-                            trailingIcon = {
-                                Box(
-                                    modifier = Modifier
-                                        .width(80.dp)
-                                        .padding(8.dp)
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .clickable(
-                                            interactionSource = remember { MutableInteractionSource() },
-                                            indication = rememberRipple()
-                                        ) { viewModel.dispatch(FeedbackAction.ReplyFeedback) }
+                                .align(Alignment.CenterVertically)
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = rememberRipple()
                                 ) {
-                                    Text(
-                                        text = "回复",
-                                        color = AppTheme.colors.primaryColor,
-                                        fontSize = 16.sp,
-                                        modifier = Modifier
-                                            .padding(8.dp)
-                                            .align(Alignment.Center)
-                                    )
+                                    viewModel.dispatch(FeedbackAction.ReplyFeedback)
+                                    keyboard?.hide()
                                 }
-                            },
-                            placeholder = {
-                                Text(
-                                    text = "回复",
-                                    color = AppTheme.colors.hintColor,
-                                    fontSize = 16.sp
-                                )
-                            },
-                            keyboardActions = KeyboardActions(onDone = {
-                                viewModel.dispatch(FeedbackAction.ReplyFeedback)
-                                keyboard?.hide()
-                            }),
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
-                        )
+                        ) {
+                            Text(
+                                text = "回复",
+                                fontSize = 16.sp,
+                                color = AppTheme.colors.primaryColor,
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .align(Alignment.Center)
+                            )
+                        }
                     }
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
-            }
-
+            )
         }
 
     }
 
+    // 回复框
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .offset(y = getNavigationBarHeight(context).dp)
+            .imePadding()
+            .alpha(if (isFocusReply && detailItem.id != "0") 1f else 0f)
+    ) {
+        OutlinedTextField(
+            enabled = detailItem.id != "0",
+            value = states.replyContent,
+            onValueChange = {
+                viewModel.dispatch(FeedbackAction.UpdateReplyContent(it))
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .focusRequester(replyRequester)
+                .onFocusChanged {
+                    isFocusReply = it.isFocused
+                },
+            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Send),
+            keyboardActions = KeyboardActions(onSend = {
+                viewModel.dispatch(FeedbackAction.ReplyFeedback)
+                keyboard?.hide()
+            }),
+            shape = RoundedCornerShape(8.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = AppTheme.colors.primaryColor,
+                unfocusedBorderColor = AppTheme.colors.textColor,
+                focusedContainerColor = AppTheme.colors.card,
+                unfocusedContainerColor = AppTheme.colors.card
+            ),
+            trailingIcon = {
+                Box(
+                    modifier = Modifier
+                        .width(80.dp)
+                        .padding(end = 8.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = rememberRipple()
+                        ) {
+                            viewModel.dispatch(FeedbackAction.ReplyFeedback)
+                            keyboard?.hide()
+                        }
+                ) {
+                    Text(
+                        text = "回复",
+                        fontSize = 16.sp,
+                        color = AppTheme.colors.primaryColor,
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .align(Alignment.Center)
+                    )
+                }
+            }
+        )
+    }
+
+    // 大图预览
     AnimatedVisibility(
         visible = !TextUtils.isEmpty(bigImageUrl),
         enter = fadeIn(animationSpec = tween(300)) + expandIn(
@@ -336,6 +402,7 @@ fun FeedbackPage(
         }
     }
 
+    // loading
     AnimatedVisibility(
         visible = states.isLoadingReply,
         enter = fadeIn(),
