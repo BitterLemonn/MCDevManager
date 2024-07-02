@@ -72,6 +72,7 @@ import androidx.navigation.compose.rememberNavController
 import coil.ImageLoader
 import coil.compose.rememberAsyncImagePainter
 import com.lemon.mcdevmanager.R
+import com.lemon.mcdevmanager.data.common.FEEDBACK_PAGE
 import com.lemon.mcdevmanager.data.netease.feedback.FeedbackBean
 import com.lemon.mcdevmanager.ui.theme.AppTheme
 import com.lemon.mcdevmanager.ui.theme.HeaderHeight
@@ -80,7 +81,6 @@ import com.lemon.mcdevmanager.ui.widget.AppLoadingWidget
 import com.lemon.mcdevmanager.ui.widget.FeedbackCard
 import com.lemon.mcdevmanager.ui.widget.HeaderWidget
 import com.lemon.mcdevmanager.ui.widget.SNACK_ERROR
-import com.lemon.mcdevmanager.ui.widget.SearchBarWidget
 import com.lemon.mcdevmanager.utils.getNavigationBarHeight
 import com.lemon.mcdevmanager.viewModel.FeedbackAction
 import com.lemon.mcdevmanager.viewModel.FeedbackEvent
@@ -88,7 +88,6 @@ import com.lemon.mcdevmanager.viewModel.FeedbackViewModel
 import com.lt.compose_views.refresh_layout.RefreshLayoutState
 import com.lt.compose_views.refresh_layout.VerticalRefreshableLayout
 import com.lt.compose_views.zoom.ImageViewer
-import com.orhanobut.logger.Logger
 import com.zj.mvi.core.observeEvent
 
 @Composable
@@ -110,7 +109,7 @@ fun FeedbackPage(
     val replyRequester = remember { FocusRequester() }
     var isFocusReply by remember { mutableStateOf(false) }
 
-    fun resetDetail(){
+    fun resetDetail() {
         isShowDetail = false
         keyboard?.hide()
         replyRequester.freeFocus()
@@ -122,7 +121,11 @@ fun FeedbackPage(
         viewModel.viewEvents.observeEvent(lifecycleOwner) { event ->
             when (event) {
                 is FeedbackEvent.ShowToast -> showToast(event.msg, SNACK_ERROR)
-                is FeedbackEvent.RouteToPath -> navController.navigate(event.path)
+                is FeedbackEvent.RouteToPath -> navController.navigate(event.path) {
+                    launchSingleTop = true
+                    if (event.needPop) popUpTo(FEEDBACK_PAGE) { inclusive = true }
+                }
+
                 is FeedbackEvent.ReplySuccess -> {
 
                     viewModel.dispatch(FeedbackAction.RefreshFeedback)

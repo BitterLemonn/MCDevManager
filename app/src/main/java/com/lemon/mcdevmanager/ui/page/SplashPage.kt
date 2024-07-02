@@ -65,6 +65,7 @@ fun SplashPage(
                         }
                         withContext(Dispatchers.Main) {
                             navController.navigate(event.path) {
+                                launchSingleTop = true
                                 popUpTo(SPLASH_PAGE) { inclusive = true }
                             }
                         }

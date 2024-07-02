@@ -208,7 +208,7 @@ class LoginViewModel : ViewModel() {
                 AppContext.nowNickname = nickname
                 AppContext.accountList.add(nickname)
             }.onCompletion {
-                _viewEvent.setEvent(LoginViewEvent.RouteToPath(MAIN_PAGE))
+                _viewEvent.setEvent(LoginViewEvent.RouteToPath(MAIN_PAGE, true))
             }.catch {
                 _viewEvent.setEvent(LoginViewEvent.LoginFailed(it.message ?: "未知错误"))
             }.collect()
@@ -227,7 +227,7 @@ data class LoginViewState(
 sealed class LoginViewEvent {
     data class LoginSuccess(val username: String) : LoginViewEvent()
     data class LoginFailed(val message: String) : LoginViewEvent()
-    data class RouteToPath(val path: String) : LoginViewEvent()
+    data class RouteToPath(val path: String, val needPop: Boolean = false) : LoginViewEvent()
 }
 
 sealed class LoginViewAction {

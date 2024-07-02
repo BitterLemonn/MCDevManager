@@ -9,8 +9,6 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -22,11 +20,11 @@ fun LoginOutlineTextField(
     value: String,
     onValueChange: (String) -> Unit,
     label: @Composable () -> Unit = {},
-    keyboardType: KeyboardType = KeyboardType.Text,
-    imeAction: ImeAction = ImeAction.Default,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
-    singleLine: Boolean = true
+    singleLine: Boolean = true,
+    trialingIcon: @Composable (() -> Unit)? = null
 ) {
     OutlinedTextField(
         value = value,
@@ -46,12 +44,11 @@ fun LoginOutlineTextField(
             unfocusedTextColor = AppTheme.colors.textColor,
             unfocusedContainerColor = AppTheme.colors.card
         ),
-        keyboardOptions = KeyboardOptions.Default.copy(
-            keyboardType = keyboardType, imeAction = imeAction
-        ),
+        keyboardOptions = keyboardOptions,
         singleLine = singleLine,
         keyboardActions = keyboardActions,
-        visualTransformation = visualTransformation
+        visualTransformation = visualTransformation,
+        trailingIcon = trialingIcon
     )
 }
 

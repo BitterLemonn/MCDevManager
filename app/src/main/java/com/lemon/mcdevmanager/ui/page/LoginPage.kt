@@ -1,7 +1,6 @@
 package com.lemon.mcdevmanager.ui.page
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -18,15 +17,16 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,9 +37,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -64,10 +66,10 @@ import com.lemon.mcdevmanager.ui.widget.AppLoadingWidget
 import com.lemon.mcdevmanager.ui.widget.BottomNameInput
 import com.lemon.mcdevmanager.ui.widget.LoginOutlineTextField
 import com.lemon.mcdevmanager.ui.widget.SNACK_ERROR
+import com.lemon.mcdevmanager.utils.pxToDp
 import com.lemon.mcdevmanager.viewModel.LoginViewAction
 import com.lemon.mcdevmanager.viewModel.LoginViewEvent
 import com.lemon.mcdevmanager.viewModel.LoginViewModel
-import com.orhanobut.logger.Logger
 import com.zj.mvi.core.observeEvent
 
 @Composable
@@ -83,6 +85,8 @@ fun LoginPage(
 
     var isLoginSuccess by remember { mutableStateOf(false) }
     var isUseCookies by remember { mutableStateOf(false) }
+    var isShowTitle by remember { mutableStateOf(true) }
+    var isShowPassword by remember { mutableStateOf(false) }
 
     val animatedUsername by animateDpAsState(
         targetValue = if (isUseCookies) 0.dp else 60.dp,
@@ -98,6 +102,7 @@ fun LoginPage(
                 is LoginViewEvent.LoginSuccess -> isLoginSuccess = true
                 is LoginViewEvent.RouteToPath -> navController.navigate(event.path) {
                     popUpTo(LOGIN_PAGE) { inclusive = true }
+                    launchSingleTop = true
                 }
 
                 else -> {}
@@ -111,25 +116,31 @@ fun LoginPage(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(AppTheme.colors.background)
+                    .imePadding()
+                    .onGloballyPositioned {
+                        isShowTitle = pxToDp(context, it.size.height.toFloat()) > 600
+                    }
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.TopCenter)
-                        .padding(top = 30.dp)
-                ) {
-                    Text(
-                        text = "登录",
-                        fontSize = 40.sp,
+                if (isShowTitle)
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(20.dp),
-                        color = AppTheme.colors.textColor,
-                        fontFamily = FontFamily(Font(R.font.minecraft_ae)),
-                        letterSpacing = 20.sp,
-                        textAlign = TextAlign.Center
-                    )
-                }
+                            .align(Alignment.TopCenter)
+                            .padding(top = 30.dp)
+                    ) {
+                        Text(
+                            text = "登录",
+                            fontSize = 40.sp,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
+                            color = AppTheme.colors.textColor,
+                            fontFamily = FontFamily(Font(R.font.minecraft_ae)),
+                            letterSpacing = 20.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+
                 Column(
                     Modifier
                         .fillMaxWidth()
@@ -161,8 +172,10 @@ fun LoginPage(
                                 },
                                 label = { Text("邮箱") },
                                 modifier = Modifier.height(animatedUsername),
-                                keyboardType = KeyboardType.Text,
-                                imeAction = ImeAction.Next
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Ascii,
+                                    imeAction = ImeAction.Next
+                                )
                             )
                         }
                     }
@@ -175,16 +188,43 @@ fun LoginPage(
                             else viewModel.dispatch(LoginViewAction.UpdatePassword(it))
                         },
                         label = { Text(text = if (isUseCookies) "Cookies" else "密码") },
-                        keyboardType = if (isUseCookies) KeyboardType.Text
-                        else KeyboardType.Password,
-                        imeAction = ImeAction.Done,
-                        visualTransformation = if (!isUseCookies) PasswordVisualTransformation()
+                        keyboardOptions = KeyboardOptions(
+                            imeAction = ImeAction.Done,
+                            shouldShowKeyboardOnFocus = false,
+                            keyboardType = KeyboardType.Ascii
+                        ),
+                        visualTransformation = if (!isUseCookies && !isShowPassword) PasswordVisualTransformation()
                         else VisualTransformation.None,
                         keyboardActions = KeyboardActions(onDone = {
                             viewModel.dispatch(LoginViewAction.Login)
                             keyboardController?.hide()
                         }),
-                        singleLine = !isUseCookies
+                        singleLine = !isUseCookies,
+                        trialingIcon = {
+                            if (!isUseCookies) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(30.dp)
+                                        .clip(CircleShape)
+                                        .clickable(
+                                            indication = null,
+                                            interactionSource = remember { MutableInteractionSource() }
+                                        ) {
+                                            isShowPassword = !isShowPassword
+                                        }
+                                ) {
+                                    Image(
+                                        painter = painterResource(
+                                            id = if (isShowPassword) R.drawable.ic_no_show
+                                            else R.drawable.ic_show
+                                        ),
+                                        contentDescription = "visibility",
+                                        colorFilter = ColorFilter.tint(AppTheme.colors.primaryColor),
+                                        modifier = Modifier.align(Alignment.Center)
+                                    )
+                                }
+                            }
+                        }
                     )
                     // 切换登录方式
                     Box(
@@ -201,6 +241,7 @@ fun LoginPage(
                                 ) {
                                     viewModel.dispatch(LoginViewAction.UpdateCookies(""))
                                     isUseCookies = !isUseCookies
+                                    isShowPassword = false
                                 }
                                 .padding(10.dp)
                         ) {

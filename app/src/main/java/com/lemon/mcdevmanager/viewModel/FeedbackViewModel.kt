@@ -100,6 +100,7 @@ class FeedbackViewModel : ViewModel() {
                 _viewEvents.setEvent(FeedbackEvent.ShowToast("回复成功"))
                 _viewEvents.setEvent(FeedbackEvent.ReplySuccess)
             }
+
             is NetworkState.Error -> throw Exception(result.msg)
         }
     }
@@ -125,6 +126,6 @@ data class FeedbackViewState(
 
 sealed class FeedbackEvent {
     data class ShowToast(val msg: String) : FeedbackEvent()
-    data class RouteToPath(val path: String) : FeedbackEvent()
+    data class RouteToPath(val path: String, val needPop: Boolean = false) : FeedbackEvent()
     data object ReplySuccess : FeedbackEvent()
 }

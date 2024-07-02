@@ -87,6 +87,7 @@ fun MainPage(
                 is MainViewEvent.ShowToast -> showToast(event.msg, SNACK_ERROR)
                 is MainViewEvent.RouteToPath -> navController.navigate(event.path) {
                     if (event.needPop) popUpTo(MAIN_PAGE) { inclusive = true }
+                    launchSingleTop = true
                 }
 
                 is MainViewEvent.MaybeDataNoRefresh -> isShowNotice = true
@@ -203,7 +204,9 @@ fun MainPage(
                         coroutineScope.launch { showToast("更多功能请期待未来更新", SNACK_INFO) }
                     }
                     FunctionCard(icon = R.drawable.ic_feedback, title = "玩家反馈") {
-                        navController.navigate(FEEDBACK_PAGE)
+                        navController.navigate(FEEDBACK_PAGE){
+                            launchSingleTop = true
+                        }
                     }
                     FunctionCard(icon = R.drawable.ic_profit, title = "收益管理") {
                         coroutineScope.launch { showToast("更多功能请期待未来更新", SNACK_INFO) }
