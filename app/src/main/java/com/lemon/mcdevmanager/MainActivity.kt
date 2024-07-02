@@ -6,7 +6,7 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.lemon.mcdevmanager.ui.theme.MCDevManagerTheme
-import com.lemon.mcdevmanager.ui.widget.BaseScaffold
+import com.lemon.mcdevmanager.ui.base.BaseScaffold
 import com.orhanobut.logger.AndroidLogAdapter
 import com.orhanobut.logger.Logger
 

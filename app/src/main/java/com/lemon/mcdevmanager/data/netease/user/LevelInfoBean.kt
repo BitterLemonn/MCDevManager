@@ -16,5 +16,19 @@ data class LevelInfoBean(
     @SerialName("total_exp")
     val totalExp: Double,
     @SerialName("upgrade_class_achieve")
-    val upgradeClassAchieve: Boolean
+    val upgradeClassAchieve: Boolean,
+    @SerialName("contribution_month")
+    val contributionMonth: String,
+    @SerialName("contribution_netgame_class")
+    val contributionNetGameClass: Int,
+    @SerialName("contribution_netgame_rank")
+    val contributionNetGameRank: Int,
+    @SerialName("contribution_netgame_score")
+    val contributionNetGameScore: String,
+    @SerialName("contribution_class")
+    val contributionClass: Int,
+    @SerialName("contribution_rank")
+    val contributionRank: Int,
+    @SerialName("contribution_score")
+    val contributionScore: String
 )

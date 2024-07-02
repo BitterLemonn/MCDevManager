@@ -1,4 +1,4 @@
-package com.lemon.mcdevmanager.ui.widget
+package com.lemon.mcdevmanager.ui.base
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,6 +22,8 @@ import com.lemon.mcdevmanager.ui.page.LoginPage
 import com.lemon.mcdevmanager.ui.page.MainPage
 import com.lemon.mcdevmanager.ui.page.SplashPage
 import com.lemon.mcdevmanager.ui.theme.AppTheme
+import com.lemon.mcdevmanager.ui.widget.AppSnackbar
+import com.lemon.mcdevmanager.ui.widget.popupSnackBar
 
 @Composable
 fun BaseScaffold() {

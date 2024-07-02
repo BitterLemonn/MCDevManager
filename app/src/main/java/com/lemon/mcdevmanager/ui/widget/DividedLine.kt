@@ -11,10 +11,12 @@ import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanager.ui.theme.AppTheme
 
 @Composable
-fun DividedLine() {
+fun DividedLine(
+    modifier: Modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp)
+) {
     Box(
         modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 2.dp)
+            .then(modifier)
             .fillMaxWidth()
             .height(1.dp)
             .background(AppTheme.colors.hintColor.copy(alpha = 0.35f))

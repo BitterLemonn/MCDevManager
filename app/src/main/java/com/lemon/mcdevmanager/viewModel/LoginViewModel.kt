@@ -206,6 +206,7 @@ class LoginViewModel : ViewModel() {
                 GlobalDataBase.database.userDao().updateUser(userInfo)
                 AppContext.cookiesStore[nickname] = cookie
                 AppContext.nowNickname = nickname
+                AppContext.accountList.add(nickname)
             }.onCompletion {
                 _viewEvent.setEvent(LoginViewEvent.RouteToPath(MAIN_PAGE))
             }.catch {

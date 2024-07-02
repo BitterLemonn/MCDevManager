@@ -3,6 +3,7 @@ package com.lemon.mcdevmanager.viewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lemon.mcdevmanager.data.common.CookiesStore
+import com.lemon.mcdevmanager.data.common.LOGIN_PAGE
 import com.lemon.mcdevmanager.data.common.NETEASE_USER_COOKIE
 import com.lemon.mcdevmanager.data.database.database.GlobalDataBase
 import com.lemon.mcdevmanager.data.database.entities.OverviewEntity
@@ -42,6 +43,8 @@ class MainViewModel : ViewModel() {
     fun dispatch(action: MainViewAction) {
         when (action) {
             is MainViewAction.LoadData -> loadData(action.nickname)
+            is MainViewAction.DeleteAccount -> deleteAccount(action.accountName)
+            is MainViewAction.ChangeAccount -> changeAccount(action.accountName)
         }
     }
 
@@ -101,7 +104,17 @@ class MainViewModel : ViewModel() {
                         copy(
                             mainLevel = it.currentClass,
                             subLevel = it.currentLevel,
-                            levelText = "$levelText LV. ${it.currentLevel}"
+                            levelText = "$levelText LV. ${it.currentLevel}",
+                            maxLevelExp = it.expCeiling,
+                            currentExp = it.totalExp,
+                            canLevelUp = it.upgradeClassAchieve,
+                            contributionMonth = it.contributionMonth,
+                            netGameClass = it.contributionNetGameClass,
+                            netGameRank = it.contributionNetGameRank,
+                            netGameScore = it.contributionNetGameScore,
+                            contributionClass = it.contributionClass,
+                            contributionRank = it.contributionRank,
+                            contributionScore = it.contributionScore
                         )
                     }
                 } ?: throw Exception("获取等级信息失败")
@@ -201,6 +214,27 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    private fun deleteAccount(accountName: String) {
+        val isLogout = accountName == AppContext.nowNickname
+        viewModelScope.launch {
+            AppContext.accountList.remove(accountName)
+            AppContext.cookiesStore.remove(accountName)
+            withContext(Dispatchers.IO) {
+                GlobalDataBase.database.infoDao().deleteOverviewByNickname(accountName)
+                GlobalDataBase.database.userDao().deleteUserByNickname(accountName)
+            }
+            if (isLogout)
+                _viewEvents.setEvent(MainViewEvent.RouteToPath(LOGIN_PAGE, true))
+        }
+    }
+
+    private fun changeAccount(accountName: String) {
+        viewModelScope.launch {
+            AppContext.nowNickname = accountName
+            loadData(AppContext.nowNickname)
+        }
+    }
+
     private fun computeMoney() {
         val lastMonthProfit = viewStates.value.lastMonthProfit / 100.0
         val thisMonthProfit = viewStates.value.curMonthProfit / 100.0
@@ -263,6 +297,17 @@ data class MainViewState(
     val mainLevel: Int = 0,
     val subLevel: Int = 0,
     val levelText: String = "",
+    val maxLevelExp: Double = 1.0,
+    val currentExp: Double = 1.0,
+    val canLevelUp: Boolean = false,
+
+    val contributionMonth: String = "",
+    val netGameClass: Int = 0,
+    val netGameRank: Int = 0,
+    val netGameScore: String = "0",
+    val contributionClass: Int = 0,
+    val contributionRank: Int = 0,
+    val contributionScore: String = "0",
 
     val realMoney: String = "0.00",
     val taxMoney: String = "0.00",
@@ -272,7 +317,7 @@ data class MainViewState(
 )
 
 sealed class MainViewEvent {
-    data class RouteToPath(val path: String) : MainViewEvent()
+    data class RouteToPath(val path: String, val needPop: Boolean = false) : MainViewEvent()
     data class ShowToast(val msg: String) : MainViewEvent()
     data object MaybeDataNoRefresh : MainViewEvent()
     data object ShowLastMonthProfit : MainViewEvent()
@@ -280,4 +325,6 @@ sealed class MainViewEvent {
 
 sealed class MainViewAction {
     data class LoadData(val nickname: String) : MainViewAction()
+    data class DeleteAccount(val accountName: String) : MainViewAction()
+    data class ChangeAccount(val accountName: String) : MainViewAction()
 }

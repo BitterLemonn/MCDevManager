@@ -1,6 +1,7 @@
 package com.lemon.mcdevmanager.data.database.dao
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -14,4 +15,7 @@ interface InfoDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertOverview(overviewEntity: OverviewEntity)
+
+    @Query("DELETE FROM overviewEntity WHERE nickname = :nickname")
+    fun deleteOverviewByNickname(nickname: String)
 }

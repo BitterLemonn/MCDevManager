@@ -1,21 +1,16 @@
 package com.lemon.mcdevmanager.ui.theme
 
-import android.app.Activity
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.TweenSpec
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalView
-import androidx.core.view.WindowCompat
 
 
 private val DarkColorPalette = AppColors(
@@ -37,9 +32,9 @@ private val LightColorPalette = AppColors(
     hintColor = Hint,
     card = CardLight,
     background = BackgroundLight,
-    primaryColor = Purple80,
+    primaryColor = Purple200,
     primarySubColor = PurpleGrey80,
-    secondaryColor = Pink80,
+    secondaryColor = Pink200,
     info = InfoLight,
     warn = WarnLight,
     success = SuccessLight,

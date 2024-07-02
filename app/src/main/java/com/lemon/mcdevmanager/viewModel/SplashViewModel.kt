@@ -37,6 +37,7 @@ class SplashViewModel : ViewModel() {
                                 user.nickname
                             AppContext.cookiesStore[user.nickname] = user.cookie
                         }
+                        AppContext.accountList.addAll(userInfoList.map { it.nickname })
                         _viewEvents.setEvent(SplashViewEvent.RouteToPath(MAIN_PAGE))
                     } else {
                         _viewEvents.setEvent(SplashViewEvent.RouteToPath(LOGIN_PAGE))

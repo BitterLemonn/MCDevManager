@@ -17,4 +17,7 @@ interface UserDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun updateUser(user: UserEntity)
+
+    @Query("DELETE FROM userEntity WHERE nickname = :nickname")
+    fun deleteUserByNickname(nickname: String)
 }

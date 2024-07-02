@@ -50,7 +50,7 @@ fun SplashPage(
 
     LaunchedEffect(key1 = Unit) {
         this.launch(Dispatchers.IO) {
-            while (waitingLast < 5) {
+            while (waitingLast < 2) {
                 waitingLast++
                 delay(1000)
             }
@@ -60,11 +60,13 @@ fun SplashPage(
             when (event) {
                 is SplashViewEvent.RouteToPath -> {
                     this.launch(Dispatchers.IO) {
-                        while (waitingLast < 5) {
+                        while (waitingLast < 2) {
                             delay(100)
                         }
                         withContext(Dispatchers.Main) {
-                            navController.navigate(event.path)
+                            navController.navigate(event.path) {
+                                popUpTo(SPLASH_PAGE) { inclusive = true }
+                            }
                         }
                     }
                 }

@@ -1,14 +1,22 @@
 package com.lemon.mcdevmanager.ui.widget
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -23,12 +31,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.toFontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.lemon.mcdevmanager.R
 import com.lemon.mcdevmanager.ui.theme.AppTheme
+import java.text.DecimalFormat
 
 @Composable
 fun MainUserCard(
@@ -36,12 +47,26 @@ fun MainUserCard(
     avatarUrl: String,
     mainLevel: Int = 0,
     subLevel: Int = 0,
-    levelText: String = ""
+    levelText: String = "",
+    maxLevelExp: Double = 1.0,
+    currentExp: Double = 1.0,
+    canLevelUp: Boolean = false,
+    contributeScore: String = "0",
+    contributeRank: Int = 0,
+    contributeClass: Int = 0,
+    netGameScore: String = "0",
+    netGameRank: Int = 0,
+    netGameClass: Int = 0,
+    dataDate: String = "",
+    onPasteToClipboard: () -> Unit = {}
 ) {
     val context = LocalContext.current
 
     var levelImg by remember { mutableIntStateOf(0) }
-    val isLoadingAvatar by remember { mutableStateOf(true) }
+    var isShowLevelInfo by remember { mutableStateOf(false) }
+
+    var contributeClassStr by remember { mutableStateOf("") }
+    var netGameClassStr by remember { mutableStateOf("") }
 
     LaunchedEffect(key1 = mainLevel) {
         var levelImgStr = when (mainLevel) {
@@ -67,17 +92,41 @@ fun MainUserCard(
         }
         val resId = context.resources.getIdentifier(levelImgStr, "drawable", context.packageName)
         if (resId != 0) levelImg = resId
+
+        contributeClassStr = when (contributeClass) {
+            1 -> "一览众山小"
+            2 -> "起飞时刻"
+            3 -> "奋斗老铁"
+            4 -> "咸鱼潜水"
+            5 -> "躺平的村民"
+            else -> "躺平的村民"
+        }
+        netGameClassStr = when (netGameClass) {
+            1 -> "一览众山小"
+            2 -> "起飞时刻"
+            3 -> "奋斗老铁"
+            4 -> "咸鱼潜水"
+            5 -> "躺平的村民"
+            else -> "躺平的村民"
+        }
     }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp), colors = CardDefaults.cardColors(
-            containerColor = AppTheme.colors.card
-        )
+            .padding(8.dp)
+            .animateContentSize(),
+        colors = CardDefaults.cardColors(containerColor = AppTheme.colors.card)
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
-            Row {
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(4.dp))
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = rememberRipple()
+                    ) { onPasteToClipboard() }
+            ) {
                 AsyncImage(
                     model = avatarUrl,
                     contentDescription = "avatar image",
@@ -91,7 +140,9 @@ fun MainUserCard(
                 )
                 Text(
                     text = username,
-                    modifier = Modifier.align(Alignment.CenterVertically),
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
+                        .padding(end = 8.dp),
                     fontSize = 16.sp,
                     color = AppTheme.colors.textColor
                 )
@@ -100,11 +151,18 @@ fun MainUserCard(
                 Row(
                     modifier = Modifier
                         .align(Alignment.CenterEnd)
-                        .padding(end = 8.dp)
+                        .padding(horizontal = 8.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = rememberRipple()
+                        ) { isShowLevelInfo = !isShowLevelInfo }
                 ) {
                     Text(
                         text = levelText,
-                        modifier = Modifier.align(Alignment.CenterVertically),
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                            .padding(start = 8.dp),
                         fontSize = 16.sp,
                         color = AppTheme.colors.textColor
                     )
@@ -120,6 +178,185 @@ fun MainUserCard(
                 }
             }
         }
+        if (isShowLevelInfo) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp)
+            ) {
+                Column {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 8.dp, end = 8.dp, bottom = 4.dp)
+                    ) {
+                        Text(
+                            text = "${DecimalFormat("0.0").format(currentExp)}/ ${
+                                DecimalFormat("0.0").format(maxLevelExp)
+                            }",
+                            fontSize = if ("$currentExp".length + "/$maxLevelExp".length > 15) 12.sp else 14.sp,
+                            color = AppTheme.colors.textColor,
+                            modifier = Modifier.align(Alignment.BottomStart),
+                            fontFamily = Font(R.font.minecraft_ae).toFontFamily()
+                        )
+                        Text(
+                            text = "升阶任务 ${if (canLevelUp) "已完成" else "未完成"}",
+                            fontSize = 14.sp,
+                            color = AppTheme.colors.textColor,
+                            modifier = Modifier.align(Alignment.BottomEnd)
+                        )
+                    }
+                    LinearProgressIndicator(
+                        progress = (currentExp / maxLevelExp).toFloat(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(6.dp)
+                            .padding(horizontal = 8.dp)
+                            .clip(CircleShape),
+                        color = if (canLevelUp) AppTheme.colors.success else AppTheme.colors.primaryColor
+                    )
+                }
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Text(
+                    text = "月度贡献",
+                    fontSize = 14.sp,
+                    color = AppTheme.colors.textColor,
+                    modifier = Modifier.align(Alignment.CenterStart)
+                )
+                Text(
+                    text = "统计时间 $dataDate",
+                    fontSize = 12.sp,
+                    color = AppTheme.colors.hintColor,
+                    modifier = Modifier.align(Alignment.CenterEnd)
+                )
+            }
+            DividedLine()
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp)
+            ) {
+                Row {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 8.dp, end = 8.dp, bottom = 4.dp)
+                        ) {
+                            Text(
+                                text = "组件贡献分数",
+                                fontSize = 14.sp,
+                                color = AppTheme.colors.textColor,
+                                modifier = Modifier.align(Alignment.BottomStart)
+                            )
+                            Text(
+                                text = DecimalFormat("0.0").format(contributeScore.toDouble()),
+                                fontSize = 14.sp,
+                                color = AppTheme.colors.primaryColor,
+                                modifier = Modifier.align(Alignment.BottomEnd)
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 8.dp, end = 8.dp, bottom = 4.dp)
+                        ) {
+                            Text(
+                                text = "组件贡献排名",
+                                fontSize = 14.sp,
+                                color = AppTheme.colors.textColor,
+                                modifier = Modifier.align(Alignment.BottomStart)
+                            )
+                            Text(
+                                text = "$contributeRank",
+                                fontSize = 14.sp,
+                                color = AppTheme.colors.primaryColor,
+                                modifier = Modifier.align(Alignment.BottomEnd)
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 8.dp, end = 8.dp, bottom = 4.dp)
+                        ) {
+                            Text(
+                                text = "组件贡献等级",
+                                fontSize = 14.sp,
+                                color = AppTheme.colors.textColor,
+                                modifier = Modifier.align(Alignment.BottomStart)
+                            )
+                            Text(
+                                text = contributeClassStr,
+                                fontSize = 14.sp,
+                                color = AppTheme.colors.primaryColor,
+                                modifier = Modifier.align(Alignment.BottomEnd)
+                            )
+                        }
+                    }
+                    Column(modifier = Modifier.weight(1f)) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 8.dp, end = 8.dp, bottom = 4.dp)
+                        ) {
+                            Text(
+                                text = "网络游戏分数",
+                                fontSize = 14.sp,
+                                color = AppTheme.colors.textColor,
+                                modifier = Modifier.align(Alignment.BottomStart)
+                            )
+                            Text(
+                                text = DecimalFormat("0.0").format(netGameScore.toDouble()),
+                                fontSize = 14.sp,
+                                color = AppTheme.colors.primaryColor,
+                                modifier = Modifier.align(Alignment.BottomEnd)
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 8.dp, end = 8.dp, bottom = 4.dp)
+                        ) {
+                            Text(
+                                text = "网络游戏排名",
+                                fontSize = 14.sp,
+                                color = AppTheme.colors.textColor,
+                                modifier = Modifier.align(Alignment.BottomStart)
+                            )
+                            Text(
+                                text = "$netGameRank",
+                                fontSize = 14.sp,
+                                color = AppTheme.colors.primaryColor,
+                                modifier = Modifier.align(Alignment.BottomEnd)
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 8.dp, end = 8.dp, bottom = 4.dp)
+                        ) {
+                            Text(
+                                text = "网络游戏等级",
+                                fontSize = 14.sp,
+                                color = AppTheme.colors.textColor,
+                                modifier = Modifier.align(Alignment.BottomStart)
+                            )
+                            Text(
+                                text = netGameClassStr,
+                                fontSize = 14.sp,
+                                color = AppTheme.colors.primaryColor,
+                                modifier = Modifier.align(Alignment.BottomEnd)
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -131,6 +368,10 @@ private fun MainUserCardPreview() {
         "https://x19.fp.ps.netease.com/file/65967c76a72130654744d818gJc5iJKi05",
         3,
         2,
-        "杰出精英 LV.2"
+        "杰出精英 LV.2",
+        5610101.0,
+        561010.0,
+        true,
+        dataDate = "2024-5"
     )
 }
