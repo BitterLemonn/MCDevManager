@@ -31,7 +31,13 @@ class FeedbackViewModel : ViewModel() {
         when (action) {
             is FeedbackAction.LoadFeedback -> loadFeedback()
             is FeedbackAction.RefreshFeedback -> {
-                _viewStates.setState { copy(feedbackList = emptyList(), nowPage = 1) }
+                _viewStates.setState {
+                    copy(
+                        feedbackList = emptyList(),
+                        nowPage = 1,
+                        totalCount = Int.MAX_VALUE
+                    )
+                }
                 loadFeedback()
             }
 
