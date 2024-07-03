@@ -25,7 +25,12 @@ interface FeedbackApi {
     @GET("/items/feedback/pe/")
     suspend fun loadFeedback(
         @Query("start") from: Int,
-        @Query("span") size: Int
+        @Query("span") size: Int,
+        @Query("sort") sort: String? = null,
+        @Query("order") order: String? = null,
+        @Query("type") status: String? = null,
+        @Query("fuzzy_key") key: String? = null,
+        @Query("reply_count") replyCount: Int? = null
     ): ResponseData<FeedbackResponseBean>
 
     @PUT("/items/feedback/pe/{id}/reply")

@@ -30,3 +30,7 @@ fun getScreenWidth(context: Context): Int {
 fun pxToDp(context: Context, px: Float): Int {
     return Math.round(px / context.resources.displayMetrics.density)
 }
+
+fun dpToPx(context: Context, dp: Int): Int {
+    return Math.round(dp * context.resources.displayMetrics.density)
+}

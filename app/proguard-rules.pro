@@ -112,3 +112,17 @@
 
 # With R8 full mode generic signatures are stripped for classes that are not kept.
 -keep,allowobfuscation,allowshrinking class retrofit2.Response
+
+-keep class androidx.room.** { *; }
+-keep class androidx.sqlite.** { *; }
+-keep class androidx.paging.** { *; }
+-keep class * extends androidx.room.RoomDatabase { *; }
+-keep @androidx.room.Entity class * { *; }
+-keep @androidx.room.Dao class * { *; }
+-keep @androidx.room.Database class * { *; }
+-keep @androidx.room.Query class * { *; }
+-keep @androidx.room.Insert class * { *; }
+-keep @androidx.room.Update class * { *; }
+-keep @androidx.room.Delete class * { *; }
+
+-keep class com.eclipsesource.v8.** { *; }

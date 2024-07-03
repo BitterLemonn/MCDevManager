@@ -24,13 +24,32 @@ class FeedbackRepository {
         }
     }
 
-    suspend fun loadFeedback(page: Int): NetworkState<FeedbackResponseBean> {
+    suspend fun loadFeedback(
+        page: Int,
+        keyword: String = "",
+        order: String = "DESC",
+        types: List<Int> = emptyList(),
+        replyCount: Int = -1
+    ): NetworkState<FeedbackResponseBean> {
         val start = (page - 1) * 20
         val cookie = AppContext.cookiesStore[AppContext.nowNickname]
+        val keywordStr = keyword.ifEmpty { null }
+        val typeStr = if (types.isNotEmpty()) types.joinToString("__") else null
+        val realReplyCount = if (replyCount != -1) replyCount else null
+        val orderStr = if (order == "DESC") null else "ASC"
+        val sortStr = if (orderStr != null) "create_time" else null
         cookie?.let {
             CookiesStore.addCookie(NETEASE_USER_COOKIE, cookie)
             return UnifiedExceptionHandler.handleSuspend {
-                FeedbackApi.create().loadFeedback(start, 20)
+                FeedbackApi.create().loadFeedback(
+                    from = start,
+                    size = 20,
+                    sort = sortStr,
+                    order = orderStr,
+                    status = typeStr,
+                    key = keywordStr,
+                    replyCount = realReplyCount
+                )
             }
         } ?: return NetworkState.Error("无法获取用户cookie, 请重新登录")
 

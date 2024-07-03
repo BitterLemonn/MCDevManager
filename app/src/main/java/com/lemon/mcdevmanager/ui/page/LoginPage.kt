@@ -209,9 +209,7 @@ fun LoginPage(
                                         .clickable(
                                             indication = null,
                                             interactionSource = remember { MutableInteractionSource() }
-                                        ) {
-                                            isShowPassword = !isShowPassword
-                                        }
+                                        ) { isShowPassword = !isShowPassword }
                                 ) {
                                     Image(
                                         painter = painterResource(
@@ -264,7 +262,8 @@ fun LoginPage(
                             .padding(horizontal = 20.dp),
                         shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = AppTheme.colors.primaryColor, contentColor = TextWhite
+                            containerColor = AppTheme.colors.primaryColor,
+                            contentColor = TextWhite
                         )
                     ) {
                         Text(text = "登录", fontSize = 16.sp, modifier = Modifier.padding(10.dp))

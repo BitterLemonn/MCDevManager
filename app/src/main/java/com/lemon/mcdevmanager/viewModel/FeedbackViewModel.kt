@@ -43,31 +43,63 @@ class FeedbackViewModel : ViewModel() {
                 _viewStates.setState { copy(replyId = action.id) }
             }
 
+            is FeedbackAction.UpdateKeyword -> {
+                _viewStates.setState { copy(keyword = action.keyword) }
+            }
+
+            is FeedbackAction.UpdateOrder -> {
+                _viewStates.setState { copy(order = action.order) }
+                checkFilterUsed()
+            }
+
+            is FeedbackAction.UpdateSortReplyCount -> {
+                _viewStates.setState { copy(sortReplyCount = action.count) }
+                checkFilterUsed()
+            }
+
+            is FeedbackAction.UpdateType -> {
+                _viewStates.setState {
+                    copy(
+                        types = if (action.isAdd) _viewStates.value.types + action.type
+                        else _viewStates.value.types - action.type
+                    )
+                }
+                checkFilterUsed()
+            }
+
             is FeedbackAction.ReplyFeedback -> replyFeedback()
         }
     }
 
     private fun loadFeedback() {
-        viewModelScope.launch {
-            flow<Unit> {
-                loadFeedbackLogic()
-            }.onStart {
-                _viewStates.value = _viewStates.value.copy(isLoadingList = true)
-            }.onCompletion {
-                _viewStates.value = _viewStates.value.copy(isLoadingList = false)
-            }.catch {
-                _viewEvents.setEvent(FeedbackEvent.ShowToast(it.message ?: "获取反馈失败: $it"))
-            }.flowOn(Dispatchers.IO).collect()
-        }
+        if (_viewStates.value.feedbackList.size < _viewStates.value.totalCount)
+            viewModelScope.launch {
+                flow<Unit> {
+                    loadFeedbackLogic()
+                }.onStart {
+                    _viewStates.value = _viewStates.value.copy(isLoadingList = true)
+                }.onCompletion {
+                    _viewStates.value = _viewStates.value.copy(isLoadingList = false)
+                }.catch {
+                    _viewEvents.setEvent(FeedbackEvent.ShowToast(it.message ?: "获取反馈失败: $it"))
+                }.flowOn(Dispatchers.IO).collect()
+            }
     }
 
     private suspend fun loadFeedbackLogic() {
-        when (val result = repository.loadFeedback(_viewStates.value.nowPage)) {
+        when (val result = repository.loadFeedback(
+            page = _viewStates.value.nowPage,
+            keyword = _viewStates.value.keyword,
+            order = _viewStates.value.order,
+            types = _viewStates.value.types,
+            replyCount = _viewStates.value.sortReplyCount
+        )) {
             is NetworkState.Success -> {
                 result.data?.let {
                     _viewStates.value = _viewStates.value.copy(
                         feedbackList = _viewStates.value.feedbackList + it.data,
-                        nowPage = _viewStates.value.nowPage + 1
+                        nowPage = _viewStates.value.nowPage + 1,
+                        totalCount = it.count
                     )
                 }
             }
@@ -104,6 +136,14 @@ class FeedbackViewModel : ViewModel() {
             is NetworkState.Error -> throw Exception(result.msg)
         }
     }
+
+    private fun checkFilterUsed() {
+        _viewStates.value = _viewStates.value.copy(
+            isFilterUsed = _viewStates.value.order == "ASC" ||
+                    _viewStates.value.sortReplyCount != -1 ||
+                    _viewStates.value.types.isNotEmpty()
+        )
+    }
 }
 
 sealed class FeedbackAction {
@@ -111,6 +151,10 @@ sealed class FeedbackAction {
     data object RefreshFeedback : FeedbackAction()
     data class UpdateReplyContent(val content: String) : FeedbackAction()
     data class UpdateReplyId(val id: String) : FeedbackAction()
+    data class UpdateKeyword(val keyword: String) : FeedbackAction()
+    data class UpdateOrder(val order: String) : FeedbackAction()
+    data class UpdateSortReplyCount(val count: Int) : FeedbackAction()
+    data class UpdateType(val type: Int, val isAdd: Boolean) : FeedbackAction()
     data object ReplyFeedback : FeedbackAction()
 }
 
@@ -118,6 +162,13 @@ data class FeedbackViewState(
     val isLoadingList: Boolean = false,
     val feedbackList: List<FeedbackBean> = emptyList(),
     val nowPage: Int = 1,
+    val totalCount: Int = Int.MAX_VALUE,
+
+    val keyword: String = "",
+    val order: String = "DESC",
+    val sortReplyCount: Int = -1,
+    val types: List<Int> = emptyList(),
+    val isFilterUsed: Boolean = false,
 
     val replyContent: String = "",
     val replyId: String = "",

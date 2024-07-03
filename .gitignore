@@ -14,3 +14,7 @@
 .cxx
 local.properties
 /.idea/inspectionProfiles/Project_Default.xml
+/app/release/app-release.apk
+/app/release/baselineProfiles/0/app-release.dm
+/app/release/baselineProfiles/1/app-release.dm
+/app/release/output-metadata.json

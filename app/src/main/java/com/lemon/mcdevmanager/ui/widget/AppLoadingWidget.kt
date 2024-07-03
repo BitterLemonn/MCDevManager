@@ -33,7 +33,7 @@ import coil.decode.ImageDecoderDecoder
 import com.lemon.mcdevmanager.R
 
 @Composable
-fun AppLoadingWidget() {
+fun AppLoadingWidget(showBackground: Boolean = true) {
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
 
@@ -54,7 +54,7 @@ fun AppLoadingWidget() {
     val minSize = if (height > width) width else height
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Box(
+        if (showBackground)Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.35f))

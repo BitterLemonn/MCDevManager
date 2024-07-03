@@ -17,6 +17,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -31,6 +33,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -38,15 +41,20 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -78,18 +86,24 @@ import com.lemon.mcdevmanager.ui.theme.AppTheme
 import com.lemon.mcdevmanager.ui.theme.HeaderHeight
 import com.lemon.mcdevmanager.ui.theme.TextWhite
 import com.lemon.mcdevmanager.ui.widget.AppLoadingWidget
+import com.lemon.mcdevmanager.ui.widget.FABPositionWidget
 import com.lemon.mcdevmanager.ui.widget.FeedbackCard
+import com.lemon.mcdevmanager.ui.widget.FlowTabWidget
 import com.lemon.mcdevmanager.ui.widget.HeaderWidget
 import com.lemon.mcdevmanager.ui.widget.SNACK_ERROR
+import com.lemon.mcdevmanager.ui.widget.SearchBarWidget
 import com.lemon.mcdevmanager.utils.getNavigationBarHeight
 import com.lemon.mcdevmanager.viewModel.FeedbackAction
 import com.lemon.mcdevmanager.viewModel.FeedbackEvent
 import com.lemon.mcdevmanager.viewModel.FeedbackViewModel
+import com.lt.compose_views.other.VerticalSpace
 import com.lt.compose_views.refresh_layout.RefreshLayoutState
 import com.lt.compose_views.refresh_layout.VerticalRefreshableLayout
 import com.lt.compose_views.zoom.ImageViewer
 import com.zj.mvi.core.observeEvent
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun FeedbackPage(
     showToast: (String, String) -> Unit = { _, _ -> },
@@ -100,6 +114,10 @@ fun FeedbackPage(
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
     val keyboard = LocalSoftwareKeyboardController.current
+    val coroutineScope = rememberCoroutineScope()
+
+    val lazyState = rememberLazyListState()
+    val firstVisibleItemIndex by remember { derivedStateOf { lazyState.firstVisibleItemIndex } }
 
     var bigImageUrl by remember { mutableStateOf("") }
     var detailItem by remember { mutableStateOf(FeedbackBean()) }
@@ -141,6 +159,7 @@ fun FeedbackPage(
         }
     }
 
+    // 玩家反馈列表
     Column(Modifier.fillMaxSize()) {
         HeaderWidget(title = "玩家反馈", leftAction = {
             Box(modifier = Modifier
@@ -165,48 +184,154 @@ fun FeedbackPage(
                 )
             }
         })
-//        SearchBarWidget()
+        SearchBarWidget(
+            searchStr = states.keyword,
+            onSearchStrChange = { viewModel.dispatch(FeedbackAction.UpdateKeyword(it)) },
+            onSearch = { viewModel.dispatch(FeedbackAction.RefreshFeedback) },
+            isWithFilter = true,
+            isUseFilter = states.isFilterUsed
+        ) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp),
+                colors = CardDefaults.cardColors(containerColor = AppTheme.colors.card)
+            ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "反馈时间",
+                        fontSize = 14.sp,
+                        color = AppTheme.colors.textColor,
+                        modifier = Modifier.padding(start = 8.dp, top = 8.dp)
+                    )
+                    FlowRow(Modifier.fillMaxWidth()) {
+                        FlowTabWidget(text = "顺序", isSelected = states.order == "ASC") {
+                            viewModel.dispatch(FeedbackAction.UpdateOrder("ASC"))
+                            viewModel.dispatch(FeedbackAction.RefreshFeedback)
+                        }
+                        FlowTabWidget(text = "倒序", isSelected = states.order == "DESC") {
+                            viewModel.dispatch(FeedbackAction.UpdateOrder("DESC"))
+                            viewModel.dispatch(FeedbackAction.RefreshFeedback)
+                        }
+                    }
+                    Text(
+                        text = "回复次数",
+                        fontSize = 14.sp,
+                        color = AppTheme.colors.textColor,
+                        modifier = Modifier.padding(start = 8.dp, top = 8.dp)
+                    )
+                    FlowRow(Modifier.fillMaxWidth()) {
+                        FlowTabWidget(text = "未回复", isSelected = states.sortReplyCount == 0) {
+                            viewModel.dispatch(FeedbackAction.UpdateSortReplyCount(if (it) -1 else 0))
+                            viewModel.dispatch(FeedbackAction.RefreshFeedback)
+                        }
+                        FlowTabWidget(text = "回复一次", isSelected = states.sortReplyCount == 1) {
+                            viewModel.dispatch(FeedbackAction.UpdateSortReplyCount(if (it) -1 else 1))
+                            viewModel.dispatch(FeedbackAction.RefreshFeedback)
+                        }
+                        FlowTabWidget(text = "回复两次", isSelected = states.sortReplyCount == 2) {
+                            viewModel.dispatch(FeedbackAction.UpdateSortReplyCount(if (it) -1 else 2))
+                            viewModel.dispatch(FeedbackAction.RefreshFeedback)
+                        }
+                    }
+                    VerticalSpace(dp = 8.dp)
+                    Text(
+                        text = "反馈类型",
+                        fontSize = 14.sp,
+                        color = AppTheme.colors.textColor,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                    FlowRow(Modifier.fillMaxWidth()) {
+                        FlowTabWidget(text = "故障问题反馈", states.types.contains(0)) {
+                            viewModel.dispatch(FeedbackAction.UpdateType(0, !it))
+                            viewModel.dispatch(FeedbackAction.RefreshFeedback)
+                        }
+                        FlowTabWidget(text = "玩法建议与意见", states.types.contains(1)) {
+                            viewModel.dispatch(FeedbackAction.UpdateType(1, !it))
+                            viewModel.dispatch(FeedbackAction.RefreshFeedback)
+                        }
+                        FlowTabWidget(text = "内容被侵权提醒", states.types.contains(2)) {
+                            viewModel.dispatch(FeedbackAction.UpdateType(2, !it))
+                            viewModel.dispatch(FeedbackAction.RefreshFeedback)
+                        }
+                        FlowTabWidget(text = "其他", states.types.contains(3)) {
+                            viewModel.dispatch(FeedbackAction.UpdateType(3, !it))
+                            viewModel.dispatch(FeedbackAction.RefreshFeedback)
+                        }
+                        FlowTabWidget(text = "组件冲突", states.types.contains(4)) {
+                            viewModel.dispatch(FeedbackAction.UpdateType(4, !it))
+                            viewModel.dispatch(FeedbackAction.RefreshFeedback)
+                        }
+                    }
+                    VerticalSpace(dp = 8.dp)
+                }
+            }
+        }
         VerticalRefreshableLayout(
+            modifier = Modifier.weight(1f),
             topRefreshLayoutState = topRefreshState,
             bottomRefreshLayoutState = bottomRefreshState,
             bottomIsLoadFinish = !states.isLoadingList,
             topUserEnable = false
         ) {
             LazyColumn(
-                Modifier
-                    .fillMaxWidth()
-                    .animateContentSize()
+                modifier = Modifier.animateContentSize(),
+                state = lazyState
             ) {
                 if (states.isLoadingList && states.feedbackList.isEmpty()) {
                     item {
-                        AppLoadingWidget()
+                        AppLoadingWidget(showBackground = false)
                     }
-                } else itemsIndexed(states.feedbackList) { index, item ->
-                    FeedbackCard(
-                        modifier = Modifier.clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple()
-                        ) {
-                            detailItem = item
-                            isShowDetail = true
-                            if (isFocusReply) keyboard?.show()
-                        },
-                        modName = item.resName,
-                        modUid = item.iid,
-                        createTime = item.createTime,
-                        type = item.type,
-                        nickname = item.commitNickname,
-                        content = item.content,
-                        picList = item.picList,
-                        reply = item.reply,
-                        onClickImg = { url ->
-                            bigImageUrl = url
-                        })
+                } else
+                    itemsIndexed(states.feedbackList) { index, item ->
+                        FeedbackCard(
+                            modifier = Modifier.clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = rememberRipple()
+                            ) {
+                                detailItem = item
+                                isShowDetail = true
+                                if (isFocusReply) keyboard?.show()
+                            },
+                            modName = item.resName,
+                            modUid = item.iid,
+                            createTime = item.createTime,
+                            type = item.type,
+                            nickname = item.commitNickname,
+                            content = item.content,
+                            picList = item.picList,
+                            reply = item.reply,
+                            onClickImg = { url ->
+                                bigImageUrl = url
+                            })
 
-                    if (index == states.feedbackList.size - 5) {
-                        viewModel.dispatch(FeedbackAction.LoadFeedback)
+                        if (index == states.feedbackList.size - 5) {
+                            viewModel.dispatch(FeedbackAction.LoadFeedback)
+                        }
                     }
-                }
+            }
+        }
+    }
+
+    // 悬浮按钮
+    AnimatedVisibility(visible = firstVisibleItemIndex > 2, enter = fadeIn(), exit = fadeOut()) {
+        FABPositionWidget {
+            FloatingActionButton(
+                onClick = {
+                    coroutineScope.launch { lazyState.animateScrollToItem(0) }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+                    .border(2.dp, AppTheme.colors.primaryColor, CircleShape),
+                shape = CircleShape,
+                containerColor = AppTheme.colors.primaryColor,
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_back_to_top),
+                    contentDescription = "up",
+                    modifier = Modifier.size(36.dp),
+                    colorFilter = ColorFilter.tint(TextWhite)
+                )
             }
         }
     }
