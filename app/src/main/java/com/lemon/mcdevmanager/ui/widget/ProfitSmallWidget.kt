@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -42,6 +43,8 @@ import com.lemon.mcdevmanager.data.common.UPImage
 import com.lemon.mcdevmanager.ui.theme.AppTheme
 import com.lemon.mcdevmanager.ui.theme.IconDark
 import com.lemon.mcdevmanager.ui.theme.IconLight
+import com.lemon.mcdevmanager.utils.pxToDp
+import com.orhanobut.logger.Logger
 import java.util.Base64
 
 @Composable
@@ -58,6 +61,22 @@ fun ProfitSmallWidget(
     val upImageBytes by remember { mutableStateOf(Base64.getDecoder().decode(UPImage)) }
     val normalImageBytes by remember { mutableStateOf(Base64.getDecoder().decode(NORMALImage)) }
     val downImageBytes by remember { mutableStateOf(Base64.getDecoder().decode(DOWNImage)) }
+
+    val screenWidth = LocalContext.current.resources.displayMetrics.widthPixels
+
+    var largeTextSize by remember { mutableStateOf(24.sp) }
+    var mediumTextSize by remember { mutableStateOf(18.sp) }
+    var smallTextSize by remember { mutableStateOf(14.sp) }
+    var smallestTextSize by remember { mutableStateOf(12.sp) }
+
+    LaunchedEffect(key1 = Unit) {
+        var offset = (400 - screenWidth) / 50
+        if (offset < 0) offset = 0
+        largeTextSize = (24 - 2 * offset).sp
+        mediumTextSize = (18 - 2 * offset).sp
+        smallTextSize = (14 - 2 * offset).sp
+        smallestTextSize = (12 - 2 * offset).sp
+    }
 
     Box(
         modifier = Modifier.then(modifier)
@@ -78,7 +97,7 @@ fun ProfitSmallWidget(
         Column(modifier = Modifier.padding(start = 20.dp)) {
             Text(
                 text = mainText,
-                fontSize = 18.sp,
+                fontSize = mediumTextSize,
                 color = AppTheme.colors.textColor,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 3.sp,
@@ -90,7 +109,7 @@ fun ProfitSmallWidget(
                     Text(
                         text = mainNum.toString(),
                         fontFamily = Font(R.font.minecraft_ae).toFontFamily(),
-                        fontSize = if (mainNum.toString().length < 6) 24.sp else 18.sp,
+                        fontSize = if (mainNum.toString().length < 6) largeTextSize else mediumTextSize,
                         color = AppTheme.colors.textColor,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 3.sp,
@@ -124,22 +143,39 @@ fun ProfitSmallWidget(
                     .heightIn(min = 18.dp)
                     .align(Alignment.CenterHorizontally)
             ) {
-                Row(Modifier.align(Alignment.Center)) {
-                    Text(
-                        text = subText,
-                        fontSize = if (subNum.toString().length + subText.length < 12) 14.sp else 12.sp,
-                        color = AppTheme.colors.textColor,
-                        letterSpacing = 2.sp,
-                        modifier = Modifier.align(Alignment.CenterVertically)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = subNum.toString(),
-                        fontSize = if (subNum.toString().length + subText.length < 12) 14.sp else 12.sp,
-                        color = AppTheme.colors.textColor,
-                        modifier = Modifier.align(Alignment.CenterVertically)
-                    )
-                }
+                if (subNum.toString().length + subText.length < 12)
+                    Row(Modifier.align(Alignment.Center)) {
+                        Text(
+                            text = subText,
+                            fontSize = smallTextSize,
+                            color = AppTheme.colors.textColor,
+                            letterSpacing = 2.sp,
+                            modifier = Modifier.align(Alignment.CenterVertically)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = subNum.toString(),
+                            fontSize = smallTextSize,
+                            color = AppTheme.colors.textColor,
+                            modifier = Modifier.align(Alignment.CenterVertically)
+                        )
+                    }
+                else
+                    Column(Modifier.align(Alignment.Center)) {
+                        Text(
+                            text = subText,
+                            fontSize = smallTextSize,
+                            color = AppTheme.colors.textColor,
+                            letterSpacing = 1.sp,
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        )
+                        Text(
+                            text = subNum.toString(),
+                            fontSize = smallTextSize,
+                            color = AppTheme.colors.textColor,
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        )
+                    }
             }
         }
     }
@@ -153,6 +189,6 @@ private fun ProfitSmallWidgetPreview() {
         mainText = "本月钻石收益",
         mainNum = 3000,
         subText = "上月钻石收益",
-        subNum = 1500
+        subNum = 15000000
     )
 }
