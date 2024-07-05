@@ -28,3 +28,7 @@ data class DetailEntity(
     @SerialName("upload_time")
     val uploadTime: String
 )
+
+data class DetailResponseBean(
+    val data: List<DetailEntity>
+)
