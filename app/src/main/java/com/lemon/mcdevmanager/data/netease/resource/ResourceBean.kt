@@ -1,10 +1,32 @@
-package com.lemon.mcdevmanager.data.database.entities
+package com.lemon.mcdevmanager.data.netease.resource
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class DetailEntity(
+data class ResourceBean(
+    @SerialName("create_time")
+    val createTime: String,
+    @SerialName("item_id")
+    val itemId: String,
+    @SerialName("item_name")
+    val itemName: String,
+    @SerialName("online_time")
+    val onlineTime: String,
+    @SerialName("pri_type")
+    val priType: String,
+    val price: Int
+)
+
+@Serializable
+data class ResourceResponseBean(
+    val count: Int,
+    val item: List<ResourceBean>
+)
+
+
+@Serializable
+data class ResDetailBean(
     @SerialName("DAU")
     val dau: Int,
     @SerialName("cnt_buy")
@@ -29,6 +51,6 @@ data class DetailEntity(
     val uploadTime: String
 )
 
-data class DetailResponseBean(
-    val data: List<DetailEntity>
+data class ResDetailResponseBean(
+    val data: List<ResDetailBean>
 )

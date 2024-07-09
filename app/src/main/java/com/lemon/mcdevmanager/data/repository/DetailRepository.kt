@@ -2,7 +2,7 @@ package com.lemon.mcdevmanager.data.repository
 
 import com.lemon.mcdevmanager.api.AnalyzeApi
 import com.lemon.mcdevmanager.data.database.entities.DetailResponseBean
-import com.lemon.mcdevmanager.data.netease.resourceDetail.ResourceResponseBean
+import com.lemon.mcdevmanager.data.netease.resource.ResourceResponseBean
 import com.lemon.mcdevmanager.utils.NetworkState
 import com.lemon.mcdevmanager.utils.UnifiedExceptionHandler
 

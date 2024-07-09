@@ -5,7 +5,7 @@ import com.lemon.mcdevmanager.data.CommonInterceptor
 import com.lemon.mcdevmanager.data.common.JSONConverter
 import com.lemon.mcdevmanager.data.common.NETEASE_MC_DEV_LINK
 import com.lemon.mcdevmanager.data.database.entities.DetailResponseBean
-import com.lemon.mcdevmanager.data.netease.resourceDetail.ResourceResponseBean
+import com.lemon.mcdevmanager.data.netease.resource.ResourceResponseBean
 import com.lemon.mcdevmanager.utils.ResponseData
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient

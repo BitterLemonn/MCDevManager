@@ -4,6 +4,7 @@ import com.lemon.mcdevmanager.data.AddCookiesInterceptor
 import com.lemon.mcdevmanager.data.CommonInterceptor
 import com.lemon.mcdevmanager.data.common.JSONConverter
 import com.lemon.mcdevmanager.data.common.NETEASE_MC_DEV_LINK
+import com.lemon.mcdevmanager.data.netease.resource.ResourceResponseBean
 import com.lemon.mcdevmanager.data.netease.user.LevelInfoBean
 import com.lemon.mcdevmanager.data.netease.user.OverviewBean
 import com.lemon.mcdevmanager.data.netease.user.UserInfoBean
@@ -13,6 +14,8 @@ import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import retrofit2.http.GET
+import retrofit2.http.Path
+import retrofit2.http.Query
 import java.util.concurrent.TimeUnit
 
 interface InfoApi {
@@ -20,11 +23,18 @@ interface InfoApi {
     @GET("/users/me")
     suspend fun getUserInfo(): ResponseData<UserInfoBean>
 
-    @GET("/data_analysis/overview/")
+    @GET("/data_analysis/overview")
     suspend fun getOverview(): ResponseData<OverviewBean>
 
-    @GET("/new_level/")
+    @GET("/new_level")
     suspend fun getLevelInfo(): ResponseData<LevelInfoBean>
+
+    @GET("/items/categories/{platform}")
+    suspend fun getResInfoList(
+        @Path("platform") platform: String = "pe",
+        @Query("start") start: Int = 0,
+        @Query("span") span: Int = Int.MAX_VALUE
+    ): ResponseData<ResourceResponseBean>
 
     companion object {
         /**
