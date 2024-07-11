@@ -6,6 +6,7 @@ import com.lemon.mcdevmanager.data.common.NETEASE_USER_COOKIE
 import com.lemon.mcdevmanager.data.global.AppContext
 import com.lemon.mcdevmanager.data.netease.feedback.FeedbackResponseBean
 import com.lemon.mcdevmanager.data.netease.feedback.ReplyBean
+import com.lemon.mcdevmanager.utils.CookiesExpiredException
 import com.lemon.mcdevmanager.utils.NetworkState
 import com.lemon.mcdevmanager.utils.NoNeedData
 import com.lemon.mcdevmanager.utils.ResponseData
@@ -51,7 +52,7 @@ class FeedbackRepository {
                     replyCount = realReplyCount
                 )
             }
-        } ?: return NetworkState.Error("无法获取用户cookie, 请重新登录")
+        } ?: return NetworkState.Error("无法获取用户cookie, 请重新登录", CookiesExpiredException)
 
     }
 
@@ -68,6 +69,6 @@ class FeedbackRepository {
             return UnifiedExceptionHandler.handleSuspend {
                 FeedbackApi.create().sendReply(feedbackId, requestBody)
             }
-        } ?: return NetworkState.Error("无法获取用户cookie, 请重新登录")
+        } ?: return NetworkState.Error("无法获取用户cookie, 请重新登录", CookiesExpiredException)
     }
 }

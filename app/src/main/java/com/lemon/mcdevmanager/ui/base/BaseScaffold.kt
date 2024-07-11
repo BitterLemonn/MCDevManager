@@ -16,10 +16,12 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.lemon.mcdevmanager.data.common.ANALYZE_PAGE
 import com.lemon.mcdevmanager.data.common.FEEDBACK_PAGE
 import com.lemon.mcdevmanager.data.common.LOGIN_PAGE
 import com.lemon.mcdevmanager.data.common.MAIN_PAGE
 import com.lemon.mcdevmanager.data.common.SPLASH_PAGE
+import com.lemon.mcdevmanager.ui.page.AnalyzePage
 import com.lemon.mcdevmanager.ui.page.FeedbackPage
 import com.lemon.mcdevmanager.ui.page.LoginPage
 import com.lemon.mcdevmanager.ui.page.MainPage
@@ -78,7 +80,21 @@ fun BaseScaffold() {
             ) {
                 FeedbackPage(
                     navController = navController,
-                    showToast = { msg, flag -> showToast(msg, flag) })
+                    showToast = { msg, flag -> showToast(msg, flag) }
+                )
+            }
+            composable(
+                route = ANALYZE_PAGE,
+                enterTransition = {
+                    slideInHorizontally(animationSpec = tween(200), initialOffsetX = { -it })
+                }, popExitTransition = {
+                    slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
+                }
+            ) {
+                AnalyzePage(
+                    navController = navController,
+                    showToast = { msg, flag -> showToast(msg, flag) }
+                )
             }
         }
     }

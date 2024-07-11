@@ -1,7 +1,7 @@
 package com.lemon.mcdevmanager.data.repository
 
 import com.lemon.mcdevmanager.api.AnalyzeApi
-import com.lemon.mcdevmanager.data.database.entities.DetailResponseBean
+import com.lemon.mcdevmanager.data.netease.resource.ResDetailResponseBean
 import com.lemon.mcdevmanager.data.netease.resource.ResourceResponseBean
 import com.lemon.mcdevmanager.utils.NetworkState
 import com.lemon.mcdevmanager.utils.UnifiedExceptionHandler
@@ -30,7 +30,7 @@ class DetailRepository {
         order: String = "ASC",
         start: Int = 0,
         span: Int = Int.MAX_VALUE
-    ): NetworkState<DetailResponseBean> {
+    ): NetworkState<ResDetailResponseBean> {
         val itemListStr = itemList.joinToString(",")
         return UnifiedExceptionHandler.handleSuspend {
             AnalyzeApi.create().getDayDetail(

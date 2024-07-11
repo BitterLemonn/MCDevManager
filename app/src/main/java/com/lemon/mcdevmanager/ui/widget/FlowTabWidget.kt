@@ -22,11 +22,12 @@ import com.lemon.mcdevmanager.ui.theme.TextWhite
 
 @Composable
 fun FlowTabWidget(
+    modifier: Modifier = Modifier,
     text: String = "",
     isSelected: Boolean = false,
     onClick: (Boolean) -> Unit = {}
 ) {
-    Box(modifier = Modifier.padding(start = 8.dp, top = 8.dp)) {
+    Box(modifier = Modifier.padding(start = 8.dp, top = 8.dp).then(modifier)) {
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
@@ -43,6 +44,7 @@ fun FlowTabWidget(
                     onClick(isSelected)
                 }
                 .padding(8.dp)
+                .align(Alignment.Center)
         ) {
             Text(
                 text = text,

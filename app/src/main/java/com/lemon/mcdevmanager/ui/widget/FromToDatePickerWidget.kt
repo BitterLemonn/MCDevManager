@@ -6,9 +6,11 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandIn
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -51,25 +53,26 @@ import java.time.ZonedDateTime
 @Composable
 fun FromToDatePickerWidget(
     modifier: Modifier = Modifier,
+    startTime: ZonedDateTime = ZonedDateTime.now(ZoneId.of("Asia/Shanghai")).minusDays(7),
+    endTime: ZonedDateTime = ZonedDateTime.now(ZoneId.of("Asia/Shanghai")),
     onChangeFromDate: (String) -> Unit = {},
     onChangeToDate: (String) -> Unit = {},
     onChanging: (Boolean) -> Unit = {}
 ) {
-    val nowDate = remember { ZonedDateTime.now(ZoneId.of("Asia/Shanghai")) }
-    var fromDate by remember { mutableStateOf("${nowDate.year}-${nowDate.monthValue}-${nowDate.dayOfMonth}") }
-    var toDate by remember { mutableStateOf("${nowDate.year}-${nowDate.monthValue}-${nowDate.dayOfMonth}") }
+    var fromDate by remember { mutableStateOf("${startTime.year}-${startTime.monthValue}-${startTime.dayOfMonth}") }
+    var toDate by remember { mutableStateOf("${endTime.year}-${endTime.monthValue}-${endTime.dayOfMonth}") }
     val fromDateSelectorState = remember {
         DateSelectorState(
-            defaultYear = nowDate.year,
-            defaultMonth = nowDate.monthValue,
-            defaultDay = nowDate.dayOfMonth
+            defaultYear = startTime.year,
+            defaultMonth = startTime.monthValue,
+            defaultDay = startTime.dayOfMonth
         )
     }
     val toDateSelectorState = remember {
         DateSelectorState(
-            defaultYear = nowDate.year,
-            defaultMonth = nowDate.monthValue,
-            defaultDay = nowDate.dayOfMonth
+            defaultYear = endTime.year,
+            defaultMonth = endTime.monthValue,
+            defaultDay = endTime.dayOfMonth
         )
     }
 
@@ -139,16 +142,10 @@ fun FromToDatePickerWidget(
                 }
                 androidx.compose.animation.AnimatedVisibility(
                     visible = isSelectFromDate,
-                    enter = expandIn(
-                        animationSpec = tween(durationMillis = 200, delayMillis = 1000),
-                        expandFrom = Alignment.TopCenter,
-                        initialSize = { IntSize(it.width, 0) }
-                    ) + fadeIn(tween(200)),
-                    exit = shrinkOut(
-                        tween(200),
-                        shrinkTowards = Alignment.TopCenter,
-                        targetSize = { IntSize(it.width, 0) }
-                    ) + fadeOut(tween(200))
+                    enter = expandVertically(animationSpec = tween(200, delayMillis = 200))
+                            + fadeIn(tween(200)),
+                    exit = shrinkVertically(animationSpec = tween(200))
+                            + fadeOut(tween(200))
                 ) {
                     Card(
                         colors = CardDefaults.cardColors(
@@ -262,16 +259,10 @@ fun FromToDatePickerWidget(
                 }
                 androidx.compose.animation.AnimatedVisibility(
                     visible = isSelectToDate,
-                    enter = expandIn(
-                        animationSpec = tween(durationMillis = 200, delayMillis = 1000),
-                        expandFrom = Alignment.TopCenter,
-                        initialSize = { IntSize(it.width, 0) }
-                    ) + fadeIn(tween(200)),
-                    exit = shrinkOut(
-                        tween(200),
-                        shrinkTowards = Alignment.TopCenter,
-                        targetSize = { IntSize(it.width, 0) }
-                    ) + fadeOut(tween(200))
+                    enter = expandVertically(animationSpec = tween(200, delayMillis = 200))
+                            + fadeIn(tween(200)),
+                    exit = shrinkVertically(animationSpec = tween(200))
+                            + fadeOut(tween(200))
                 ) {
                     Card(
                         colors = CardDefaults.cardColors(
