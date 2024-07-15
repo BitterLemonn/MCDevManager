@@ -91,6 +91,7 @@ import com.lemon.mcdevmanager.ui.widget.FeedbackCard
 import com.lemon.mcdevmanager.ui.widget.FlowTabWidget
 import com.lemon.mcdevmanager.ui.widget.HeaderWidget
 import com.lemon.mcdevmanager.ui.widget.SNACK_ERROR
+import com.lemon.mcdevmanager.ui.widget.SNACK_SUCCESS
 import com.lemon.mcdevmanager.ui.widget.SearchBarWidget
 import com.lemon.mcdevmanager.utils.getNavigationBarHeight
 import com.lemon.mcdevmanager.viewModel.FeedbackAction
@@ -138,14 +139,17 @@ fun FeedbackPage(
         viewModel.dispatch(FeedbackAction.LoadFeedback)
         viewModel.viewEvents.observeEvent(lifecycleOwner) { event ->
             when (event) {
-                is FeedbackEvent.ShowToast -> showToast(event.msg, SNACK_ERROR)
+                is FeedbackEvent.ShowToast -> {
+                    showToast(event.msg, if (event.isError) SNACK_ERROR else SNACK_SUCCESS)
+                }
+
                 is FeedbackEvent.RouteToPath -> navController.navigate(event.path) {
                     launchSingleTop = true
                     if (event.needPop) popUpTo(FEEDBACK_PAGE) { inclusive = true }
                 }
 
                 is FeedbackEvent.ReplySuccess -> {
-
+                    resetDetail()
                     viewModel.dispatch(FeedbackAction.RefreshFeedback)
                 }
             }
@@ -241,15 +245,24 @@ fun FeedbackPage(
                         modifier = Modifier.padding(start = 8.dp)
                     )
                     FlowRow(Modifier.fillMaxWidth()) {
-                        FlowTabWidget(text = "故障问题反馈", isSelected = states.types.contains(0)) {
+                        FlowTabWidget(
+                            text = "故障问题反馈",
+                            isSelected = states.types.contains(0)
+                        ) {
                             viewModel.dispatch(FeedbackAction.UpdateType(0, !it))
                             viewModel.dispatch(FeedbackAction.RefreshFeedback)
                         }
-                        FlowTabWidget(text = "玩法建议与意见", isSelected = states.types.contains(1)) {
+                        FlowTabWidget(
+                            text = "玩法建议与意见",
+                            isSelected = states.types.contains(1)
+                        ) {
                             viewModel.dispatch(FeedbackAction.UpdateType(1, !it))
                             viewModel.dispatch(FeedbackAction.RefreshFeedback)
                         }
-                        FlowTabWidget(text = "内容被侵权提醒", isSelected = states.types.contains(2)) {
+                        FlowTabWidget(
+                            text = "内容被侵权提醒",
+                            isSelected = states.types.contains(2)
+                        ) {
                             viewModel.dispatch(FeedbackAction.UpdateType(2, !it))
                             viewModel.dispatch(FeedbackAction.RefreshFeedback)
                         }

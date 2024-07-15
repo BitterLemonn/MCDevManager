@@ -123,10 +123,9 @@ class FeedbackViewModel : ViewModel() {
                 replyFeedbackLogic()
             }.onStart {
                 _viewStates.value = _viewStates.value.copy(isLoadingReply = true)
-            }.onCompletion {
-                _viewStates.value = _viewStates.value.copy(isLoadingReply = false)
             }.catch {
                 _viewEvents.setEvent(FeedbackEvent.ShowToast(it.message ?: "回复反馈失败: $it"))
+                _viewStates.value = _viewStates.value.copy(isLoadingReply = false)
             }.flowOn(Dispatchers.IO).collect()
         }
     }
@@ -135,8 +134,9 @@ class FeedbackViewModel : ViewModel() {
         when (val result =
             repository.sendReply(_viewStates.value.replyId, _viewStates.value.replyContent)) {
             is NetworkState.Success -> {
-                _viewEvents.setEvent(FeedbackEvent.ShowToast("回复成功"))
+                _viewEvents.setEvent(FeedbackEvent.ShowToast("回复成功", false))
                 _viewEvents.setEvent(FeedbackEvent.ReplySuccess)
+                _viewStates.value = _viewStates.value.copy(isLoadingReply = false)
             }
 
             is NetworkState.Error -> throw Exception(result.msg)
@@ -182,7 +182,7 @@ data class FeedbackViewState(
 )
 
 sealed class FeedbackEvent {
-    data class ShowToast(val msg: String) : FeedbackEvent()
+    data class ShowToast(val msg: String, val isError: Boolean = true) : FeedbackEvent()
     data class RouteToPath(val path: String, val needPop: Boolean = false) : FeedbackEvent()
     data object ReplySuccess : FeedbackEvent()
 }

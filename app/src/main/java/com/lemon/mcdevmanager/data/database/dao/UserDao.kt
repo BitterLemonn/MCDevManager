@@ -13,7 +13,7 @@ interface UserDao {
     fun getUserByNickname(nickname: String): UserEntity?
 
     @Query("SELECT * FROM userEntity")
-    fun getAllUsers(): List<UserEntity>?
+    fun getAllUsers(): List<UserEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun updateUser(user: UserEntity)
