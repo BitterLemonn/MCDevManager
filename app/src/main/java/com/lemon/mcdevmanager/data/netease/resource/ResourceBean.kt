@@ -51,6 +51,7 @@ data class ResDetailBean(
     val uploadTime: String
 )
 
+@Serializable
 data class ResDetailResponseBean(
     val data: List<ResDetailBean>
 )

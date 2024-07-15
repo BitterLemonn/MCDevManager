@@ -30,6 +30,7 @@ class AnalyzeViewModel : ViewModel() {
 
     fun dispatch(action: AnalyzeAction) {
         when (action) {
+            is AnalyzeAction.GetAllResourceList -> getAllResourceList()
             is AnalyzeAction.UpdateStartDate -> {
                 _viewStates.setState { copy(startDate = action.date) }
             }
@@ -52,6 +53,34 @@ class AnalyzeViewModel : ViewModel() {
         }
     }
 
+    private fun getAllResourceList() {
+        viewModelScope.launch {
+            flow<Unit> {
+                getAllResourceListLogic()
+            }.onStart {
+                _viewStates.setState { copy(isShowLoading = true) }
+            }.onCompletion {
+                _viewStates.setState { copy(isShowLoading = false) }
+            }.catch {
+                _viewEvents.setEvent(
+                    AnalyzeEvent.ShowToast(it.message ?: "获取资源列表失败: 未知错误")
+                )
+            }.flowOn(Dispatchers.IO).collect()
+        }
+    }
+
+    private suspend fun getAllResourceListLogic() {
+        when (val res = detailRepository.getAllResource(viewStates.value.platform)) {
+            is NetworkState.Success -> res.data?.let {
+                _viewStates.setState { copy(allResourceList = it.item) }
+            }
+
+            is NetworkState.Error -> _viewEvents.setEvent(
+                AnalyzeEvent.ShowToast("获取资源列表失败: ${res.msg}")
+            )
+        }
+    }
+
     private fun loadAnalyze() {
         viewModelScope.launch {
             flow<Unit> {
@@ -61,7 +90,9 @@ class AnalyzeViewModel : ViewModel() {
             }.onCompletion {
                 _viewStates.setState { copy(isShowLoading = false) }
             }.catch {
-                _viewEvents.setEvent(AnalyzeEvent.ShowToast(it.message ?: "获取数据分析失败: 未知错误"))
+                _viewEvents.setEvent(
+                    AnalyzeEvent.ShowToast(it.message ?: "获取数据分析失败: 未知错误")
+                )
             }.flowOn(Dispatchers.IO).collect()
         }
     }
@@ -90,7 +121,16 @@ data class AnalyzeViewState(
     val startDate: String = "",
     val endDate: String = "",
     val filterResourceList: List<String> = emptyList(),
-    val allResourceList: List<ResourceBean> = emptyList(),
+    val allResourceList: List<ResourceBean> = listOf(
+        ResourceBean(
+            "2001-10-11",
+            "123123123123",
+            "神话之森",
+            "20011011",
+            "diamond",
+            300
+        )
+    ),
     val isShowLoading: Boolean = false
 )
 
@@ -99,6 +139,7 @@ sealed class AnalyzeAction {
     data class UpdateEndDate(val date: String) : AnalyzeAction()
     data class ChangeResourceList(val resId: String, val isDel: Boolean) : AnalyzeAction()
     data object LoadAnalyze : AnalyzeAction()
+    data object GetAllResourceList : AnalyzeAction()
 }
 
 sealed class AnalyzeEvent {
