@@ -14,7 +14,7 @@ data class ResourceBean(
     @SerialName("online_time")
     val onlineTime: String,
     @SerialName("pri_type")
-    val priType: String,
+    val priType: Int,
     val price: Int
 )
 
@@ -44,7 +44,7 @@ data class ResDetailBean(
     @SerialName("points")
     val points: Int,
     @SerialName("refund_rate")
-    val refundRate: Int,
+    val refundRate: Double,
     @SerialName("res_name")
     val resName: String,
     @SerialName("upload_time")

@@ -16,7 +16,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowColumn
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -70,6 +70,8 @@ import com.lemon.mcdevmanager.viewModel.AnalyzeEvent
 import com.lemon.mcdevmanager.viewModel.AnalyzeViewModel
 import com.lt.compose_views.other.HorizontalSpace
 import com.zj.mvi.core.observeEvent
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -98,19 +100,22 @@ fun AnalyzePage(
 
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxWidth()) {
-            HeaderWidget(title = "数据分析", leftAction = {
-                Box(modifier = Modifier
-                    .fillMaxHeight()
-                    .aspectRatio(1f)
-                    .clip(CircleShape)
-                    .clickable(indication = rememberRipple(),
-                        interactionSource = remember { MutableInteractionSource() }) { navController.navigateUp() }) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_back),
-                        contentDescription = "back"
-                    )
+            HeaderWidget(
+                title = "数据分析",
+                leftAction = {
+                    Box(modifier = Modifier
+                        .fillMaxHeight()
+                        .aspectRatio(1f)
+                        .clip(CircleShape)
+                        .clickable(indication = rememberRipple(),
+                            interactionSource = remember { MutableInteractionSource() }) { navController.navigateUp() }) {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_back),
+                            contentDescription = "back"
+                        )
+                    }
                 }
-            })
+            )
             Row(
                 Modifier
                     .fillMaxWidth()
@@ -118,7 +123,10 @@ fun AnalyzePage(
             ) {
                 Box(modifier = Modifier.weight(1f)) {
                     SelectCard(leftName = "PE", rightName = "PC") {
-
+                        if (it)
+                            viewModel.dispatch(AnalyzeAction.UpdatePlatform("pe"))
+                        else
+                            viewModel.dispatch(AnalyzeAction.UpdatePlatform("pc"))
                     }
                 }
                 Box(modifier = Modifier
@@ -159,7 +167,11 @@ fun AnalyzePage(
                 Column(modifier = Modifier.fillMaxWidth()) {
                     FromToDatePickerWidget(
                         modifier = Modifier.fillMaxWidth(),
-                        onChanging = { isOnChangingDate = it }
+                        startTime = ZonedDateTime.parse(states.startDate),
+                        endTime = ZonedDateTime.parse(states.endDate),
+                        onChanging = { isOnChangingDate = it },
+                        onChangeFromDate = { viewModel.dispatch(AnalyzeAction.UpdateStartDate(it)) },
+                        onChangeToDate = { viewModel.dispatch(AnalyzeAction.UpdateEndDate(it)) },
                     )
                     if (!isOnChangingDate) {
                         Box(Modifier.fillMaxWidth()) {
@@ -196,7 +208,7 @@ fun AnalyzePage(
                                 }
                             }
                         }
-                        FlowColumn(modifier = Modifier.fillMaxWidth()) {
+                        FlowRow(modifier = Modifier.fillMaxWidth()) {
                             for (item in states.filterResourceList) {
                                 FlowTabWidget(
                                     text = states.allResourceList.find { it.itemId == item }?.itemName
@@ -210,13 +222,20 @@ fun AnalyzePage(
                                     })
                             }
                         }
-                        Box(modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(AppTheme.colors.primaryColor)
-                            .clickable(indication = rememberRipple(),
-                                interactionSource = remember { MutableInteractionSource() }) {}) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(AppTheme.colors.primaryColor)
+                                .clickable(
+                                    indication = rememberRipple(),
+                                    interactionSource = remember { MutableInteractionSource() }
+                                ) {
+                                    viewModel.dispatch(AnalyzeAction.LoadAnalyze)
+                                    isShowFilter = false
+                                }
+                        ) {
                             Text(
                                 text = "确定",
                                 fontSize = 16.sp,
@@ -314,12 +333,15 @@ fun AnalyzePage(
                                     }
                                 }
                             ) {
-                                viewModel.dispatch(
-                                    AnalyzeAction.ChangeResourceList(
-                                        item.itemId,
-                                        it
+                                if (it)
+                                    viewModel.dispatch(
+                                        AnalyzeAction.ChangeResourceList(item.itemId, true)
                                     )
-                                )
+                                else if (states.filterResourceList.size < 5)
+                                    viewModel.dispatch(
+                                        AnalyzeAction.ChangeResourceList(item.itemId, false)
+                                    )
+                                else showToast("最多选择5个组件", SNACK_INFO)
                             }
                         }
                     }

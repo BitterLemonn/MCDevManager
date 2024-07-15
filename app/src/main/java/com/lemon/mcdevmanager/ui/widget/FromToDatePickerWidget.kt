@@ -172,11 +172,11 @@ fun FromToDatePickerWidget(
                                     indication = rememberRipple()
                                 ) {
                                     isSelectFromDate = false
-                                    val year = fromDateSelectorState.getYear()
-                                    val month = fromDateSelectorState.getMonth()
-                                    val day = fromDateSelectorState.getDay()
+                                    val year = fromDateSelectorState.getYear().toInt()
+                                    val month = fromDateSelectorState.getMonth().toInt()
+                                    val day = fromDateSelectorState.getDay().toInt()
                                     fromDate = "$year-$month-$day"
-                                    onChangeFromDate(fromDate)
+                                    onChangeFromDate(ZonedDateTime.of(year, month, day, 0, 0, 0, 0, ZoneId.of("Asia/Shanghai")).toString())
                                     onChanging(false)
                                 }
 
@@ -293,7 +293,7 @@ fun FromToDatePickerWidget(
                                     val month = toDateSelectorState.getMonth()
                                     val day = toDateSelectorState.getDay()
                                     toDate = "$year-$month-$day"
-                                    onChangeToDate(toDate)
+                                    onChangeToDate(ZonedDateTime.of(year.toInt(), month.toInt(), day.toInt(), 0, 0, 0, 0, ZoneId.of("Asia/Shanghai")).toString())
                                     onChanging(false)
                                 }
                         )

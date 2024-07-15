@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import java.time.ZonedDateTime
 
 class AnalyzeViewModel : ViewModel() {
     private val detailRepository = DetailRepository.getInstance()
@@ -35,6 +36,9 @@ class AnalyzeViewModel : ViewModel() {
                 _viewStates.setState { copy(startDate = action.date) }
             }
 
+            is AnalyzeAction.UpdatePlatform -> {
+                _viewStates.setState { copy(platform = action.platform) }
+            }
             is AnalyzeAction.UpdateEndDate -> {
                 _viewStates.setState { copy(endDate = action.date) }
             }
@@ -98,10 +102,18 @@ class AnalyzeViewModel : ViewModel() {
     }
 
     private suspend fun loadAnalyzeLogic() {
+        if (viewStates.value.startDate > viewStates.value.endDate) {
+            _viewEvents.setEvent(AnalyzeEvent.ShowToast("开始日期不能大于结束日期"))
+            return
+        }
+        if (viewStates.value.filterResourceList.isEmpty()) {
+            _viewEvents.setEvent(AnalyzeEvent.ShowToast("请先选择需要对比的组件"))
+            return
+        }
         when (val res = detailRepository.getDailyDetail(
             viewStates.value.platform,
-            viewStates.value.startDate,
-            viewStates.value.endDate,
+            viewStates.value.startDate.split("T")[0].replace("-", ""),
+            viewStates.value.endDate.split("T")[0].replace("-", ""),
             viewStates.value.filterResourceList
         )) {
             is NetworkState.Success -> res.data?.let {
@@ -117,9 +129,9 @@ class AnalyzeViewModel : ViewModel() {
 
 data class AnalyzeViewState(
     val analyzeList: List<ResDetailBean> = emptyList(),
-    val platform: String = "PE",
-    val startDate: String = "",
-    val endDate: String = "",
+    val platform: String = "pe",
+    val startDate: String = ZonedDateTime.now().minusDays(7).toString(),
+    val endDate: String = ZonedDateTime.now().toString(),
     val filterResourceList: List<String> = emptyList(),
     val allResourceList: List<ResourceBean> = listOf(
         ResourceBean(
@@ -127,7 +139,7 @@ data class AnalyzeViewState(
             "123123123123",
             "神话之森",
             "20011011",
-            "diamond",
+            2,
             300
         )
     ),
@@ -135,6 +147,7 @@ data class AnalyzeViewState(
 )
 
 sealed class AnalyzeAction {
+    data class UpdatePlatform(val platform: String) : AnalyzeAction()
     data class UpdateStartDate(val date: String) : AnalyzeAction()
     data class UpdateEndDate(val date: String) : AnalyzeAction()
     data class ChangeResourceList(val resId: String, val isDel: Boolean) : AnalyzeAction()
