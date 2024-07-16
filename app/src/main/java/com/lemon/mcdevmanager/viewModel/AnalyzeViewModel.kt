@@ -2,10 +2,15 @@ package com.lemon.mcdevmanager.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lemon.mcdevmanager.data.database.database.GlobalDataBase
+import com.lemon.mcdevmanager.data.database.entities.AnalyzeEntity
+import com.lemon.mcdevmanager.data.global.AppContext
 import com.lemon.mcdevmanager.data.netease.resource.ResDetailBean
 import com.lemon.mcdevmanager.data.netease.resource.ResourceBean
 import com.lemon.mcdevmanager.data.repository.DetailRepository
+import com.lemon.mcdevmanager.utils.CookiesExpiredException
 import com.lemon.mcdevmanager.utils.NetworkState
+import com.lemon.mcdevmanager.utils.logout
 import com.zj.mvi.core.SharedFlowEvents
 import com.zj.mvi.core.setEvent
 import com.zj.mvi.core.setState
@@ -20,6 +25,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.ZonedDateTime
 
 class AnalyzeViewModel : ViewModel() {
@@ -32,15 +38,18 @@ class AnalyzeViewModel : ViewModel() {
     fun dispatch(action: AnalyzeAction) {
         when (action) {
             is AnalyzeAction.GetAllResourceList -> getAllResourceList()
-            is AnalyzeAction.UpdateStartDate -> {
+            is AnalyzeAction.UpdateStartDate ->
                 _viewStates.setState { copy(startDate = action.date) }
-            }
 
-            is AnalyzeAction.UpdatePlatform -> {
+            is AnalyzeAction.UpdatePlatform ->
                 _viewStates.setState { copy(platform = action.platform) }
-            }
-            is AnalyzeAction.UpdateEndDate -> {
+
+            is AnalyzeAction.UpdateEndDate ->
                 _viewStates.setState { copy(endDate = action.date) }
+
+            is AnalyzeAction.UpdateFilterType ->{
+                _viewStates.setState { copy(filterType = action.type) }
+                setChartData(action.type)
             }
 
             is AnalyzeAction.ChangeResourceList -> {
@@ -51,15 +60,26 @@ class AnalyzeViewModel : ViewModel() {
                 }
             }
 
-            is AnalyzeAction.LoadAnalyze -> {
-                loadAnalyze()
-            }
+            is AnalyzeAction.LoadAnalyze -> loadAnalyze()
         }
     }
 
     private fun getAllResourceList() {
         viewModelScope.launch {
             flow<Unit> {
+                withContext(Dispatchers.IO) {
+                    GlobalDataBase.database.infoDao()
+                        .getLastAnalyzeParmaByNickname(AppContext.nowNickname)?.let {
+                            _viewStates.setState {
+                                copy(
+                                    platform = it.platform,
+                                    startDate = it.startDate,
+                                    endDate = it.endDate,
+                                    filterResourceList = it.filterResourceList.split(",")
+                                )
+                            }
+                        }
+                }
                 getAllResourceListLogic()
             }.onStart {
                 _viewStates.setState { copy(isShowLoading = true) }
@@ -79,9 +99,13 @@ class AnalyzeViewModel : ViewModel() {
                 _viewStates.setState { copy(allResourceList = it.item) }
             }
 
-            is NetworkState.Error -> _viewEvents.setEvent(
-                AnalyzeEvent.ShowToast("获取资源列表失败: ${res.msg}")
-            )
+            is NetworkState.Error -> if (res.e is CookiesExpiredException) {
+                _viewEvents.setEvent(AnalyzeEvent.NeedReLogin)
+                _viewEvents.setEvent(AnalyzeEvent.ShowToast("登录过期, 请重新登录"))
+                logout(AppContext.nowNickname)
+            } else {
+                _viewEvents.setEvent(AnalyzeEvent.ShowToast("获取资源列表失败: ${res.msg}"))
+            }
         }
     }
 
@@ -118,11 +142,39 @@ class AnalyzeViewModel : ViewModel() {
         )) {
             is NetworkState.Success -> res.data?.let {
                 _viewStates.setState { copy(analyzeList = it.data) }
+                setChartData(viewStates.value.filterType)
+                withContext(Dispatchers.IO) {
+                    GlobalDataBase.database.infoDao().insertAnalyzeParam(
+                        AnalyzeEntity(
+                            nickname = AppContext.nowNickname,
+                            filterType = viewStates.value.filterType,
+                            platform = viewStates.value.platform,
+                            startDate = viewStates.value.startDate,
+                            endDate = viewStates.value.endDate,
+                            filterResourceList = viewStates.value.filterResourceList.joinToString(",")
+                        )
+                    )
+                }
             }
 
-            is NetworkState.Error -> _viewEvents.setEvent(
-                AnalyzeEvent.ShowToast("获取数据分析失败: ${res.msg}")
-            )
+            is NetworkState.Error -> if (res.e is CookiesExpiredException) {
+                _viewEvents.setEvent(AnalyzeEvent.NeedReLogin)
+                _viewEvents.setEvent(AnalyzeEvent.ShowToast("登录过期, 请重新登录"))
+                logout(AppContext.nowNickname)
+            } else {
+                _viewEvents.setEvent(AnalyzeEvent.ShowToast("获取数据分析失败: ${res.msg}"))
+            }
+        }
+    }
+
+    private fun setChartData(type: Int){
+        when (type){
+            0 -> _viewStates.setState { copy(chartData = viewStates.value.analyzeList.groupBy { it.resName }.mapValues { it.value.map { it.dateId to it.cntBuy.toFloat() } }) }
+            1 -> _viewStates.setState { copy(chartData = viewStates.value.analyzeList.groupBy { it.resName }.mapValues { it.value.map { it.dateId to it.downloadNum.toFloat() } }) }
+            2 -> _viewStates.setState { copy(chartData = viewStates.value.analyzeList.groupBy { it.resName }.mapValues { it.value.map { it.dateId to it.diamond.toFloat() } }) }
+            3 -> _viewStates.setState { copy(chartData = viewStates.value.analyzeList.groupBy { it.resName }.mapValues { it.value.map { it.dateId to it.points.toFloat() } }) }
+            4 -> _viewStates.setState { copy(chartData = viewStates.value.analyzeList.groupBy { it.resName }.mapValues { it.value.map { it.dateId to it.dau.toFloat() } }) }
+            5 -> _viewStates.setState { copy(chartData = viewStates.value.analyzeList.groupBy { it.resName }.mapValues { it.value.map { it.dateId to it.refundRate.toFloat() } }) }
         }
     }
 }
@@ -130,20 +182,13 @@ class AnalyzeViewModel : ViewModel() {
 data class AnalyzeViewState(
     val analyzeList: List<ResDetailBean> = emptyList(),
     val platform: String = "pe",
+    val filterType: Int = 0,
     val startDate: String = ZonedDateTime.now().minusDays(7).toString(),
     val endDate: String = ZonedDateTime.now().toString(),
     val filterResourceList: List<String> = emptyList(),
-    val allResourceList: List<ResourceBean> = listOf(
-        ResourceBean(
-            "2001-10-11",
-            "123123123123",
-            "神话之森",
-            "20011011",
-            2,
-            300
-        )
-    ),
-    val isShowLoading: Boolean = false
+    val allResourceList: List<ResourceBean> = emptyList(),
+    val isShowLoading: Boolean = false,
+    val chartData: Map<String, List<Pair<String, Float>>> = emptyMap()
 )
 
 sealed class AnalyzeAction {
@@ -151,10 +196,12 @@ sealed class AnalyzeAction {
     data class UpdateStartDate(val date: String) : AnalyzeAction()
     data class UpdateEndDate(val date: String) : AnalyzeAction()
     data class ChangeResourceList(val resId: String, val isDel: Boolean) : AnalyzeAction()
+    data class UpdateFilterType(val type: Int) : AnalyzeAction()
     data object LoadAnalyze : AnalyzeAction()
     data object GetAllResourceList : AnalyzeAction()
 }
 
 sealed class AnalyzeEvent {
     data class ShowToast(val msg: String, val isError: Boolean = true) : AnalyzeEvent()
+    data object NeedReLogin : AnalyzeEvent()
 }

@@ -24,7 +24,8 @@ private val DarkColorPalette = AppColors(
     info = InfoNight,
     warn = WarnNight,
     success = SuccessNight,
-    error = ErrorNight
+    error = ErrorNight,
+    lineChartColors = LineChartColorsDark
 )
 
 private val LightColorPalette = AppColors(
@@ -38,7 +39,8 @@ private val LightColorPalette = AppColors(
     info = InfoLight,
     warn = WarnLight,
     success = SuccessLight,
-    error = ErrorLight
+    error = ErrorLight,
+    lineChartColors = LineChartColorsLight
 )
 
 var LocalAppColors = compositionLocalOf {
@@ -72,30 +74,32 @@ fun MCDevManagerTheme(
         AppTheme.Theme.Dark -> DarkColorPalette
     }
 
-    val textColor = animateColorAsState(targetColors.textColor, TweenSpec(600))
-    val hintColor = animateColorAsState(targetColors.hintColor, TweenSpec(600))
-    val card = animateColorAsState(targetColors.card, TweenSpec(600))
-    val background = animateColorAsState(targetColors.background, TweenSpec(600))
-    val primaryColor = animateColorAsState(targetColors.primaryColor, TweenSpec(600))
-    val primarySubColor = animateColorAsState(targetColors.primarySubColor, TweenSpec(600))
-    val secondaryColor = animateColorAsState(targetColors.secondaryColor, TweenSpec(600))
-    val info = animateColorAsState(targetColors.info, TweenSpec(600))
-    val warn = animateColorAsState(targetColors.warn, TweenSpec(600))
-    val success = animateColorAsState(targetColors.success, TweenSpec(600))
-    val error = animateColorAsState(targetValue = targetColors.error, TweenSpec(600))
+    val textColor by animateColorAsState(targetColors.textColor, TweenSpec(600))
+    val hintColor by animateColorAsState(targetColors.hintColor, TweenSpec(600))
+    val card by animateColorAsState(targetColors.card, TweenSpec(600))
+    val background by animateColorAsState(targetColors.background, TweenSpec(600))
+    val primaryColor by animateColorAsState(targetColors.primaryColor, TweenSpec(600))
+    val primarySubColor by animateColorAsState(targetColors.primarySubColor, TweenSpec(600))
+    val secondaryColor by animateColorAsState(targetColors.secondaryColor, TweenSpec(600))
+    val info by animateColorAsState(targetColors.info, TweenSpec(600))
+    val warn by animateColorAsState(targetColors.warn, TweenSpec(600))
+    val success by animateColorAsState(targetColors.success, TweenSpec(600))
+    val error by animateColorAsState(targetValue = targetColors.error, TweenSpec(600))
+    val lineChartColors = targetColors.lineChartColors
 
     val appColors = AppColors(
-        textColor = textColor.value,
-        hintColor = hintColor.value,
-        card = card.value,
-        background = background.value,
-        primaryColor = primaryColor.value,
-        primarySubColor = primarySubColor.value,
-        secondaryColor = secondaryColor.value,
-        info = info.value,
-        warn = warn.value,
-        success = success.value,
-        error = error.value
+        textColor = textColor,
+        hintColor = hintColor,
+        card = card,
+        background = background,
+        primaryColor = primaryColor,
+        primarySubColor = primarySubColor,
+        secondaryColor = secondaryColor,
+        info = info,
+        warn = warn,
+        success = success,
+        error = error,
+        lineChartColors = lineChartColors
     )
 
 //    val view = LocalView.current
@@ -124,6 +128,7 @@ class AppColors(
     warn: Color,
     success: Color,
     error: Color,
+    lineChartColors: List<Color>
 ) {
     var textColor: Color by mutableStateOf(textColor)
         internal set
@@ -146,5 +151,7 @@ class AppColors(
     var success: Color by mutableStateOf(success)
         private set
     var error: Color by mutableStateOf(error)
+        private set
+    var lineChartColors: List<Color> by mutableStateOf(lineChartColors)
         private set
 }

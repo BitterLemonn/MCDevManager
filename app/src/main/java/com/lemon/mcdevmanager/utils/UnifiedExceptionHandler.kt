@@ -102,5 +102,5 @@ object UnifiedExceptionHandler {
         }
     }
 
-    class LoginException(message: String) : Exception(message)
+    class LoginException(message: String? = null) : Exception(message)
 }

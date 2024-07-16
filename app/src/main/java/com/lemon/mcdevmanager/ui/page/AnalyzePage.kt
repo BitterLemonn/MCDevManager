@@ -13,6 +13,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -37,6 +38,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -45,19 +47,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.aay.compose.baseComponents.model.GridOrientation
+import com.aay.compose.lineChart.LineChart
+import com.aay.compose.lineChart.model.LineParameters
+import com.aay.compose.lineChart.model.LineType
 import com.lemon.mcdevmanager.R
+import com.lemon.mcdevmanager.data.common.LOGIN_PAGE
 import com.lemon.mcdevmanager.ui.theme.AppTheme
 import com.lemon.mcdevmanager.ui.theme.HeaderHeight
 import com.lemon.mcdevmanager.ui.theme.MCDevManagerTheme
 import com.lemon.mcdevmanager.ui.theme.TextWhite
+import com.lemon.mcdevmanager.ui.widget.DividedLine
 import com.lemon.mcdevmanager.ui.widget.FlowTabWidget
 import com.lemon.mcdevmanager.ui.widget.FromToDatePickerWidget
 import com.lemon.mcdevmanager.ui.widget.HeaderWidget
@@ -65,12 +76,12 @@ import com.lemon.mcdevmanager.ui.widget.SNACK_ERROR
 import com.lemon.mcdevmanager.ui.widget.SNACK_INFO
 import com.lemon.mcdevmanager.ui.widget.SelectCard
 import com.lemon.mcdevmanager.ui.widget.SelectableItem
+import com.lemon.mcdevmanager.utils.pxToDp
 import com.lemon.mcdevmanager.viewModel.AnalyzeAction
 import com.lemon.mcdevmanager.viewModel.AnalyzeEvent
 import com.lemon.mcdevmanager.viewModel.AnalyzeViewModel
 import com.lt.compose_views.other.HorizontalSpace
 import com.zj.mvi.core.observeEvent
-import java.time.ZoneId
 import java.time.ZonedDateTime
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -82,11 +93,17 @@ fun AnalyzePage(
 ) {
     val states by viewModel.viewStates.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
+    val context = LocalContext.current
 
+    var filterHeight by remember { mutableStateOf(0) }
 
     var isOnChangingDate by remember { mutableStateOf(false) }
     var isShowFilter by remember { mutableStateOf(false) }
     var isShowResPicker by remember { mutableStateOf(false) }
+
+    val analyzeResNameList = remember{ mutableStateListOf<String>() }
+    val analyzeYValueList = remember{ mutableStateListOf<List<Double>>() }
+    val analyzeXValueList = remember{ mutableStateListOf<List<String>>() }
 
     LaunchedEffect(key1 = Unit) {
         viewModel.dispatch(AnalyzeAction.GetAllResourceList)
@@ -94,7 +111,29 @@ fun AnalyzePage(
             when (event) {
                 is AnalyzeEvent.ShowToast ->
                     showToast(event.msg, if (event.isError) SNACK_ERROR else SNACK_INFO)
+
+                is AnalyzeEvent.NeedReLogin -> navController.navigate(LOGIN_PAGE) {
+                    launchSingleTop = true
+                    popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                }
             }
+        }
+    }
+
+    LaunchedEffect(key1 = states.chartData) {
+        analyzeYValueList.clear()
+        analyzeXValueList.clear()
+        analyzeResNameList.clear()
+        for (item in states.chartData) {
+            analyzeResNameList.add(item.key)
+            val yValue = mutableListOf<Float>()
+            val xValue = mutableListOf<String>()
+            for (data in item.value) {
+                yValue.add(data.second)
+                xValue.add(data.first)
+            }
+            analyzeYValueList.add(yValue.map { it.toDouble() })
+            analyzeXValueList.add(xValue)
         }
     }
 
@@ -117,9 +156,10 @@ fun AnalyzePage(
                 }
             )
             Row(
-                Modifier
+                modifier = Modifier
                     .fillMaxWidth()
                     .padding(end = 8.dp)
+                    .onGloballyPositioned { filterHeight = it.size.height }
             ) {
                 Box(modifier = Modifier.weight(1f)) {
                     SelectCard(leftName = "PE", rightName = "PC") {
@@ -138,21 +178,101 @@ fun AnalyzePage(
                         interactionSource = remember { MutableInteractionSource() }) {
                         isShowFilter = !isShowFilter
                     }
-                    .padding(8.dp)) {
+                    .padding(horizontal = 8.dp)) {
                     Image(
-                        modifier = Modifier.padding(4.dp),
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .align(Alignment.Center),
                         painter = painterResource(id = R.drawable.ic_filter),
                         contentDescription = "filter",
                         colorFilter = ColorFilter.tint(TextWhite)
                     )
                 }
             }
+            FlowRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(end = 8.dp)
+            ) {
+                FlowTabWidget(text = "新增购买", isSelected = states.filterType == 0, onClick = {
+                    viewModel.dispatch(AnalyzeAction.UpdateFilterType(0))
+                })
+                FlowTabWidget(text = "销售总量", isSelected = states.filterType == 1, onClick = {
+                    viewModel.dispatch(AnalyzeAction.UpdateFilterType(1))
+                })
+                FlowTabWidget(text = "收益", isSelected = states.filterType == 2, onClick = {
+                    viewModel.dispatch(AnalyzeAction.UpdateFilterType(2))
+                })
+                FlowTabWidget(text = "绿宝石", isSelected = states.filterType == 3, onClick = {
+                    viewModel.dispatch(AnalyzeAction.UpdateFilterType(3))
+                })
+                FlowTabWidget(text = "日活", isSelected = states.filterType == 4, onClick = {
+                    viewModel.dispatch(AnalyzeAction.UpdateFilterType(4))
+                })
+                FlowTabWidget(text = "退款率", isSelected = states.filterType == 5, onClick = {
+                    viewModel.dispatch(AnalyzeAction.UpdateFilterType(5))
+                })
+            }
+            DividedLine(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 8.dp, end = 8.dp, top = 16.dp, bottom = 8.dp)
+                    .background(AppTheme.colors.hintColor.copy(alpha = 0.5f))
+            )
+            if (analyzeResNameList.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                ) {
+                    Text(
+                        text = "暂无数据\n请检查筛选条件",
+                        fontSize = 20.sp,
+                        textAlign = TextAlign.Center,
+                        color = AppTheme.colors.hintColor,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+            } else {
+                val lineParams = mutableListOf<LineParameters>()
+                for (i in analyzeResNameList.indices){
+                    lineParams.add(
+                        LineParameters(
+                            label = analyzeResNameList[i],
+                            data = analyzeYValueList[i],
+                            lineColor = AppTheme.colors.lineChartColors[i % AppTheme.colors.lineChartColors.size],
+                            lineType = LineType.DEFAULT_LINE,
+                            lineShadow = false
+                        )
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(16.dp)
+                ){
+                    LineChart(
+                        modifier = Modifier.fillMaxWidth(),
+                        linesParameters = lineParams,
+                        animateChart = true,
+                        showGridWithSpacer = true,
+                        xAxisData = analyzeXValueList[0],
+                        oneLineChart = false,
+                        gridOrientation = GridOrientation.HORIZONTAL
+                    )
+                }
+            }
         }
+
+        // 过滤
         AnimatedVisibility(
             visible = isShowFilter,
             enter = expandVertically(animationSpec = tween(400)),
             exit = shrinkVertically(animationSpec = tween(400)),
-            modifier = Modifier.padding(top = HeaderHeight + 40.dp + 16.dp)
+            modifier = Modifier.padding(
+                top = HeaderHeight + pxToDp(context, filterHeight.toFloat()).dp
+            )
         ) {
             Card(
                 modifier = Modifier

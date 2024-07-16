@@ -81,6 +81,7 @@ import coil.ImageLoader
 import coil.compose.rememberAsyncImagePainter
 import com.lemon.mcdevmanager.R
 import com.lemon.mcdevmanager.data.common.FEEDBACK_PAGE
+import com.lemon.mcdevmanager.data.common.LOGIN_PAGE
 import com.lemon.mcdevmanager.data.netease.feedback.FeedbackBean
 import com.lemon.mcdevmanager.ui.theme.AppTheme
 import com.lemon.mcdevmanager.ui.theme.HeaderHeight
@@ -146,6 +147,11 @@ fun FeedbackPage(
                 is FeedbackEvent.RouteToPath -> navController.navigate(event.path) {
                     launchSingleTop = true
                     if (event.needPop) popUpTo(FEEDBACK_PAGE) { inclusive = true }
+                }
+
+                is FeedbackEvent.NeedReLogin -> navController.navigate(LOGIN_PAGE) {
+                    launchSingleTop = true
+                    popUpTo(navController.graph.startDestinationId) { inclusive = true }
                 }
 
                 is FeedbackEvent.ReplySuccess -> {

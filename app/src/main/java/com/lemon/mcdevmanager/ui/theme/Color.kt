@@ -38,3 +38,29 @@ val SuccessNight = Color(0xFF2E7D32)
 
 val ErrorLight = Color(0xFFFF5252)
 val ErrorNight = Color(0xFFC62828)
+
+val LineChartColor1Light = Color(0xFF4CAF50)
+val LineChartColor2Light = Color(0xFF2196F3)
+val LineChartColor3Light = Color(0xFFFF5252)
+val LineChartColor4Light = Color(0xFFFFC107)
+val LineChartColor5Light = Color(0xFF9C27B0)
+val LineChartColorsLight = listOf(
+    LineChartColor1Light,
+    LineChartColor2Light,
+    LineChartColor3Light,
+    LineChartColor4Light,
+    LineChartColor5Light
+)
+
+val LineChartColor1Dark = Color(0xFF2E7D32)
+val LineChartColor2Dark = Color(0xFF40739B)
+val LineChartColor3Dark = Color(0xFFC62828)
+val LineChartColor4Dark = Color(0xFFD8A000)
+val LineChartColor5Dark = Color(0xFF7B1FA2)
+val LineChartColorsDark = listOf(
+    LineChartColor1Dark,
+    LineChartColor2Dark,
+    LineChartColor3Dark,
+    LineChartColor4Dark,
+    LineChartColor5Dark
+)

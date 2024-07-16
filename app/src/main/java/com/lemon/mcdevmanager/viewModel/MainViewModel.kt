@@ -9,7 +9,10 @@ import com.lemon.mcdevmanager.data.database.database.GlobalDataBase
 import com.lemon.mcdevmanager.data.database.entities.OverviewEntity
 import com.lemon.mcdevmanager.data.global.AppContext
 import com.lemon.mcdevmanager.data.repository.MainRepository
+import com.lemon.mcdevmanager.utils.CookiesExpiredException
 import com.lemon.mcdevmanager.utils.NetworkState
+import com.lemon.mcdevmanager.utils.UnifiedExceptionHandler
+import com.lemon.mcdevmanager.utils.logout
 import com.orhanobut.logger.Logger
 import com.zj.mvi.core.SharedFlowEvents
 import com.zj.mvi.core.setEvent
@@ -79,11 +82,21 @@ class MainViewModel : ViewModel() {
                             avatarUrl = it.headImg
                         )
                     }
-                } ?: throw Exception("获取用户信息失败")
+                } ?: run {
+                    _viewEvents.setEvent(MainViewEvent.RouteToPath(LOGIN_PAGE, true))
+                    _viewEvents.setEvent(MainViewEvent.ShowToast("无法找到用户信息, 请重新登录"))
+                    logout(AppContext.nowNickname)
+                }
             }
 
             is NetworkState.Error -> {
-                _viewEvents.setEvent(MainViewEvent.ShowToast(userInfo.msg))
+                if (userInfo.e is CookiesExpiredException) {
+                    _viewEvents.setEvent(MainViewEvent.RouteToPath(LOGIN_PAGE, true))
+                    _viewEvents.setEvent(MainViewEvent.ShowToast("登录过期, 请重新登录"))
+                    logout(AppContext.nowNickname)
+                } else {
+                    _viewEvents.setEvent(MainViewEvent.ShowToast(userInfo.msg))
+                }
             }
         }
     }
@@ -121,7 +134,13 @@ class MainViewModel : ViewModel() {
             }
 
             is NetworkState.Error -> {
-                _viewEvents.setEvent(MainViewEvent.ShowToast(levelInfo.msg))
+                if (levelInfo.e is CookiesExpiredException) {
+                    _viewEvents.setEvent(MainViewEvent.RouteToPath(LOGIN_PAGE, true))
+                    _viewEvents.setEvent(MainViewEvent.ShowToast("登录过期, 请重新登录"))
+                    logout(AppContext.nowNickname)
+                } else {
+                    _viewEvents.setEvent(MainViewEvent.ShowToast(levelInfo.msg))
+                }
             }
         }
     }
@@ -137,8 +156,8 @@ class MainViewModel : ViewModel() {
             val chinaTime = ZonedDateTime.ofInstant(instant, chinaZoneId)
 
             var isLoad = false
-            if (chinaTime.hour >= 11 && overviewEntity.yesterdayDownload != 0) isLoad = true
-            else if (chinaTime.hour >= 12) isLoad = true
+            if (overviewEntity.yesterdayDownload != 0) isLoad = true
+            else if (chinaTime.hour > 11 || (chinaTime.hour == 11 && chinaTime.minute >= 30)) isLoad = true
             if (isDifferentDay(overviewEntity.timestamp)) isLoad = false
 
             if (isLoad) {
@@ -209,7 +228,13 @@ class MainViewModel : ViewModel() {
             }
 
             is NetworkState.Error -> {
-                _viewEvents.setEvent(MainViewEvent.ShowToast(overview.msg))
+                if (overview.e is CookiesExpiredException) {
+                    _viewEvents.setEvent(MainViewEvent.RouteToPath(LOGIN_PAGE, true))
+                    _viewEvents.setEvent(MainViewEvent.ShowToast("登录过期, 请重新登录"))
+                    logout(AppContext.nowNickname)
+                } else {
+                    _viewEvents.setEvent(MainViewEvent.ShowToast(overview.msg))
+                }
             }
         }
     }
@@ -217,12 +242,7 @@ class MainViewModel : ViewModel() {
     private fun deleteAccount(accountName: String) {
         val isLogout = accountName == AppContext.nowNickname
         viewModelScope.launch {
-            AppContext.accountList.remove(accountName)
-            AppContext.cookiesStore.remove(accountName)
-            withContext(Dispatchers.IO) {
-                GlobalDataBase.database.infoDao().deleteOverviewByNickname(accountName)
-                GlobalDataBase.database.userDao().deleteUserByNickname(accountName)
-            }
+            logout(accountName)
             if (isLogout)
                 _viewEvents.setEvent(MainViewEvent.RouteToPath(LOGIN_PAGE, true))
         }

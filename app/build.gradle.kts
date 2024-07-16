@@ -104,7 +104,7 @@ dependencies {
     implementation(libs.coil.gif)
 
     // chart
-    implementation (libs.mpandroidchart)
+    implementation("io.github.thechance101:chart:Beta-0.0.5")
 
     // compose extend view
     implementation(libs.composeviews)

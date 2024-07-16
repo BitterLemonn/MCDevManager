@@ -16,6 +16,7 @@ import com.lemon.mcdevmanager.data.netease.login.PVResultStrBean
 import com.lemon.mcdevmanager.data.repository.LoginRepository
 import com.lemon.mcdevmanager.utils.NetworkState
 import com.lemon.mcdevmanager.utils.dataJsonToString
+import com.lemon.mcdevmanager.utils.vdfAsync
 import com.orhanobut.logger.Logger
 import com.zj.mvi.core.SharedFlowEvents
 import com.zj.mvi.core.setEvent
@@ -31,6 +32,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class LoginViewModel : ViewModel() {
     private val repository = LoginRepository.getInstance()
@@ -99,7 +101,6 @@ class LoginViewModel : ViewModel() {
             is NetworkState.Success -> {
                 power.data?.let {
                     val pvInfo = JSONConverter.decodeFromString<PVInfo>(it)
-
                     val e = """
                     var e = {
                         sid: "${pvInfo.sid}",
@@ -125,6 +126,8 @@ class LoginViewModel : ViewModel() {
                             )
                         }
                     }
+//                    pvResultBean = vdfAsync(pvInfo)
+                    Logger.d("pvResultBean: $pvResultBean")
                     getTicket()
                 }
             }
@@ -190,28 +193,46 @@ class LoginViewModel : ViewModel() {
 
     private fun setUser(nickname: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            flow<Unit> {
-                // room持久化
-                val cookie = CookiesStore.getCookie(NETEASE_USER_COOKIE)
-                    ?: throw Exception("获取用户信息失败, 请重新登录")
-                val username = _viewState.value.username
-                val password = _viewState.value.password
-                val userInfo = UserEntity(
-                    username = username,
-                    password = password,
-                    nickname = nickname,
-                    cookie = cookie
-                )
-                // 持久化
-                GlobalDataBase.database.userDao().updateUser(userInfo)
-                AppContext.cookiesStore[nickname] = cookie
-                AppContext.nowNickname = nickname
-                AppContext.accountList.add(nickname)
-            }.onCompletion {
-                _viewEvent.setEvent(LoginViewEvent.RouteToPath(MAIN_PAGE, true))
-            }.catch {
-                _viewEvent.setEvent(LoginViewEvent.LoginFailed(it.message ?: "未知错误"))
-            }.collect()
+            var isExist = false
+            withContext(Dispatchers.IO) {
+                val user = GlobalDataBase.database.userDao().getUserByNickname(nickname)
+                if (user != null) {
+                    _viewEvent.setEvent(LoginViewEvent.ShowToast("助记名称已存在"))
+                    isExist = true
+                }
+                val allUsers = GlobalDataBase.database.userDao().getAllUsers()
+                allUsers.forEach {
+                    if (it.username == _viewState.value.username) {
+                        GlobalDataBase.database.userDao().deleteUserByNickname(it.nickname)
+                        AppContext.cookiesStore.remove(it.nickname)
+                        AppContext.accountList.remove(it.nickname)
+                    }
+                }
+            }
+            if (!isExist) {
+                flow<Unit> {
+                    // room持久化
+                    val cookie = CookiesStore.getCookie(NETEASE_USER_COOKIE)
+                        ?: throw Exception("获取用户信息失败, 请重新登录")
+                    val username = _viewState.value.username
+                    val password = _viewState.value.password
+                    val userInfo = UserEntity(
+                        username = username,
+                        password = password,
+                        nickname = nickname,
+                        cookie = cookie
+                    )
+                    // 持久化
+                    GlobalDataBase.database.userDao().updateUser(userInfo)
+                    AppContext.cookiesStore[nickname] = cookie
+                    AppContext.nowNickname = nickname
+                    AppContext.accountList.add(nickname)
+                }.onCompletion {
+                    _viewEvent.setEvent(LoginViewEvent.RouteToPath(MAIN_PAGE, true))
+                }.catch {
+                    _viewEvent.setEvent(LoginViewEvent.LoginFailed(it.message ?: "未知错误"))
+                }.collect()
+            }
         }
     }
 }
@@ -228,6 +249,7 @@ sealed class LoginViewEvent {
     data class LoginSuccess(val username: String) : LoginViewEvent()
     data class LoginFailed(val message: String) : LoginViewEvent()
     data class RouteToPath(val path: String, val needPop: Boolean = false) : LoginViewEvent()
+    data class ShowToast(val message: String, val isError: Boolean = true) : LoginViewEvent()
 }
 
 sealed class LoginViewAction {
