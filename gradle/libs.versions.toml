@@ -2,10 +2,10 @@
 accompanistPermissions = "0.35.1-alpha"
 agp = "8.5.0"
 bcprovJdk15on = "1.68"
-charty = "2.0.0-alpha01"
 coil = "2.2.2"
 coilCompose = "2.6.0"
-composeviews = "1.6.0.4"
+composeCharts = "0.0.13"
+composeviews = "1.6.11.2"
 converterKotlinxSerialization = "2.11.0"
 kotlin = "1.9.0"
 coreKtx = "1.13.1"
@@ -29,10 +29,10 @@ androidx-navigation-compose = { module = "androidx.navigation:navigation-compose
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomGradlePlugin" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomGradlePlugin" }
 bcprov-jdk15on = { module = "org.bouncycastle:bcprov-jdk15on", version.ref = "bcprovJdk15on" }
-charty = { module = "com.himanshoe:charty", version.ref = "charty" }
 coil = { module = "io.coil-kt:coil", version.ref = "coil" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 coil-gif = { module = "io.coil-kt:coil-gif", version.ref = "coilCompose" }
+compose-charts = { module = "io.github.ehsannarmani:compose-charts", version.ref = "composeCharts" }
 composeviews = { module = "io.github.ltttttttttttt:ComposeViews", version.ref = "composeviews" }
 converter-kotlinx-serialization = { module = "com.squareup.retrofit2:converter-kotlinx-serialization", version.ref = "converterKotlinxSerialization" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

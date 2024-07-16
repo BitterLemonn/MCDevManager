@@ -1,5 +1,6 @@
 package com.lemon.mcdevmanager.ui.page
 
+import android.icu.text.DecimalFormat
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -13,7 +14,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -38,6 +39,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,10 +49,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -58,16 +62,13 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.aay.compose.baseComponents.model.GridOrientation
-import com.aay.compose.lineChart.LineChart
-import com.aay.compose.lineChart.model.LineParameters
-import com.aay.compose.lineChart.model.LineType
 import com.lemon.mcdevmanager.R
 import com.lemon.mcdevmanager.data.common.LOGIN_PAGE
 import com.lemon.mcdevmanager.ui.theme.AppTheme
 import com.lemon.mcdevmanager.ui.theme.HeaderHeight
 import com.lemon.mcdevmanager.ui.theme.MCDevManagerTheme
 import com.lemon.mcdevmanager.ui.theme.TextWhite
+import com.lemon.mcdevmanager.ui.widget.AppLoadingWidget
 import com.lemon.mcdevmanager.ui.widget.DividedLine
 import com.lemon.mcdevmanager.ui.widget.FlowTabWidget
 import com.lemon.mcdevmanager.ui.widget.FromToDatePickerWidget
@@ -75,14 +76,30 @@ import com.lemon.mcdevmanager.ui.widget.HeaderWidget
 import com.lemon.mcdevmanager.ui.widget.SNACK_ERROR
 import com.lemon.mcdevmanager.ui.widget.SNACK_INFO
 import com.lemon.mcdevmanager.ui.widget.SelectCard
+import com.lemon.mcdevmanager.ui.widget.SelectTextCard
 import com.lemon.mcdevmanager.ui.widget.SelectableItem
+import com.lemon.mcdevmanager.utils.getAvgItems
 import com.lemon.mcdevmanager.utils.pxToDp
 import com.lemon.mcdevmanager.viewModel.AnalyzeAction
 import com.lemon.mcdevmanager.viewModel.AnalyzeEvent
 import com.lemon.mcdevmanager.viewModel.AnalyzeViewModel
 import com.lt.compose_views.other.HorizontalSpace
+import com.orhanobut.logger.Logger
 import com.zj.mvi.core.observeEvent
+import ir.ehsannarmani.compose_charts.ColumnChart
+import ir.ehsannarmani.compose_charts.LineChart
+import ir.ehsannarmani.compose_charts.extensions.format
+import ir.ehsannarmani.compose_charts.models.AnimationMode
+import ir.ehsannarmani.compose_charts.models.BarProperties
+import ir.ehsannarmani.compose_charts.models.Bars
+import ir.ehsannarmani.compose_charts.models.DotProperties
+import ir.ehsannarmani.compose_charts.models.GridProperties
+import ir.ehsannarmani.compose_charts.models.HorizontalIndicatorProperties
+import ir.ehsannarmani.compose_charts.models.LabelHelperProperties
+import ir.ehsannarmani.compose_charts.models.LabelProperties
+import ir.ehsannarmani.compose_charts.models.Line
 import java.time.ZonedDateTime
+import kotlin.math.max
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -95,17 +112,21 @@ fun AnalyzePage(
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
 
-    var filterHeight by remember { mutableStateOf(0) }
+    var filterHeight by remember { mutableIntStateOf(0) }
+    var analyzeWidth by remember { mutableIntStateOf(200) }
 
     var isOnChangingDate by remember { mutableStateOf(false) }
     var isShowFilter by remember { mutableStateOf(false) }
     var isShowResPicker by remember { mutableStateOf(false) }
 
-    val analyzeResNameList = remember{ mutableStateListOf<String>() }
-    val analyzeYValueList = remember{ mutableStateListOf<List<Double>>() }
-    val analyzeXValueList = remember{ mutableStateListOf<List<String>>() }
+    val analyzeResNameList = remember { mutableStateListOf<String>() }
+    val analyzeYValueList = remember { mutableStateListOf<List<Double>>() }
+    val analyzeXValueList = remember { mutableStateListOf<List<String>>() }
+
+    var chartType by remember { mutableStateOf("line") }
 
     LaunchedEffect(key1 = Unit) {
+        viewModel.dispatch(AnalyzeAction.GetLastAnalyzeParams)
         viewModel.dispatch(AnalyzeAction.GetAllResourceList)
         viewModel.viewEvents.observeEvent(lifecycleOwner) { event ->
             when (event) {
@@ -125,16 +146,22 @@ fun AnalyzePage(
         analyzeXValueList.clear()
         analyzeResNameList.clear()
         for (item in states.chartData) {
-            analyzeResNameList.add(item.key)
             val yValue = mutableListOf<Float>()
             val xValue = mutableListOf<String>()
             for (data in item.value) {
                 yValue.add(data.second)
-                xValue.add(data.first)
+                val xValueStr = data.first.substring(5)
+                val date = xValueStr.substring(xValueStr.length - 2, xValueStr.length)
+                val month = xValueStr.substring(0, xValueStr.length - date.length)
+                xValue.add("$month/$date")
             }
             analyzeYValueList.add(yValue.map { it.toDouble() })
             analyzeXValueList.add(xValue)
+            analyzeResNameList.add(item.key)
         }
+        Logger.d("analyzeYValueList: $analyzeYValueList")
+        Logger.d("analyzeXValueList: $analyzeXValueList")
+        Logger.d("analyzeResNameList: $analyzeResNameList")
     }
 
     Box(Modifier.fillMaxSize()) {
@@ -162,23 +189,27 @@ fun AnalyzePage(
                     .onGloballyPositioned { filterHeight = it.size.height }
             ) {
                 Box(modifier = Modifier.weight(1f)) {
-                    SelectCard(leftName = "PE", rightName = "PC") {
+                    SelectTextCard(
+                        initSelectLeft = states.platform == "pe",
+                        leftName = "PE",
+                        rightName = "PC"
+                    ) {
                         if (it)
                             viewModel.dispatch(AnalyzeAction.UpdatePlatform("pe"))
                         else
                             viewModel.dispatch(AnalyzeAction.UpdatePlatform("pc"))
                     }
                 }
-                Box(modifier = Modifier
-                    .size(40.dp)
-                    .align(Alignment.CenterVertically)
-                    .clip(CircleShape)
-                    .background(AppTheme.colors.primaryColor)
-                    .clickable(indication = rememberRipple(),
-                        interactionSource = remember { MutableInteractionSource() }) {
-                        isShowFilter = !isShowFilter
-                    }
-                    .padding(horizontal = 8.dp)) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .align(Alignment.CenterVertically)
+                        .clip(CircleShape)
+                        .background(AppTheme.colors.primaryColor)
+                        .clickable(indication = rememberRipple(),
+                            interactionSource = remember { MutableInteractionSource() }
+                        ) { isShowFilter = !isShowFilter }
+                        .padding(horizontal = 8.dp)) {
                     Image(
                         modifier = Modifier
                             .padding(4.dp)
@@ -213,13 +244,54 @@ fun AnalyzePage(
                     viewModel.dispatch(AnalyzeAction.UpdateFilterType(5))
                 })
             }
-            DividedLine(
-                modifier = Modifier
+            Row(
+                Modifier
                     .fillMaxWidth()
-                    .padding(start = 8.dp, end = 8.dp, top = 16.dp, bottom = 8.dp)
-                    .background(AppTheme.colors.hintColor.copy(alpha = 0.5f))
-            )
-            if (analyzeResNameList.isEmpty()) {
+                    .padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 4.dp)
+            ) {
+                DividedLine(
+                    modifier = Modifier
+                        .weight(1f)
+                        .background(AppTheme.colors.hintColor.copy(alpha = 0.5f))
+                        .align(Alignment.CenterVertically)
+                )
+                SelectCard(
+                    modifier = Modifier
+                        .width(80.dp)
+                        .align(Alignment.CenterVertically),
+                    initSelectLeft = chartType == "line",
+                    leftContain = {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_line_chart),
+                            contentDescription = "line chart",
+                            modifier = Modifier
+                                .size(24.dp)
+                                .padding(4.dp)
+                                .align(Alignment.Center),
+                            colorFilter = ColorFilter.tint(
+                                if (chartType == "line") TextWhite else AppTheme.colors.primaryColor
+                            )
+                        )
+                    },
+                    rightContain = {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_bar_chart),
+                            contentDescription = "bar chart",
+                            modifier = Modifier
+                                .size(24.dp)
+                                .padding(4.dp)
+                                .align(Alignment.Center),
+                            colorFilter = ColorFilter.tint(
+                                if (chartType == "bar") TextWhite else AppTheme.colors.primaryColor
+                            )
+                        )
+                    },
+                    nowSelectLeft = {
+                        chartType = if (it) "line" else "bar"
+                    }
+                )
+            }
+            if (analyzeResNameList.isEmpty() && !states.isShowLoading) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -233,34 +305,162 @@ fun AnalyzePage(
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
-            } else {
-                val lineParams = mutableListOf<LineParameters>()
-                for (i in analyzeResNameList.indices){
-                    lineParams.add(
-                        LineParameters(
-                            label = analyzeResNameList[i],
-                            data = analyzeYValueList[i],
-                            lineColor = AppTheme.colors.lineChartColors[i % AppTheme.colors.lineChartColors.size],
-                            lineType = LineType.DEFAULT_LINE,
-                            lineShadow = false
-                        )
-                    )
-                }
+            } else if (!states.isShowLoading) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
                         .padding(16.dp)
-                ){
-                    LineChart(
-                        modifier = Modifier.fillMaxWidth(),
-                        linesParameters = lineParams,
-                        animateChart = true,
-                        showGridWithSpacer = true,
-                        xAxisData = analyzeXValueList[0],
-                        oneLineChart = false,
-                        gridOrientation = GridOrientation.HORIZONTAL
-                    )
+                        .onGloballyPositioned {
+                            analyzeWidth = pxToDp(context, it.size.width.toFloat())
+                        }
+                ) {
+                    if (chartType == "line") {
+                        // 折线图
+                        val lineParams = mutableListOf<Line>()
+                        for (i in analyzeResNameList.indices) {
+                            lineParams.add(
+                                Line(
+                                    label = analyzeResNameList[i],
+                                    values = analyzeYValueList[i],
+                                    color = SolidColor(AppTheme.colors.lineChartColors[i % AppTheme.colors.lineChartColors.size]),
+                                    curvedEdges = false,
+                                    dotProperties = DotProperties(
+                                        enabled = true,
+                                        color = SolidColor(AppTheme.colors.lineChartColors[i % AppTheme.colors.lineChartColors.size]),
+                                        radius = 4.dp,
+                                        strokeWidth = 2.dp,
+                                        strokeColor = SolidColor(TextWhite)
+                                    )
+                                )
+                            )
+                        }
+                        LineChart(
+                            data = lineParams,
+                            curvedEdges = false,
+                            animationMode = AnimationMode.Together(),
+                            labelProperties = LabelProperties(
+                                labels = getAvgItems(analyzeXValueList[0], analyzeWidth / 80),
+                                enabled = true,
+                                textStyle = TextStyle(
+                                    fontSize = 12.sp,
+                                    color = AppTheme.colors.textColor
+                                )
+                            ),
+                            gridProperties = GridProperties(
+                                yAxisProperties = GridProperties.AxisProperties(
+                                    enabled = true,
+                                    color = SolidColor(AppTheme.colors.hintColor.copy(alpha = 0.5f)),
+                                    lineCount = analyzeXValueList[0].size
+                                ),
+                                xAxisProperties = GridProperties.AxisProperties(
+                                    enabled = true,
+                                    color = SolidColor(AppTheme.colors.hintColor.copy(alpha = 0.5f))
+                                )
+                            ),
+                            labelHelperProperties = LabelHelperProperties(
+                                textStyle = TextStyle(
+                                    fontSize = 12.sp,
+                                    color = AppTheme.colors.textColor
+                                )
+                            ),
+                            indicatorProperties = HorizontalIndicatorProperties(
+                                textStyle = TextStyle(
+                                    fontSize = 12.sp,
+                                    color = AppTheme.colors.textColor
+                                ),
+                                contentBuilder = { value ->
+                                    if (value > 1000000) {
+                                        "${DecimalFormat("#.##").format(value / 1000000)}m"
+                                    } else if (value > 1000) {
+                                        "${DecimalFormat("#.##").format(value / 1000)}k"
+                                    } else {
+                                        if (value == value.toInt().toDouble()) {
+                                            value.format(0)
+                                        } else value.format(1)
+                                    }
+                                }
+                            )
+                        )
+                    } else {
+                        // 柱状图
+                        val barParams = mutableListOf<Bars>()
+                        for (dateIndex in analyzeXValueList[0].indices) {
+                            val barData = mutableListOf<Bars.Data>()
+                            for (resIndex in analyzeResNameList.indices) {
+                                val value = analyzeYValueList[resIndex][dateIndex]
+                                if (value != 0.0) {
+                                    barData.add(
+                                        Bars.Data(
+                                            label = analyzeResNameList[resIndex],
+                                            value = analyzeYValueList[resIndex][dateIndex],
+                                            color = SolidColor(AppTheme.colors.lineChartColors[resIndex % AppTheme.colors.lineChartColors.size])
+                                        )
+                                    )
+                                }
+                            }
+                            if (barData.isNotEmpty())
+                                barParams.add(
+                                    Bars(
+                                        label = analyzeXValueList[0][dateIndex],
+                                        values = barData
+                                    )
+                                )
+                        }
+                        if (barParams.isNotEmpty())
+                            ColumnChart(
+                                data = barParams,
+                                barProperties = BarProperties(
+                                    thickness = max(
+                                        2,
+                                        15 - (analyzeXValueList.size * analyzeResNameList.size) / 5
+                                    ).dp,
+                                ),
+                                animationMode = AnimationMode.Together(),
+                                labelProperties = LabelProperties(
+                                    labels = analyzeResNameList,
+                                    enabled = true,
+                                    textStyle = TextStyle(
+                                        fontSize = 12.sp,
+                                        color = AppTheme.colors.textColor
+                                    )
+                                ),
+                                gridProperties = GridProperties(
+                                    yAxisProperties = GridProperties.AxisProperties(
+                                        enabled = true,
+                                        color = SolidColor(AppTheme.colors.hintColor.copy(alpha = 0.5f)),
+                                        lineCount = analyzeXValueList[0].size
+                                    ),
+                                    xAxisProperties = GridProperties.AxisProperties(
+                                        enabled = true,
+                                        color = SolidColor(AppTheme.colors.hintColor.copy(alpha = 0.5f))
+                                    )
+                                ),
+                                labelHelperProperties = LabelHelperProperties(
+                                    textStyle = TextStyle(
+                                        fontSize = 12.sp,
+                                        color = AppTheme.colors.textColor
+                                    )
+                                ),
+                                indicatorProperties = HorizontalIndicatorProperties(
+                                    textStyle = TextStyle(
+                                        fontSize = 12.sp,
+                                        color = AppTheme.colors.textColor
+                                    ),
+                                    contentBuilder = { value ->
+                                        if (value > 1000000) {
+                                            "${DecimalFormat("#.##").format(value / 1000000)}m"
+                                        } else if (value > 1000) {
+                                            "${DecimalFormat("#.##").format(value / 1000)}k"
+                                        } else {
+                                            if (value == value.toInt().toDouble()) {
+                                                value.format(0)
+                                            } else value.format(1)
+                                        }
+                                    }
+                                )
+                            )
+                    }
                 }
             }
         }
@@ -467,6 +667,15 @@ fun AnalyzePage(
                     }
                 }
             }
+        }
+
+        // 加载中
+        AnimatedVisibility(
+            visible = states.isShowLoading,
+            enter = fadeIn(),
+            exit = fadeOut(),
+        ) {
+            AppLoadingWidget()
         }
     }
 }

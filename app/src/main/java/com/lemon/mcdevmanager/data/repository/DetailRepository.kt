@@ -25,7 +25,7 @@ class DetailRepository {
         cookie?.let {
             CookiesStore.addCookie(NETEASE_USER_COOKIE, cookie)
             return UnifiedExceptionHandler.handleSuspend {
-                AnalyzeApi.create().getAllResource(platform.lowercase(Locale.PRC))
+                AnalyzeApi.create().getAllResource(if (platform == "pe") "pe" else "comp")
             }
         } ?: return NetworkState.Error("无法获取用户cookie, 请重新登录", CookiesExpiredException)
     }
@@ -47,7 +47,7 @@ class DetailRepository {
             return UnifiedExceptionHandler.handleSuspend {
                 AnalyzeApi.create().getDayDetail(
                     platform = platform,
-                    category = platform,
+                    category = if (platform == "pe") "pe" else "comp",
                     startDate = startDate,
                     endDate = endDate,
                     itemListStr = itemListStr,

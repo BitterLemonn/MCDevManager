@@ -13,8 +13,8 @@ android {
         applicationId = "com.lemon.mcdevmanager"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "0.3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -104,7 +104,7 @@ dependencies {
     implementation(libs.coil.gif)
 
     // chart
-    implementation("io.github.thechance101:chart:Beta-0.0.5")
+    implementation (libs.compose.charts)
 
     // compose extend view
     implementation(libs.composeviews)

@@ -11,6 +11,7 @@ import com.lemon.mcdevmanager.data.repository.DetailRepository
 import com.lemon.mcdevmanager.utils.CookiesExpiredException
 import com.lemon.mcdevmanager.utils.NetworkState
 import com.lemon.mcdevmanager.utils.logout
+import com.orhanobut.logger.Logger
 import com.zj.mvi.core.SharedFlowEvents
 import com.zj.mvi.core.setEvent
 import com.zj.mvi.core.setState
@@ -37,17 +38,28 @@ class AnalyzeViewModel : ViewModel() {
 
     fun dispatch(action: AnalyzeAction) {
         when (action) {
+            is AnalyzeAction.GetLastAnalyzeParams -> getLastAnalyzePlatform()
             is AnalyzeAction.GetAllResourceList -> getAllResourceList()
             is AnalyzeAction.UpdateStartDate ->
                 _viewStates.setState { copy(startDate = action.date) }
 
-            is AnalyzeAction.UpdatePlatform ->
-                _viewStates.setState { copy(platform = action.platform) }
+            is AnalyzeAction.UpdatePlatform -> {
+                _viewStates.setState {
+                    copy(
+                        platform = action.platform,
+                        filterResourceList = emptyList(),
+                        chartData = emptyMap(),
+                        analyzeList = emptyList()
+                    )
+                }
+                getLastAnalyzeParam()
+                getAllResourceList()
+            }
 
             is AnalyzeAction.UpdateEndDate ->
                 _viewStates.setState { copy(endDate = action.date) }
 
-            is AnalyzeAction.UpdateFilterType ->{
+            is AnalyzeAction.UpdateFilterType -> {
                 _viewStates.setState { copy(filterType = action.type) }
                 setChartData(action.type)
             }
@@ -64,22 +76,41 @@ class AnalyzeViewModel : ViewModel() {
         }
     }
 
+    private fun getLastAnalyzePlatform() {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                GlobalDataBase.database.infoDao().getLastAnalyzePlatformByNickname(AppContext.nowNickname)
+            }?.let {
+                _viewStates.setState { copy(platform = it) }
+            }
+            getLastAnalyzeParam()
+        }
+    }
+
+    private fun getLastAnalyzeParam() {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                GlobalDataBase.database.infoDao()
+                    .getLastAnalyzeParamsByNicknamePlatform(
+                        AppContext.nowNickname, viewStates.value.platform
+                    )?.let {
+                        _viewStates.setState {
+                            copy(
+                                platform = it.platform,
+                                startDate = it.startDate,
+                                endDate = it.endDate,
+                                filterResourceList = it.filterResourceList.split(",")
+                            )
+                        }
+                        loadAnalyze()
+                    }
+            }
+        }
+    }
+
     private fun getAllResourceList() {
         viewModelScope.launch {
             flow<Unit> {
-                withContext(Dispatchers.IO) {
-                    GlobalDataBase.database.infoDao()
-                        .getLastAnalyzeParmaByNickname(AppContext.nowNickname)?.let {
-                            _viewStates.setState {
-                                copy(
-                                    platform = it.platform,
-                                    startDate = it.startDate,
-                                    endDate = it.endDate,
-                                    filterResourceList = it.filterResourceList.split(",")
-                                )
-                            }
-                        }
-                }
                 getAllResourceListLogic()
             }.onStart {
                 _viewStates.setState { copy(isShowLoading = true) }
@@ -167,14 +198,37 @@ class AnalyzeViewModel : ViewModel() {
         }
     }
 
-    private fun setChartData(type: Int){
-        when (type){
-            0 -> _viewStates.setState { copy(chartData = viewStates.value.analyzeList.groupBy { it.resName }.mapValues { it.value.map { it.dateId to it.cntBuy.toFloat() } }) }
-            1 -> _viewStates.setState { copy(chartData = viewStates.value.analyzeList.groupBy { it.resName }.mapValues { it.value.map { it.dateId to it.downloadNum.toFloat() } }) }
-            2 -> _viewStates.setState { copy(chartData = viewStates.value.analyzeList.groupBy { it.resName }.mapValues { it.value.map { it.dateId to it.diamond.toFloat() } }) }
-            3 -> _viewStates.setState { copy(chartData = viewStates.value.analyzeList.groupBy { it.resName }.mapValues { it.value.map { it.dateId to it.points.toFloat() } }) }
-            4 -> _viewStates.setState { copy(chartData = viewStates.value.analyzeList.groupBy { it.resName }.mapValues { it.value.map { it.dateId to it.dau.toFloat() } }) }
-            5 -> _viewStates.setState { copy(chartData = viewStates.value.analyzeList.groupBy { it.resName }.mapValues { it.value.map { it.dateId to it.refundRate.toFloat() } }) }
+    private fun setChartData(type: Int) {
+        when (type) {
+            0 -> _viewStates.setState {
+                copy(chartData = viewStates.value.analyzeList.groupBy { it.resName }
+                    .mapValues { it.value.map { it.dateId to it.cntBuy.toFloat() } })
+            }
+
+            1 -> _viewStates.setState {
+                copy(chartData = viewStates.value.analyzeList.groupBy { it.resName }
+                    .mapValues { it.value.map { it.dateId to it.downloadNum.toFloat() } })
+            }
+
+            2 -> _viewStates.setState {
+                copy(chartData = viewStates.value.analyzeList.groupBy { it.resName }
+                    .mapValues { it.value.map { it.dateId to it.diamond.toFloat() } })
+            }
+
+            3 -> _viewStates.setState {
+                copy(chartData = viewStates.value.analyzeList.groupBy { it.resName }
+                    .mapValues { it.value.map { it.dateId to it.points.toFloat() } })
+            }
+
+            4 -> _viewStates.setState {
+                copy(chartData = viewStates.value.analyzeList.groupBy { it.resName }
+                    .mapValues { it.value.map { it.dateId to it.dau.toFloat() } })
+            }
+
+            5 -> _viewStates.setState {
+                copy(chartData = viewStates.value.analyzeList.groupBy { it.resName }
+                    .mapValues { it.value.map { it.dateId to it.refundRate.toFloat() } })
+            }
         }
     }
 }
@@ -192,6 +246,7 @@ data class AnalyzeViewState(
 )
 
 sealed class AnalyzeAction {
+    data object GetLastAnalyzeParams : AnalyzeAction()
     data class UpdatePlatform(val platform: String) : AnalyzeAction()
     data class UpdateStartDate(val date: String) : AnalyzeAction()
     data class UpdateEndDate(val date: String) : AnalyzeAction()

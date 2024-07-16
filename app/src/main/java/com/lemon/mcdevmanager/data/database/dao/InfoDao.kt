@@ -1,7 +1,6 @@
 package com.lemon.mcdevmanager.data.database.dao
 
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -20,8 +19,11 @@ interface InfoDao {
     @Query("DELETE FROM overviewEntity WHERE nickname = :nickname")
     fun deleteOverviewByNickname(nickname: String)
 
-    @Query("SELECT * FROM analyzeEntity WHERE nickname = :nickname ORDER BY createTime DESC LIMIT 1")
-    fun getLastAnalyzeParmaByNickname(nickname: String): AnalyzeEntity?
+    @Query("SELECT platform FROM analyzeEntity WHERE nickname = :nickname ORDER BY createTime DESC LIMIT 1")
+    fun getLastAnalyzePlatformByNickname(nickname: String): String?
+
+    @Query("SELECT * FROM analyzeEntity WHERE nickname = :nickname AND platform = :platform ORDER BY createTime DESC LIMIT 1")
+    fun getLastAnalyzeParamsByNicknamePlatform(nickname: String, platform:String): AnalyzeEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertAnalyzeParam(analyzeEntity: AnalyzeEntity)

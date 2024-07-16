@@ -29,9 +29,11 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -85,6 +87,10 @@ fun FromToDatePickerWidget(
     val animateToWidth by animateFloatAsState(
         targetValue = if (!isSelectFromDate) 1f else 0.1f, animationSpec = tween(200)
     )
+
+    val hintColor = AppTheme.colors.hintColor
+    val dateSelectorColorList = remember{ mutableStateListOf(hintColor) }
+    val dateSelectorFontSize = remember{ mutableStateListOf(14.sp) }
 
     Row(
         modifier = Modifier
@@ -156,10 +162,10 @@ fun FromToDatePickerWidget(
                         DateSelector(
                             state = fromDateSelectorState,
                             cacheSize = 1,
-                            textColors = arrayListOf(AppTheme.colors.hintColor),
+                            textColors = dateSelectorColorList,
                             selectedTextSize = 14.sp,
                             selectedTextColor = AppTheme.colors.textColor,
-                            textSizes = arrayListOf(14.sp)
+                            textSizes = dateSelectorFontSize
                         )
                         Box(
                             modifier = Modifier
@@ -273,10 +279,10 @@ fun FromToDatePickerWidget(
                         DateSelector(
                             state = toDateSelectorState,
                             cacheSize = 1,
-                            textColors = arrayListOf(AppTheme.colors.hintColor),
+                            textColors = dateSelectorColorList,
                             selectedTextSize = 14.sp,
                             selectedTextColor = AppTheme.colors.textColor,
-                            textSizes = arrayListOf(14.sp)
+                            textSizes = dateSelectorFontSize
                         )
                         Box(
                             modifier = Modifier

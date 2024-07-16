@@ -43,3 +43,17 @@ fun pxToDp(context: Context, px: Float): Int {
 fun dpToPx(context: Context, dp: Int): Int {
     return Math.round(dp * context.resources.displayMetrics.density)
 }
+
+fun <T> getAvgItems(list : List<T>, count : Int) : List<T> {
+    if (count <= 0 || list.isEmpty()) {
+        return emptyList()
+    }
+    val step = list.size / count
+    val selectedItems = mutableListOf<T>()
+    var index = 0
+    while (index < list.size && selectedItems.size < count) {
+        selectedItems.add(list[index])
+        index += step
+    }
+    return selectedItems
+}
