@@ -1,7 +1,6 @@
 package com.lemon.mcdevmanager.ui.page
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -100,7 +99,6 @@ import ir.ehsannarmani.compose_charts.models.HorizontalIndicatorProperties
 import ir.ehsannarmani.compose_charts.models.LabelHelperProperties
 import ir.ehsannarmani.compose_charts.models.LabelProperties
 import java.time.ZonedDateTime
-import java.util.Locale
 import kotlin.math.max
 
 @OptIn(ExperimentalLayoutApi::class)
