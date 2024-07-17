@@ -2,8 +2,10 @@ package com.lemon.mcdevmanager.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lemon.mcdevmanager.data.common.LOGIN_PAGE
 import com.lemon.mcdevmanager.data.netease.feedback.FeedbackBean
 import com.lemon.mcdevmanager.data.repository.FeedbackRepository
+import com.lemon.mcdevmanager.utils.CookiesExpiredException
 import com.lemon.mcdevmanager.utils.NetworkState
 import com.zj.mvi.core.SharedFlowEvents
 import com.zj.mvi.core.setEvent
@@ -110,7 +112,14 @@ class FeedbackViewModel : ViewModel() {
                 }
             }
 
-            is NetworkState.Error -> throw Exception(result.msg)
+            is NetworkState.Error -> {
+                if (result.e is CookiesExpiredException) {
+                    _viewEvents.setEvent(FeedbackEvent.NeedReLogin)
+                    _viewEvents.setEvent(FeedbackEvent.ShowToast("登录过期, 请重新登录"))
+                } else {
+                    _viewEvents.setEvent(FeedbackEvent.ShowToast(result.msg))
+                }
+            }
         }
     }
 
@@ -123,10 +132,9 @@ class FeedbackViewModel : ViewModel() {
                 replyFeedbackLogic()
             }.onStart {
                 _viewStates.value = _viewStates.value.copy(isLoadingReply = true)
-            }.onCompletion {
-                _viewStates.value = _viewStates.value.copy(isLoadingReply = false)
             }.catch {
                 _viewEvents.setEvent(FeedbackEvent.ShowToast(it.message ?: "回复反馈失败: $it"))
+                _viewStates.value = _viewStates.value.copy(isLoadingReply = false)
             }.flowOn(Dispatchers.IO).collect()
         }
     }
@@ -135,11 +143,19 @@ class FeedbackViewModel : ViewModel() {
         when (val result =
             repository.sendReply(_viewStates.value.replyId, _viewStates.value.replyContent)) {
             is NetworkState.Success -> {
-                _viewEvents.setEvent(FeedbackEvent.ShowToast("回复成功"))
+                _viewEvents.setEvent(FeedbackEvent.ShowToast("回复成功", false))
                 _viewEvents.setEvent(FeedbackEvent.ReplySuccess)
+                _viewStates.value = _viewStates.value.copy(isLoadingReply = false)
             }
 
-            is NetworkState.Error -> throw Exception(result.msg)
+            is NetworkState.Error -> {
+                if (result.e is CookiesExpiredException) {
+                    _viewEvents.setEvent(FeedbackEvent.NeedReLogin)
+                    _viewEvents.setEvent(FeedbackEvent.ShowToast("登录过期, 请重新登录"))
+                } else {
+                    _viewEvents.setEvent(FeedbackEvent.ShowToast(result.msg))
+                }
+            }
         }
     }
 
@@ -182,7 +198,8 @@ data class FeedbackViewState(
 )
 
 sealed class FeedbackEvent {
-    data class ShowToast(val msg: String) : FeedbackEvent()
+    data class ShowToast(val msg: String, val isError: Boolean = true) : FeedbackEvent()
     data class RouteToPath(val path: String, val needPop: Boolean = false) : FeedbackEvent()
+    data object NeedReLogin: FeedbackEvent()
     data object ReplySuccess : FeedbackEvent()
 }

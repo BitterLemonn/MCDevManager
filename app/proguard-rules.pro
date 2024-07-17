@@ -126,3 +126,5 @@
 -keep @androidx.room.Delete class * { *; }
 
 -keep class com.eclipsesource.v8.** { *; }
+
+-keep class com.lt.* { *; }

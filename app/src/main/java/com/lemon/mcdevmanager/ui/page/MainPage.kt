@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.lemon.mcdevmanager.R
+import com.lemon.mcdevmanager.data.common.ANALYZE_PAGE
 import com.lemon.mcdevmanager.data.common.FEEDBACK_PAGE
 import com.lemon.mcdevmanager.data.common.LOGIN_PAGE
 import com.lemon.mcdevmanager.data.common.MAIN_PAGE
@@ -201,10 +202,12 @@ fun MainPage(
                         )
                     }
                     FunctionCard(icon = R.drawable.ic_analyze, title = "数据分析") {
-                        coroutineScope.launch { showToast("更多功能请期待未来更新", SNACK_INFO) }
+                        navController.navigate(ANALYZE_PAGE) {
+                            launchSingleTop = true
+                        }
                     }
                     FunctionCard(icon = R.drawable.ic_feedback, title = "玩家反馈") {
-                        navController.navigate(FEEDBACK_PAGE){
+                        navController.navigate(FEEDBACK_PAGE) {
                             launchSingleTop = true
                         }
                     }

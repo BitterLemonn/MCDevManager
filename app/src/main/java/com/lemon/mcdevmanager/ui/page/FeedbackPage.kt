@@ -81,6 +81,7 @@ import coil.ImageLoader
 import coil.compose.rememberAsyncImagePainter
 import com.lemon.mcdevmanager.R
 import com.lemon.mcdevmanager.data.common.FEEDBACK_PAGE
+import com.lemon.mcdevmanager.data.common.LOGIN_PAGE
 import com.lemon.mcdevmanager.data.netease.feedback.FeedbackBean
 import com.lemon.mcdevmanager.ui.theme.AppTheme
 import com.lemon.mcdevmanager.ui.theme.HeaderHeight
@@ -91,6 +92,7 @@ import com.lemon.mcdevmanager.ui.widget.FeedbackCard
 import com.lemon.mcdevmanager.ui.widget.FlowTabWidget
 import com.lemon.mcdevmanager.ui.widget.HeaderWidget
 import com.lemon.mcdevmanager.ui.widget.SNACK_ERROR
+import com.lemon.mcdevmanager.ui.widget.SNACK_SUCCESS
 import com.lemon.mcdevmanager.ui.widget.SearchBarWidget
 import com.lemon.mcdevmanager.utils.getNavigationBarHeight
 import com.lemon.mcdevmanager.viewModel.FeedbackAction
@@ -138,14 +140,22 @@ fun FeedbackPage(
         viewModel.dispatch(FeedbackAction.LoadFeedback)
         viewModel.viewEvents.observeEvent(lifecycleOwner) { event ->
             when (event) {
-                is FeedbackEvent.ShowToast -> showToast(event.msg, SNACK_ERROR)
+                is FeedbackEvent.ShowToast -> {
+                    showToast(event.msg, if (event.isError) SNACK_ERROR else SNACK_SUCCESS)
+                }
+
                 is FeedbackEvent.RouteToPath -> navController.navigate(event.path) {
                     launchSingleTop = true
                     if (event.needPop) popUpTo(FEEDBACK_PAGE) { inclusive = true }
                 }
 
-                is FeedbackEvent.ReplySuccess -> {
+                is FeedbackEvent.NeedReLogin -> navController.navigate(LOGIN_PAGE) {
+                    launchSingleTop = true
+                    popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                }
 
+                is FeedbackEvent.ReplySuccess -> {
+                    resetDetail()
                     viewModel.dispatch(FeedbackAction.RefreshFeedback)
                 }
             }
@@ -241,23 +251,32 @@ fun FeedbackPage(
                         modifier = Modifier.padding(start = 8.dp)
                     )
                     FlowRow(Modifier.fillMaxWidth()) {
-                        FlowTabWidget(text = "故障问题反馈", states.types.contains(0)) {
+                        FlowTabWidget(
+                            text = "故障问题反馈",
+                            isSelected = states.types.contains(0)
+                        ) {
                             viewModel.dispatch(FeedbackAction.UpdateType(0, !it))
                             viewModel.dispatch(FeedbackAction.RefreshFeedback)
                         }
-                        FlowTabWidget(text = "玩法建议与意见", states.types.contains(1)) {
+                        FlowTabWidget(
+                            text = "玩法建议与意见",
+                            isSelected = states.types.contains(1)
+                        ) {
                             viewModel.dispatch(FeedbackAction.UpdateType(1, !it))
                             viewModel.dispatch(FeedbackAction.RefreshFeedback)
                         }
-                        FlowTabWidget(text = "内容被侵权提醒", states.types.contains(2)) {
+                        FlowTabWidget(
+                            text = "内容被侵权提醒",
+                            isSelected = states.types.contains(2)
+                        ) {
                             viewModel.dispatch(FeedbackAction.UpdateType(2, !it))
                             viewModel.dispatch(FeedbackAction.RefreshFeedback)
                         }
-                        FlowTabWidget(text = "其他", states.types.contains(3)) {
+                        FlowTabWidget(text = "其他", isSelected = states.types.contains(3)) {
                             viewModel.dispatch(FeedbackAction.UpdateType(3, !it))
                             viewModel.dispatch(FeedbackAction.RefreshFeedback)
                         }
-                        FlowTabWidget(text = "组件冲突", states.types.contains(4)) {
+                        FlowTabWidget(text = "组件冲突", isSelected = states.types.contains(4)) {
                             viewModel.dispatch(FeedbackAction.UpdateType(4, !it))
                             viewModel.dispatch(FeedbackAction.RefreshFeedback)
                         }

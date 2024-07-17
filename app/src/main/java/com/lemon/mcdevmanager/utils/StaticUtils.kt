@@ -2,11 +2,9 @@ package com.lemon.mcdevmanager.utils
 
 import android.content.Context
 import android.content.res.Resources
-import android.graphics.Point
 import android.os.Build
 import android.util.DisplayMetrics
 import android.view.WindowManager
-import androidx.annotation.RequiresApi
 
 fun getNavigationBarHeight(context: Context): Int {
     val resources: Resources = context.resources
@@ -27,10 +25,35 @@ fun getScreenWidth(context: Context): Int {
     }
 }
 
+fun getScreenHeight(context: Context): Int {
+    val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        return windowManager.currentWindowMetrics.bounds.height()
+    }else{
+        val displayMetrics = DisplayMetrics()
+        windowManager.defaultDisplay.getMetrics(displayMetrics)
+        return displayMetrics.heightPixels
+    }
+}
+
 fun pxToDp(context: Context, px: Float): Int {
     return Math.round(px / context.resources.displayMetrics.density)
 }
 
 fun dpToPx(context: Context, dp: Int): Int {
     return Math.round(dp * context.resources.displayMetrics.density)
+}
+
+fun <T> getAvgItems(list : List<T>, count : Int) : List<T> {
+    if (count <= 0 || list.isEmpty()) {
+        return emptyList()
+    }
+    val step = list.size / count
+    val selectedItems = mutableListOf<T>()
+    var index = 0
+    while (index < list.size && selectedItems.size < count) {
+        selectedItems.add(list[index])
+        index += step
+    }
+    return selectedItems
 }

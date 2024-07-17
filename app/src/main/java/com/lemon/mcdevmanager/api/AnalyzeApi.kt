@@ -4,10 +4,8 @@ import com.lemon.mcdevmanager.data.AddCookiesInterceptor
 import com.lemon.mcdevmanager.data.CommonInterceptor
 import com.lemon.mcdevmanager.data.common.JSONConverter
 import com.lemon.mcdevmanager.data.common.NETEASE_MC_DEV_LINK
+import com.lemon.mcdevmanager.data.netease.resource.ResDetailResponseBean
 import com.lemon.mcdevmanager.data.netease.resource.ResourceResponseBean
-import com.lemon.mcdevmanager.data.netease.user.LevelInfoBean
-import com.lemon.mcdevmanager.data.netease.user.OverviewBean
-import com.lemon.mcdevmanager.data.netease.user.UserInfoBean
 import com.lemon.mcdevmanager.utils.ResponseData
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
@@ -18,30 +16,33 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 import java.util.concurrent.TimeUnit
 
-interface InfoApi {
-
-    @GET("/users/me")
-    suspend fun getUserInfo(): ResponseData<UserInfoBean>
-
-    @GET("/data_analysis/overview")
-    suspend fun getOverview(): ResponseData<OverviewBean>
-
-    @GET("/new_level")
-    suspend fun getLevelInfo(): ResponseData<LevelInfoBean>
-
-    @GET("/items/categories/{platform}")
-    suspend fun getResInfoList(
+interface AnalyzeApi {
+    @GET("/items/categories/{platform}/")
+    suspend fun getAllResource(
         @Path("platform") platform: String = "pe",
         @Query("start") start: Int = 0,
         @Query("span") span: Int = Int.MAX_VALUE
     ): ResponseData<ResourceResponseBean>
+
+    @GET("/data_analysis/day_detail/")
+    suspend fun getDayDetail(
+        @Query("platform") platform: String,
+        @Query("category") category: String,
+        @Query("start_date") startDate: String,
+        @Query("end_date") endDate: String,
+        @Query("item_list_str") itemListStr: String,
+        @Query("sort") sort: String = "dateid",
+        @Query("order") order: String = "ASC",
+        @Query("start") start: Int = 0,
+        @Query("span") span: Int = Int.MAX_VALUE
+    ): ResponseData<ResDetailResponseBean>
 
     companion object {
         /**
          * 获取接口实例用于调用对接方法
          * @return ServerApi
          */
-        fun create(): InfoApi {
+        fun create(): AnalyzeApi {
             val client = OkHttpClient.Builder()
                 .connectTimeout(15, TimeUnit.SECONDS)
                 .readTimeout(15, TimeUnit.SECONDS)
@@ -57,7 +58,7 @@ interface InfoApi {
                 )
                 .client(client)
                 .build()
-                .create(InfoApi::class.java)
+                .create(AnalyzeApi::class.java)
         }
     }
 }

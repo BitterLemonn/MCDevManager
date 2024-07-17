@@ -29,12 +29,11 @@ class SplashViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             flow<Unit> {
                 val userInfoList = GlobalDataBase.database.userDao().getAllUsers()
-                Logger.d("userInfoList: $userInfoList")
-                userInfoList?.let {
+                userInfoList.let {
                     if (userInfoList.isNotEmpty()) {
                         for (user in userInfoList) {
-                            if (userInfoList.indexOf(user) == 0) AppContext.nowNickname =
-                                user.nickname
+                            if (userInfoList.indexOf(user) == 0)
+                                AppContext.nowNickname = user.nickname
                             AppContext.cookiesStore[user.nickname] = user.cookie
                         }
                         AppContext.accountList.addAll(userInfoList.map { it.nickname })
@@ -42,8 +41,6 @@ class SplashViewModel : ViewModel() {
                     } else {
                         _viewEvents.setEvent(SplashViewEvent.RouteToPath(LOGIN_PAGE))
                     }
-                } ?: run {
-                    _viewEvents.setEvent(SplashViewEvent.RouteToPath(LOGIN_PAGE))
                 }
             }.collect()
         }

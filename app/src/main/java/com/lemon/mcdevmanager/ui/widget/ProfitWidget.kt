@@ -117,11 +117,12 @@ private fun ProfitWidgetPreview() {
     ProfitWidget(
         curMonthProfit = 30000000,
         curMonthDl = 10,
-        yesterdayProfit = 300,
+        yesterdayProfit = 30000000,
         yesterdayDl = 1,
-        lastMonthProfit = 150000,
+        lastMonthProfit = 1500,
         lastMonthDl = 5,
-        halfAvgProfit = 2000,
-        halfAvgDl = 8
+        halfAvgProfit = 200000000,
+        halfAvgDl = 8,
+        isLoading = false
     )
 }

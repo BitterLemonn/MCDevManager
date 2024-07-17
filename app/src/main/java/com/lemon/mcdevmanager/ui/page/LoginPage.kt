@@ -66,6 +66,7 @@ import com.lemon.mcdevmanager.ui.widget.AppLoadingWidget
 import com.lemon.mcdevmanager.ui.widget.BottomNameInput
 import com.lemon.mcdevmanager.ui.widget.LoginOutlineTextField
 import com.lemon.mcdevmanager.ui.widget.SNACK_ERROR
+import com.lemon.mcdevmanager.ui.widget.SNACK_INFO
 import com.lemon.mcdevmanager.utils.pxToDp
 import com.lemon.mcdevmanager.viewModel.LoginViewAction
 import com.lemon.mcdevmanager.viewModel.LoginViewEvent
@@ -105,7 +106,8 @@ fun LoginPage(
                     launchSingleTop = true
                 }
 
-                else -> {}
+                is LoginViewEvent.ShowToast ->
+                    showToast(event.message, if (event.isError) SNACK_ERROR else SNACK_INFO)
             }
         }
     }
