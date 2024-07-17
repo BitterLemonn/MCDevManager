@@ -85,7 +85,7 @@ fun MCDevManagerTheme(
     val warn by animateColorAsState(targetColors.warn, TweenSpec(600))
     val success by animateColorAsState(targetColors.success, TweenSpec(600))
     val error by animateColorAsState(targetValue = targetColors.error, TweenSpec(600))
-    val lineChartColors = targetColors.lineChartColors
+    val lineChartColors = targetColors.chartColors
 
     val appColors = AppColors(
         textColor = textColor,
@@ -152,6 +152,6 @@ class AppColors(
         private set
     var error: Color by mutableStateOf(error)
         private set
-    var lineChartColors: List<Color> by mutableStateOf(lineChartColors)
+    var chartColors: List<Color> by mutableStateOf(lineChartColors)
         private set
 }

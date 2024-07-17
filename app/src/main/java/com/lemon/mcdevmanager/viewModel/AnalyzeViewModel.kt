@@ -1,5 +1,9 @@
 package com.lemon.mcdevmanager.viewModel
 
+import androidx.compose.runtime.toMutableStateList
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lemon.mcdevmanager.data.database.database.GlobalDataBase
@@ -8,6 +12,7 @@ import com.lemon.mcdevmanager.data.global.AppContext
 import com.lemon.mcdevmanager.data.netease.resource.ResDetailBean
 import com.lemon.mcdevmanager.data.netease.resource.ResourceBean
 import com.lemon.mcdevmanager.data.repository.DetailRepository
+import com.lemon.mcdevmanager.ui.theme.TextWhite
 import com.lemon.mcdevmanager.utils.CookiesExpiredException
 import com.lemon.mcdevmanager.utils.NetworkState
 import com.lemon.mcdevmanager.utils.logout
@@ -15,6 +20,10 @@ import com.orhanobut.logger.Logger
 import com.zj.mvi.core.SharedFlowEvents
 import com.zj.mvi.core.setEvent
 import com.zj.mvi.core.setState
+import ir.ehsannarmani.compose_charts.models.Bars
+import ir.ehsannarmani.compose_charts.models.DotProperties
+import ir.ehsannarmani.compose_charts.models.Line
+import ir.ehsannarmani.compose_charts.models.PopupProperties
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -40,15 +49,16 @@ class AnalyzeViewModel : ViewModel() {
         when (action) {
             is AnalyzeAction.GetLastAnalyzeParams -> getLastAnalyzePlatform()
             is AnalyzeAction.GetAllResourceList -> getAllResourceList()
-            is AnalyzeAction.UpdateStartDate ->
-                _viewStates.setState { copy(startDate = action.date) }
+            is AnalyzeAction.UpdateChartColor -> _viewStates.setState { copy(chartColor = action.color) }
+            is AnalyzeAction.UpdateStartDate -> _viewStates.setState { copy(startDate = action.date) }
 
             is AnalyzeAction.UpdatePlatform -> {
                 _viewStates.setState {
                     copy(
                         platform = action.platform,
                         filterResourceList = emptyList(),
-                        chartData = emptyMap(),
+                        lineParams = emptyList(),
+                        barParams = emptyList(),
                         analyzeList = emptyList()
                     )
                 }
@@ -56,8 +66,7 @@ class AnalyzeViewModel : ViewModel() {
                 getAllResourceList()
             }
 
-            is AnalyzeAction.UpdateEndDate ->
-                _viewStates.setState { copy(endDate = action.date) }
+            is AnalyzeAction.UpdateEndDate -> _viewStates.setState { copy(endDate = action.date) }
 
             is AnalyzeAction.UpdateFilterType -> {
                 _viewStates.setState { copy(filterType = action.type) }
@@ -79,7 +88,8 @@ class AnalyzeViewModel : ViewModel() {
     private fun getLastAnalyzePlatform() {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                GlobalDataBase.database.infoDao().getLastAnalyzePlatformByNickname(AppContext.nowNickname)
+                GlobalDataBase.database.infoDao()
+                    .getLastAnalyzePlatformByNickname(AppContext.nowNickname)
             }?.let {
                 _viewStates.setState { copy(platform = it) }
             }
@@ -90,20 +100,19 @@ class AnalyzeViewModel : ViewModel() {
     private fun getLastAnalyzeParam() {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                GlobalDataBase.database.infoDao()
-                    .getLastAnalyzeParamsByNicknamePlatform(
-                        AppContext.nowNickname, viewStates.value.platform
-                    )?.let {
-                        _viewStates.setState {
-                            copy(
-                                platform = it.platform,
-                                startDate = it.startDate,
-                                endDate = it.endDate,
-                                filterResourceList = it.filterResourceList.split(",")
-                            )
-                        }
-                        loadAnalyze()
+                GlobalDataBase.database.infoDao().getLastAnalyzeParamsByNicknamePlatform(
+                    AppContext.nowNickname, viewStates.value.platform
+                )?.let {
+                    _viewStates.setState {
+                        copy(
+                            platform = it.platform,
+                            startDate = it.startDate,
+                            endDate = it.endDate,
+                            filterResourceList = it.filterResourceList.split(",")
+                        )
                     }
+                    loadAnalyze()
+                }
             }
         }
     }
@@ -200,52 +209,140 @@ class AnalyzeViewModel : ViewModel() {
 
     private fun setChartData(type: Int) {
         when (type) {
-            0 -> _viewStates.setState {
-                copy(chartData = viewStates.value.analyzeList.groupBy { it.resName }
-                    .mapValues { it.value.map { it.dateId to it.cntBuy.toFloat() } })
+            0 -> {
+                val chartData = viewStates.value.analyzeList.groupBy { it.resName }
+                    .mapValues { it.value.map { it.dateId to it.cntBuy.toFloat() } }
+                calChartData(chartData)
             }
 
-            1 -> _viewStates.setState {
-                copy(chartData = viewStates.value.analyzeList.groupBy { it.resName }
-                    .mapValues { it.value.map { it.dateId to it.downloadNum.toFloat() } })
+            1 -> {
+                val chartData = viewStates.value.analyzeList.groupBy { it.resName }
+                    .mapValues { it.value.map { it.dateId to it.downloadNum.toFloat() } }
+                calChartData(chartData)
             }
 
-            2 -> _viewStates.setState {
-                copy(chartData = viewStates.value.analyzeList.groupBy { it.resName }
-                    .mapValues { it.value.map { it.dateId to it.diamond.toFloat() } })
+            2 -> {
+                val chartData = viewStates.value.analyzeList.groupBy { it.resName }
+                    .mapValues { it.value.map { it.dateId to it.diamond.toFloat() } }
+                calChartData(chartData)
             }
 
-            3 -> _viewStates.setState {
-                copy(chartData = viewStates.value.analyzeList.groupBy { it.resName }
-                    .mapValues { it.value.map { it.dateId to it.points.toFloat() } })
+            3 -> {
+                val chartData = viewStates.value.analyzeList.groupBy { it.resName }
+                    .mapValues { it.value.map { it.dateId to it.points.toFloat() } }
+                calChartData(chartData)
             }
 
-            4 -> _viewStates.setState {
-                copy(chartData = viewStates.value.analyzeList.groupBy { it.resName }
-                    .mapValues { it.value.map { it.dateId to it.dau.toFloat() } })
+            4 -> {
+                val chartData = viewStates.value.analyzeList.groupBy { it.resName }
+                    .mapValues { it.value.map { it.dateId to it.dau.toFloat() } }
+                calChartData(chartData)
             }
 
-            5 -> _viewStates.setState {
-                copy(chartData = viewStates.value.analyzeList.groupBy { it.resName }
-                    .mapValues { it.value.map { it.dateId to it.refundRate.toFloat() } })
+            5 -> {
+                val chartData = viewStates.value.analyzeList.groupBy { it.resName }
+                    .mapValues { it.value.map { it.dateId to it.refundRate.toFloat() } }
+                calChartData(chartData)
+            }
+        }
+    }
+
+    private fun calChartData(chartData: Map<String, List<Pair<String, Float>>>) {
+        val lineParams = mutableListOf<Line>()
+        val barParams = mutableListOf<Bars>()
+
+        val analyzeYValueList = emptyList<List<Double>>().toMutableList()
+        val analyzeXValueList = emptyList<List<String>>().toMutableList()
+        val analyzeResNameList = emptyList<String>().toMutableList()
+        chartData.entries.forEach { item ->
+            val yValue = mutableListOf<Float>()
+            val xValue = mutableListOf<String>()
+            for (data in item.value) {
+                yValue.add(data.second)
+                val xValueStr = data.first.substring(5)
+                val date = xValueStr.substring(xValueStr.length - 2, xValueStr.length)
+                val month = xValueStr.substring(0, xValueStr.length - date.length)
+                xValue.add("$month/$date")
+            }
+            analyzeYValueList.add(yValue.map { it.toDouble() })
+            analyzeXValueList.add(xValue)
+            analyzeResNameList.add(item.key)
+        }
+
+        if (analyzeXValueList.isNotEmpty()) {
+            val chartColor = viewStates.value.chartColor
+            for (i in analyzeResNameList.indices) {
+                lineParams.add(
+                    Line(
+                        label = analyzeResNameList[i],
+                        values = analyzeYValueList[i],
+                        color = SolidColor(chartColor[i % chartColor.size]),
+                        curvedEdges = false,
+                        dotProperties = DotProperties(
+                            enabled = true,
+                            color = SolidColor(chartColor[i % chartColor.size]),
+                            radius = 4.dp,
+                            strokeWidth = 2.dp,
+                            strokeColor = SolidColor(TextWhite)
+                        )
+                    )
+                )
+            }
+
+            for (dateIndex in analyzeXValueList[0].indices) {
+                val barData = mutableListOf<Bars.Data>()
+                for (resIndex in analyzeResNameList.indices) {
+                    val value = analyzeYValueList[resIndex][dateIndex]
+                    if (value != 0.0) {
+                        barData.add(
+                            Bars.Data(
+                                label = analyzeResNameList[resIndex],
+                                value = analyzeYValueList[resIndex][dateIndex],
+                                color = SolidColor(chartColor[resIndex % chartColor.size])
+                            )
+                        )
+                    }
+                }
+                if (barData.isNotEmpty())
+                    barParams.add(
+                        Bars(
+                            label = analyzeXValueList[0][dateIndex],
+                            values = barData
+                        )
+                    )
+            }
+
+            _viewStates.setState {
+                copy(
+                    lineParams = lineParams,
+                    barParams = barParams,
+                    chartDateList = analyzeXValueList[0]
+                )
             }
         }
     }
 }
 
 data class AnalyzeViewState(
-    val analyzeList: List<ResDetailBean> = emptyList(),
+    val isShowLoading: Boolean = false,
+
     val platform: String = "pe",
     val filterType: Int = 0,
     val startDate: String = ZonedDateTime.now().minusDays(7).toString(),
     val endDate: String = ZonedDateTime.now().toString(),
+
+    val analyzeList: List<ResDetailBean> = emptyList(),
     val filterResourceList: List<String> = emptyList(),
     val allResourceList: List<ResourceBean> = emptyList(),
-    val isShowLoading: Boolean = false,
-    val chartData: Map<String, List<Pair<String, Float>>> = emptyMap()
+
+    val chartDateList: List<String> = emptyList(),
+    val lineParams: List<Line> = emptyList(),
+    val barParams: List<Bars> = emptyList(),
+    val chartColor: List<Color> = emptyList()
 )
 
 sealed class AnalyzeAction {
+    data class UpdateChartColor(val color: List<Color>) : AnalyzeAction()
     data object GetLastAnalyzeParams : AnalyzeAction()
     data class UpdatePlatform(val platform: String) : AnalyzeAction()
     data class UpdateStartDate(val date: String) : AnalyzeAction()

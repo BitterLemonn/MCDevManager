@@ -1,7 +1,8 @@
 package com.lemon.mcdevmanager.ui.page
 
-import android.icu.text.DecimalFormat
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -23,6 +24,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -40,13 +42,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.SolidColor
@@ -73,6 +76,7 @@ import com.lemon.mcdevmanager.ui.widget.DividedLine
 import com.lemon.mcdevmanager.ui.widget.FlowTabWidget
 import com.lemon.mcdevmanager.ui.widget.FromToDatePickerWidget
 import com.lemon.mcdevmanager.ui.widget.HeaderWidget
+import com.lemon.mcdevmanager.ui.widget.ResDetailInfoCard
 import com.lemon.mcdevmanager.ui.widget.SNACK_ERROR
 import com.lemon.mcdevmanager.ui.widget.SNACK_INFO
 import com.lemon.mcdevmanager.ui.widget.SelectCard
@@ -84,21 +88,19 @@ import com.lemon.mcdevmanager.viewModel.AnalyzeAction
 import com.lemon.mcdevmanager.viewModel.AnalyzeEvent
 import com.lemon.mcdevmanager.viewModel.AnalyzeViewModel
 import com.lt.compose_views.other.HorizontalSpace
-import com.orhanobut.logger.Logger
+import com.lt.compose_views.other.VerticalSpace
 import com.zj.mvi.core.observeEvent
 import ir.ehsannarmani.compose_charts.ColumnChart
 import ir.ehsannarmani.compose_charts.LineChart
 import ir.ehsannarmani.compose_charts.extensions.format
 import ir.ehsannarmani.compose_charts.models.AnimationMode
 import ir.ehsannarmani.compose_charts.models.BarProperties
-import ir.ehsannarmani.compose_charts.models.Bars
-import ir.ehsannarmani.compose_charts.models.DotProperties
 import ir.ehsannarmani.compose_charts.models.GridProperties
 import ir.ehsannarmani.compose_charts.models.HorizontalIndicatorProperties
 import ir.ehsannarmani.compose_charts.models.LabelHelperProperties
 import ir.ehsannarmani.compose_charts.models.LabelProperties
-import ir.ehsannarmani.compose_charts.models.Line
 import java.time.ZonedDateTime
+import java.util.Locale
 import kotlin.math.max
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -114,18 +116,23 @@ fun AnalyzePage(
 
     var filterHeight by remember { mutableIntStateOf(0) }
     var analyzeWidth by remember { mutableIntStateOf(200) }
+    var analyzeHeight by remember { mutableIntStateOf(200) }
+
+    var fullHeight by remember { mutableIntStateOf(0) }
 
     var isOnChangingDate by remember { mutableStateOf(false) }
     var isShowFilter by remember { mutableStateOf(false) }
     var isShowResPicker by remember { mutableStateOf(false) }
-
-    val analyzeResNameList = remember { mutableStateListOf<String>() }
-    val analyzeYValueList = remember { mutableStateListOf<List<Double>>() }
-    val analyzeXValueList = remember { mutableStateListOf<List<String>>() }
+    var isShowDetail by remember { mutableStateOf(false) }
 
     var chartType by remember { mutableStateOf("line") }
+    val chartColor = AppTheme.colors.chartColors
+
+    val animationRotate by animateFloatAsState(targetValue = if (!isShowDetail) 90f else -90f)
+    val analyzeDetailMap by rememberUpdatedState(newValue = states.analyzeList.groupBy { it.dateId })
 
     LaunchedEffect(key1 = Unit) {
+        viewModel.dispatch(AnalyzeAction.UpdateChartColor(chartColor))
         viewModel.dispatch(AnalyzeAction.GetLastAnalyzeParams)
         viewModel.dispatch(AnalyzeAction.GetAllResourceList)
         viewModel.viewEvents.observeEvent(lifecycleOwner) { event ->
@@ -139,33 +146,16 @@ fun AnalyzePage(
                 }
             }
         }
+        showToast("柱状图数据过多可能会导致严重卡顿", "我知道了")
     }
 
-    LaunchedEffect(key1 = states.chartData) {
-        analyzeYValueList.clear()
-        analyzeXValueList.clear()
-        analyzeResNameList.clear()
-        for (item in states.chartData) {
-            val yValue = mutableListOf<Float>()
-            val xValue = mutableListOf<String>()
-            for (data in item.value) {
-                yValue.add(data.second)
-                val xValueStr = data.first.substring(5)
-                val date = xValueStr.substring(xValueStr.length - 2, xValueStr.length)
-                val month = xValueStr.substring(0, xValueStr.length - date.length)
-                xValue.add("$month/$date")
-            }
-            analyzeYValueList.add(yValue.map { it.toDouble() })
-            analyzeXValueList.add(xValue)
-            analyzeResNameList.add(item.key)
-        }
-        Logger.d("analyzeYValueList: $analyzeYValueList")
-        Logger.d("analyzeXValueList: $analyzeXValueList")
-        Logger.d("analyzeResNameList: $analyzeResNameList")
-    }
-
-    Box(Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .onGloballyPositioned { fullHeight = pxToDp(context, it.size.height.toFloat()) }
+    ) {
         Column(Modifier.fillMaxWidth()) {
+            // 标题
             HeaderWidget(
                 title = "数据分析",
                 leftAction = {
@@ -182,6 +172,7 @@ fun AnalyzePage(
                     }
                 }
             )
+            // 选择平台
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -220,6 +211,7 @@ fun AnalyzePage(
                     )
                 }
             }
+            // 选择类型
             FlowRow(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -244,10 +236,11 @@ fun AnalyzePage(
                     viewModel.dispatch(AnalyzeAction.UpdateFilterType(5))
                 })
             }
+            // 选择图表类型
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 4.dp)
+                    .padding(horizontal = 8.dp)
             ) {
                 DividedLine(
                     modifier = Modifier
@@ -291,7 +284,8 @@ fun AnalyzePage(
                     }
                 )
             }
-            if (analyzeResNameList.isEmpty() && !states.isShowLoading) {
+            // 图表
+            if (states.lineParams.isEmpty() && states.barParams.isEmpty() && !states.isShowLoading) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -313,34 +307,19 @@ fun AnalyzePage(
                         .padding(16.dp)
                         .onGloballyPositioned {
                             analyzeWidth = pxToDp(context, it.size.width.toFloat())
+                            analyzeHeight = pxToDp(context, it.size.height.toFloat())
                         }
                 ) {
                     if (chartType == "line") {
                         // 折线图
-                        val lineParams = mutableListOf<Line>()
-                        for (i in analyzeResNameList.indices) {
-                            lineParams.add(
-                                Line(
-                                    label = analyzeResNameList[i],
-                                    values = analyzeYValueList[i],
-                                    color = SolidColor(AppTheme.colors.lineChartColors[i % AppTheme.colors.lineChartColors.size]),
-                                    curvedEdges = false,
-                                    dotProperties = DotProperties(
-                                        enabled = true,
-                                        color = SolidColor(AppTheme.colors.lineChartColors[i % AppTheme.colors.lineChartColors.size]),
-                                        radius = 4.dp,
-                                        strokeWidth = 2.dp,
-                                        strokeColor = SolidColor(TextWhite)
-                                    )
-                                )
-                            )
-                        }
                         LineChart(
-                            data = lineParams,
+                            modifier = Modifier.padding(bottom = 32.dp),
+                            data = states.lineParams,
                             curvedEdges = false,
                             animationMode = AnimationMode.Together(),
+                            animationDelay = 0,
                             labelProperties = LabelProperties(
-                                labels = getAvgItems(analyzeXValueList[0], analyzeWidth / 80),
+                                labels = getAvgItems(states.chartDateList, analyzeWidth / 80),
                                 enabled = true,
                                 textStyle = TextStyle(
                                     fontSize = 12.sp,
@@ -351,11 +330,12 @@ fun AnalyzePage(
                                 yAxisProperties = GridProperties.AxisProperties(
                                     enabled = true,
                                     color = SolidColor(AppTheme.colors.hintColor.copy(alpha = 0.5f)),
-                                    lineCount = analyzeXValueList[0].size
+                                    lineCount = states.chartDateList.size
                                 ),
                                 xAxisProperties = GridProperties.AxisProperties(
                                     enabled = true,
-                                    color = SolidColor(AppTheme.colors.hintColor.copy(alpha = 0.5f))
+                                    color = SolidColor(AppTheme.colors.hintColor.copy(alpha = 0.5f)),
+                                    lineCount = analyzeHeight / 40
                                 )
                             ),
                             labelHelperProperties = LabelHelperProperties(
@@ -365,15 +345,16 @@ fun AnalyzePage(
                                 )
                             ),
                             indicatorProperties = HorizontalIndicatorProperties(
+                                count = analyzeHeight / 40,
                                 textStyle = TextStyle(
                                     fontSize = 12.sp,
                                     color = AppTheme.colors.textColor
                                 ),
                                 contentBuilder = { value ->
                                     if (value > 1000000) {
-                                        "${DecimalFormat("#.##").format(value / 1000000)}m"
+                                        "${(value / 1000000).format(2)}m"
                                     } else if (value > 1000) {
-                                        "${DecimalFormat("#.##").format(value / 1000)}k"
+                                        "${(value / 1000).format(2)}k"
                                     } else {
                                         if (value == value.toInt().toDouble()) {
                                             value.format(0)
@@ -384,37 +365,16 @@ fun AnalyzePage(
                         )
                     } else {
                         // 柱状图
-                        val barParams = mutableListOf<Bars>()
-                        for (dateIndex in analyzeXValueList[0].indices) {
-                            val barData = mutableListOf<Bars.Data>()
-                            for (resIndex in analyzeResNameList.indices) {
-                                val value = analyzeYValueList[resIndex][dateIndex]
-                                if (value != 0.0) {
-                                    barData.add(
-                                        Bars.Data(
-                                            label = analyzeResNameList[resIndex],
-                                            value = analyzeYValueList[resIndex][dateIndex],
-                                            color = SolidColor(AppTheme.colors.lineChartColors[resIndex % AppTheme.colors.lineChartColors.size])
-                                        )
-                                    )
-                                }
-                            }
-                            if (barData.isNotEmpty())
-                                barParams.add(
-                                    Bars(
-                                        label = analyzeXValueList[0][dateIndex],
-                                        values = barData
-                                    )
-                                )
-                        }
-                        if (barParams.isNotEmpty())
+                        val analyzeResNameList =
+                            LinkedHashSet(states.analyzeList.map { it.resName }).toList()
+                        val decreaseSize = (states.chartDateList.size * analyzeResNameList.size) / 5
+                        if (states.barParams.isNotEmpty())
                             ColumnChart(
-                                data = barParams,
+                                modifier = Modifier.padding(bottom = 32.dp),
+                                data = states.barParams,
                                 barProperties = BarProperties(
-                                    thickness = max(
-                                        2,
-                                        15 - (analyzeXValueList.size * analyzeResNameList.size) / 5
-                                    ).dp,
+                                    thickness = max(2, 15 - decreaseSize).dp,
+                                    spacing = (max(2, 15 - decreaseSize) / 2.0).dp
                                 ),
                                 animationMode = AnimationMode.Together(),
                                 labelProperties = LabelProperties(
@@ -429,11 +389,12 @@ fun AnalyzePage(
                                     yAxisProperties = GridProperties.AxisProperties(
                                         enabled = true,
                                         color = SolidColor(AppTheme.colors.hintColor.copy(alpha = 0.5f)),
-                                        lineCount = analyzeXValueList[0].size
+                                        lineCount = states.chartDateList.size
                                     ),
                                     xAxisProperties = GridProperties.AxisProperties(
                                         enabled = true,
-                                        color = SolidColor(AppTheme.colors.hintColor.copy(alpha = 0.5f))
+                                        color = SolidColor(AppTheme.colors.hintColor.copy(alpha = 0.5f)),
+                                        lineCount = analyzeHeight / 40
                                     )
                                 ),
                                 labelHelperProperties = LabelHelperProperties(
@@ -443,15 +404,16 @@ fun AnalyzePage(
                                     )
                                 ),
                                 indicatorProperties = HorizontalIndicatorProperties(
+                                    count = analyzeHeight / 40,
                                     textStyle = TextStyle(
                                         fontSize = 12.sp,
                                         color = AppTheme.colors.textColor
                                     ),
                                     contentBuilder = { value ->
                                         if (value > 1000000) {
-                                            "${DecimalFormat("#.##").format(value / 1000000)}m"
+                                            "${(value / 1000000).format(2)}m"
                                         } else if (value > 1000) {
-                                            "${DecimalFormat("#.##").format(value / 1000)}k"
+                                            "${(value / 1000).format(2)}k"
                                         } else {
                                             if (value == value.toInt().toDouble()) {
                                                 value.format(0)
@@ -460,6 +422,142 @@ fun AnalyzePage(
                                     }
                                 )
                             )
+                        else
+                            Text(
+                                text = "暂无数据",
+                                fontSize = 20.sp,
+                                textAlign = TextAlign.Center,
+                                color = AppTheme.colors.hintColor,
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                    }
+                }
+            }
+        }
+
+        // 详细信息
+        if ((states.lineParams.isNotEmpty() || states.barParams.isNotEmpty()) && !states.isShowLoading) {
+            AnimatedVisibility(
+                visible = isShowDetail,
+                enter = fadeIn(),
+                exit = fadeOut(),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.65f))
+                        .clickable(
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() }
+                        ) { isShowDetail = false }
+                )
+            }
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 36.dp, max = (fullHeight * 0.8).dp)
+                    .align(Alignment.BottomCenter),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (!isShowDetail) AppTheme.colors.card
+                    else AppTheme.colors.background
+                ),
+                shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
+                        .clickable(
+                            indication = rememberRipple(),
+                            interactionSource = remember { MutableInteractionSource() }
+                        ) { isShowDetail = !isShowDetail }
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_back),
+                        contentDescription = "more",
+                        modifier = Modifier
+                            .size(32.dp)
+                            .rotate(animationRotate)
+                            .align(Alignment.Center),
+                        colorFilter = ColorFilter.tint(AppTheme.colors.hintColor)
+                    )
+                }
+                AnimatedVisibility(
+                    visible = isShowDetail,
+                    enter = expandVertically(),
+                    exit = shrinkVertically(),
+                ) {
+                    Column {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 8.dp, end = 8.dp, top = 8.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = AppTheme.colors.card
+                            ),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                text = when (states.filterType) {
+                                    0 -> "新增购买"
+                                    1 -> "销售总量"
+                                    2 -> "收益"
+                                    3 -> "绿宝石"
+                                    4 -> "日活"
+                                    5 -> "退款率"
+                                    else -> "未知"
+                                } + "　　" + states.platform.uppercase(),
+                                fontSize = 14.sp,
+                                color = AppTheme.colors.textColor,
+                                modifier = Modifier.padding(8.dp)
+                            )
+                        }
+                        LazyColumn(Modifier.fillMaxWidth()) {
+                            analyzeDetailMap.entries.forEach {
+                                item {
+                                    val year = it.key.substring(0, 4)
+                                    val day = it.key.substring(it.key.length - 2)
+                                    val month = it.key.substring(4, it.key.length - 2)
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                                    ) {
+                                        DividedLine(
+                                            modifier = Modifier
+                                                .width(16.dp)
+                                                .background(AppTheme.colors.hintColor.copy(alpha = 0.5f))
+                                                .align(Alignment.CenterVertically)
+                                        )
+                                        Text(
+                                            text = "$year-$month-$day",
+                                            fontSize = 12.sp,
+                                            color = AppTheme.colors.hintColor,
+                                            modifier = Modifier
+                                                .padding(8.dp)
+                                                .align(Alignment.CenterVertically)
+                                        )
+                                        DividedLine(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .background(AppTheme.colors.hintColor.copy(alpha = 0.5f))
+                                                .align(Alignment.CenterVertically)
+                                        )
+                                    }
+                                }
+                                item {
+                                    ResDetailInfoCard(
+                                        modifier = Modifier.padding(horizontal = 8.dp),
+                                        resBeans = it.value,
+                                        filterType = states.filterType,
+                                        containerColor = Color.Transparent
+                                    )
+                                }
+                            }
+                            item{
+                                VerticalSpace(dp = 8.dp)
+                            }
+                        }
                     }
                 }
             }
@@ -584,9 +682,7 @@ fun AnalyzePage(
                     .clickable(
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() }
-                    ) {
-                        isShowResPicker = false
-                    }
+                    ) { isShowResPicker = false }
             )
         }
         AnimatedVisibility(
