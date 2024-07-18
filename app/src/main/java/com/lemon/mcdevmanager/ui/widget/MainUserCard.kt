@@ -58,6 +58,7 @@ fun MainUserCard(
     netGameRank: Int = 0,
     netGameClass: Int = 0,
     dataDate: String = "",
+    enableAvatarClick: Boolean = true,
     onClickAvatar: () -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -124,6 +125,7 @@ fun MainUserCard(
                     .padding(8.dp)
                     .clip(RoundedCornerShape(4.dp))
                     .clickable(
+                        enabled = enableAvatarClick,
                         interactionSource = remember { MutableInteractionSource() },
                         indication = rememberRipple()
                     ) { onClickAvatar() }
@@ -208,7 +210,7 @@ fun MainUserCard(
                         )
                     }
                     LinearProgressIndicator(
-                        progress = (currentExp / maxLevelExp).toFloat(),
+                        progress = { (currentExp / maxLevelExp).toFloat() },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(6.dp)

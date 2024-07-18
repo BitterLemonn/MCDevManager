@@ -289,6 +289,7 @@ fun LoginPage(
             label = "名称",
             isShow = isLoginSuccess,
             onConfirm = { name ->
+                keyboardController?.hide()
                 viewModel.dispatch(LoginViewAction.SetUser(name))
             })
     }

@@ -146,6 +146,7 @@ fun SettingPage(
                             .clearCacheAnalyzeByNicknamePlatform(AppContext.nowNickname, "pe")
                     }
                     showToast("已清除本账号下的缓存", SNACK_INFO)
+                    isShowClearCacheDialog = false
                 }
             }
         )

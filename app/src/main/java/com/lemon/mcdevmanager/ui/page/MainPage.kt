@@ -1,33 +1,20 @@
 package com.lemon.mcdevmanager.ui.page
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.DrawerValue
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ModalDrawer
-import androidx.compose.material.Scaffold
 import androidx.compose.material.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -52,10 +39,7 @@ import com.lemon.mcdevmanager.data.common.LOGIN_PAGE
 import com.lemon.mcdevmanager.data.common.MAIN_PAGE
 import com.lemon.mcdevmanager.data.common.SETTING_PAGE
 import com.lemon.mcdevmanager.data.global.AppContext
-import com.lemon.mcdevmanager.ui.theme.AppTheme
 import com.lemon.mcdevmanager.ui.widget.AccountManagerDrawer
-import com.lemon.mcdevmanager.ui.widget.BottomButtonItem
-import com.lemon.mcdevmanager.ui.widget.BottomDialog
 import com.lemon.mcdevmanager.ui.widget.FunctionCard
 import com.lemon.mcdevmanager.ui.widget.MainUserCard
 import com.lemon.mcdevmanager.ui.widget.ProfitCard
@@ -66,9 +50,7 @@ import com.lemon.mcdevmanager.ui.widget.TipsCard
 import com.lemon.mcdevmanager.viewModel.MainViewAction
 import com.lemon.mcdevmanager.viewModel.MainViewEvent
 import com.lemon.mcdevmanager.viewModel.MainViewModel
-import com.orhanobut.logger.Logger
 import com.zj.mvi.core.observeEvent
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
@@ -137,12 +119,9 @@ fun MainPage(
                     netGameScore = states.netGameScore,
                     netGameRank = states.netGameRank,
                     netGameClass = states.netGameClass,
-                    dataDate = states.contributionMonth
-                ) {
-                    navController.navigate(SETTING_PAGE){
-                        launchSingleTop = true
-                    }
-                }
+                    dataDate = states.contributionMonth,
+                    enableAvatarClick = false
+                )
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -209,6 +188,11 @@ fun MainPage(
                     }
                     FunctionCard(icon = R.drawable.ic_profit, title = "收益管理") {
                         coroutineScope.launch { showToast("更多功能请期待未来更新", SNACK_INFO) }
+                    }
+                    FunctionCard(icon = R.drawable.ic_setting, title = "设置"){
+                        navController.navigate(SETTING_PAGE) {
+                            launchSingleTop = true
+                        }
                     }
                 }
             }

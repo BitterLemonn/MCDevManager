@@ -127,7 +127,10 @@ fun SplashPage(
         permission = PermissionType.WRITE,
         textDenied = "MC开发者管理器需要使用读取权限确保正常读取日志数据",
         textBlock = "MC开发者管理器需要使用读取权限确保正常读取日志数据，请在设置中开启",
-        onCancel = { showReadGrantDialog = false },
+        onCancel = {
+            showReadGrantDialog = false
+            activity.finish()
+        },
         doAfterPermission = {
             showReadGrantDialog = false
             showWriteGrantDialog = true
@@ -138,7 +141,10 @@ fun SplashPage(
         permission = PermissionType.WRITE,
         textDenied = "MC开发者管理器需要使用写入权限确保正常写入日志数据",
         textBlock = "MC开发者管理器需要使用写入权限确保正常写入日志数据，请在设置中开启",
-        onCancel = { showWriteGrantDialog = false },
+        onCancel = {
+            showWriteGrantDialog = false
+            activity.finish()
+        },
         doAfterPermission = {
             showWriteGrantDialog = false
             isGetPermission = true
