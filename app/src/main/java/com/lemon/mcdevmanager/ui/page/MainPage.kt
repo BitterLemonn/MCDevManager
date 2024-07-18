@@ -9,8 +9,11 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -47,9 +50,12 @@ import com.lemon.mcdevmanager.data.common.ANALYZE_PAGE
 import com.lemon.mcdevmanager.data.common.FEEDBACK_PAGE
 import com.lemon.mcdevmanager.data.common.LOGIN_PAGE
 import com.lemon.mcdevmanager.data.common.MAIN_PAGE
+import com.lemon.mcdevmanager.data.common.SETTING_PAGE
 import com.lemon.mcdevmanager.data.global.AppContext
 import com.lemon.mcdevmanager.ui.theme.AppTheme
 import com.lemon.mcdevmanager.ui.widget.AccountManagerDrawer
+import com.lemon.mcdevmanager.ui.widget.BottomButtonItem
+import com.lemon.mcdevmanager.ui.widget.BottomDialog
 import com.lemon.mcdevmanager.ui.widget.FunctionCard
 import com.lemon.mcdevmanager.ui.widget.MainUserCard
 import com.lemon.mcdevmanager.ui.widget.ProfitCard
@@ -79,9 +85,6 @@ fun MainPage(
     var isShowNotice by remember { mutableStateOf(false) }
     var isShowLastMonthProfit by remember { mutableStateOf(false) }
 
-    val clipboardManager =
-        LocalContext.current.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-
     LaunchedEffect(key1 = Unit) {
         viewModel.viewEvents.observeEvent(lifecycleOwner) { event ->
             when (event) {
@@ -98,21 +101,17 @@ fun MainPage(
 
         viewModel.dispatch(MainViewAction.LoadData(AppContext.nowNickname))
     }
-    ModalDrawer(
-        modifier = Modifier.fillMaxWidth(0.5f),
+    ModalDrawer(modifier = Modifier.fillMaxWidth(0.5f),
         drawerState = drawerState,
         drawerBackgroundColor = Color.Transparent,
         drawerElevation = 0.dp,
         drawerContent = {
-            AccountManagerDrawer(
-                accountList = AppContext.accountList,
+            AccountManagerDrawer(accountList = AppContext.accountList,
                 onClick = { viewModel.dispatch(MainViewAction.ChangeAccount(it)) },
                 onDismiss = { viewModel.dispatch(MainViewAction.DeleteAccount(it)) },
                 onLogout = { viewModel.dispatch(MainViewAction.DeleteAccount(AppContext.nowNickname)) },
-                onRightClick = { navController.navigate(LOGIN_PAGE) }
-            )
-        }
-    ) {
+                onRightClick = { navController.navigate(LOGIN_PAGE) })
+        }) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -140,12 +139,9 @@ fun MainPage(
                     netGameClass = states.netGameClass,
                     dataDate = states.contributionMonth
                 ) {
-                    val clip = ClipData.newPlainText(
-                        "cookies",
-                        AppContext.cookiesStore[AppContext.nowNickname]
-                    )
-                    clipboardManager.setPrimaryClip(clip)
-                    coroutineScope.launch { showToast("已将cookies复制至剪贴板", SNACK_INFO) }
+                    navController.navigate(SETTING_PAGE){
+                        launchSingleTop = true
+                    }
                 }
                 Column(
                     modifier = Modifier

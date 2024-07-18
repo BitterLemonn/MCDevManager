@@ -12,7 +12,7 @@ data class ResourceBean(
     @SerialName("item_name")
     val itemName: String,
     @SerialName("online_time")
-    val onlineTime: String,
+    val onlineTime: String = "UNKNOWN",
     @SerialName("pri_type")
     val priType: Int,
     val price: Int

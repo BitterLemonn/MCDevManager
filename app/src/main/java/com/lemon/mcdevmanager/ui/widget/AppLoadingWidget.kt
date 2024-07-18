@@ -2,7 +2,6 @@ package com.lemon.mcdevmanager.ui.widget
 
 import android.os.Build
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -31,6 +30,7 @@ import coil.compose.AsyncImage
 import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import com.lemon.mcdevmanager.R
+import com.lemon.mcdevmanager.ui.theme.AppTheme
 
 @Composable
 fun AppLoadingWidget(showBackground: Boolean = true) {
@@ -73,8 +73,7 @@ fun AppLoadingWidget(showBackground: Boolean = true) {
                     .clip(RoundedCornerShape(8.dp))
                     .align(Alignment.Center),
                 colorFilter = ColorFilter.lighting(
-                    multiply = if (isSystemInDarkTheme()) Color(0xFF9B9B9B)
-                    else Color.White,
+                    multiply = AppTheme.colors.imgTintColor,
                     add = Color.Transparent
                 ),
                 onSuccess = {

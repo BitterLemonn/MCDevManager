@@ -101,7 +101,7 @@ fun ProfitWidget(
                 .fillMaxWidth()
                 .height(180.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .background(if (isSystemInDarkTheme()) Color.DarkGray else Color.LightGray)
+                .background(AppTheme.colors.hintColor.copy(alpha = 0.45f))
                 .shimmerLoadingAnimation(
                     isLoadingCompleted = false,
                     isLightModeActive = !isSystemInDarkTheme(),

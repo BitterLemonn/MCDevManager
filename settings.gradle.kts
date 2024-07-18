@@ -24,4 +24,4 @@ dependencyResolutionManagement {
 rootProject.name = "MCDevManager"
 include(":app")
 include(":mvi-core")
- 
+include (":logger")

@@ -20,11 +20,13 @@ import com.lemon.mcdevmanager.data.common.ANALYZE_PAGE
 import com.lemon.mcdevmanager.data.common.FEEDBACK_PAGE
 import com.lemon.mcdevmanager.data.common.LOGIN_PAGE
 import com.lemon.mcdevmanager.data.common.MAIN_PAGE
+import com.lemon.mcdevmanager.data.common.SETTING_PAGE
 import com.lemon.mcdevmanager.data.common.SPLASH_PAGE
 import com.lemon.mcdevmanager.ui.page.AnalyzePage
 import com.lemon.mcdevmanager.ui.page.FeedbackPage
 import com.lemon.mcdevmanager.ui.page.LoginPage
 import com.lemon.mcdevmanager.ui.page.MainPage
+import com.lemon.mcdevmanager.ui.page.SettingPage
 import com.lemon.mcdevmanager.ui.page.SplashPage
 import com.lemon.mcdevmanager.ui.theme.AppTheme
 import com.lemon.mcdevmanager.ui.widget.AppSnackbar
@@ -92,6 +94,19 @@ fun BaseScaffold() {
                 }
             ) {
                 AnalyzePage(
+                    navController = navController,
+                    showToast = { msg, flag -> showToast(msg, flag) }
+                )
+            }
+            composable(
+                route = SETTING_PAGE,
+                enterTransition = {
+                    slideInHorizontally(animationSpec = tween(200), initialOffsetX = { -it })
+                }, popExitTransition = {
+                    slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
+                }
+            ) {
+                SettingPage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) }
                 )
