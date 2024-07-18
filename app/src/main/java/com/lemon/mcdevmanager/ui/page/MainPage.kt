@@ -1,8 +1,5 @@
 package com.lemon.mcdevmanager.ui.page
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
@@ -10,21 +7,14 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.DrawerValue
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ModalDrawer
-import androidx.compose.material.Scaffold
 import androidx.compose.material.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -47,8 +37,8 @@ import com.lemon.mcdevmanager.data.common.ANALYZE_PAGE
 import com.lemon.mcdevmanager.data.common.FEEDBACK_PAGE
 import com.lemon.mcdevmanager.data.common.LOGIN_PAGE
 import com.lemon.mcdevmanager.data.common.MAIN_PAGE
+import com.lemon.mcdevmanager.data.common.SETTING_PAGE
 import com.lemon.mcdevmanager.data.global.AppContext
-import com.lemon.mcdevmanager.ui.theme.AppTheme
 import com.lemon.mcdevmanager.ui.widget.AccountManagerDrawer
 import com.lemon.mcdevmanager.ui.widget.FunctionCard
 import com.lemon.mcdevmanager.ui.widget.MainUserCard
@@ -60,9 +50,7 @@ import com.lemon.mcdevmanager.ui.widget.TipsCard
 import com.lemon.mcdevmanager.viewModel.MainViewAction
 import com.lemon.mcdevmanager.viewModel.MainViewEvent
 import com.lemon.mcdevmanager.viewModel.MainViewModel
-import com.orhanobut.logger.Logger
 import com.zj.mvi.core.observeEvent
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
@@ -78,9 +66,6 @@ fun MainPage(
     val states = viewModel.viewStates.collectAsState().value
     var isShowNotice by remember { mutableStateOf(false) }
     var isShowLastMonthProfit by remember { mutableStateOf(false) }
-
-    val clipboardManager =
-        LocalContext.current.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
 
     LaunchedEffect(key1 = Unit) {
         viewModel.viewEvents.observeEvent(lifecycleOwner) { event ->
@@ -98,21 +83,17 @@ fun MainPage(
 
         viewModel.dispatch(MainViewAction.LoadData(AppContext.nowNickname))
     }
-    ModalDrawer(
-        modifier = Modifier.fillMaxWidth(0.5f),
+    ModalDrawer(modifier = Modifier.fillMaxWidth(0.5f),
         drawerState = drawerState,
         drawerBackgroundColor = Color.Transparent,
         drawerElevation = 0.dp,
         drawerContent = {
-            AccountManagerDrawer(
-                accountList = AppContext.accountList,
+            AccountManagerDrawer(accountList = AppContext.accountList,
                 onClick = { viewModel.dispatch(MainViewAction.ChangeAccount(it)) },
                 onDismiss = { viewModel.dispatch(MainViewAction.DeleteAccount(it)) },
                 onLogout = { viewModel.dispatch(MainViewAction.DeleteAccount(AppContext.nowNickname)) },
-                onRightClick = { navController.navigate(LOGIN_PAGE) }
-            )
-        }
-    ) {
+                onRightClick = { navController.navigate(LOGIN_PAGE) })
+        }) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -138,15 +119,9 @@ fun MainPage(
                     netGameScore = states.netGameScore,
                     netGameRank = states.netGameRank,
                     netGameClass = states.netGameClass,
-                    dataDate = states.contributionMonth
-                ) {
-                    val clip = ClipData.newPlainText(
-                        "cookies",
-                        AppContext.cookiesStore[AppContext.nowNickname]
-                    )
-                    clipboardManager.setPrimaryClip(clip)
-                    coroutineScope.launch { showToast("已将cookies复制至剪贴板", SNACK_INFO) }
-                }
+                    dataDate = states.contributionMonth,
+                    enableAvatarClick = false
+                )
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -213,6 +188,11 @@ fun MainPage(
                     }
                     FunctionCard(icon = R.drawable.ic_profit, title = "收益管理") {
                         coroutineScope.launch { showToast("更多功能请期待未来更新", SNACK_INFO) }
+                    }
+                    FunctionCard(icon = R.drawable.ic_setting, title = "设置"){
+                        navController.navigate(SETTING_PAGE) {
+                            launchSingleTop = true
+                        }
                     }
                 }
             }

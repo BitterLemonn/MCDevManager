@@ -16,6 +16,8 @@ val TextNight = Color(0xFFCCCCCC)
 val TextWhite = Color(0xFFFFFFFF)
 val TextBlack = Color(0xFF000000)
 val Hint = Color(0xFF9E9E9E)
+val DividerLight = Color(0xFFE0E0E0)
+val DividerDark = Color(0xFF707070)
 
 val CardLight = Color(0xFFFEFEFE)
 val CardDark = Color(0xFF313131)
@@ -23,8 +25,8 @@ val CardDark = Color(0xFF313131)
 val BackgroundLight = Color(0xFFF1F1F1)
 val BackgroundDark = Color(0xFF121212)
 
-val IconLight = Color(0xFFFFFFFF)
-val IconDark = Color(0xFFCCCCCC)
+val IconLight = Color.White
+val IconDark = Color(0xFFAAAAAA)
 
 
 val InfoLight = Color(0xFF2196F3)

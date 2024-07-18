@@ -63,6 +63,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(project(":mvi-core"))
+    implementation(project(":logger")){exclude("com.google.guava")}
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -90,7 +91,7 @@ dependencies {
     implementation(libs.accompanist.permissions)
 
     // logger
-    implementation(libs.logger)
+//    implementation(libs.logger)
 
     // sm4
     implementation(libs.bcprov.jdk15on)

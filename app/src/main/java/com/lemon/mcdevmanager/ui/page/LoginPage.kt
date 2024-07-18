@@ -9,7 +9,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -156,8 +155,8 @@ fun LoginPage(
                             .width(120.dp)
                             .aspectRatio(1f),
                         colorFilter = ColorFilter.lighting(
-                            multiply = if (isSystemInDarkTheme()) Color(0xFFAAAAAA)
-                            else Color(0xFFFFFFFF), add = Color.Transparent
+                            multiply = AppTheme.colors.imgTintColor,
+                            add = Color.Transparent
                         )
                     )
                     AnimatedVisibility(
@@ -290,6 +289,7 @@ fun LoginPage(
             label = "名称",
             isShow = isLoginSuccess,
             onConfirm = { name ->
+                keyboardController?.hide()
                 viewModel.dispatch(LoginViewAction.SetUser(name))
             })
     }

@@ -126,7 +126,7 @@ fun ProfitCard(
                 .padding(8.dp)
                 .height(90.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .background(if (isSystemInDarkTheme()) Color.DarkGray else Color.LightGray)
+                .background(AppTheme.colors.hintColor.copy(alpha = 0.45f))
                 .shimmerLoadingAnimation(false, !isSystemInDarkTheme(), durationMillis = 2000)
         )
 }

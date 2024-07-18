@@ -16,6 +16,8 @@ import androidx.compose.ui.graphics.Color
 private val DarkColorPalette = AppColors(
     textColor = TextNight,
     hintColor = Hint,
+    dividerColor = DividerDark,
+    imgTintColor = IconDark,
     card = CardDark,
     background = BackgroundDark,
     primaryColor = Purple40,
@@ -31,6 +33,8 @@ private val DarkColorPalette = AppColors(
 private val LightColorPalette = AppColors(
     textColor = TextDay,
     hintColor = Hint,
+    dividerColor = DividerLight,
+    imgTintColor = IconLight,
     card = CardLight,
     background = BackgroundLight,
     primaryColor = Purple200,
@@ -76,6 +80,8 @@ fun MCDevManagerTheme(
 
     val textColor by animateColorAsState(targetColors.textColor, TweenSpec(600))
     val hintColor by animateColorAsState(targetColors.hintColor, TweenSpec(600))
+    val dividerColor by animateColorAsState(targetColors.dividerColor, TweenSpec(600))
+    val imgTintColor by animateColorAsState(targetColors.imgTintColor, TweenSpec(600))
     val card by animateColorAsState(targetColors.card, TweenSpec(600))
     val background by animateColorAsState(targetColors.background, TweenSpec(600))
     val primaryColor by animateColorAsState(targetColors.primaryColor, TweenSpec(600))
@@ -90,6 +96,8 @@ fun MCDevManagerTheme(
     val appColors = AppColors(
         textColor = textColor,
         hintColor = hintColor,
+        dividerColor = dividerColor,
+        imgTintColor = imgTintColor,
         card = card,
         background = background,
         primaryColor = primaryColor,
@@ -119,6 +127,8 @@ fun MCDevManagerTheme(
 class AppColors(
     textColor: Color,
     hintColor: Color,
+    dividerColor: Color,
+    imgTintColor: Color,
     card: Color,
     background: Color,
     primaryColor: Color,
@@ -134,24 +144,28 @@ class AppColors(
         internal set
     var hintColor: Color by mutableStateOf(hintColor)
         internal set
+    var dividerColor: Color by mutableStateOf(dividerColor)
+        internal set
+    var imgTintColor: Color by mutableStateOf(imgTintColor)
+        internal set
     var card: Color by mutableStateOf(card)
         internal set
     var background: Color by mutableStateOf(background)
-        private set
+        internal set
     var primaryColor: Color by mutableStateOf(primaryColor)
-        private set
+        internal set
     var primarySubColor: Color by mutableStateOf(primarySubColor)
-        private set
+        internal set
     var secondaryColor: Color by mutableStateOf(secondaryColor)
-        private set
+        internal set
     var info: Color by mutableStateOf(info)
-        private set
+        internal set
     var warn: Color by mutableStateOf(warn)
-        private set
+        internal set
     var success: Color by mutableStateOf(success)
-        private set
+        internal set
     var error: Color by mutableStateOf(error)
-        private set
+        internal set
     var chartColors: List<Color> by mutableStateOf(lineChartColors)
-        private set
+        internal set
 }

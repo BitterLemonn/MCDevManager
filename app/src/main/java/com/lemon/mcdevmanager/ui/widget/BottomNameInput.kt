@@ -11,10 +11,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -30,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -50,7 +50,7 @@ fun BottomNameInput(
     var input by remember { mutableStateOf("") }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        if (isShow){
+        if (isShow) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -59,7 +59,9 @@ fun BottomNameInput(
         }
         AnimatedVisibility(
             visible = isShow,
-            modifier = Modifier.align(Alignment.TopCenter).imePadding(),
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .imePadding(),
             enter = slideIn { fullSize -> IntOffset(0, -fullSize.height) },
             exit = slideOut { fullSize -> IntOffset(0, -fullSize.height) }
         ) {
@@ -97,14 +99,21 @@ fun BottomNameInput(
                             focusedLabelColor = AppTheme.colors.primaryColor,
                             unfocusedLabelColor = AppTheme.colors.hintColor
                         ),
-                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Ascii),
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            keyboardType = KeyboardType.Ascii,
+                            imeAction = ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = { onConfirm(input) }
+                        ),
                         label = {
                             Text(
                                 text = label,
                                 fontSize = 16.sp,
                                 textAlign = TextAlign.Start
                             )
-                        }
+                        },
+                        singleLine = true
                     )
                     Button(
                         onClick = { onConfirm(input) },

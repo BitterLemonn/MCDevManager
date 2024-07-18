@@ -1,8 +1,7 @@
 package com.lemon.mcdevmanager.ui.widget
 
-import android.support.annotation.DrawableRes
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,7 +15,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -41,10 +39,7 @@ import com.lemon.mcdevmanager.data.common.DOWNImage
 import com.lemon.mcdevmanager.data.common.NORMALImage
 import com.lemon.mcdevmanager.data.common.UPImage
 import com.lemon.mcdevmanager.ui.theme.AppTheme
-import com.lemon.mcdevmanager.ui.theme.IconDark
-import com.lemon.mcdevmanager.ui.theme.IconLight
-import com.lemon.mcdevmanager.utils.pxToDp
-import com.orhanobut.logger.Logger
+import com.lemon.mcdevmanager.ui.theme.MCDevManagerTheme
 import java.util.Base64
 
 @Composable
@@ -89,7 +84,7 @@ fun ProfitSmallWidget(
                     .size(18.dp)
                     .align(Alignment.Center),
                 colorFilter = ColorFilter.lighting(
-                    multiply = if (isSystemInDarkTheme()) IconDark else IconLight,
+                    multiply = AppTheme.colors.imgTintColor,
                     add = Color.Transparent
                 )
             )
@@ -132,7 +127,7 @@ fun ProfitSmallWidget(
                         .align(Alignment.CenterVertically),
                     contentScale = ContentScale.Fit,
                     colorFilter = ColorFilter.lighting(
-                        multiply = if (isSystemInDarkTheme()) IconDark else IconLight,
+                        multiply = AppTheme.colors.imgTintColor,
                         add = Color.Transparent
                     )
                 )
@@ -184,11 +179,13 @@ fun ProfitSmallWidget(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun ProfitSmallWidgetPreview() {
-    ProfitSmallWidget(
-        icon = R.drawable.ic_diamond,
-        mainText = "本月钻石收益",
-        mainNum = 3000,
-        subText = "上月钻石收益",
-        subNum = 15000000
-    )
+    MCDevManagerTheme {
+        ProfitSmallWidget(
+            icon = R.drawable.ic_diamond,
+            mainText = "本月钻石收益",
+            mainNum = 3000,
+            subText = "上月钻石收益",
+            subNum = 15000000
+        )
+    }
 }

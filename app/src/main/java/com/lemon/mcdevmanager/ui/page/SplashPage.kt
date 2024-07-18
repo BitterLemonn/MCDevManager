@@ -1,5 +1,6 @@
 package com.lemon.mcdevmanager.ui.page
 
+import android.app.Activity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -14,6 +15,10 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,9 +33,10 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.lemon.mcdevmanager.R
-import com.lemon.mcdevmanager.data.common.LOGIN_PAGE
 import com.lemon.mcdevmanager.data.common.SPLASH_PAGE
 import com.lemon.mcdevmanager.ui.theme.TextWhite
+import com.lemon.mcdevmanager.ui.widget.GrantPermission
+import com.lemon.mcdevmanager.ui.widget.PermissionType
 import com.lemon.mcdevmanager.viewModel.SplashViewAction
 import com.lemon.mcdevmanager.viewModel.SplashViewEvent
 import com.lemon.mcdevmanager.viewModel.SplashViewModel
@@ -48,25 +54,33 @@ fun SplashPage(
     var waitingLast = 0
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    LaunchedEffect(key1 = Unit) {
-        this.launch(Dispatchers.IO) {
-            while (waitingLast < 2) {
-                waitingLast++
-                delay(1000)
+    var showReadGrantDialog by remember { mutableStateOf(true) }
+    var showWriteGrantDialog by remember { mutableStateOf(false) }
+    val activity = LocalContext.current as Activity
+
+    var isGetPermission by remember { mutableStateOf(false) }
+
+    LaunchedEffect(key1 = isGetPermission) {
+        if (isGetPermission) {
+            this.launch(Dispatchers.IO) {
+                while (waitingLast < 2) {
+                    waitingLast++
+                    delay(1000)
+                }
             }
-        }
-        viewmodel.dispatch(SplashViewAction.GetDatabase)
-        viewmodel.viewEvents.observeEvent(lifecycleOwner) { event ->
-            when (event) {
-                is SplashViewEvent.RouteToPath -> {
-                    this.launch(Dispatchers.IO) {
-                        while (waitingLast < 2) {
-                            delay(100)
-                        }
-                        withContext(Dispatchers.Main) {
-                            navController.navigate(event.path) {
-                                launchSingleTop = true
-                                popUpTo(SPLASH_PAGE) { inclusive = true }
+            viewmodel.dispatch(SplashViewAction.GetDatabase)
+            viewmodel.viewEvents.observeEvent(lifecycleOwner) { event ->
+                when (event) {
+                    is SplashViewEvent.RouteToPath -> {
+                        this.launch(Dispatchers.IO) {
+                            while (waitingLast < 2) {
+                                delay(100)
+                            }
+                            withContext(Dispatchers.Main) {
+                                navController.navigate(event.path) {
+                                    launchSingleTop = true
+                                    popUpTo(SPLASH_PAGE) { inclusive = true }
+                                }
                             }
                         }
                     }
@@ -74,6 +88,7 @@ fun SplashPage(
             }
         }
     }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -106,6 +121,35 @@ fun SplashPage(
             )
         }
     }
+
+    GrantPermission(
+        isShow = showReadGrantDialog,
+        permission = PermissionType.WRITE,
+        textDenied = "MC开发者管理器需要使用读取权限确保正常读取日志数据",
+        textBlock = "MC开发者管理器需要使用读取权限确保正常读取日志数据，请在设置中开启",
+        onCancel = {
+            showReadGrantDialog = false
+            activity.finish()
+        },
+        doAfterPermission = {
+            showReadGrantDialog = false
+            showWriteGrantDialog = true
+        }
+    )
+    GrantPermission(
+        isShow = showWriteGrantDialog,
+        permission = PermissionType.WRITE,
+        textDenied = "MC开发者管理器需要使用写入权限确保正常写入日志数据",
+        textBlock = "MC开发者管理器需要使用写入权限确保正常写入日志数据，请在设置中开启",
+        onCancel = {
+            showWriteGrantDialog = false
+            activity.finish()
+        },
+        doAfterPermission = {
+            showWriteGrantDialog = false
+            isGetPermission = true
+        }
+    )
 }
 
 @Composable

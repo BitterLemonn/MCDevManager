@@ -58,7 +58,8 @@ fun MainUserCard(
     netGameRank: Int = 0,
     netGameClass: Int = 0,
     dataDate: String = "",
-    onPasteToClipboard: () -> Unit = {}
+    enableAvatarClick: Boolean = true,
+    onClickAvatar: () -> Unit = {}
 ) {
     val context = LocalContext.current
 
@@ -121,19 +122,21 @@ fun MainUserCard(
         Box(modifier = Modifier.fillMaxWidth()) {
             Row(
                 modifier = Modifier
+                    .padding(8.dp)
                     .clip(RoundedCornerShape(4.dp))
                     .clickable(
+                        enabled = enableAvatarClick,
                         interactionSource = remember { MutableInteractionSource() },
                         indication = rememberRipple()
-                    ) { onPasteToClipboard() }
+                    ) { onClickAvatar() }
             ) {
                 AsyncImage(
                     model = avatarUrl,
                     contentDescription = "avatar image",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .padding(12.dp)
-                        .size(32.dp)
+                        .padding(8.dp)
+                        .size(28.dp)
                         .clip(CircleShape)
                         .align(Alignment.CenterVertically),
                     placeholder = painterResource(id = R.drawable.img_avatar)
@@ -207,7 +210,7 @@ fun MainUserCard(
                         )
                     }
                     LinearProgressIndicator(
-                        progress = (currentExp / maxLevelExp).toFloat(),
+                        progress = { (currentExp / maxLevelExp).toFloat() },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(6.dp)
