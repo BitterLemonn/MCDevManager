@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.lemon.mcdevmanager.R
+import com.lemon.mcdevmanager.data.common.ABOUT_PAGE
 import com.lemon.mcdevmanager.data.common.LOG_PAGE
 import com.lemon.mcdevmanager.data.database.database.GlobalDataBase
 import com.lemon.mcdevmanager.data.global.AppContext
@@ -120,7 +121,11 @@ fun SettingPage(
         SettingCard(
             type = "关于",
             content = listOf(
-                SettingItemData("关于MC开发者管理器") {}
+                SettingItemData("关于MC开发者管理器") {
+                    navController.navigate(ABOUT_PAGE) {
+                        launchSingleTop = true
+                    }
+                }
             )
         )
     }

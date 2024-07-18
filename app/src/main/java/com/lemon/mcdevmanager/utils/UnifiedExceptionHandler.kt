@@ -1,5 +1,6 @@
 package com.lemon.mcdevmanager.utils
 
+import com.lemon.mcdevmanager.data.github.update.LatestReleaseBean
 import com.lemon.mcdevmanager.data.netease.login.BaseLoginBean
 import com.lemon.mcdevmanager.data.netease.login.CapIdBean
 import com.lemon.mcdevmanager.data.netease.login.PowerBean
@@ -31,6 +32,38 @@ object UnifiedExceptionHandler {
             if (e.code() == 401) {
                 Logger.e("$TAG:Token失效\n$e")
                 return NetworkState.Error("登录过期啦!", LoginException("登录过期啦!"))
+            } else return NetworkState.Error("未知错误，请联系管理员", e)
+        } catch (e: Exception) {
+            e.message?.let { Logger.e("$TAG:$it") } ?: Logger.e(e::class.toString())
+            return NetworkState.Error("未知错误，请联系管理员", e)
+        }
+    }
+
+    suspend fun <T> handleSuspendWithGithubData(function: suspend () -> T): NetworkState<T> {
+        return try {
+            when (val result = function.invoke()) {
+                is LatestReleaseBean -> {
+                    val uniData = ResponseData("200", result)
+                    parseData(uniData)
+                }
+                else -> NetworkState.Error("函数调用错误，非Github更新接口请使用handleSuspend")
+            }
+        } catch (e: SocketTimeoutException) {
+            Logger.e("$TAG:链接超时\n$e")
+            return NetworkState.Error(
+                "网络好像被末影人搬走了",
+                SocketTimeoutException("网络好像被末影人搬走了")
+            )
+        } catch (e: ConnectException) {
+            Logger.e("$TAG:无法连接到服务器\n$e")
+            return NetworkState.Error(
+                "服务器掉进深暗之域了",
+                ConnectException("服务器掉进深暗之域了")
+            )
+        } catch (e: HttpException) {
+            if (e.code() == 403) {
+                Logger.e("$TAG:GithubApi请求上限\n$e")
+                return NetworkState.Error("请求过于频繁,请稍后再次尝试", e)
             } else return NetworkState.Error("未知错误，请联系管理员", e)
         } catch (e: Exception) {
             e.message?.let { Logger.e("$TAG:$it") } ?: Logger.e(e::class.toString())
