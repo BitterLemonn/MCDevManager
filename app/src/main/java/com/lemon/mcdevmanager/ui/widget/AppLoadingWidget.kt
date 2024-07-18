@@ -97,6 +97,6 @@ fun AppLoadingWidget(showBackground: Boolean = true) {
 
 @Preview(showBackground = true)
 @Composable
-fun AppLoadingWidgetPreview() {
+private fun AppLoadingWidgetPreview() {
     AppLoadingWidget()
 }

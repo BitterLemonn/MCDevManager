@@ -7,6 +7,7 @@ const val MAIN_PAGE = "MAIN_PAGE"
 const val FEEDBACK_PAGE = "FEEDBACK_PAGE"
 const val ANALYZE_PAGE = "ANALYZE_PAGE"
 const val SETTING_PAGE = "SETTING_PAGE"
+const val LOG_PAGE = "LOG_PAGE"
 
 // 网易用户cookie名
 const val NETEASE_USER_COOKIE = "NTES_SESS"

@@ -5,4 +5,6 @@ object AppContext {
     var nowNickname = "UNKNOWN"
 
     val accountList = mutableListOf<String>()
+
+    var logDirPath = ""
 }

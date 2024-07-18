@@ -1,6 +1,9 @@
 package com.lemon.mcdevmanager.ui.page
 
 import android.content.ClipData
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,8 +25,11 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,12 +44,14 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.lemon.mcdevmanager.R
+import com.lemon.mcdevmanager.data.common.LOG_PAGE
 import com.lemon.mcdevmanager.data.database.database.GlobalDataBase
 import com.lemon.mcdevmanager.data.global.AppContext
 import com.lemon.mcdevmanager.ui.theme.AppTheme
 import com.lemon.mcdevmanager.ui.theme.MCDevManagerTheme
 import com.lemon.mcdevmanager.ui.theme.TextWhite
 import com.lemon.mcdevmanager.ui.widget.HeaderWidget
+import com.lemon.mcdevmanager.ui.widget.HintDoubleSelectDialog
 import com.lemon.mcdevmanager.ui.widget.SNACK_INFO
 import com.lt.compose_views.other.VerticalSpace
 import kotlinx.coroutines.Dispatchers
@@ -57,6 +65,8 @@ fun SettingPage(
 ) {
     val clipboardManager = LocalClipboardManager.current.nativeClipboard
     val coroutineScope = rememberCoroutineScope()
+
+    var isShowClearCacheDialog by remember { mutableStateOf(false) }
 
     Column(Modifier.fillMaxSize()) {
         HeaderWidget(title = "设置", leftAction = {
@@ -97,19 +107,13 @@ fun SettingPage(
         SettingCard(
             type = "调试",
             content = listOf(
-                SettingItemData("查看日志") {},
-                SettingItemData("清除缓存","仅支持清除本账号下的缓存") {
-                    coroutineScope.launch(Dispatchers.IO) {
-                        withContext(Dispatchers.IO) {
-                            GlobalDataBase.database.infoDao()
-                                .clearCacheOverviewByNickname(AppContext.nowNickname)
-                            GlobalDataBase.database.infoDao()
-                                .clearCacheAnalyzeByNicknamePlatform(AppContext.nowNickname, "pc")
-                            GlobalDataBase.database.infoDao()
-                                .clearCacheAnalyzeByNicknamePlatform(AppContext.nowNickname, "pe")
-                        }
-                        showToast("已清除本账号下的缓存", SNACK_INFO)
+                SettingItemData("查看日志") {
+                    navController.navigate(LOG_PAGE) {
+                        launchSingleTop = true
                     }
+                },
+                SettingItemData("清除缓存", "仅支持清除本账号下的缓存") {
+                    isShowClearCacheDialog = true
                 }
             )
         )
@@ -118,6 +122,32 @@ fun SettingPage(
             content = listOf(
                 SettingItemData("关于MC开发者管理器") {}
             )
+        )
+    }
+
+    AnimatedVisibility(
+        visible = isShowClearCacheDialog,
+        enter = fadeIn(),
+        exit = fadeOut()
+    ) {
+        HintDoubleSelectDialog(
+            hint = "是否删除本账号下的所有缓存数据？",
+            highlightCertain = false,
+            canTouchOutside = true,
+            onCanceled = { isShowClearCacheDialog = false },
+            onConfirmed = {
+                coroutineScope.launch(Dispatchers.IO) {
+                    withContext(Dispatchers.IO) {
+                        GlobalDataBase.database.infoDao()
+                            .clearCacheOverviewByNickname(AppContext.nowNickname)
+                        GlobalDataBase.database.infoDao()
+                            .clearCacheAnalyzeByNicknamePlatform(AppContext.nowNickname, "pc")
+                        GlobalDataBase.database.infoDao()
+                            .clearCacheAnalyzeByNicknamePlatform(AppContext.nowNickname, "pe")
+                    }
+                    showToast("已清除本账号下的缓存", SNACK_INFO)
+                }
+            }
         )
     }
 }
@@ -171,7 +201,7 @@ private fun SettingItem(
                 indication = rememberRipple(),
                 interactionSource = remember { MutableInteractionSource() }
             )
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 16.dp, vertical = 16.dp)
     ) {
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.Start) {
             Text(

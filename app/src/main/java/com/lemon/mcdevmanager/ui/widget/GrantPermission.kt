@@ -19,8 +19,7 @@ fun GrantPermission(
     textDenied: String,
     textBlock: String,
     onCancel: () -> Unit,
-    doAfterPermission: () -> Unit,
-    onDined: () -> Unit
+    doAfterPermission: () -> Unit
 ) {
     val permissionGet = rememberPermissionState(
         permission = when (permission) {
@@ -28,10 +27,7 @@ fun GrantPermission(
             PermissionType.WRITE -> android.Manifest.permission.WRITE_EXTERNAL_STORAGE
         }
     )
-    val items = listOf(
-        BottomButtonItem("取消") { onCancel.invoke() },
-        BottomButtonItem("确认") { permissionGet.launchPermissionRequest() }
-    )
+
     when (permissionGet.status) {
         is PermissionStatus.Denied -> {
             val textShow =
@@ -39,9 +35,9 @@ fun GrantPermission(
                 else textBlock
             BottomHintDialog(
                 hint = textShow,
-                items = items,
                 isShow = isShow,
-                onCancel = onDined
+                onCancel = onCancel,
+                onConfirm = { permissionGet.launchPermissionRequest() }
             )
         }
         is PermissionStatus.Granted -> if (isShow) doAfterPermission.invoke()

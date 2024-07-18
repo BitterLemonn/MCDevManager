@@ -44,19 +44,13 @@ public class DiskLogStrategy implements LogStrategy {
         @NonNull
         private final String folder;
         private final int maxFileSize;
-        private String mFileName = "sqn_log.log";
-        private String mWyLTEInfoFileName = "wy_LTE_info.txt";
-//        private String mNetInfoFileName = "wy_net_info.txt";
+        private String mFileName = "mcDevMng_log.log";
 
         WriteHandler(@NonNull Looper looper, @NonNull String folder, @NonNull String fileName, int maxFileSize) {
             super(checkNotNull(looper));
             this.folder = checkNotNull(folder);
             this.maxFileSize = maxFileSize;
             mFileName = fileName;
-
-//            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss.SSS");
-            mWyLTEInfoFileName = "wy_LTE_info_" + mFileName;
-//            mNetInfoFileName = "wy_net_info_" + mFileName;
 
         }
 
@@ -65,14 +59,8 @@ public class DiskLogStrategy implements LogStrategy {
         public void handleMessage(@NonNull Message msg) {
             String content = (String) msg.obj;
 
-            int what = msg.what;
             FileWriter fileWriter = null;
-            File logFile = null;
-            if (what == Logger.WARN) {
-                logFile = getLogFile(folder, mWyLTEInfoFileName);
-            } else {
-                logFile = getLogFile(folder, mFileName);
-            }
+            File logFile = getLogFile(folder, mFileName);
 
             try {
                 fileWriter = new FileWriter(logFile, true);

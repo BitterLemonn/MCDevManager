@@ -16,7 +16,6 @@ import com.lemon.mcdevmanager.data.netease.login.PVResultStrBean
 import com.lemon.mcdevmanager.data.repository.LoginRepository
 import com.lemon.mcdevmanager.utils.NetworkState
 import com.lemon.mcdevmanager.utils.dataJsonToString
-import com.lemon.mcdevmanager.utils.vdfAsync
 import com.orhanobut.logger.Logger
 import com.zj.mvi.core.SharedFlowEvents
 import com.zj.mvi.core.setEvent
@@ -199,14 +198,6 @@ class LoginViewModel : ViewModel() {
                 if (user != null) {
                     _viewEvent.setEvent(LoginViewEvent.ShowToast("助记名称已存在"))
                     isExist = true
-                }
-                val allUsers = GlobalDataBase.database.userDao().getAllUsers()
-                allUsers.forEach {
-                    if (it.username == _viewState.value.username) {
-                        GlobalDataBase.database.userDao().deleteUserByNickname(it.nickname)
-                        AppContext.cookiesStore.remove(it.nickname)
-                        AppContext.accountList.remove(it.nickname)
-                    }
                 }
             }
             if (!isExist) {
