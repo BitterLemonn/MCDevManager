@@ -13,8 +13,8 @@ android {
         applicationId = "com.lemon.mcdevmanager"
         minSdk = 26
         targetSdk = 34
-        versionCode = 3
-        versionName = "0.3.1"
+        versionCode = 4
+        versionName = "0.3.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -41,6 +41,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
@@ -63,7 +64,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(project(":mvi-core"))
-    implementation(project(":logger")){exclude("com.google.guava")}
+    implementation(project(":logger")) { exclude("com.google.guava") }
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -97,15 +98,15 @@ dependencies {
     implementation(libs.bcprov.jdk15on)
 
     // j2v8 js引擎
-    implementation ("com.eclipsesource.j2v8:j2v8:6.2.0@aar")
-    
+    implementation("com.eclipsesource.j2v8:j2v8:6.2.0@aar")
+
     // coil
-    implementation (libs.coil)
+    implementation(libs.coil)
     implementation(libs.coil.compose)
     implementation(libs.coil.gif)
 
     // chart
-    implementation (libs.compose.charts)
+    implementation(libs.compose.charts)
 
     // compose extend view
     implementation(libs.composeviews)

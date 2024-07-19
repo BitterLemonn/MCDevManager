@@ -54,8 +54,7 @@ fun SplashPage(
     var waitingLast = 0
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    var showReadGrantDialog by remember { mutableStateOf(true) }
-    var showWriteGrantDialog by remember { mutableStateOf(false) }
+    var showGrantDialog by remember { mutableStateOf(true) }
     val activity = LocalContext.current as Activity
 
     var isGetPermission by remember { mutableStateOf(false) }
@@ -123,30 +122,17 @@ fun SplashPage(
     }
 
     GrantPermission(
-        isShow = showReadGrantDialog,
-        permission = PermissionType.WRITE,
-        textDenied = "MC开发者管理器需要使用读取权限确保正常读取日志数据",
-        textBlock = "MC开发者管理器需要使用读取权限确保正常读取日志数据，请在设置中开启",
+        isShow = showGrantDialog,
+        permissions = listOf(
+            Pair(PermissionType.READ, "MC开发者管理器需要使用读取权限确保正常读取日志数据"),
+            Pair(PermissionType.WRITE, "MC开发者管理器需要使用写入权限确保正常写入日志数据")
+        ),
         onCancel = {
-            showReadGrantDialog = false
+            showGrantDialog = false
             activity.finish()
         },
         doAfterPermission = {
-            showReadGrantDialog = false
-            showWriteGrantDialog = true
-        }
-    )
-    GrantPermission(
-        isShow = showWriteGrantDialog,
-        permission = PermissionType.WRITE,
-        textDenied = "MC开发者管理器需要使用写入权限确保正常写入日志数据",
-        textBlock = "MC开发者管理器需要使用写入权限确保正常写入日志数据，请在设置中开启",
-        onCancel = {
-            showWriteGrantDialog = false
-            activity.finish()
-        },
-        doAfterPermission = {
-            showWriteGrantDialog = false
+            showGrantDialog = false
             isGetPermission = true
         }
     )

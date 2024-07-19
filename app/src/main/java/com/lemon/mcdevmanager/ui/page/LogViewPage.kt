@@ -68,6 +68,7 @@ import com.lemon.mcdevmanager.data.global.AppContext
 import com.lemon.mcdevmanager.ui.widget.AppLoadingWidget
 import com.lemon.mcdevmanager.ui.widget.HintDoubleSelectDialog
 import com.lemon.mcdevmanager.ui.widget.SNACK_WARN
+import com.lemon.mcdevmanager.utils.copyFileToDownloadFolder
 import com.lemon.mcdevmanager.viewModel.LogViewAction
 import com.lemon.mcdevmanager.viewModel.LogViewEvent
 import com.lemon.mcdevmanager.viewModel.LogViewModel
@@ -101,57 +102,14 @@ fun LogViewPage(
                 is LogViewEvent.ExportLog -> {
                     val targetPath =
                         Environment.DIRECTORY_DOWNLOADS + File.pathSeparator + "MCDevManager" + File.pathSeparator + "Log"
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        val resolver = context.contentResolver
-                        val contentValues = ContentValues().apply {
-                            put(
-                                MediaStore.Downloads.DISPLAY_NAME,
-                                "MCDevManager" + File.pathSeparator + "Log" + File.pathSeparator + event.filename
-                            )
-                            put(MediaStore.Downloads.MIME_TYPE, "application/octet-stream")
-                            put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
-                        }
-                        val uri = resolver.insert(
-                            MediaStore.Downloads.EXTERNAL_CONTENT_URI,
-                            contentValues
-                        )
-                        uri?.let {
-                            try {
-                                resolver.openOutputStream(it)?.use { outputStream ->
-                                    val file = File(event.filePath)
-                                    FileInputStream(file).use { inputStream ->
-                                        inputStream.copyTo(outputStream)
-                                    }
-                                }
-                                viewModel.dispatch(LogViewAction.DownloadOverSingle)
-                            } catch (e: IOException) {
-                                Logger.e(e, "日志文件导出失败: ${e.message}")
-                                viewModel.dispatch(LogViewAction.DownloadFailSingle)
-                            }
-                        } ?: run {
-                            viewModel.dispatch(LogViewAction.DownloadFailSingle)
-                            Logger.e("日志文件导出失败: uri is null")
-                        }
-                    } else {
-                        val sourceFile = File(event.filePath)
-                        val downloadsDir = Environment.getExternalStoragePublicDirectory(targetPath)
-                        if (!downloadsDir.exists()) {
-                            downloadsDir.mkdirs()
-                        }
-                        val destinationFile = File(downloadsDir, event.filename)
-
-                        try {
-                            FileInputStream(sourceFile).use { input ->
-                                FileOutputStream(destinationFile).use { output ->
-                                    input.copyTo(output)
-                                }
-                            }
-                            viewModel.dispatch(LogViewAction.DownloadOverSingle)
-                        } catch (e: IOException) {
-                            Logger.e(e, "日志文件导出失败: ${e.message}")
-                            viewModel.dispatch(LogViewAction.DownloadFailSingle)
-                        }
-                    }
+                    copyFileToDownloadFolder(
+                        context = context,
+                        sourcePath = AppContext.logDirPath,
+                        fileName = event.filename,
+                        targetPath = targetPath,
+                        onSuccess = { viewModel.dispatch(LogViewAction.DownloadOverSingle) },
+                        onFail = { viewModel.dispatch(LogViewAction.DownloadFailSingle) }
+                    )
                 }
             }
         }
