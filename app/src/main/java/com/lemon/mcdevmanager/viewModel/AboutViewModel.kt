@@ -19,6 +19,9 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import okhttp3.RequestBody
+import okhttp3.ResponseBody
+import java.net.URL
 
 class AboutViewModel : ViewModel() {
     private val repository = UpdateRepository.getInstance()
@@ -29,7 +32,7 @@ class AboutViewModel : ViewModel() {
 
     fun dispatch(action: AboutViewActions) {
         when (action) {
-            is AboutViewActions.DownloadAsset -> {}
+            is AboutViewActions.DownloadAsset -> downloadAsset()
             is AboutViewActions.CheckUpdate -> checkUpdate()
         }
     }
@@ -42,12 +45,8 @@ class AboutViewModel : ViewModel() {
                         val hasNewVersion = result.data?.let {
                             BuildConfig.VERSION_NAME != it.tagName.replace("v", "")
                         } ?: false
-                        _viewStates.setState {
-                            copy(
-                                latestBean = result.data,
-                                hasNewVersion = hasNewVersion
-                            )
-                        }
+                        _viewStates.setState { copy(latestBean = result.data) }
+                        if (hasNewVersion) _viewEvents.setEvent(AboutViewEvents.ShowNewVersionDialog)
                     }
 
                     is NetworkState.Error -> {
@@ -74,13 +73,34 @@ class AboutViewModel : ViewModel() {
             }.collect()
         }
     }
+
+    private fun downloadAsset() {
+        viewModelScope.launch {
+            flow<Unit> {
+                val latestBean = _viewStates.value.latestBean
+                if (latestBean == null) {
+                    _viewEvents.setEvent(AboutViewEvents.ShowToast("无法获取更新地址", SNACK_ERROR))
+                    return@flow
+                }
+                val downloadUrl = latestBean.assets.firstOrNull()?.url
+                if (downloadUrl == null) {
+                    _viewEvents.setEvent(AboutViewEvents.ShowToast("无法获取更新地址", SNACK_ERROR))
+                    return@flow
+                }
+                _viewEvents.setEvent(AboutViewEvents.DownloadStart(downloadUrl))
+            }.catch { e ->
+                _viewEvents.setEvent(
+                    AboutViewEvents.DownloadFailed(e.message ?: "未知错误, 请联系管理员")
+                )
+            }.collect()
+        }
+    }
 }
 
 data class AboutViewStates(
     val downloadProgress: Int = 0,
     val latestBean: LatestReleaseBean? = null,
-    val isLoading: Boolean = false,
-    val hasNewVersion: Boolean = false
+    val isLoading: Boolean = false
 )
 
 sealed class AboutViewActions {
@@ -89,8 +109,8 @@ sealed class AboutViewActions {
 }
 
 sealed class AboutViewEvents {
-    data object DownloadStart : AboutViewEvents()
-    data class DownloadSuccess(val path: String) : AboutViewEvents()
+    data class DownloadStart(val downloadUrl: String) : AboutViewEvents()
     data class DownloadFailed(val msg: String) : AboutViewEvents()
     data class ShowToast(val msg: String, val type: String) : AboutViewEvents()
+    data object ShowNewVersionDialog : AboutViewEvents()
 }

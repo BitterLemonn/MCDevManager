@@ -10,7 +10,9 @@ import com.lemon.mcdevmanager.ui.base.BaseScaffold
 import com.lemon.mcdevmanager.ui.theme.MCDevManagerTheme
 import com.orhanobut.logger.AndroidLogAdapter
 import com.orhanobut.logger.DiskLogAdapter
+import com.orhanobut.logger.FormatStrategy
 import com.orhanobut.logger.Logger
+import com.orhanobut.logger.PrettyFormatStrategy
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -18,7 +20,12 @@ import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        Logger.addLogAdapter(AndroidLogAdapter())
+        val formatStrategy: FormatStrategy = PrettyFormatStrategy.newBuilder()
+            .showThreadInfo(true)
+            .methodCount(4)
+            .tag("MCDevLogger")
+            .build()
+        Logger.addLogAdapter(AndroidLogAdapter(formatStrategy))
         val fileName = SimpleDateFormat("yyyy_MM_dd-HH:mm:ss", Locale.CHINA)
             .format(System.currentTimeMillis()) + ".log"
         val logDirPath =

@@ -27,7 +27,6 @@ interface DownloadApi {
                 .connectTimeout(15, TimeUnit.SECONDS)
                 .readTimeout(15, TimeUnit.SECONDS)
                 .addInterceptor(AddCookiesInterceptor())
-                .addInterceptor(CommonInterceptor())
                 .build()
             return Retrofit.Builder()
                 .baseUrl(baseUrl)
