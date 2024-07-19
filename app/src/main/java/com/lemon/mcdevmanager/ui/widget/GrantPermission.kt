@@ -1,16 +1,21 @@
 package com.lemon.mcdevmanager.ui.widget
 
-import android.os.Build
-import androidx.compose.runtime.Composable
-import android.Manifest.permission.*
+import android.Manifest.permission.FOREGROUND_SERVICE
+import android.Manifest.permission.POST_NOTIFICATIONS
+import android.Manifest.permission.READ_EXTERNAL_STORAGE
+import android.Manifest.permission.REQUEST_INSTALL_PACKAGES
+import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.app.Activity
+import android.app.NotificationManager
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
-import androidx.core.app.NotificationManagerCompat
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionStatus
 import com.google.accompanist.permissions.rememberPermissionState
@@ -36,7 +41,6 @@ fun GrantPermission(
             else onCancel.invoke()
         }
     val packageManager = context.packageManager
-    val notificationManager = NotificationManagerCompat.from(context)
 
     for (permissionData in permissions) {
         val permission = permissionData.first
@@ -72,17 +76,24 @@ fun GrantPermission(
                     )
                 } else if (isShow) doAfterPermission()
             } else if (permission == PermissionType.POST_NOTIFICATION) {
+                val notificationManager =
+                    context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !notificationManager.areNotificationsEnabled()) {
                     BottomHintDialog(
                         hint = hint,
                         isShow = isShow,
                         onCancel = onCancel,
                         onConfirm = {
-                            val intent =
-                                Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-                                    putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-                                }
-                            launcher.launch(intent)
+                            try{
+                                val intent =
+                                    Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                                        putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                                    }
+                                launcher.launch(intent)
+                            }catch (e: Exception){
+                                Logger.e("打开通知设置失败: ${e.message}")
+                                onCancel.invoke()
+                            }
                         }
                     )
                 } else if (isShow) doAfterPermission()

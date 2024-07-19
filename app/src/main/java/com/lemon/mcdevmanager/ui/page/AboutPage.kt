@@ -47,6 +47,8 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.lemon.mcdevmanager.BuildConfig
 import com.lemon.mcdevmanager.R
+import com.lemon.mcdevmanager.data.common.LICENSE_PAGE
+import com.lemon.mcdevmanager.data.common.OPEN_SOURCE_INFO_PAGE
 import com.lemon.mcdevmanager.service.DownloadService
 import com.lemon.mcdevmanager.ui.theme.AppTheme
 import com.lemon.mcdevmanager.ui.theme.MCDevManagerTheme
@@ -264,7 +266,11 @@ fun AboutPage(
                     modifier = Modifier.clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
-                    ) {}
+                    ) {
+                        navController.navigate(OPEN_SOURCE_INFO_PAGE){
+                            launchSingleTop = true
+                        }
+                    }
                 )
                 HorizontalSpace(dp = 8.dp)
                 Text(text = "·", fontSize = 14.sp, color = Color(0xFF4169E1))
@@ -276,7 +282,11 @@ fun AboutPage(
                     modifier = Modifier.clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
-                    ) {}
+                    ) {
+                        navController.navigate(LICENSE_PAGE){
+                            launchSingleTop = true
+                        }
+                    }
                 )
             }
             VerticalSpace(dp = 8.dp)
@@ -305,41 +315,45 @@ fun AboutPage(
         }
     }
 
-    GrantPermission(
-        isShow = isShowGrandPermissionDialog,
-        permissions = listOf(
-            Pair(
-                PermissionType.POST_NOTIFICATION,
-                "MC开发者管理器需要使用通知权限确保发送下载进度通知"
-            )
-        ),
-        onCancel = {
+    if (isShowGrandPermissionDialog){
+        GrantPermission(
+            isShow = true,
+            permissions = listOf(
+                Pair(
+                    PermissionType.POST_NOTIFICATION,
+                    "MC开发者管理器需要使用通知权限确保发送下载进度通知"
+                )
+            ),
+            onCancel = {
+                isShowGrandPermissionDialog = false
+                showToast("未授予通知权限, 无法通知下载进度", SNACK_WARN)
+            },
+        ) {
             isShowGrandPermissionDialog = false
-            showToast("未授予通知权限, 无法通知下载进度", SNACK_WARN)
-        },
-    ) {
-        isShowGrandPermissionDialog = false
-        isShowGrandInstallPermissionDialog = true
+            isShowGrandInstallPermissionDialog = true
+        }
     }
 
-    GrantPermission(
-        isShow = isShowGrandInstallPermissionDialog,
-        permissions = listOf(
-            Pair(
-                PermissionType.INSTALL_APK,
-                "MC开发者管理器需要使用安装权限确保自动安装下载的APK"
-            )
-        ),
-        onCancel = {
+    if (isShowGrandInstallPermissionDialog){
+        GrantPermission(
+            isShow = true,
+            permissions = listOf(
+                Pair(
+                    PermissionType.INSTALL_APK,
+                    "MC开发者管理器需要使用安装权限确保自动安装下载的APK"
+                )
+            ),
+            onCancel = {
+                isShowGrandInstallPermissionDialog = false
+                isShowNewVersionDialog = false
+                viewModel.dispatch(AboutViewActions.DownloadAsset)
+                showToast("未授予安装权限, 无法自动安装下载的APK", SNACK_WARN)
+            }
+        ) {
             isShowGrandInstallPermissionDialog = false
             isShowNewVersionDialog = false
             viewModel.dispatch(AboutViewActions.DownloadAsset)
-            showToast("未授予安装权限, 无法自动安装下载的APK", SNACK_WARN)
         }
-    ) {
-        isShowGrandInstallPermissionDialog = false
-        isShowNewVersionDialog = false
-        viewModel.dispatch(AboutViewActions.DownloadAsset)
     }
 
     AnimatedVisibility(

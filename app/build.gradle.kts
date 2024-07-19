@@ -13,8 +13,8 @@ android {
         applicationId = "com.lemon.mcdevmanager"
         minSdk = 26
         targetSdk = 34
-        versionCode = 3
-        versionName = "0.3.1"
+        versionCode = 4
+        versionName = "0.3.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
