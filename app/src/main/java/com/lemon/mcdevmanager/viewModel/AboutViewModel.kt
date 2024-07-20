@@ -6,6 +6,7 @@ import com.lemon.mcdevmanager.BuildConfig
 import com.lemon.mcdevmanager.data.github.update.LatestReleaseBean
 import com.lemon.mcdevmanager.data.repository.UpdateRepository
 import com.lemon.mcdevmanager.ui.widget.SNACK_ERROR
+import com.lemon.mcdevmanager.ui.widget.SNACK_INFO
 import com.lemon.mcdevmanager.utils.NetworkState
 import com.zj.mvi.core.SharedFlowEvents
 import com.zj.mvi.core.setEvent
@@ -19,9 +20,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
-import okhttp3.RequestBody
-import okhttp3.ResponseBody
-import java.net.URL
 
 class AboutViewModel : ViewModel() {
     private val repository = UpdateRepository.getInstance()
@@ -47,6 +45,9 @@ class AboutViewModel : ViewModel() {
                         } ?: false
                         _viewStates.setState { copy(latestBean = result.data) }
                         if (hasNewVersion) _viewEvents.setEvent(AboutViewEvents.ShowNewVersionDialog)
+                        else _viewEvents.setEvent(
+                            AboutViewEvents.ShowToast("当前已是最新版本", SNACK_INFO)
+                        )
                     }
 
                     is NetworkState.Error -> {
