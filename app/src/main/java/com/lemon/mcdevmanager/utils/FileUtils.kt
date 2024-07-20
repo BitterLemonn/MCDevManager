@@ -20,6 +20,7 @@ fun copyFileToDownloadFolder(
     onFail: () -> Unit
 ) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        Logger.d("MCDevManager" + File.pathSeparator + "Log" + File.pathSeparator + fileName)
         val resolver = context.contentResolver
         val contentValues = ContentValues().apply {
             put(
@@ -36,7 +37,7 @@ fun copyFileToDownloadFolder(
         uri?.let {
             try {
                 resolver.openOutputStream(it)?.use { outputStream ->
-                    val file = File(sourcePath)
+                    val file = File(sourcePath + File.separator + fileName)
                     FileInputStream(file).use { inputStream ->
                         inputStream.copyTo(outputStream)
                     }

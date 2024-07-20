@@ -1,6 +1,7 @@
 package com.lemon.mcdevmanager.ui.widget
 
 import android.Manifest.permission.FOREGROUND_SERVICE
+import android.Manifest.permission.MANAGE_EXTERNAL_STORAGE
 import android.Manifest.permission.POST_NOTIFICATIONS
 import android.Manifest.permission.READ_EXTERNAL_STORAGE
 import android.Manifest.permission.REQUEST_INSTALL_PACKAGES

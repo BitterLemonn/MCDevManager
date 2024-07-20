@@ -37,6 +37,7 @@ import com.lemon.mcdevmanager.data.common.SPLASH_PAGE
 import com.lemon.mcdevmanager.ui.theme.TextWhite
 import com.lemon.mcdevmanager.ui.widget.GrantPermission
 import com.lemon.mcdevmanager.ui.widget.PermissionType
+import com.lemon.mcdevmanager.ui.widget.SNACK_WARN
 import com.lemon.mcdevmanager.viewModel.SplashViewAction
 import com.lemon.mcdevmanager.viewModel.SplashViewEvent
 import com.lemon.mcdevmanager.viewModel.SplashViewModel
@@ -49,18 +50,19 @@ import kotlinx.coroutines.withContext
 @Composable
 fun SplashPage(
     navController: NavController,
+    showToast: (String, String) -> Unit = { _, _ -> },
     viewmodel: SplashViewModel = viewModel()
 ) {
     var waitingLast = 0
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    var showGrantDialog by remember { mutableStateOf(true) }
-    val activity = LocalContext.current as Activity
+//    var showGrantDialog by remember { mutableStateOf(true) }
+//    val activity = LocalContext.current as Activity
 
-    var isGetPermission by remember { mutableStateOf(false) }
+//    var isGetPermission by remember { mutableStateOf(false) }
 
-    LaunchedEffect(key1 = isGetPermission) {
-        if (isGetPermission) {
+    LaunchedEffect(key1 = Unit) {
+//        if (isGetPermission) {
             this.launch(Dispatchers.IO) {
                 while (waitingLast < 2) {
                     waitingLast++
@@ -85,7 +87,7 @@ fun SplashPage(
                     }
                 }
             }
-        }
+//        }
     }
 
     Box(
@@ -121,21 +123,22 @@ fun SplashPage(
         }
     }
 
-    GrantPermission(
-        isShow = showGrantDialog,
-        permissions = listOf(
-            Pair(PermissionType.READ, "MC开发者管理器需要使用读取权限确保正常读取日志数据"),
-            Pair(PermissionType.WRITE, "MC开发者管理器需要使用写入权限确保正常写入日志数据")
-        ),
-        onCancel = {
-            showGrantDialog = false
-            activity.finish()
-        },
-        doAfterPermission = {
-            showGrantDialog = false
-            isGetPermission = true
-        }
-    )
+//    GrantPermission(
+//        isShow = showGrantDialog,
+//        permissions = listOf(
+//            Pair(PermissionType.READ, "MC开发者管理器需要使用读取权限确保正常读取日志数据"),
+//            Pair(PermissionType.WRITE, "MC开发者管理器需要使用写入权限确保正常写入日志数据")
+//        ),
+//        onCancel = {
+//            showGrantDialog = false
+//            showToast("未获取读写权限, 应用将无法写入日志数据", SNACK_WARN)
+//            isGetPermission = true
+//        },
+//        doAfterPermission = {
+//            showGrantDialog = false
+//            isGetPermission = true
+//        }
+//    )
 }
 
 @Composable
