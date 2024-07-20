@@ -85,7 +85,7 @@ class DownloadService : Service() {
                     Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath
                 copyFileToDownloadFolder(
                     context = this,
-                    sourcePath = targetPath,
+                    sourcePath = targetPath.substringBeforeLast("/"),
                     targetPath = downloadFolderPath,
                     fileName = downloadLink.substringAfterLast("/"),
                     onSuccess = {

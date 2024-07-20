@@ -63,7 +63,10 @@ fun BaseScaffold() {
             startDestination = SPLASH_PAGE
         ) {
             composable(route = SPLASH_PAGE) {
-                SplashPage(navController = navController)
+                SplashPage(
+                    navController = navController,
+                    showToast = { msg, flag -> showToast(msg, flag) }
+                )
             }
             composable(route = LOGIN_PAGE) {
                 LoginPage(
@@ -180,7 +183,7 @@ fun BaseScaffold() {
                 exitTransition = {
                     slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
                 }
-            ){
+            ) {
                 LicensePage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) }
