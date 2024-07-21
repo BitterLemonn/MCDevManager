@@ -5,6 +5,8 @@ import com.lemon.mcdevmanager.data.common.JSONConverter
 import com.lemon.mcdevmanager.data.netease.login.PVArgs
 import com.lemon.mcdevmanager.data.netease.login.PVInfo
 import com.lemon.mcdevmanager.data.netease.login.PVResultStrBean
+import com.orhanobut.logger.Logger
+import kotlinx.coroutines.time.delay
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import okhttp3.internal.and
@@ -17,6 +19,8 @@ import java.math.BigInteger
 import java.net.URLEncoder
 import java.security.KeyFactory
 import java.security.spec.X509EncodedKeySpec
+import java.time.Duration
+import java.time.temporal.TemporalUnit
 import java.util.Date
 import javax.crypto.Cipher
 import kotlin.concurrent.fixedRateTimer
@@ -70,7 +74,7 @@ fun getRandomTid(): String {
  * VDF 算法
  */
 
-fun vdfAsync(data: PVInfo): PVResultStrBean {
+suspend fun vdfAsync(data: PVInfo): PVResultStrBean {
     val puzzle = data.args.puzzle
     val mod = BigInteger(data.args.mod, 16)
     var x = BigInteger(data.args.x, 16)
@@ -89,9 +93,9 @@ fun vdfAsync(data: PVInfo): PVResultStrBean {
 
     val time = Date().time - startTime
     val signObj = mapOf(
-        "runTimes" to count,
-        "spendTime" to time,
-        "t" to count,
+        "runTimes" to count.toUInt(),
+        "spendTime" to time.toUInt(),
+        "t" to count.toUInt(),
         "x" to x.toString(16)
     )
 
@@ -101,7 +105,8 @@ fun vdfAsync(data: PVInfo): PVResultStrBean {
         "${URLEncoder.encode(key, "UTF-8")}=${URLEncoder.encode(value, "UTF-8")}"
     }
 
-    val sign = powSign(encodedParams, count.toLong())
+    Logger.d("encodedParams: $encodedParams, count: ${count.toUInt()}")
+    val sign = murmurHash3(encodedParams, count.toUInt())
 
     return PVResultStrBean(
         maxTime = data.maxTime,
@@ -113,45 +118,52 @@ fun vdfAsync(data: PVInfo): PVResultStrBean {
     )
 }
 
-fun powSign(key: String, seed: Long): Long {
-    var h1b: Long
-    var k1: Long
+fun murmurHash3(key: String, seed: UInt): UInt {
+    val c1 = 0xcc9e2d51.toInt()
+    val c2 = 0x1b873593.toInt()
+    val r1 = 15
+    val r2 = 13
+    val m = 5
+    val n = 0xe6546b64.toInt()
 
-    val remainder = key.length and 3
-    val bytes = key.length - remainder
-    var h1 = seed
-    val c1 = 0xcc9e2d51
-    val c2 = 0x1b873593
+    var hash = seed.toInt()
+
+    var k1: Int
+    var k2: Int
     var i = 0
+    while (i + 4 <= key.length) {
+        k1 = (key[i + 3].code shl 24) or (key[i + 2].code shl 16) or (key[i + 1].code shl 8) or key[i].code
+        i += 4
 
-    while (i < bytes) {
-        k1 = ((key[i].code and 0xff) or ((key[++i].code and 0xff) shl 8) or ((key[++i].code and 0xff) shl 16) or ((key[++i].code and 0xff) shl 24)).toLong()
-        ++i
-        k1 = ((k1 and 0xffff) * c1 + (((k1 ushr 16) * c1 and 0xffff) shl 16)) and 0xffffffff
-        k1 = (k1 shl 15) or (k1 ushr 17)
-        k1 = ((k1 and 0xffff) * c2 + (((k1 ushr 16) * c2 and 0xffff) shl 16)) and 0xffffffff
-        h1 = h1 xor k1
-        h1 = (h1 shl 13) or (h1 ushr 19)
-        h1b = (((h1 and 0xffff) * 5 + (((h1 ushr 16) * 5 and 0xffff) shl 16)) and 0xffffffff)
-        h1 = (h1b and 0xffff) + 0x6b64 + (((h1b ushr 16) + 0xe654 and 0xffff) shl 16)
+        k1 *= c1
+        k1 = (k1 shl r1) or (k1 ushr (32 - r1))
+        k1 *= c2
+
+        hash = hash xor k1
+        hash = (hash shl r2) or (hash ushr (32 - r2))
+        hash = hash * m + n
     }
-    k1 = 0
-    when (remainder) {
-        3 -> k1 = k1 xor ((key[i + 2].code and 0xff shl 16).toLong())
-        2 -> k1 = k1 xor ((key[i + 1].code and 0xff shl 8).toLong())
-        1 -> {
-            k1 = k1 xor ((key[i].code and 0xff).toLong())
-            k1 = ((k1 and 0xffff) * c1 + (((k1 ushr 16) * c1 and 0xffff) shl 16)) and 0xffffffff
-            k1 = (k1 shl 15) or (k1 ushr 17)
-            k1 = ((k1 and 0xffff) * c2 + (((k1 ushr 16) * c2 and 0xffff) shl 16)) and 0xffffffff
-            h1 = h1 xor k1
+
+    if (i < key.length) {
+        k2 = 0
+        for (j in 0..<key.length - i) {
+            k2 = k2 or (key[i + j].code shl (j * 8))
         }
+
+        k2 *= c1
+        k2 = (k2 shl r1) or (k2 ushr (32 - r1))
+        k2 *= c2
+
+        hash = hash xor k2
     }
-    h1 = h1 xor key.length.toLong()
-    h1 = h1 xor (h1 ushr 16)
-    h1 = ((h1 and 0xffff) * 0x85ebca6b.toInt() + (((h1 ushr 16) * 0x85ebca6b and 0xffff) shl 16)) and 0xffffffff
-    h1 = h1 xor (h1 ushr 13)
-    h1 = ((h1 and 0xffff) * 0xc2b2ae35.toInt() + (((h1 ushr 16) * 0xc2b2ae35 and 0xffff) shl 16)) and 0xffffffff
-    h1 = h1 xor (h1 ushr 16)
-    return h1 ushr 0
+
+    hash = hash xor key.length
+
+    hash = hash xor (hash ushr 16)
+    hash *= 0x85ebca6b.toInt()
+    hash = hash xor (hash ushr 13)
+    hash *= 0xc2b2ae35.toInt()
+    hash = hash xor (hash ushr 16)
+
+    return hash.toUInt()
 }

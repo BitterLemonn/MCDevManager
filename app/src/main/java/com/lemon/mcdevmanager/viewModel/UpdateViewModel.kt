@@ -8,6 +8,7 @@ import com.lemon.mcdevmanager.data.repository.UpdateRepository
 import com.lemon.mcdevmanager.ui.widget.SNACK_ERROR
 import com.lemon.mcdevmanager.ui.widget.SNACK_INFO
 import com.lemon.mcdevmanager.utils.NetworkState
+import com.orhanobut.logger.Logger
 import com.zj.mvi.core.SharedFlowEvents
 import com.zj.mvi.core.setEvent
 import com.zj.mvi.core.setState
@@ -21,17 +22,17 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 
-class AboutViewModel : ViewModel() {
+class UpdateViewmodel : ViewModel() {
     private val repository = UpdateRepository.getInstance()
-    private val _viewStates = MutableStateFlow(AboutViewStates())
+    private val _viewStates = MutableStateFlow(UpdateViewStates())
     val viewStates = _viewStates.asStateFlow()
-    private val _viewEvents = SharedFlowEvents<AboutViewEvents>()
+    private val _viewEvents = SharedFlowEvents<UpdateViewEvents>()
     val viewEvents = _viewEvents.asSharedFlow()
 
-    fun dispatch(action: AboutViewActions) {
+    fun dispatch(action: UpdateViewActions) {
         when (action) {
-            is AboutViewActions.DownloadAsset -> downloadAsset()
-            is AboutViewActions.CheckUpdate -> checkUpdate()
+            is UpdateViewActions.DownloadAsset -> downloadAsset()
+            is UpdateViewActions.CheckUpdate -> checkUpdate()
         }
     }
 
@@ -41,21 +42,20 @@ class AboutViewModel : ViewModel() {
                 when (val result = repository.getLatestRelease()) {
                     is NetworkState.Success -> {
                         val hasNewVersion = result.data?.let {
-                            BuildConfig.VERSION_NAME != it.tagName.replace("v", "")
+                            Logger.d("当前版本: ${BuildConfig.VERSION_NAME}, 最新版本: ${it.tagName.replace("v", "")}")
+                            BuildConfig.VERSION_NAME < it.tagName.replace("v", "")
                         } ?: false
                         _viewStates.setState { copy(latestBean = result.data) }
-                        if (hasNewVersion) _viewEvents.setEvent(AboutViewEvents.ShowNewVersionDialog)
+                        if (hasNewVersion) _viewEvents.setEvent(UpdateViewEvents.ShowNewVersionDialog)
                         else _viewEvents.setEvent(
-                            AboutViewEvents.ShowToast("当前已是最新版本", SNACK_INFO)
+                            UpdateViewEvents.ShowToast("当前已是最新版本", SNACK_INFO)
                         )
                     }
 
                     is NetworkState.Error -> {
+                        Logger.d("检查更新失败: ${result.e}")
                         _viewEvents.setEvent(
-                            AboutViewEvents.ShowToast(
-                                "检查更新失败: ${result.msg}",
-                                SNACK_ERROR
-                            )
+                            UpdateViewEvents.ShowToast("检查更新失败: ${result.msg}", SNACK_ERROR)
                         )
                     }
                 }
@@ -66,7 +66,7 @@ class AboutViewModel : ViewModel() {
             }.catch { e ->
                 _viewStates.setState { copy(isLoading = false) }
                 _viewEvents.setEvent(
-                    AboutViewEvents.ShowToast(
+                    UpdateViewEvents.ShowToast(
                         "检查更新失败: ${e.message ?: "未知错误, 请联系管理员"}",
                         SNACK_ERROR
                     )
@@ -80,38 +80,48 @@ class AboutViewModel : ViewModel() {
             flow<Unit> {
                 val latestBean = _viewStates.value.latestBean
                 if (latestBean == null) {
-                    _viewEvents.setEvent(AboutViewEvents.ShowToast("无法获取更新地址", SNACK_ERROR))
+                    _viewEvents.setEvent(
+                        UpdateViewEvents.ShowToast(
+                            "无法获取更新地址",
+                            SNACK_ERROR
+                        )
+                    )
                     return@flow
                 }
                 val downloadUrl = latestBean.assets.firstOrNull()?.url
                 if (downloadUrl == null) {
-                    _viewEvents.setEvent(AboutViewEvents.ShowToast("无法获取更新地址", SNACK_ERROR))
+                    _viewEvents.setEvent(
+                        UpdateViewEvents.ShowToast(
+                            "无法获取更新地址",
+                            SNACK_ERROR
+                        )
+                    )
                     return@flow
                 }
-                _viewEvents.setEvent(AboutViewEvents.DownloadStart(downloadUrl))
+                _viewEvents.setEvent(UpdateViewEvents.DownloadStart(downloadUrl))
             }.catch { e ->
                 _viewEvents.setEvent(
-                    AboutViewEvents.DownloadFailed(e.message ?: "未知错误, 请联系管理员")
+                    UpdateViewEvents.DownloadFailed(e.message ?: "未知错误, 请联系管理员")
                 )
             }.collect()
         }
     }
 }
 
-data class AboutViewStates(
+data class UpdateViewStates(
     val downloadProgress: Int = 0,
     val latestBean: LatestReleaseBean? = null,
     val isLoading: Boolean = false
 )
 
-sealed class AboutViewActions {
-    data object DownloadAsset : AboutViewActions()
-    data object CheckUpdate : AboutViewActions()
+sealed class UpdateViewActions {
+    data object DownloadAsset : UpdateViewActions()
+    data object CheckUpdate : UpdateViewActions()
 }
 
-sealed class AboutViewEvents {
-    data class DownloadStart(val downloadUrl: String) : AboutViewEvents()
-    data class DownloadFailed(val msg: String) : AboutViewEvents()
-    data class ShowToast(val msg: String, val type: String) : AboutViewEvents()
-    data object ShowNewVersionDialog : AboutViewEvents()
+sealed class UpdateViewEvents {
+    data class DownloadStart(val downloadUrl: String) : UpdateViewEvents()
+    data class DownloadFailed(val msg: String) : UpdateViewEvents()
+    data class ShowToast(val msg: String, val type: String) : UpdateViewEvents()
+    data object ShowNewVersionDialog : UpdateViewEvents()
 }

@@ -128,3 +128,8 @@
 -keep class com.eclipsesource.v8.** { *; }
 
 -keep class com.lt.* { *; }
+
+-keep class com.lemon.mcdevmanager.utils.NetworkState
+-keep class com.lemon.mcdevmanager.utils.NoNeedData
+-keep class com.lemon.mcdevmanager.utils.ResponseData
+-keep class com.lemon.mcdevmanager.utils.CookiesExpiredException

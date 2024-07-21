@@ -94,8 +94,6 @@ fun LoginPage(
     )
 
     LaunchedEffect(key1 = Unit) {
-        val script = context.assets.open("powerCompute.js").bufferedReader().use { it.readText() }
-        viewModel.dispatch(LoginViewAction.UpdatePowerScript(script))
         viewModel.viewEvent.observeEvent(lifecycleOwner) { event ->
             when (event) {
                 is LoginViewEvent.LoginFailed -> showToast(event.message, SNACK_ERROR)

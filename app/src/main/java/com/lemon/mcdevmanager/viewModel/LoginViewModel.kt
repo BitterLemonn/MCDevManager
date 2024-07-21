@@ -2,8 +2,8 @@ package com.lemon.mcdevmanager.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.eclipsesource.v8.V8
-import com.eclipsesource.v8.V8Object
+//import com.eclipsesource.v8.V8
+//import com.eclipsesource.v8.V8Object
 import com.lemon.mcdevmanager.data.common.CookiesStore
 import com.lemon.mcdevmanager.data.common.JSONConverter
 import com.lemon.mcdevmanager.data.common.MAIN_PAGE
@@ -16,6 +16,7 @@ import com.lemon.mcdevmanager.data.netease.login.PVResultStrBean
 import com.lemon.mcdevmanager.data.repository.LoginRepository
 import com.lemon.mcdevmanager.utils.NetworkState
 import com.lemon.mcdevmanager.utils.dataJsonToString
+import com.lemon.mcdevmanager.utils.vdfAsync
 import com.orhanobut.logger.Logger
 import com.zj.mvi.core.SharedFlowEvents
 import com.zj.mvi.core.setEvent
@@ -48,7 +49,6 @@ class LoginViewModel : ViewModel() {
 
     fun dispatch(action: LoginViewAction) {
         when (action) {
-            is LoginViewAction.UpdatePowerScript -> _viewState.setState { copy(powerScript = action.script) }
             is LoginViewAction.UpdateUsername -> _viewState.setState { copy(username = action.username) }
             is LoginViewAction.UpdatePassword -> _viewState.setState { copy(password = action.password) }
             is LoginViewAction.UpdateCookies -> _viewState.setState { copy(cookies = action.cookies) }
@@ -100,32 +100,32 @@ class LoginViewModel : ViewModel() {
             is NetworkState.Success -> {
                 power.data?.let {
                     val pvInfo = JSONConverter.decodeFromString<PVInfo>(it)
-                    val e = """
-                    var e = {
-                        sid: "${pvInfo.sid}",
-                        hashFunc: "${pvInfo.hashFunc}",
-                        needCheck: ${pvInfo.needCheck},
-                        args: ${dataJsonToString(pvInfo.args)},
-                        maxTime: ${pvInfo.maxTime},
-                        minTime: ${pvInfo.minTime}
-                    };
-                    var e = vdfFun(e);
-                    """.trimIndent()
-                    V8.createV8Runtime().use { runtime ->
-                        runtime.executeVoidScript(_viewState.value.powerScript)
-                        runtime.executeVoidScript(e)
-                        (runtime.executeScript("e") as V8Object).use { result ->
-                            pvResultBean = PVResultStrBean(
-                                maxTime = result.getInteger("maxTime"),
-                                args = result.getString("args"),
-                                puzzle = result.getString("puzzle"),
-                                runTimes = result.getInteger("runTimes"),
-                                sid = result.getString("sid"),
-                                spendTime = result.getInteger("spendTime")
-                            )
-                        }
-                    }
-//                    pvResultBean = vdfAsync(pvInfo)
+//                    val e = """
+//                    var e = {
+//                        sid: "${pvInfo.sid}",
+//                        hashFunc: "${pvInfo.hashFunc}",
+//                        needCheck: ${pvInfo.needCheck},
+//                        args: ${dataJsonToString(pvInfo.args)},
+//                        maxTime: ${pvInfo.maxTime},
+//                        minTime: ${pvInfo.minTime}
+//                    };
+//                    var e = vdfFun(e);
+//                    """.trimIndent()
+//                    V8.createV8Runtime().use { runtime ->
+//                        runtime.executeVoidScript(_viewState.value.powerScript)
+//                        runtime.executeVoidScript(e)
+//                        (runtime.executeScript("e") as V8Object).use { result ->
+//                            pvResultBean = PVResultStrBean(
+//                                maxTime = result.getInteger("maxTime"),
+//                                args = result.getString("args"),
+//                                puzzle = result.getString("puzzle"),
+//                                runTimes = result.getInteger("runTimes"),
+//                                sid = result.getString("sid"),
+//                                spendTime = result.getInteger("spendTime")
+//                            )
+//                        }
+//                    }
+                    pvResultBean = vdfAsync(pvInfo)
                     Logger.d("pvResultBean: $pvResultBean")
                     getTicket()
                 }
@@ -232,8 +232,7 @@ data class LoginViewState(
     val isStartLogin: Boolean = false,
     val username: String = "",
     val password: String = "",
-    val cookies: String = "",
-    val powerScript: String = ""
+    val cookies: String = ""
 )
 
 sealed class LoginViewEvent {
@@ -244,7 +243,6 @@ sealed class LoginViewEvent {
 }
 
 sealed class LoginViewAction {
-    data class UpdatePowerScript(val script: String) : LoginViewAction()
     data class UpdateUsername(val username: String) : LoginViewAction()
     data class UpdatePassword(val password: String) : LoginViewAction()
     data class UpdateCookies(val cookies: String) : LoginViewAction()
