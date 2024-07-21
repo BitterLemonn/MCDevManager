@@ -1,47 +1,43 @@
-package com.orhanobut.logger;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+package com.orhanobut.logger
 
 /**
  * A proxy interface to enable additional operations.
  * Contains all possible Log message usages.
  */
-public interface Printer {
+interface Printer {
+    fun addAdapter(adapter: LogAdapter)
 
-  void addAdapter(@NonNull LogAdapter adapter);
+    fun t(tag: String?): Printer
 
-  Printer t(@Nullable String tag);
+    fun d(message: String, vararg args: Any?)
 
-  void d(@NonNull String message, @Nullable Object... args);
+    fun d(`object`: Any?)
 
-  void d(@Nullable Object object);
+    fun e(message: String, vararg args: Any?)
 
-  void e(@NonNull String message, @Nullable Object... args);
+    fun e(throwable: Throwable?, message: String, vararg args: Any?)
 
-  void e(@Nullable Throwable throwable, @NonNull String message, @Nullable Object... args);
+    fun w(message: String, vararg args: Any?)
 
-  void w(@NonNull String message, @Nullable Object... args);
+    fun i(message: String, vararg args: Any?)
 
-  void i(@NonNull String message, @Nullable Object... args);
+    fun v(message: String, vararg args: Any?)
 
-  void v(@NonNull String message, @Nullable Object... args);
+    fun n(message: String, vararg args: Any?)
 
-  void n(@NonNull String message, @Nullable Object... args);
+    fun wtf(message: String, vararg args: Any?)
 
-  void wtf(@NonNull String message, @Nullable Object... args);
+    /**
+     * Formats the given json content and print it
+     */
+    fun json(json: String?)
 
-  /**
-   * Formats the given json content and print it
-   */
-  void json(@Nullable String json);
+    /**
+     * Formats the given xml content and print it
+     */
+    fun xml(xml: String?)
 
-  /**
-   * Formats the given xml content and print it
-   */
-  void xml(@Nullable String xml);
+    fun log(priority: Int, tag: String?, message: String?, throwable: Throwable?)
 
-  void log(int priority, @Nullable String tag, @Nullable String message, @Nullable Throwable throwable);
-
-  void clearLogAdapters();
+    fun clearLogAdapters()
 }

@@ -59,9 +59,9 @@ import com.lemon.mcdevmanager.ui.widget.PermissionType
 import com.lemon.mcdevmanager.ui.widget.SNACK_INFO
 import com.lemon.mcdevmanager.ui.widget.SNACK_WARN
 import com.lemon.mcdevmanager.ui.widget.popupSnackBar
-import com.lemon.mcdevmanager.viewModel.AboutViewActions
-import com.lemon.mcdevmanager.viewModel.AboutViewEvents
-import com.lemon.mcdevmanager.viewModel.AboutViewModel
+import com.lemon.mcdevmanager.viewModel.UpdateViewActions
+import com.lemon.mcdevmanager.viewModel.UpdateViewEvents
+import com.lemon.mcdevmanager.viewModel.UpdateViewmodel
 import com.zj.mvi.core.observeEvent
 import java.io.File
 
@@ -71,7 +71,7 @@ fun BaseScaffold() {
     val scope = rememberCoroutineScope()
     val navController = rememberNavController()
 
-    val viewModel: AboutViewModel = viewModel()
+    val viewModel: UpdateViewmodel = viewModel()
     val states by viewModel.viewStates.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
@@ -85,12 +85,12 @@ fun BaseScaffold() {
     )
 
     LaunchedEffect(key1 = Unit) {
-        viewModel.dispatch(AboutViewActions.CheckUpdate)
+        viewModel.dispatch(UpdateViewActions.CheckUpdate)
         viewModel.viewEvents.observeEvent(lifecycleOwner) { event ->
             when (event) {
-                is AboutViewEvents.ShowToast -> showToast(event.msg, event.type)
-                is AboutViewEvents.ShowNewVersionDialog -> isShowNewVersionDialog = true
-                is AboutViewEvents.DownloadStart -> {
+                is UpdateViewEvents.ShowToast -> showToast(event.msg, event.type)
+                is UpdateViewEvents.ShowNewVersionDialog -> isShowNewVersionDialog = true
+                is UpdateViewEvents.DownloadStart -> {
                     val fileName = event.downloadUrl.substringAfterLast("/")
                     val targetPath =
                         context.getExternalFilesDir("update" + File.separator + "apk")?.absolutePath + File.separator + fileName
@@ -104,7 +104,7 @@ fun BaseScaffold() {
                     showToast("开始下载", SNACK_INFO)
                 }
 
-                is AboutViewEvents.DownloadFailed -> {
+                is UpdateViewEvents.DownloadFailed -> {
                     showToast("下载失败: ${event.msg}", SNACK_INFO)
                 }
             }
@@ -214,7 +214,9 @@ fun BaseScaffold() {
             ) {
                 AboutPage(
                     navController = navController,
-                    showToast = { msg, flag -> showToast(msg, flag) }
+                    showToast = { msg, flag -> showToast(msg, flag) },
+                    checkUpdate = { viewModel.dispatch(UpdateViewActions.CheckUpdate) },
+                    isShowLoading = states.isLoading
                 )
             }
             composable(
@@ -266,7 +268,7 @@ fun BaseScaffold() {
                 isShowGrandPermissionDialog = true
             }
         }
-        if (isShowGrandPermissionDialog){
+        if (isShowGrandPermissionDialog) {
             GrantPermission(
                 isShow = true,
                 permissions = listOf(
@@ -284,7 +286,7 @@ fun BaseScaffold() {
                 isShowGrandInstallPermissionDialog = true
             }
         }
-        if (isShowGrandInstallPermissionDialog){
+        if (isShowGrandInstallPermissionDialog) {
             GrantPermission(
                 isShow = true,
                 permissions = listOf(
@@ -296,13 +298,13 @@ fun BaseScaffold() {
                 onCancel = {
                     isShowGrandInstallPermissionDialog = false
                     isShowNewVersionDialog = false
-                    viewModel.dispatch(AboutViewActions.DownloadAsset)
+                    viewModel.dispatch(UpdateViewActions.DownloadAsset)
                     showToast("未授予安装权限, 无法自动安装下载的APK", SNACK_WARN)
                 }
             ) {
                 isShowGrandInstallPermissionDialog = false
                 isShowNewVersionDialog = false
-                viewModel.dispatch(AboutViewActions.DownloadAsset)
+                viewModel.dispatch(UpdateViewActions.DownloadAsset)
             }
         }
     }

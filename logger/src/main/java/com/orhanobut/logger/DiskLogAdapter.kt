@@ -1,38 +1,27 @@
-package com.orhanobut.logger;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import static com.orhanobut.logger.Utils.checkNotNull;
-
-import android.content.Context;
+package com.orhanobut.logger
 
 /**
  * This is used to saves log messages to the disk.
- * By default it uses {@link CsvFormatStrategy} to translates text message into CSV format.
+ * By default it uses [CsvFormatStrategy] to translates text message into CSV format.
  */
-public class DiskLogAdapter implements LogAdapter {
+open class DiskLogAdapter : LogAdapter {
+    private val formatStrategy: FormatStrategy
 
-    @NonNull
-    private final FormatStrategy formatStrategy;
-
-    public DiskLogAdapter(String fileName, String logDirPath) {
+    constructor(fileName: String, logDirPath: String) {
         formatStrategy = CsvFormatStrategy.newBuilder()
-                .build(fileName, logDirPath);
+            .build(fileName, logDirPath)
     }
 
 
-    public DiskLogAdapter(@NonNull FormatStrategy formatStrategy) {
-        this.formatStrategy = checkNotNull(formatStrategy);
+    constructor(formatStrategy: FormatStrategy) {
+        this.formatStrategy = Utils.checkNotNull(formatStrategy)
     }
 
-    @Override
-    public boolean isLoggable(int priority, @Nullable String tag) {
-        return true;
+    override fun isLoggable(priority: Int, tag: String?): Boolean {
+        return true
     }
 
-    @Override
-    public void log(int priority, @Nullable String tag, @NonNull String message) {
-        formatStrategy.log(priority, tag, message);
+    override fun log(priority: Int, tag: String?, message: String) {
+        formatStrategy.log(priority, tag, message)
     }
 }

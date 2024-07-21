@@ -1,190 +1,190 @@
-package com.orhanobut.logger;
+package com.orhanobut.logger
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import com.orhanobut.logger.Logger.ASSERT
+import com.orhanobut.logger.Logger.DEBUG
+import com.orhanobut.logger.Logger.ERROR
+import com.orhanobut.logger.Logger.INFO
+import com.orhanobut.logger.Logger.NET
+import com.orhanobut.logger.Logger.VERBOSE
+import com.orhanobut.logger.Logger.WARN
+import org.json.JSONArray
+import org.json.JSONException
+import org.json.JSONObject
+import java.io.StringReader
+import java.io.StringWriter
+import javax.xml.transform.OutputKeys
+import javax.xml.transform.Source
+import javax.xml.transform.TransformerException
+import javax.xml.transform.TransformerFactory
+import javax.xml.transform.stream.StreamResult
+import javax.xml.transform.stream.StreamSource
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+internal class LoggerPrinter : Printer {
+    /**
+     * Provides one-time used tag for the log message
+     */
+    private val localTag = ThreadLocal<String>()
 
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.List;
+    private val logAdapters: MutableList<LogAdapter> = ArrayList()
 
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
-
-import static com.orhanobut.logger.Logger.ASSERT;
-import static com.orhanobut.logger.Logger.DEBUG;
-import static com.orhanobut.logger.Logger.ERROR;
-import static com.orhanobut.logger.Logger.INFO;
-import static com.orhanobut.logger.Logger.NET;
-import static com.orhanobut.logger.Logger.VERBOSE;
-import static com.orhanobut.logger.Logger.WARN;
-import static com.orhanobut.logger.Utils.checkNotNull;
-
-class LoggerPrinter implements Printer {
-
-  /**
-   * It is used for json pretty print
-   */
-  private static final int JSON_INDENT = 2;
-
-  /**
-   * Provides one-time used tag for the log message
-   */
-  private final ThreadLocal<String> localTag = new ThreadLocal<>();
-
-  private final List<LogAdapter> logAdapters = new ArrayList<>();
-
-  @Override public Printer t(String tag) {
-    if (tag != null) {
-      localTag.set(tag);
-    }
-    return this;
-  }
-
-  @Override public void d(@NonNull String message, @Nullable Object... args) {
-    log(DEBUG, null, message, args);
-  }
-
-  @Override public void d(@Nullable Object object) {
-    log(DEBUG, null, Utils.toString(object));
-  }
-
-  @Override public void e(@NonNull String message, @Nullable Object... args) {
-    e(null, message, args);
-  }
-
-  @Override public void e(@Nullable Throwable throwable, @NonNull String message, @Nullable Object... args) {
-    log(ERROR, throwable, message, args);
-  }
-
-  @Override public void w(@NonNull String message, @Nullable Object... args) {
-    log(WARN, null, message, args);
-  }
-
-  @Override public void i(@NonNull String message, @Nullable Object... args) {
-    log(INFO, null, message, args);
-  }
-
-  @Override public void v(@NonNull String message, @Nullable Object... args) {
-    log(VERBOSE, null, message, args);
-  }
-
-  @Override public void n(@NonNull String message, @Nullable Object... args) {
-    log(NET, null, message, args);
-  }
-
-  @Override public void wtf(@NonNull String message, @Nullable Object... args) {
-    log(ASSERT, null, message, args);
-  }
-
-  @Override public void json(@Nullable String json) {
-    if (Utils.isEmpty(json)) {
-      d("Empty/Null json content");
-      return;
-    }
-    try {
-      json = json.trim();
-      if (json.startsWith("{")) {
-        JSONObject jsonObject = new JSONObject(json);
-        String message = jsonObject.toString(JSON_INDENT);
-        d(message);
-        return;
-      }
-      if (json.startsWith("[")) {
-        JSONArray jsonArray = new JSONArray(json);
-        String message = jsonArray.toString(JSON_INDENT);
-        d(message);
-        return;
-      }
-      e("Invalid Json");
-    } catch (JSONException e) {
-      e("Invalid Json");
-    }
-  }
-
-  @Override public void xml(@Nullable String xml) {
-    if (Utils.isEmpty(xml)) {
-      d("Empty/Null xml content");
-      return;
-    }
-    try {
-      Source xmlInput = new StreamSource(new StringReader(xml));
-      StreamResult xmlOutput = new StreamResult(new StringWriter());
-      Transformer transformer = TransformerFactory.newInstance().newTransformer();
-      transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-      transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-      transformer.transform(xmlInput, xmlOutput);
-      d(xmlOutput.getWriter().toString().replaceFirst(">", ">\n"));
-    } catch (TransformerException e) {
-      e("Invalid xml");
-    }
-  }
-
-  @Override public synchronized void log(int priority,
-                                         @Nullable String tag,
-                                         @Nullable String message,
-                                         @Nullable Throwable throwable) {
-    if (throwable != null && message != null) {
-      message += " : " + Utils.getStackTraceString(throwable);
-    }
-    if (throwable != null && message == null) {
-      message = Utils.getStackTraceString(throwable);
-    }
-    if (Utils.isEmpty(message)) {
-      message = "Empty/NULL log message";
+    override fun t(tag: String?): Printer {
+        if (tag != null) {
+            localTag.set(tag)
+        }
+        return this
     }
 
-    for (LogAdapter adapter : logAdapters) {
-      if (adapter.isLoggable(priority, tag)) {
-        adapter.log(priority, tag, message);
-      }
+    override fun d(message: String, vararg args: Any?) {
+        log(DEBUG, null, message, *args)
     }
-  }
 
-  @Override public void clearLogAdapters() {
-    logAdapters.clear();
-  }
-
-  @Override public void addAdapter(@NonNull LogAdapter adapter) {
-    logAdapters.add(checkNotNull(adapter));
-  }
-
-  /**
-   * This method is synchronized in order to avoid messy of logs' order.
-   */
-  private synchronized void log(int priority,
-                                @Nullable Throwable throwable,
-                                @NonNull String msg,
-                                @Nullable Object... args) {
-    checkNotNull(msg);
-
-    String tag = getTag();
-    String message = createMessage(msg, args);
-    log(priority, tag, message, throwable);
-  }
-
-  /**
-   * @return the appropriate tag based on local or global
-   */
-  @Nullable private String getTag() {
-    String tag = localTag.get();
-    if (tag != null) {
-      localTag.remove();
-      return tag;
+    override fun d(`object`: Any?) {
+        log(DEBUG, null, Utils.toString(`object`))
     }
-    return null;
-  }
 
-  @NonNull private String createMessage(@NonNull String message, @Nullable Object... args) {
-    return args == null || args.length == 0 ? message : String.format(message, args);
-  }
+    override fun e(message: String, vararg args: Any?) {
+        e(null, message, *args)
+    }
+
+    override fun e(throwable: Throwable?, message: String, vararg args: Any?) {
+        log(ERROR, throwable, message, *args)
+    }
+
+    override fun w(message: String, vararg args: Any?) {
+        log(WARN, null, message, *args)
+    }
+
+    override fun i(message: String, vararg args: Any?) {
+        log(INFO, null, message, *args)
+    }
+
+    override fun v(message: String, vararg args: Any?) {
+        log(VERBOSE, null, message, *args)
+    }
+
+    override fun n(message: String, vararg args: Any?) {
+        log(NET, null, message, *args)
+    }
+
+    override fun wtf(message: String, vararg args: Any?) {
+        log(ASSERT, null, message, *args)
+    }
+
+    override fun json(json: String?) {
+        var json = json
+        if (Utils.isEmpty(json)) {
+            d("Empty/Null json content")
+            return
+        }
+        try {
+            json = json!!.trim { it <= ' ' }
+            if (json.startsWith("{")) {
+                val jsonObject = JSONObject(json)
+                val message = jsonObject.toString(JSON_INDENT)
+                d(message)
+                return
+            }
+            if (json.startsWith("[")) {
+                val jsonArray = JSONArray(json)
+                val message = jsonArray.toString(JSON_INDENT)
+                d(message)
+                return
+            }
+            e("Invalid Json")
+        } catch (e: JSONException) {
+            e("Invalid Json")
+        }
+    }
+
+    override fun xml(xml: String?) {
+        if (Utils.isEmpty(xml)) {
+            d("Empty/Null xml content")
+            return
+        }
+        try {
+            val xmlInput: Source = StreamSource(StringReader(xml))
+            val xmlOutput = StreamResult(StringWriter())
+            val transformer = TransformerFactory.newInstance().newTransformer()
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes")
+            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2")
+            transformer.transform(xmlInput, xmlOutput)
+            d(xmlOutput.writer.toString().replaceFirst(">".toRegex(), ">\n"))
+        } catch (e: TransformerException) {
+            e("Invalid xml")
+        }
+    }
+
+    @Synchronized
+    override fun log(
+        priority: Int,
+        tag: String?,
+        message: String?,
+        throwable: Throwable?
+    ) {
+        var message = message
+        if (throwable != null && message != null) {
+            message += " : " + Utils.getStackTraceString(throwable)
+        }
+        if (throwable != null && message == null) {
+            message = Utils.getStackTraceString(throwable)
+        }
+        if (Utils.isEmpty(message)) {
+            message = "Empty/NULL log message"
+        }
+
+        for (adapter in logAdapters) {
+            if (adapter.isLoggable(priority, tag)) {
+                adapter.log(priority, tag, message!!)
+            }
+        }
+    }
+
+    override fun clearLogAdapters() {
+        logAdapters.clear()
+    }
+
+    override fun addAdapter(adapter: LogAdapter) {
+        logAdapters.add(Utils.checkNotNull(adapter))
+    }
+
+    /**
+     * This method is synchronized in order to avoid messy of logs' order.
+     */
+    @Synchronized
+    private fun log(
+        priority: Int,
+        throwable: Throwable?,
+        msg: String,
+        vararg args: Any?
+    ) {
+        Utils.checkNotNull(msg)
+
+        val tag = tag
+        val message = createMessage(msg, *args)
+        log(priority, tag, message, throwable)
+    }
+
+    private val tag: String?
+        /**
+         * @return the appropriate tag based on local or global
+         */
+        get() {
+            val tag = localTag.get()
+            if (tag != null) {
+                localTag.remove()
+                return tag
+            }
+            return null
+        }
+
+    private fun createMessage(message: String, vararg args: Any?): String {
+        return if (args == null || args.size == 0) message else String.format(message, *args)
+    }
+
+    companion object {
+        /**
+         * It is used for json pretty print
+         */
+        private const val JSON_INDENT = 2
+    }
 }

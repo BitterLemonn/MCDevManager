@@ -1,27 +1,25 @@
-package com.orhanobut.logger;
+package com.orhanobut.logger
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import android.util.Log;
-
-import static com.orhanobut.logger.Utils.checkNotNull;
+import android.util.Log
 
 /**
- * LogCat implementation for {@link LogStrategy}
+ * LogCat implementation for [LogStrategy]
  *
- * This simply prints out all logs to Logcat by using standard {@link Log} class.
+ * This simply prints out all logs to Logcat by using standard [Log] class.
  */
-public class LogcatLogStrategy implements LogStrategy {
+class LogcatLogStrategy : LogStrategy {
+    override fun log(priority: Int, tag: String?, message: String) {
+        var tags = tag
+        Utils.checkNotNull(message)
 
-  static final String DEFAULT_TAG = "NO_TAG";
+        if (tags == null) {
+            tags = DEFAULT_TAG
+        }
 
-  @Override public void log(int priority, @Nullable String tag, @NonNull String message) {
-    checkNotNull(message);
-
-    if (tag == null) {
-      tag = DEFAULT_TAG;
+        Log.println(priority, tags, message)
     }
 
-    Log.println(priority, tag, message);
-  }
+    companion object {
+        const val DEFAULT_TAG: String = "NO_TAG"
+    }
 }

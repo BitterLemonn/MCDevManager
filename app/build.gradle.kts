@@ -13,8 +13,8 @@ android {
         applicationId = "com.lemon.mcdevmanager"
         minSdk = 26
         targetSdk = 34
-        versionCode = 4
-        versionName = "0.3.4"
+        versionCode = 5
+        versionName = "0.3.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -30,6 +30,17 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+
+            // 只打包arm64-v8a
+            ndk {
+                abiFilters.clear()
+                abiFilters.add("arm64-v8a")
+            }
+        }
+        debug {
+            ndk {
+                abiFilters.clear() // 清除abiFilters，打包所有架构
+            }
         }
     }
     compileOptions {
@@ -98,7 +109,7 @@ dependencies {
     implementation(libs.bcprov.jdk15on)
 
     // j2v8 js引擎
-    implementation("com.eclipsesource.j2v8:j2v8:6.2.0@aar")
+//    implementation("com.eclipsesource.j2v8:j2v8:6.2.0@aar")
 
     // coil
     implementation(libs.coil)

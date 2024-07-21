@@ -1,167 +1,157 @@
-package com.orhanobut.logger;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import static com.orhanobut.logger.Utils.checkNotNull;
+package com.orhanobut.logger
 
 /**
  * <pre>
- *  ┌────────────────────────────────────────────
- *  │ LOGGER
- *  ├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
- *  │ Standard logging mechanism
- *  ├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
- *  │ But more pretty, simple and powerful
- *  └────────────────────────────────────────────
- * </pre>
+ * ┌────────────────────────────────────────────
+ * │ LOGGER
+ * ├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+ * │ Standard logging mechanism
+ * ├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+ * │ But more pretty, simple and powerful
+ * └────────────────────────────────────────────
+</pre> *
  *
  * <h3>How to use it</h3>
  * Initialize it first
- * <pre><code>
- *   Logger.addLogAdapter(new AndroidLogAdapter());
- * </code></pre>
+ * <pre>`
+ * Logger.addLogAdapter(new AndroidLogAdapter());
+`</pre> *
  *
  * And use the appropriate static Logger methods.
  *
- * <pre><code>
- *   Logger.d("debug");
- *   Logger.e("error");
- *   Logger.w("warning");
- *   Logger.v("verbose");
- *   Logger.i("information");
- *   Logger.wtf("What a Terrible Failure");
- * </code></pre>
+ * <pre>`
+ * Logger.d("debug");
+ * Logger.e("error");
+ * Logger.w("warning");
+ * Logger.v("verbose");
+ * Logger.i("information");
+ * Logger.wtf("What a Terrible Failure");
+`</pre> *
  *
  * <h3>String format arguments are supported</h3>
- * <pre><code>
- *   Logger.d("hello %s", "world");
- * </code></pre>
+ * <pre>`
+ * Logger.d("hello %s", "world");
+`</pre> *
  *
  * <h3>Collections are support ed(only available for debug logs)</h3>
- * <pre><code>
- *   Logger.d(MAP);
- *   Logger.d(SET);
- *   Logger.d(LIST);
- *   Logger.d(ARRAY);
- * </code></pre>
+ * <pre>`
+ * Logger.d(MAP);
+ * Logger.d(SET);
+ * Logger.d(LIST);
+ * Logger.d(ARRAY);
+`</pre> *
  *
  * <h3>Json and Xml support (output will be in debug level)</h3>
- * <pre><code>
- *   Logger.json(JSON_CONTENT);
- *   Logger.xml(XML_CONTENT);
- * </code></pre>
+ * <pre>`
+ * Logger.json(JSON_CONTENT);
+ * Logger.xml(XML_CONTENT);
+`</pre> *
  *
  * <h3>Customize Logger</h3>
  * Based on your needs, you can change the following settings:
- * <ul>
- *   <li>Different {@link LogAdapter}</li>
- *   <li>Different {@link FormatStrategy}</li>
- *   <li>Different {@link LogStrategy}</li>
- * </ul>
+ *
+ *  * Different [LogAdapter]
+ *  * Different [FormatStrategy]
+ *  * Different [LogStrategy]
+ *
  *
  * @see LogAdapter
+ *
  * @see FormatStrategy
+ *
  * @see LogStrategy
  */
-public final class Logger {
-
-  public static final int VERBOSE = 2;
-  public static final int DEBUG = 3;
-  public static final int INFO = 4;
-  public static final int WARN = 5;
-  public static final int ERROR = 6;
-  public static final int ASSERT = 7;
-  public static final int NET = 8;
-
+object Logger {
+    const val VERBOSE: Int = 2
+    const val DEBUG: Int = 3
+    const val INFO: Int = 4
+    const val WARN: Int = 5
+    const val ERROR: Int = 6
+    const val ASSERT: Int = 7
+    const val NET: Int = 8
 
 
-  @NonNull private static Printer printer = new LoggerPrinter();
+    private var printer: Printer = LoggerPrinter()
 
-  private Logger() {
-    //no instance
-  }
+    fun printer(printer: Printer) {
+        Logger.printer = Utils.checkNotNull(printer)
+    }
 
-  public static void printer(@NonNull Printer printer) {
-    Logger.printer = checkNotNull(printer);
-  }
+    fun addLogAdapter(adapter: LogAdapter) {
+        printer.addAdapter(Utils.checkNotNull(adapter))
+    }
 
-  public static void addLogAdapter(@NonNull LogAdapter adapter) {
-    printer.addAdapter(checkNotNull(adapter));
-  }
+    fun clearLogAdapters() {
+        printer.clearLogAdapters()
+    }
 
-  public static void clearLogAdapters() {
-    printer.clearLogAdapters();
-  }
+    /**
+     * Given tag will be used as tag only once for this method call regardless of the tag that's been
+     * set during initialization. After this invocation, the general tag that's been set will
+     * be used for the subsequent log calls
+     */
+    fun t(tag: String?): Printer {
+        return printer.t(tag)
+    }
 
-  /**
-   * Given tag will be used as tag only once for this method call regardless of the tag that's been
-   * set during initialization. After this invocation, the general tag that's been set will
-   * be used for the subsequent log calls
-   */
-  public static Printer t(@Nullable String tag) {
-    return printer.t(tag);
-  }
+    /**
+     * General log function that accepts all configurations as parameter
+     */
+    fun log(priority: Int, tag: String?, message: String?, throwable: Throwable?) {
+        printer.log(priority, tag, message, throwable)
+    }
 
-  /**
-   * General log function that accepts all configurations as parameter
-   */
-  public static void log(int priority, @Nullable String tag, @Nullable String message, @Nullable Throwable throwable) {
-    printer.log(priority, tag, message, throwable);
-  }
+    fun d(message: String, vararg args: Any?) {
+        printer.d(message, *args)
+    }
 
-  public static void d(@NonNull String message, @Nullable Object... args) {
-    printer.d(message, args);
-  }
+    fun d(`object`: Any?) {
+        printer.d(`object`)
+    }
 
-  public static void d(@Nullable Object object) {
-    printer.d(object);
-  }
+    fun e(message: String, vararg args: Any?) {
+        printer.e(null, message, *args)
+    }
 
-  public static void e(@NonNull String message, @Nullable Object... args) {
-    printer.e(null, message, args);
-  }
+    fun e(throwable: Throwable?, message: String, vararg args: Any?) {
+        printer.e(throwable, message, *args)
+    }
 
-  public static void e(@Nullable Throwable throwable, @NonNull String message, @Nullable Object... args) {
-    printer.e(throwable, message, args);
-  }
+    fun i(message: String, vararg args: Any?) {
+        printer.i(message, *args)
+    }
 
-  public static void i(@NonNull String message, @Nullable Object... args) {
-    printer.i(message, args);
-  }
+    fun v(message: String, vararg args: Any?) {
+        printer.v(message, *args)
+    }
 
-  public static void v(@NonNull String message, @Nullable Object... args) {
-    printer.v(message, args);
-  }
+    fun net(message: String, vararg args: Any?) {
+        printer.n(message, *args)
+    }
 
-  public static void net(@NonNull String message, @Nullable Object... args) {
-    printer.n(message, args);
-  }
+    fun w(message: String, vararg args: Any?) {
+        printer.w(message, *args)
+    }
 
-  public static void w(@NonNull String message, @Nullable Object... args) {
-    printer.w(message, args);
-  }
+    /**
+     * Tip: Use this for exceptional situations to log
+     * ie: Unexpected errors etc
+     */
+    fun wtf(message: String, vararg args: Any?) {
+        printer.wtf(message, *args)
+    }
 
-  /**
-   * Tip: Use this for exceptional situations to log
-   * ie: Unexpected errors etc
-   */
-  public static void wtf(@NonNull String message, @Nullable Object... args) {
-    printer.wtf(message, args);
-  }
+    /**
+     * Formats the given json content and print it
+     */
+    fun json(json: String?) {
+        printer.json(json)
+    }
 
-  /**
-   * Formats the given json content and print it
-   */
-  public static void json(@Nullable String json) {
-    printer.json(json);
-  }
-
-  /**
-   * Formats the given xml content and print it
-   */
-  public static void xml(@Nullable String xml) {
-    printer.xml(xml);
-  }
-
+    /**
+     * Formats the given xml content and print it
+     */
+    fun xml(xml: String?) {
+        printer.xml(xml)
+    }
 }

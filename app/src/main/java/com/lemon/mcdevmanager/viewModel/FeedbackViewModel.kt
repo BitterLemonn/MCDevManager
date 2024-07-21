@@ -155,6 +155,7 @@ class FeedbackViewModel : ViewModel() {
                 } else {
                     _viewEvents.setEvent(FeedbackEvent.ShowToast(result.msg))
                 }
+                throw Exception(result.msg)
             }
         }
     }

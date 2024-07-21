@@ -1,41 +1,34 @@
-package com.orhanobut.logger;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import static com.orhanobut.logger.Utils.checkNotNull;
+package com.orhanobut.logger
 
 /**
- * Android terminal log output implementation for {@link LogAdapter}.
+ * Android terminal log output implementation for [LogAdapter].
  *
  * Prints output to LogCat with pretty borders.
  *
  * <pre>
- *  ┌──────────────────────────
- *  │ Method stack history
- *  ├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
- *  │ Log message
- *  └──────────────────────────
- * </pre>
+ * ┌──────────────────────────
+ * │ Method stack history
+ * ├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+ * │ Log message
+ * └──────────────────────────
+</pre> *
  */
-public class AndroidLogAdapter implements LogAdapter {
+class AndroidLogAdapter : LogAdapter {
+    private val formatStrategy: FormatStrategy
 
-  @NonNull private final FormatStrategy formatStrategy;
+    constructor() {
+        this.formatStrategy = PrettyFormatStrategy.newBuilder().build()
+    }
 
-  public AndroidLogAdapter() {
-    this.formatStrategy = PrettyFormatStrategy.newBuilder().build();
-  }
+    constructor(formatStrategy: FormatStrategy) {
+        this.formatStrategy = Utils.checkNotNull(formatStrategy)
+    }
 
-  public AndroidLogAdapter(@NonNull FormatStrategy formatStrategy) {
-    this.formatStrategy = checkNotNull(formatStrategy);
-  }
+    override fun isLoggable(priority: Int, tag: String?): Boolean {
+        return true
+    }
 
-  @Override public boolean isLoggable(int priority, @Nullable String tag) {
-    return true;
-  }
-
-  @Override public void log(int priority, @Nullable String tag, @NonNull String message) {
-    formatStrategy.log(priority, tag, message);
-  }
-
+    override fun log(priority: Int, tag: String?, message: String) {
+        formatStrategy.log(priority, tag, message)
+    }
 }

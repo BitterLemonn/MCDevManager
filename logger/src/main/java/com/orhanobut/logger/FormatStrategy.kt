@@ -1,15 +1,12 @@
-package com.orhanobut.logger;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+package com.orhanobut.logger
 
 /**
  * Used to determine how messages should be printed or saved.
  *
  * @see PrettyFormatStrategy
+ *
  * @see CsvFormatStrategy
  */
-public interface FormatStrategy {
-
-  void log(int priority, @Nullable String tag, @NonNull String message);
+interface FormatStrategy {
+    fun log(priority: Int, tag: String?, message: String)
 }
