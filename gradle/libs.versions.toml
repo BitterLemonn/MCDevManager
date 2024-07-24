@@ -19,6 +19,8 @@ composeBom = "2024.06.00"
 logger = "2.2.0"
 mpandroidchart = "v3.1.0"
 navigationCompose = "2.7.7"
+pagingCompose = "3.3.0"
+pagingRuntime = "3.3.0"
 retrofit = "2.11.0"
 roomGradlePlugin = "2.7.0-alpha04"
 
@@ -26,6 +28,8 @@ roomGradlePlugin = "2.7.0-alpha04"
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+androidx-paging-runtime = { module = "androidx.paging:paging-runtime", version.ref = "pagingRuntime" }
+androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "pagingCompose" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomGradlePlugin" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomGradlePlugin" }
 bcprov-jdk15on = { module = "org.bouncycastle:bcprov-jdk15on", version.ref = "bcprovJdk15on" }
