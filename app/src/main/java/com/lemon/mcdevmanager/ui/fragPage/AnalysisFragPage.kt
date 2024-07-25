@@ -112,7 +112,7 @@ fun AnalysisFragPage(
     val animationRotate by animateFloatAsState(targetValue = if (!isShowDetail) 90f else -90f)
     val analyzeDetailMap by rememberUpdatedState(newValue = states.analyzeList.groupBy { it.dateId })
 
-    Box {
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .onGloballyPositioned { fullHeight = pxToDp(context, it.size.height.toFloat()) }

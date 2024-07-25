@@ -5,6 +5,7 @@ import com.lemon.mcdevmanager.data.CommonInterceptor
 import com.lemon.mcdevmanager.data.common.JSONConverter
 import com.lemon.mcdevmanager.data.common.NETEASE_MC_DEV_LINK
 import com.lemon.mcdevmanager.data.netease.resource.ResDetailResponseBean
+import com.lemon.mcdevmanager.data.netease.resource.ResMonthDetailResponseBean
 import com.lemon.mcdevmanager.data.netease.resource.ResourceResponseBean
 import com.lemon.mcdevmanager.utils.ResponseData
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -36,6 +37,21 @@ interface AnalyzeApi {
         @Query("start") start: Int = 0,
         @Query("span") span: Int = Int.MAX_VALUE
     ): ResponseData<ResDetailResponseBean>
+
+    @GET("/data_analysis/month_detail/")
+    suspend fun getMonthDetail(
+        @Query("platform") platform: String,
+        @Query("category") category: String,
+        @Query("start_date") startDate: String,
+        @Query("end_date") endDate: String,
+        @Query("sort") sort: String = "monthid",
+        @Query("order") order: String = "DESC",
+        @Query("start") start: Int = 0,
+        @Query("span") span: Int = Int.MAX_VALUE,
+        @Query("day_sort") daySort: String = "cnt_buy",
+        @Query("day_span") daySpan: Int = Int.MAX_VALUE,
+        @Query("day_dateid") dayDateId: String
+    ): ResponseData<ResMonthDetailResponseBean>
 
     companion object {
         /**

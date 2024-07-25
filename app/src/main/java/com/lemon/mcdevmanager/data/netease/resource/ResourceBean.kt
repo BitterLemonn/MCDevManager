@@ -52,6 +52,37 @@ data class ResDetailBean(
 )
 
 @Serializable
+data class ResMonthDetailBean(
+    @SerialName("avg_dau")
+    val avgDau: Int,
+    @SerialName("avg_day_buy")
+    val avgDayBuy: Int,
+    @SerialName("download_num")
+    val downloadNum: Int,
+    @SerialName("iid")
+    val iid: String,
+    @SerialName("mau")
+    val mau: Int,
+    @SerialName("monthid")
+    val monthId: String,
+    @SerialName("platform")
+    val platform: String,
+    @SerialName("res_name")
+    val resName: String,
+    @SerialName("total_diamond")
+    val totalDiamond: Int,
+    @SerialName("total_points")
+    val totalPoints: Int,
+    @SerialName("upload_time")
+    val uploadTime: String = "UNKNOWN"
+)
+
+@Serializable
 data class ResDetailResponseBean(
     val data: List<ResDetailBean>
+)
+
+@Serializable
+data class ResMonthDetailResponseBean(
+    val data: List<ResMonthDetailBean>
 )

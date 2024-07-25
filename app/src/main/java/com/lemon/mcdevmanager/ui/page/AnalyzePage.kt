@@ -99,7 +99,6 @@ fun AnalyzePage(
                 }
             }
         }
-        showToast("柱状图数据过多可能会导致严重卡顿", "我知道了")
     }
 
     Box(

@@ -1,6 +1,10 @@
 package com.lemon.mcdevmanager.utils
 
+import com.lemon.mcdevmanager.data.common.CookiesStore
+import com.lemon.mcdevmanager.data.common.NETEASE_USER_COOKIE
+import com.lemon.mcdevmanager.data.database.database.GlobalDataBase
 import com.lemon.mcdevmanager.data.github.update.LatestReleaseBean
+import com.lemon.mcdevmanager.data.global.AppContext
 import com.lemon.mcdevmanager.data.netease.login.BaseLoginBean
 import com.lemon.mcdevmanager.data.netease.login.CapIdBean
 import com.lemon.mcdevmanager.data.netease.login.PowerBean
@@ -46,6 +50,7 @@ object UnifiedExceptionHandler {
                     val uniData = ResponseData("200", result)
                     parseData(uniData)
                 }
+
                 else -> NetworkState.Error("函数调用错误，非Github更新接口请使用handleSuspend")
             }
         } catch (e: SocketTimeoutException) {
@@ -121,6 +126,19 @@ object UnifiedExceptionHandler {
     }
 
     private fun <T> parseData(result: ResponseData<T>): NetworkState<T> {
+        val returnCookies = CookiesStore.getCookie(NETEASE_USER_COOKIE)
+        // 更新用户cookie
+        if (returnCookies != null && returnCookies != AppContext.cookiesStore[AppContext.nowNickname]) {
+            AppContext.cookiesStore[AppContext.nowNickname] = returnCookies
+            GlobalDataBase.database.userDao().getUserByNickname(AppContext.nowNickname)?.let {
+                val user = it.copy(cookie = returnCookies)
+                GlobalDataBase.database.userDao().updateUser(user)
+                Logger.d("用户${AppContext.nowNickname}的cookie已更新: $returnCookies")
+            } ?: run {
+                Logger.e("用户${AppContext.nowNickname}不存在")
+            }
+        }
+
         return when (result.status) {
             "200", "ok", "OK", "Ok" -> result.data?.let { NetworkState.Success(result.data) }
                 ?: NetworkState.Success(msg = result.status)
@@ -128,7 +146,7 @@ object UnifiedExceptionHandler {
             "201" -> result.data?.let { NetworkState.Success(result.data) }
                 ?: NetworkState.Success(msg = result.status)
 
-            "401" -> NetworkState.Error("登录过期了，请重新登录", CookiesExpiredException)
+            "401", "no_login" -> NetworkState.Error("登录过期了，请重新登录", CookiesExpiredException)
 
             else ->
                 NetworkState.Error(result.status)
