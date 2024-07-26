@@ -24,6 +24,7 @@ android {
 
     buildTypes {
         release {
+            // r8混淆
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -55,7 +56,7 @@ android {
         buildConfig = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+        kotlinCompilerExtensionVersion = "1.5.10"
     }
     packaging {
         resources {
@@ -121,4 +122,6 @@ dependencies {
 
     // compose extend view
     implementation(libs.composeviews)
+    // compose wheel picker
+    implementation(libs.compose.wheel.picker)
 }

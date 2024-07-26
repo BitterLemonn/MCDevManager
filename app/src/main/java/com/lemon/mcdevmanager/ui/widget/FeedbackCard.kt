@@ -26,6 +26,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -223,7 +224,11 @@ fun FeedbackCard(
                 }
             }
         if (isShowReply) {
-            DividedLine()
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
+                color = AppTheme.colors.dividerColor,
+                thickness = 0.5.dp
+            )
             if (!TextUtils.isEmpty(reply))
                 Text(
                     text = reply!!,

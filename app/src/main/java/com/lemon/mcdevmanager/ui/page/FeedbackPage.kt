@@ -473,13 +473,16 @@ fun FeedbackPage(
             keyboardActions = KeyboardActions(onSend = {
                 viewModel.dispatch(FeedbackAction.ReplyFeedback)
                 keyboard?.hide()
+                isFocusReply = false
             }),
             shape = RoundedCornerShape(8.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = AppTheme.colors.primaryColor,
-                unfocusedBorderColor = AppTheme.colors.textColor,
+                unfocusedBorderColor = AppTheme.colors.card,
                 focusedContainerColor = AppTheme.colors.card,
-                unfocusedContainerColor = AppTheme.colors.card
+                unfocusedContainerColor = AppTheme.colors.card,
+                focusedTextColor = AppTheme.colors.textColor,
+                unfocusedLabelColor = AppTheme.colors.textColor,
             ),
             trailingIcon = {
                 Box(
@@ -493,6 +496,7 @@ fun FeedbackPage(
                         ) {
                             viewModel.dispatch(FeedbackAction.ReplyFeedback)
                             keyboard?.hide()
+                            isFocusReply = false
                         }
                 ) {
                     Text(

@@ -10,6 +10,7 @@ import com.lemon.mcdevmanager.data.database.database.GlobalDataBase
 import com.lemon.mcdevmanager.data.database.entities.AnalyzeEntity
 import com.lemon.mcdevmanager.data.global.AppContext
 import com.lemon.mcdevmanager.data.netease.resource.ResDetailBean
+import com.lemon.mcdevmanager.data.netease.resource.ResMonthDetailBean
 import com.lemon.mcdevmanager.data.netease.resource.ResourceBean
 import com.lemon.mcdevmanager.data.repository.DetailRepository
 import com.lemon.mcdevmanager.ui.theme.TextWhite
@@ -207,6 +208,52 @@ class AnalyzeViewModel : ViewModel() {
         }
     }
 
+    private fun loadMonthAnalyze() {
+        viewModelScope.launch {
+            flow<Unit> {
+                loadMonthAnalyzeLogic()
+            }.onStart {
+                _viewStates.setState { copy(isShowLoading = true) }
+            }.onCompletion {
+                _viewStates.setState { copy(isShowLoading = false) }
+            }.catch {
+                _viewEvents.setEvent(
+                    AnalyzeEvent.ShowToast(it.message ?: "获取数据分析失败: 未知错误")
+                )
+            }.flowOn(Dispatchers.IO).collect()
+        }
+    }
+
+    private suspend fun loadMonthAnalyzeLogic() {
+        if (viewStates.value.startDate > viewStates.value.endDate) {
+            _viewEvents.setEvent(AnalyzeEvent.ShowToast("开始日期不能大于结束日期"))
+            return
+        }
+        if (viewStates.value.filterResourceList.isEmpty()) {
+            _viewEvents.setEvent(AnalyzeEvent.ShowToast("请先选择需要对比的组件"))
+            return
+        }
+        when (
+            val res = detailRepository.getMonthDetail(
+                viewStates.value.platform,
+                viewStates.value.startDate.split("T")[0].replace("-", ""),
+                viewStates.value.endDate.split("T")[0].replace("-", "")
+            )
+        ) {
+            is NetworkState.Success -> res.data?.let {
+                _viewStates.setState { copy(monthAnalyseList = it.data) }
+            }
+
+            is NetworkState.Error -> if (res.e is CookiesExpiredException) {
+                _viewEvents.setEvent(AnalyzeEvent.NeedReLogin)
+                _viewEvents.setEvent(AnalyzeEvent.ShowToast("登录过期, 请重新登录"))
+                logout(AppContext.nowNickname)
+            } else {
+                _viewEvents.setEvent(AnalyzeEvent.ShowToast("获取数据分析失败: ${res.msg}"))
+            }
+        }
+    }
+
     private fun setChartData(type: Int) {
         when (type) {
             0 -> {
@@ -332,6 +379,7 @@ data class AnalyzeViewState(
     val endDate: String = ZonedDateTime.now().toString(),
 
     val analyzeList: List<ResDetailBean> = emptyList(),
+    val monthAnalyseList: List<ResMonthDetailBean> = emptyList(),
     val filterResourceList: List<String> = emptyList(),
     val allResourceList: List<ResourceBean> = emptyList(),
 

@@ -33,6 +33,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -183,11 +184,12 @@ fun AnalysisFragPage(
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp)
             ) {
-                DividedLine(
+                HorizontalDivider(
                     modifier = Modifier
                         .weight(1f)
-                        .background(AppTheme.colors.hintColor.copy(alpha = 0.5f))
-                        .align(Alignment.CenterVertically)
+                        .align(Alignment.CenterVertically),
+                    color = AppTheme.colors.dividerColor,
+                    thickness = 0.5.dp
                 )
                 SelectCard(modifier = Modifier
                     .width(80.dp)
@@ -448,11 +450,12 @@ fun AnalysisFragPage(
                                             .fillMaxWidth()
                                             .padding(horizontal = 8.dp, vertical = 4.dp)
                                     ) {
-                                        DividedLine(
+                                        HorizontalDivider(
                                             modifier = Modifier
                                                 .width(16.dp)
-                                                .background(AppTheme.colors.hintColor.copy(alpha = 0.5f))
-                                                .align(Alignment.CenterVertically)
+                                                .align(Alignment.CenterVertically),
+                                            color = AppTheme.colors.dividerColor,
+                                            thickness = 0.5.dp
                                         )
                                         Text(
                                             text = "$year-$month-$day",
@@ -462,11 +465,12 @@ fun AnalysisFragPage(
                                                 .padding(8.dp)
                                                 .align(Alignment.CenterVertically)
                                         )
-                                        DividedLine(
+                                        HorizontalDivider(
                                             modifier = Modifier
                                                 .weight(1f)
-                                                .background(AppTheme.colors.hintColor.copy(alpha = 0.5f))
-                                                .align(Alignment.CenterVertically)
+                                                .align(Alignment.CenterVertically),
+                                            color = AppTheme.colors.dividerColor,
+                                            thickness = 0.5.dp
                                         )
                                     }
                                 }

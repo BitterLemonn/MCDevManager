@@ -10,6 +10,7 @@ import com.lemon.mcdevmanager.data.netease.resource.ResourceResponseBean
 import com.lemon.mcdevmanager.utils.CookiesExpiredException
 import com.lemon.mcdevmanager.utils.NetworkState
 import com.lemon.mcdevmanager.utils.UnifiedExceptionHandler
+import com.orhanobut.logger.Logger
 import java.time.ZonedDateTime
 import java.util.Locale
 
@@ -64,16 +65,19 @@ class DetailRepository {
 
     suspend fun getMonthDetail(
         platform: String,
-        startMonth: Int,
-        endMonth: Int,
+        startMonth: String,
+        endMonth: String,
         sort: String = "monthid",
         order: String = "ASC",
         start: Int = 0,
         span: Int = Int.MAX_VALUE
     ): NetworkState<ResMonthDetailResponseBean> {
-
         val cookie = AppContext.cookiesStore[AppContext.nowNickname]
         cookie?.let {
+            val endDate = ZonedDateTime.parse(endMonth).toLocalDate()
+            endDate.minusMonths(1)
+            val dayDateId = endDate.toString().replace("-", "")
+            Logger.d("dayDateId: $dayDateId")
             CookiesStore.addCookie(NETEASE_USER_COOKIE, cookie)
             return UnifiedExceptionHandler.handleSuspend {
                 AnalyzeApi.create().getMonthDetail(

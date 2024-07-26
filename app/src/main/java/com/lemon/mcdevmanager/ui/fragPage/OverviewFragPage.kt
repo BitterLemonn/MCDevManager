@@ -6,11 +6,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.lemon.mcdevmanager.ui.theme.AppTheme
 import com.lemon.mcdevmanager.ui.theme.MCDevManagerTheme
+import com.lemon.mcdevmanager.viewModel.AnalyzeViewModel
 
 @Composable
-fun OverviewFragPage() {
+fun OverviewFragPage(
+    showToast: (String, String) -> Unit = { _, _ -> },
+    viewModel: AnalyzeViewModel
+) {
 
 }
 
@@ -23,7 +28,7 @@ fun OverviewFragPagePreview() {
                 .fillMaxSize()
                 .background(AppTheme.colors.background)
         ) {
-            OverviewFragPage()
+            OverviewFragPage(viewModel = viewModel())
         }
     }
 }
