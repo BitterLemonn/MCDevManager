@@ -34,6 +34,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -162,10 +163,10 @@ fun FromToDatePickerWidget(
                         DateSelector(
                             state = fromDateSelectorState,
                             cacheSize = 1,
-                            textColors = dateSelectorColorList,
+                            textColors = remember { dateSelectorColorList.toMutableStateList() },
                             selectedTextSize = 14.sp,
                             selectedTextColor = AppTheme.colors.textColor,
-                            textSizes = dateSelectorFontSize
+                            textSizes = remember { dateSelectorFontSize.toMutableStateList() }
                         )
                         Box(
                             modifier = Modifier
@@ -298,10 +299,10 @@ fun FromToDatePickerWidget(
                         DateSelector(
                             state = toDateSelectorState,
                             cacheSize = 1,
-                            textColors = dateSelectorColorList,
+                            textColors = remember { dateSelectorColorList.toMutableStateList() },
                             selectedTextSize = 14.sp,
                             selectedTextColor = AppTheme.colors.textColor,
-                            textSizes = dateSelectorFontSize
+                            textSizes = remember { dateSelectorFontSize.toMutableStateList() }
                         )
                         Box(
                             modifier = Modifier

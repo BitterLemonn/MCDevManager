@@ -57,3 +57,7 @@ fun <T> getAvgItems(list : List<T>, count : Int) : List<T> {
     }
     return selectedItems
 }
+
+fun getFontScale(context: Context): Float {
+    return context.resources.configuration.fontScale
+}
