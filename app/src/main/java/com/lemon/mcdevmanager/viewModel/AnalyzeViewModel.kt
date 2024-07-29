@@ -52,6 +52,8 @@ class AnalyzeViewModel : ViewModel() {
             is AnalyzeAction.GetAllResourceList -> getAllResourceList()
             is AnalyzeAction.UpdateChartColor -> _viewStates.setState { copy(chartColor = action.color) }
             is AnalyzeAction.UpdateStartDate -> _viewStates.setState { copy(startDate = action.date) }
+            is AnalyzeAction.UpdateFromMonth -> _viewStates.setState { copy(fromMonth = action.date) }
+            is AnalyzeAction.UpdateToMonth -> _viewStates.setState { copy(toMonth = action.date) }
 
             is AnalyzeAction.UpdatePlatform -> {
                 _viewStates.setState {
@@ -81,6 +83,8 @@ class AnalyzeViewModel : ViewModel() {
                     _viewStates.setState { copy(filterResourceList = filterResourceList + action.resId) }
                 }
             }
+
+            is AnalyzeAction.GetMonthlyAnalyze -> loadMonthAnalyze()
 
             is AnalyzeAction.LoadAnalyze -> loadAnalyze()
         }
@@ -217,6 +221,7 @@ class AnalyzeViewModel : ViewModel() {
             }.onCompletion {
                 _viewStates.setState { copy(isShowLoading = false) }
             }.catch {
+                Logger.e(it, "loadMonthAnalyze")
                 _viewEvents.setEvent(
                     AnalyzeEvent.ShowToast(it.message ?: "获取数据分析失败: 未知错误")
                 )
@@ -233,11 +238,14 @@ class AnalyzeViewModel : ViewModel() {
             _viewEvents.setEvent(AnalyzeEvent.ShowToast("请先选择需要对比的组件"))
             return
         }
+
+        val fromMonthDate = viewStates.value.fromMonth.replace("-", "") + "01"
+        val toMonthDate = viewStates.value.toMonth.replace("-", "") + "01"
         when (
             val res = detailRepository.getMonthDetail(
                 viewStates.value.platform,
-                viewStates.value.startDate.split("T")[0].replace("-", ""),
-                viewStates.value.endDate.split("T")[0].replace("-", "")
+                fromMonthDate,
+                toMonthDate,
             )
         ) {
             is NetworkState.Success -> res.data?.let {
@@ -378,8 +386,11 @@ data class AnalyzeViewState(
     val startDate: String = ZonedDateTime.now().minusDays(7).toString(),
     val endDate: String = ZonedDateTime.now().toString(),
 
-    val analyzeList: List<ResDetailBean> = emptyList(),
+    val fromMonth: String = "2024-07",
+    val toMonth: String = "2024-07",
     val monthAnalyseList: List<ResMonthDetailBean> = emptyList(),
+
+    val analyzeList: List<ResDetailBean> = emptyList(),
     val filterResourceList: List<String> = emptyList(),
     val allResourceList: List<ResourceBean> = emptyList(),
 
@@ -391,14 +402,18 @@ data class AnalyzeViewState(
 
 sealed class AnalyzeAction {
     data class UpdateChartColor(val color: List<Color>) : AnalyzeAction()
-    data object GetLastAnalyzeParams : AnalyzeAction()
     data class UpdatePlatform(val platform: String) : AnalyzeAction()
     data class UpdateStartDate(val date: String) : AnalyzeAction()
     data class UpdateEndDate(val date: String) : AnalyzeAction()
     data class ChangeResourceList(val resId: String, val isDel: Boolean) : AnalyzeAction()
     data class UpdateFilterType(val type: Int) : AnalyzeAction()
+    data class UpdateFromMonth(val date: String) : AnalyzeAction()
+    data class UpdateToMonth(val date: String) : AnalyzeAction()
+
+    data object GetLastAnalyzeParams : AnalyzeAction()
     data object LoadAnalyze : AnalyzeAction()
     data object GetAllResourceList : AnalyzeAction()
+    data object GetMonthlyAnalyze : AnalyzeAction()
 }
 
 sealed class AnalyzeEvent {

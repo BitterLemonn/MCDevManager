@@ -48,6 +48,7 @@ import androidx.navigation.compose.rememberNavController
 import com.lemon.mcdevmanager.R
 import com.lemon.mcdevmanager.data.common.LOGIN_PAGE
 import com.lemon.mcdevmanager.ui.fragPage.AnalysisFragPage
+import com.lemon.mcdevmanager.ui.fragPage.OverviewFragPage
 import com.lemon.mcdevmanager.ui.theme.AppTheme
 import com.lemon.mcdevmanager.ui.theme.MCDevManagerTheme
 import com.lemon.mcdevmanager.ui.widget.AppLoadingWidget
@@ -129,6 +130,11 @@ fun AnalyzePage(
             ) {
                 when (it) {
                     0 -> AnalysisFragPage(
+                        viewModel = viewModel,
+                        showToast = showToast
+                    )
+
+                    1 -> OverviewFragPage(
                         viewModel = viewModel,
                         showToast = showToast
                     )

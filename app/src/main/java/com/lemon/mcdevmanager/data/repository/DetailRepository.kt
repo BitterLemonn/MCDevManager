@@ -11,7 +11,11 @@ import com.lemon.mcdevmanager.utils.CookiesExpiredException
 import com.lemon.mcdevmanager.utils.NetworkState
 import com.lemon.mcdevmanager.utils.UnifiedExceptionHandler
 import com.orhanobut.logger.Logger
+import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 class DetailRepository {
@@ -74,10 +78,11 @@ class DetailRepository {
     ): NetworkState<ResMonthDetailResponseBean> {
         val cookie = AppContext.cookiesStore[AppContext.nowNickname]
         cookie?.let {
-            val endDate = ZonedDateTime.parse(endMonth).toLocalDate()
-            endDate.minusMonths(1)
-            val dayDateId = endDate.toString().replace("-", "")
-            Logger.d("dayDateId: $dayDateId")
+            val formatter = DateTimeFormatter.ofPattern("yyyyMMdd", Locale.CHINA)
+            val localDate = LocalDate.parse(endMonth, formatter)
+            val endDate = localDate.atStartOfDay(ZoneId.of("Asia/Shanghai")).toLocalDate()
+            val dayDateId = endDate.minusMonths(1).toString().replace("-", "")
+
             CookiesStore.addCookie(NETEASE_USER_COOKIE, cookie)
             return UnifiedExceptionHandler.handleSuspend {
                 AnalyzeApi.create().getMonthDetail(
@@ -89,7 +94,7 @@ class DetailRepository {
                     order = order,
                     start = start,
                     span = span,
-                    dayDateId = ""
+                    dayDateId = dayDateId
                 )
             }
         } ?: return NetworkState.Error("无法获取用户cookie, 请重新登录", CookiesExpiredException)

@@ -18,7 +18,7 @@ fun getScreenWidth(context: Context): Int {
     val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
         return windowManager.currentWindowMetrics.bounds.width()
-    }else{
+    } else {
         val displayMetrics = DisplayMetrics()
         windowManager.defaultDisplay.getMetrics(displayMetrics)
         return displayMetrics.widthPixels
@@ -29,7 +29,7 @@ fun getScreenHeight(context: Context): Int {
     val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
         return windowManager.currentWindowMetrics.bounds.height()
-    }else{
+    } else {
         val displayMetrics = DisplayMetrics()
         windowManager.defaultDisplay.getMetrics(displayMetrics)
         return displayMetrics.heightPixels
@@ -44,7 +44,15 @@ fun dpToPx(context: Context, dp: Int): Int {
     return Math.round(dp * context.resources.displayMetrics.density)
 }
 
-fun <T> getAvgItems(list : List<T>, count : Int) : List<T> {
+fun getNoScaleTextSize(context: Context, textSize: Float): Float {
+    val fontScale = getFontScale(context)
+    if (fontScale > 1.0f) {
+        return textSize / fontScale
+    }
+    return textSize
+}
+
+fun <T> getAvgItems(list: List<T>, count: Int): List<T> {
     if (count <= 0 || list.isEmpty()) {
         return emptyList()
     }
