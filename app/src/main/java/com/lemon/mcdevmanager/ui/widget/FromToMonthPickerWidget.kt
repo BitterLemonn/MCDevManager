@@ -52,7 +52,7 @@ fun FromToMonthPickerWidget(
     toMonthStr: String,
     onFromMonthChange: (String) -> Unit = {},
     onToMonthChange: (String) -> Unit = {},
-    onChanging: (Boolean) -> Unit = {},
+    onConfirm: () -> Unit = {},
     showToast: (String, String) -> Unit = { _, _ -> }
 ) {
     val nowDate = ZonedDateTime.now(ZoneId.of("Asia/Shanghai"))
@@ -79,55 +79,85 @@ fun FromToMonthPickerWidget(
     val toMonthState =
         rememberFWheelPickerState(initialIndex = monthSelectList.indexOf(toMonthMonth))
 
-    Row(
+    Card(
         modifier = Modifier
-            .fillMaxWidth()
             .padding(8.dp)
             .then(modifier),
-        verticalAlignment = Alignment.CenterVertically
+        colors = CardDefaults.cardColors(containerColor = AppTheme.colors.card),
+        shape = RoundedCornerShape(8.dp),
     ) {
-        Box(modifier = Modifier
-            .weight(1f)
-            .border(1.dp, AppTheme.colors.primaryColor, RoundedCornerShape(8.dp))
-            .clickable(indication = null,
-                interactionSource = remember { MutableInteractionSource() }) {
-                isChangingFromMonth = true
-                onChanging(true)
-            }, contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = fromMonth,
-                color = AppTheme.colors.textColor,
-                modifier = Modifier.padding(vertical = 16.dp)
-            )
-        }
-        Box(
-            modifier = Modifier
-                .padding(horizontal = 8.dp)
-                .width(20.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "至",
-                modifier = Modifier.padding(vertical = 8.dp),
-                color = AppTheme.colors.textColor
-            )
-        }
-        Box(modifier = Modifier
-            .weight(1f)
-            .border(1.dp, AppTheme.colors.primaryColor, RoundedCornerShape(8.dp))
-            .clickable(
-                indication = null,
-                interactionSource = remember { MutableInteractionSource() }) {
-                isChangingToMonth = true
-                onChanging(true)
-            }, contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = toMonth,
-                color = AppTheme.colors.textColor,
-                modifier = Modifier.padding(vertical = 16.dp)
-            )
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(modifier = Modifier
+                    .weight(1f)
+                    .border(1.dp, AppTheme.colors.primaryColor, RoundedCornerShape(8.dp))
+                    .clickable(indication = null,
+                        interactionSource = remember { MutableInteractionSource() }) {
+                        isChangingFromMonth = true
+                    }, contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = fromMonth,
+                        color = AppTheme.colors.textColor,
+                        modifier = Modifier.padding(vertical = 16.dp)
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp)
+                        .width(20.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "至",
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        color = AppTheme.colors.textColor
+                    )
+                }
+                Box(modifier = Modifier
+                    .weight(1f)
+                    .border(1.dp, AppTheme.colors.primaryColor, RoundedCornerShape(8.dp))
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }) {
+                        isChangingToMonth = true
+                    }, contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = toMonth,
+                        color = AppTheme.colors.textColor,
+                        modifier = Modifier.padding(vertical = 16.dp)
+                    )
+                }
+            }
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = rememberRipple(),
+                        onClick = onConfirm
+                    ),
+                colors = CardDefaults.cardColors(containerColor = AppTheme.colors.primaryColor),
+                shape = RoundedCornerShape(8.dp),
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "确定",
+                        color = TextWhite,
+                        modifier = Modifier.padding(vertical = 12.dp)
+                    )
+                }
+            }
         }
     }
 
@@ -225,7 +255,6 @@ fun FromToMonthPickerWidget(
                         val month = monthSelectList[selectMonthIndex]
                         onFromMonthChange("$year-$month")
                         isChangingFromMonth = false
-                        onChanging(false)
                     },
                 colors = CardDefaults.cardColors(
                     containerColor = AppTheme.colors.primaryColor
@@ -332,7 +361,6 @@ fun FromToMonthPickerWidget(
                         val year = yearSelectList[selectYearIndex]
                         val month = monthSelectList[selectMonthIndex]
                         isChangingToMonth = false
-                        onChanging(false)
 
                         if (year < fromMonthYear || (year == fromMonthYear && month < fromMonthMonth)) {
                             showToast("结束月份不能小于开始月份", SNACK_ERROR)

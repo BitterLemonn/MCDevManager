@@ -1,5 +1,10 @@
 package com.lemon.mcdevmanager.ui.fragPage
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -11,11 +16,10 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -26,7 +30,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -37,38 +40,26 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.lemon.mcdevmanager.R
-import com.lemon.mcdevmanager.data.netease.resource.ResMonthDetailBean
 import com.lemon.mcdevmanager.ui.theme.AppTheme
 import com.lemon.mcdevmanager.ui.theme.MCDevManagerTheme
 import com.lemon.mcdevmanager.ui.theme.TextWhite
-import com.lemon.mcdevmanager.ui.widget.AppLoadingWidget
 import com.lemon.mcdevmanager.ui.widget.DividedLine
 import com.lemon.mcdevmanager.ui.widget.FlowTabWidget
 import com.lemon.mcdevmanager.ui.widget.FromToMonthPickerWidget
-import com.lemon.mcdevmanager.ui.widget.HeaderWidget
-import com.lemon.mcdevmanager.ui.widget.ModalBackgroundWidget
 import com.lemon.mcdevmanager.ui.widget.MonthlyAnalyzeInfoCard
-import com.lemon.mcdevmanager.ui.widget.SNACK_ERROR
-import com.lemon.mcdevmanager.ui.widget.SNACK_SUCCESS
-import com.lemon.mcdevmanager.ui.widget.SelectCard
 import com.lemon.mcdevmanager.ui.widget.SelectTextCard
-import com.lemon.mcdevmanager.utils.dpToPx
 import com.lemon.mcdevmanager.utils.pxToDp
 import com.lemon.mcdevmanager.viewModel.AnalyzeAction
-import com.lemon.mcdevmanager.viewModel.AnalyzeEvent
 import com.lemon.mcdevmanager.viewModel.AnalyzeViewModel
 import com.lt.compose_views.other.VerticalSpace
-import com.zj.mvi.core.observeEvent
-import org.bouncycastle.math.raw.Mod
+import com.orhanobut.logger.Logger
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
@@ -83,8 +74,8 @@ fun OverviewFragPage(
 
     val nowDate by remember { mutableStateOf(ZonedDateTime.now(ZoneId.of("Asia/Shanghai"))) }
 
-    var pickerHeight by remember { mutableIntStateOf(0) }
     var selectTextHeight by remember { mutableIntStateOf(0) }
+    var isShowFilter by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = Unit) {
         viewModel.dispatch(AnalyzeAction.UpdateFromMonth(getMonthStr(nowDate)))
@@ -120,8 +111,9 @@ fun OverviewFragPage(
                 .background(AppTheme.colors.primaryColor)
                 .clickable(
                     indication = rememberRipple(),
-                    interactionSource = remember { MutableInteractionSource() }) {
-//                    isShowFilter = !isShowFilter
+                    interactionSource = remember { MutableInteractionSource() }
+                ) {
+                    isShowFilter = !isShowFilter
                 }
                 .padding(horizontal = 8.dp)) {
                 Image(
@@ -134,11 +126,6 @@ fun OverviewFragPage(
                 )
             }
         }
-        Box(
-            modifier = Modifier
-                .padding(vertical = 8.dp)
-                .height(pickerHeight.dp)
-        )
         FlowRow(Modifier.fillMaxWidth()) {
             FlowTabWidget(
                 text = "当月",
@@ -194,7 +181,10 @@ fun OverviewFragPage(
                     val map = states.monthAnalyseList.groupBy { it.monthId }
                     for (item in map.entries) {
                         item {
-                            Row(modifier = Modifier.padding(vertical = 8.dp)) {
+                            Row(
+                                modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
                                 DividedLine(modifier = Modifier.width(24.dp))
                                 Text(
                                     text = item.key,
@@ -214,22 +204,44 @@ fun OverviewFragPage(
     }
 
     FromToMonthPickerWidget(
-        modifier = Modifier
-            .onGloballyPositioned {
-                pickerHeight = pxToDp(context, it.size.height.toFloat())
-            }
-            .offset { IntOffset(0, dpToPx(context, selectTextHeight)) },
+        modifier = Modifier.wrapContentSize(),
         fromMonthStr = states.fromMonth,
         toMonthStr = states.toMonth,
         onFromMonthChange = {
             viewModel.dispatch(AnalyzeAction.UpdateFromMonth(it))
-            viewModel.dispatch(AnalyzeAction.GetMonthlyAnalyze)
         },
         onToMonthChange = {
             viewModel.dispatch(AnalyzeAction.UpdateToMonth(it))
+        },
+        onConfirm = {
             viewModel.dispatch(AnalyzeAction.GetMonthlyAnalyze)
+            isShowFilter = false
         }
     )
+
+
+    AnimatedVisibility(
+        visible = isShowFilter,
+        enter = slideInVertically(initialOffsetY = { -it - selectTextHeight }) + fadeIn(),
+        exit = slideOutVertically(targetOffsetY = { -it - selectTextHeight }) + fadeOut(),
+        modifier = Modifier.padding(top = selectTextHeight.dp)
+    ) {
+        Logger.d("showing filter")
+        FromToMonthPickerWidget(
+            fromMonthStr = states.fromMonth,
+            toMonthStr = states.toMonth,
+            onFromMonthChange = {
+                viewModel.dispatch(AnalyzeAction.UpdateFromMonth(it))
+            },
+            onToMonthChange = {
+                viewModel.dispatch(AnalyzeAction.UpdateToMonth(it))
+            },
+            onConfirm = {
+                viewModel.dispatch(AnalyzeAction.GetMonthlyAnalyze)
+                isShowFilter = false
+            }
+        )
+    }
 }
 
 private fun getMonthStr(date: ZonedDateTime): String {
