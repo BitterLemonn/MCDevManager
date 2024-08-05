@@ -161,11 +161,10 @@ fun FromToMonthPickerWidget(
         }
     }
 
-    ModalBackgroundWidget(
-        visibility = isChangingFromMonth || isChangingToMonth
-    )
+    ModalBackgroundWidget(visibility = isChangingFromMonth || isChangingToMonth)
 
     AnimatedVisibility(
+        modifier = modifier,
         visible = isChangingFromMonth,
         enter = slideInHorizontally(
             initialOffsetX = { -it }, animationSpec = spring(stiffness = 100f)

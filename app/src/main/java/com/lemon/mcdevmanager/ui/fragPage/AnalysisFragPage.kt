@@ -36,6 +36,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -63,7 +64,6 @@ import com.lemon.mcdevmanager.R
 import com.lemon.mcdevmanager.ui.theme.AppTheme
 import com.lemon.mcdevmanager.ui.theme.MCDevManagerTheme
 import com.lemon.mcdevmanager.ui.theme.TextWhite
-import com.lemon.mcdevmanager.ui.widget.DividedLine
 import com.lemon.mcdevmanager.ui.widget.FlowTabWidget
 import com.lemon.mcdevmanager.ui.widget.FromToDatePickerWidget
 import com.lemon.mcdevmanager.ui.widget.ResDetailInfoCard
@@ -111,7 +111,13 @@ fun AnalysisFragPage(
     var chartType by remember { mutableStateOf("line") }
 
     val animationRotate by animateFloatAsState(targetValue = if (!isShowDetail) 90f else -90f)
-    val analyzeDetailMap by rememberUpdatedState(newValue = states.analyzeList.groupBy { it.dateId })
+    val analyzeDetailMap by rememberUpdatedState(newValue = states.analyzeList.groupBy { it.dateId }
+        .toSortedMap(compareByDescending { it }))
+
+    LaunchedEffect(key1 = Unit) {
+        viewModel.dispatch(AnalyzeAction.GetLastAnalyzeParams)
+        viewModel.dispatch(AnalyzeAction.GetAllResourceList)
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -123,14 +129,16 @@ fun AnalysisFragPage(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(end = 8.dp)
-                    .onGloballyPositioned { filterHeight = pxToDp(context, it.size.height.toFloat()) }
+                    .onGloballyPositioned {
+                        filterHeight = pxToDp(context, it.size.height.toFloat())
+                    }
             ) {
                 Box(modifier = Modifier.weight(1f)) {
                     SelectTextCard(
                         initSelectLeft = states.platform == "pe", leftName = "PE", rightName = "PC"
                     ) {
-                        if (it) viewModel.dispatch(AnalyzeAction.UpdatePlatform("pe"))
-                        else viewModel.dispatch(AnalyzeAction.UpdatePlatform("pc"))
+                        if (it) viewModel.dispatch(AnalyzeAction.UpdatePlatformAnalyze("pe"))
+                        else viewModel.dispatch(AnalyzeAction.UpdatePlatformAnalyze("pc"))
                     }
                 }
                 Box(modifier = Modifier

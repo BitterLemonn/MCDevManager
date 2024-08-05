@@ -86,8 +86,6 @@ fun AnalyzePage(
 
     LaunchedEffect(key1 = Unit) {
         viewModel.dispatch(AnalyzeAction.UpdateChartColor(chartColor))
-        viewModel.dispatch(AnalyzeAction.GetLastAnalyzeParams)
-        viewModel.dispatch(AnalyzeAction.GetAllResourceList)
         viewModel.viewEvents.observeEvent(lifecycleOwner) { event ->
             when (event) {
                 is AnalyzeEvent.ShowToast -> showToast(
@@ -168,7 +166,7 @@ fun AnalyzePage(
                         icon = R.drawable.ic_analyze,
                         isSelected = nowPage == 0
                     ) {
-                        coroutineScope.launch { pageState.scrollToPage(0) }
+                        coroutineScope.launch { pageState.animateScrollToPage(0) }
                     }
                     Spacer(modifier = Modifier.weight(1f))
                     NavigationItem(
@@ -176,7 +174,7 @@ fun AnalyzePage(
                         icon = R.drawable.ic_total,
                         isSelected = nowPage == 1
                     ) {
-                        coroutineScope.launch { pageState.scrollToPage(1) }
+                        coroutineScope.launch { pageState.animateScrollToPage(1) }
                     }
                     Spacer(modifier = Modifier.weight(1f))
                     NavigationItem(
@@ -184,7 +182,7 @@ fun AnalyzePage(
                         icon = R.drawable.ic_beta,
                         isSelected = nowPage == 2
                     ) {
-                        coroutineScope.launch { pageState.scrollToPage(2) }
+                        coroutineScope.launch { pageState.animateScrollToPage(2) }
                     }
                     Spacer(modifier = Modifier.weight(0.5f))
                 }

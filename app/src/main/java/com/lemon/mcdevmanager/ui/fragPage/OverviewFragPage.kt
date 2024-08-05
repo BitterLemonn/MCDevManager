@@ -1,10 +1,9 @@
 package com.lemon.mcdevmanager.ui.fragPage
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,7 +18,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -59,7 +57,6 @@ import com.lemon.mcdevmanager.utils.pxToDp
 import com.lemon.mcdevmanager.viewModel.AnalyzeAction
 import com.lemon.mcdevmanager.viewModel.AnalyzeViewModel
 import com.lt.compose_views.other.VerticalSpace
-import com.orhanobut.logger.Logger
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
@@ -82,165 +79,156 @@ fun OverviewFragPage(
         viewModel.dispatch(AnalyzeAction.UpdateToMonth(getMonthStr(nowDate)))
         viewModel.dispatch(AnalyzeAction.GetMonthlyAnalyze)
     }
-
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // 选择平台
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(end = 8.dp)
-                .onGloballyPositioned {
-                    selectTextHeight = pxToDp(context, it.size.height.toFloat())
-                }
+    Box {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Box(modifier = Modifier.weight(1f)) {
-                SelectTextCard(
-                    initSelectLeft = states.platform == "pe", leftName = "PE", rightName = "PC"
-                ) {
-                    if (it) viewModel.dispatch(AnalyzeAction.UpdatePlatform("pe"))
-                    else viewModel.dispatch(AnalyzeAction.UpdatePlatform("pc"))
+            // 选择平台
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(end = 8.dp)
+                    .onGloballyPositioned {
+                        selectTextHeight = pxToDp(context, it.size.height.toFloat())
+                    }
+            ) {
+                Box(modifier = Modifier.weight(1f)) {
+                    SelectTextCard(
+                        initSelectLeft = states.platform == "pe", leftName = "PE", rightName = "PC"
+                    ) {
+                        if (it) viewModel.dispatch(AnalyzeAction.UpdatePlatformOverview("pe"))
+                        else viewModel.dispatch(AnalyzeAction.UpdatePlatformOverview("pc"))
+                    }
+                }
+                Box(modifier = Modifier
+                    .size(40.dp)
+                    .align(Alignment.CenterVertically)
+                    .clip(CircleShape)
+                    .background(AppTheme.colors.primaryColor)
+                    .clickable(
+                        indication = rememberRipple(),
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) {
+                        isShowFilter = !isShowFilter
+                    }
+                    .padding(horizontal = 8.dp)) {
+                    Image(
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .align(Alignment.Center),
+                        painter = painterResource(id = R.drawable.ic_filter),
+                        contentDescription = "filter",
+                        colorFilter = ColorFilter.tint(TextWhite)
+                    )
                 }
             }
-            Box(modifier = Modifier
-                .size(40.dp)
-                .align(Alignment.CenterVertically)
-                .clip(CircleShape)
-                .background(AppTheme.colors.primaryColor)
-                .clickable(
-                    indication = rememberRipple(),
-                    interactionSource = remember { MutableInteractionSource() }
-                ) {
-                    isShowFilter = !isShowFilter
-                }
-                .padding(horizontal = 8.dp)) {
-                Image(
-                    modifier = Modifier
-                        .padding(4.dp)
-                        .align(Alignment.Center),
-                    painter = painterResource(id = R.drawable.ic_filter),
-                    contentDescription = "filter",
-                    colorFilter = ColorFilter.tint(TextWhite)
+            FlowRow(Modifier.fillMaxWidth()) {
+                FlowTabWidget(
+                    text = "当月",
+                    onClick = {
+                        viewModel.dispatch(AnalyzeAction.UpdateFromMonth(getMonthStr(nowDate)))
+                        viewModel.dispatch(AnalyzeAction.UpdateToMonth(getMonthStr(nowDate)))
+                        viewModel.dispatch(AnalyzeAction.GetMonthlyAnalyze)
+                    }
+                )
+                FlowTabWidget(
+                    text = "近三月",
+                    onClick = {
+                        val fromMonthStr = getMonthStr(nowDate.minusMonths(3))
+                        viewModel.dispatch(AnalyzeAction.UpdateFromMonth(fromMonthStr))
+                        viewModel.dispatch(AnalyzeAction.UpdateToMonth(getMonthStr(nowDate)))
+                        viewModel.dispatch(AnalyzeAction.GetMonthlyAnalyze)
+                    }
+                )
+                FlowTabWidget(
+                    text = "近半年",
+                    onClick = {
+                        val fromMonthStr = getMonthStr(nowDate.minusMonths(6))
+                        viewModel.dispatch(AnalyzeAction.UpdateFromMonth(fromMonthStr))
+                        viewModel.dispatch(AnalyzeAction.UpdateToMonth(getMonthStr(nowDate)))
+                        viewModel.dispatch(AnalyzeAction.GetMonthlyAnalyze)
+                    }
+                )
+                FlowTabWidget(
+                    text = "近一年",
+                    onClick = {
+                        val fromMonthStr = getMonthStr(nowDate.minusMonths(12))
+                        viewModel.dispatch(AnalyzeAction.UpdateFromMonth(fromMonthStr))
+                        viewModel.dispatch(AnalyzeAction.UpdateToMonth(getMonthStr(nowDate)))
+                        viewModel.dispatch(AnalyzeAction.GetMonthlyAnalyze)
+                    }
                 )
             }
-        }
-        FlowRow(Modifier.fillMaxWidth()) {
-            FlowTabWidget(
-                text = "当月",
-                onClick = {
-                    viewModel.dispatch(AnalyzeAction.UpdateFromMonth(getMonthStr(nowDate)))
-                    viewModel.dispatch(AnalyzeAction.UpdateToMonth(getMonthStr(nowDate)))
-                    viewModel.dispatch(AnalyzeAction.GetMonthlyAnalyze)
-                }
-            )
-            FlowTabWidget(
-                text = "近三月",
-                onClick = {
-                    val fromMonthStr = getMonthStr(nowDate.minusMonths(3))
-                    viewModel.dispatch(AnalyzeAction.UpdateFromMonth(fromMonthStr))
-                    viewModel.dispatch(AnalyzeAction.UpdateToMonth(getMonthStr(nowDate)))
-                    viewModel.dispatch(AnalyzeAction.GetMonthlyAnalyze)
-                }
-            )
-            FlowTabWidget(
-                text = "近半年",
-                onClick = {
-                    val fromMonthStr = getMonthStr(nowDate.minusMonths(6))
-                    viewModel.dispatch(AnalyzeAction.UpdateFromMonth(fromMonthStr))
-                    viewModel.dispatch(AnalyzeAction.UpdateToMonth(getMonthStr(nowDate)))
-                    viewModel.dispatch(AnalyzeAction.GetMonthlyAnalyze)
-                }
-            )
-            FlowTabWidget(
-                text = "近一年",
-                onClick = {
-                    val fromMonthStr = getMonthStr(nowDate.minusMonths(12))
-                    viewModel.dispatch(AnalyzeAction.UpdateFromMonth(fromMonthStr))
-                    viewModel.dispatch(AnalyzeAction.UpdateToMonth(getMonthStr(nowDate)))
-                    viewModel.dispatch(AnalyzeAction.GetMonthlyAnalyze)
-                }
-            )
-        }
-        VerticalSpace(dp = 8.dp)
-        if (!states.isShowLoading)
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                if (states.monthAnalyseList.isEmpty()) {
-                    item {
-                        Box(contentAlignment = Alignment.Center) {
-                            Text(
-                                text = "暂无数据",
-                                color = Color.Gray,
-                                modifier = Modifier.fillMaxSize(),
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
-                } else {
-                    val map = states.monthAnalyseList.groupBy { it.monthId }
-                    for (item in map.entries) {
+            VerticalSpace(dp = 8.dp)
+            if (!states.isShowLoading)
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    if (states.monthAnalyseList.isEmpty()) {
                         item {
-                            Row(
-                                modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                DividedLine(modifier = Modifier.width(24.dp))
+                            Box(contentAlignment = Alignment.Center) {
                                 Text(
-                                    text = item.key,
-                                    modifier = Modifier.padding(8.dp),
-                                    color = AppTheme.colors.hintColor,
-                                    fontSize = 14.sp
+                                    text = "暂无数据",
+                                    color = Color.Gray,
+                                    modifier = Modifier.fillMaxSize(),
+                                    textAlign = TextAlign.Center
                                 )
-                                DividedLine(modifier = Modifier.weight(1f))
                             }
                         }
-                        items(item.value) { bean ->
-                            MonthlyAnalyzeInfoCard(bean)
+                    } else {
+                        val map = states.monthAnalyseList.groupBy { it.monthId }
+                        for (item in map.entries) {
+                            item {
+                                Row(
+                                    modifier = Modifier.padding(
+                                        vertical = 8.dp,
+                                        horizontal = 16.dp
+                                    ),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    DividedLine(modifier = Modifier.width(24.dp))
+                                    Text(
+                                        text = item.key,
+                                        modifier = Modifier.padding(8.dp),
+                                        color = AppTheme.colors.hintColor,
+                                        fontSize = 14.sp
+                                    )
+                                    DividedLine(modifier = Modifier.weight(1f))
+                                }
+                            }
+                            items(item.value) { bean ->
+                                MonthlyAnalyzeInfoCard(bean)
+                            }
                         }
                     }
                 }
-            }
-    }
-
-    FromToMonthPickerWidget(
-        modifier = Modifier.wrapContentSize(),
-        fromMonthStr = states.fromMonth,
-        toMonthStr = states.toMonth,
-        onFromMonthChange = {
-            viewModel.dispatch(AnalyzeAction.UpdateFromMonth(it))
-        },
-        onToMonthChange = {
-            viewModel.dispatch(AnalyzeAction.UpdateToMonth(it))
-        },
-        onConfirm = {
-            viewModel.dispatch(AnalyzeAction.GetMonthlyAnalyze)
-            isShowFilter = false
         }
-    )
-
-
-    AnimatedVisibility(
-        visible = isShowFilter,
-        enter = slideInVertically(initialOffsetY = { -it - selectTextHeight }) + fadeIn(),
-        exit = slideOutVertically(targetOffsetY = { -it - selectTextHeight }) + fadeOut(),
-        modifier = Modifier.padding(top = selectTextHeight.dp)
-    ) {
-        Logger.d("showing filter")
-        FromToMonthPickerWidget(
-            fromMonthStr = states.fromMonth,
-            toMonthStr = states.toMonth,
-            onFromMonthChange = {
-                viewModel.dispatch(AnalyzeAction.UpdateFromMonth(it))
-            },
-            onToMonthChange = {
-                viewModel.dispatch(AnalyzeAction.UpdateToMonth(it))
-            },
-            onConfirm = {
-                viewModel.dispatch(AnalyzeAction.GetMonthlyAnalyze)
-                isShowFilter = false
-            }
-        )
+        AnimatedVisibility(
+            visible = isShowFilter,
+            enter = expandVertically(
+                expandFrom = Alignment.Top,
+                animationSpec = tween(200)
+            ),
+            exit = shrinkVertically(
+                shrinkTowards = Alignment.Top,
+                animationSpec = tween(200)
+            )
+        ) {
+            FromToMonthPickerWidget(
+                modifier = Modifier.padding(top = selectTextHeight.dp),
+                fromMonthStr = states.fromMonth,
+                toMonthStr = states.toMonth,
+                onFromMonthChange = {
+                    viewModel.dispatch(AnalyzeAction.UpdateFromMonth(it))
+                },
+                onToMonthChange = {
+                    viewModel.dispatch(AnalyzeAction.UpdateToMonth(it))
+                },
+                onConfirm = {
+                    viewModel.dispatch(AnalyzeAction.GetMonthlyAnalyze)
+                    isShowFilter = false
+                }
+            )
+        }
     }
 }
 

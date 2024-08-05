@@ -1,6 +1,5 @@
 package com.lemon.mcdevmanager.viewModel
 
-import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.dp
@@ -24,7 +23,6 @@ import com.zj.mvi.core.setState
 import ir.ehsannarmani.compose_charts.models.Bars
 import ir.ehsannarmani.compose_charts.models.DotProperties
 import ir.ehsannarmani.compose_charts.models.Line
-import ir.ehsannarmani.compose_charts.models.PopupProperties
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -37,6 +35,7 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.ZoneId
 import java.time.ZonedDateTime
 
 class AnalyzeViewModel : ViewModel() {
@@ -55,18 +54,27 @@ class AnalyzeViewModel : ViewModel() {
             is AnalyzeAction.UpdateFromMonth -> _viewStates.setState { copy(fromMonth = action.date) }
             is AnalyzeAction.UpdateToMonth -> _viewStates.setState { copy(toMonth = action.date) }
 
-            is AnalyzeAction.UpdatePlatform -> {
+            is AnalyzeAction.UpdatePlatformAnalyze -> {
                 _viewStates.setState {
                     copy(
                         platform = action.platform,
                         filterResourceList = emptyList(),
                         lineParams = emptyList(),
-                        barParams = emptyList(),
-                        analyzeList = emptyList()
+                        barParams = emptyList()
                     )
                 }
                 getLastAnalyzeParam()
                 getAllResourceList()
+            }
+
+            is AnalyzeAction.UpdatePlatformOverview -> {
+                _viewStates.setState {
+                    copy(
+                        platform = action.platform,
+                        analyzeList = emptyList()
+                    )
+                }
+                loadMonthAnalyze()
             }
 
             is AnalyzeAction.UpdateEndDate -> _viewStates.setState { copy(endDate = action.date) }
@@ -108,11 +116,12 @@ class AnalyzeViewModel : ViewModel() {
                 GlobalDataBase.database.infoDao().getLastAnalyzeParamsByNicknamePlatform(
                     AppContext.nowNickname, viewStates.value.platform
                 )?.let {
+                    val nowDate = ZonedDateTime.now(ZoneId.of("Asia/Shanghai"))
                     _viewStates.setState {
                         copy(
                             platform = it.platform,
                             startDate = it.startDate,
-                            endDate = it.endDate,
+                            endDate = nowDate.minusDays(1L).toString(),
                             filterResourceList = it.filterResourceList.split(",")
                         )
                     }
@@ -402,7 +411,8 @@ data class AnalyzeViewState(
 
 sealed class AnalyzeAction {
     data class UpdateChartColor(val color: List<Color>) : AnalyzeAction()
-    data class UpdatePlatform(val platform: String) : AnalyzeAction()
+    data class UpdatePlatformAnalyze(val platform: String) : AnalyzeAction()
+    data class UpdatePlatformOverview(val platform: String) : AnalyzeAction()
     data class UpdateStartDate(val date: String) : AnalyzeAction()
     data class UpdateEndDate(val date: String) : AnalyzeAction()
     data class ChangeResourceList(val resId: String, val isDel: Boolean) : AnalyzeAction()

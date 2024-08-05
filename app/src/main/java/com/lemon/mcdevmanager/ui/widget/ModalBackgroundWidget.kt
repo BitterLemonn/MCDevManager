@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 
 @Composable
 fun ModalBackgroundWidget(
+    modifier: Modifier = Modifier,
     visibility: Boolean = false,
     onClick: () -> Unit = {}
 ) {
@@ -32,6 +33,7 @@ fun ModalBackgroundWidget(
                     interactionSource = remember { MutableInteractionSource() },
                     onClick = onClick
                 )
+                .then(modifier)
         )
     }
 }
