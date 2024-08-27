@@ -12,12 +12,14 @@ import com.lemon.mcdevmanager.data.repository.MainRepository
 import com.lemon.mcdevmanager.utils.CookiesExpiredException
 import com.lemon.mcdevmanager.utils.NetworkState
 import com.lemon.mcdevmanager.utils.UnifiedExceptionHandler
+import com.lemon.mcdevmanager.utils.UnifiedExceptionHandler.CancelException
 import com.lemon.mcdevmanager.utils.logout
 import com.orhanobut.logger.Logger
 import com.zj.mvi.core.SharedFlowEvents
 import com.zj.mvi.core.setEvent
 import com.zj.mvi.core.setState
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -52,6 +54,7 @@ class MainViewModel : ViewModel() {
     }
 
     private fun loadData(nickname: String) {
+        Logger.d("loadData: $nickname")
         viewModelScope.launch(Dispatchers.IO) {
             flow<Unit> {
                 val cookie = AppContext.cookiesStore[nickname]
@@ -63,7 +66,12 @@ class MainViewModel : ViewModel() {
                 _viewStates.setState { copy(isLoadingOverview = true) }
                 CookiesStore.clearCookies()
             }.catch {
-                _viewEvents.setEvent(MainViewEvent.ShowToast(it.message ?: "未知错误"))
+                if (it !is CancelException) {
+                    _viewEvents.setEvent(MainViewEvent.ShowToast(it.message ?: "未知错误"))
+                    _viewStates.setState { copy(isLoadingOverview = false) }
+                } else {
+                    Logger.d(it.message ?: "未知错误")
+                }
             }.onCompletion {
                 CookiesStore.clearCookies()
                 _viewStates.setState { copy(isLoadingOverview = false) }
@@ -90,12 +98,20 @@ class MainViewModel : ViewModel() {
             }
 
             is NetworkState.Error -> {
-                if (userInfo.e is CookiesExpiredException) {
-                    _viewEvents.setEvent(MainViewEvent.RouteToPath(LOGIN_PAGE, true))
-                    _viewEvents.setEvent(MainViewEvent.ShowToast("登录过期, 请重新登录"))
-                    logout(AppContext.nowNickname)
-                } else {
-                    _viewEvents.setEvent(MainViewEvent.ShowToast(userInfo.msg))
+                when (userInfo.e) {
+                    is CookiesExpiredException -> {
+                        _viewEvents.setEvent(MainViewEvent.RouteToPath(LOGIN_PAGE, true))
+                        _viewEvents.setEvent(MainViewEvent.ShowToast("登录过期, 请重新登录"))
+                        logout(AppContext.nowNickname)
+                    }
+
+                    is CancelException -> {
+                        throw CancelException(userInfo.msg)
+                    }
+
+                    else -> {
+                        _viewEvents.setEvent(MainViewEvent.ShowToast(userInfo.msg))
+                    }
                 }
             }
         }
@@ -134,12 +150,20 @@ class MainViewModel : ViewModel() {
             }
 
             is NetworkState.Error -> {
-                if (levelInfo.e is CookiesExpiredException) {
-                    _viewEvents.setEvent(MainViewEvent.RouteToPath(LOGIN_PAGE, true))
-                    _viewEvents.setEvent(MainViewEvent.ShowToast("登录过期, 请重新登录"))
-                    logout(AppContext.nowNickname)
-                } else {
-                    _viewEvents.setEvent(MainViewEvent.ShowToast(levelInfo.msg))
+                when (levelInfo.e) {
+                    is CookiesExpiredException -> {
+                        _viewEvents.setEvent(MainViewEvent.RouteToPath(LOGIN_PAGE, true))
+                        _viewEvents.setEvent(MainViewEvent.ShowToast("登录过期, 请重新登录"))
+                        logout(AppContext.nowNickname)
+                    }
+
+                    is CancelException -> {
+                        throw CancelException(levelInfo.msg)
+                    }
+
+                    else -> {
+                        _viewEvents.setEvent(MainViewEvent.ShowToast(levelInfo.msg))
+                    }
                 }
             }
         }
@@ -157,7 +181,8 @@ class MainViewModel : ViewModel() {
 
             var isLoad = false
             if (overviewEntity.yesterdayDownload != 0) isLoad = true
-            else if (chinaTime.hour > 11 || (chinaTime.hour == 11 && chinaTime.minute >= 30)) isLoad = true
+            else if (chinaTime.hour > 11 || (chinaTime.hour == 11 && chinaTime.minute >= 30)) isLoad =
+                true
             if (isDifferentDay(overviewEntity.timestamp)) isLoad = false
 
             if (isLoad) {
@@ -228,12 +253,20 @@ class MainViewModel : ViewModel() {
             }
 
             is NetworkState.Error -> {
-                if (overview.e is CookiesExpiredException) {
-                    _viewEvents.setEvent(MainViewEvent.RouteToPath(LOGIN_PAGE, true))
-                    _viewEvents.setEvent(MainViewEvent.ShowToast("登录过期, 请重新登录"))
-                    logout(AppContext.nowNickname)
-                } else {
-                    _viewEvents.setEvent(MainViewEvent.ShowToast(overview.msg))
+                when (overview.e) {
+                    is CookiesExpiredException -> {
+                        _viewEvents.setEvent(MainViewEvent.RouteToPath(LOGIN_PAGE, true))
+                        _viewEvents.setEvent(MainViewEvent.ShowToast("登录过期, 请重新登录"))
+                        logout(AppContext.nowNickname)
+                    }
+
+                    is CancelException -> {
+                        throw CancelException(overview.msg)
+                    }
+
+                    else -> {
+                        _viewEvents.setEvent(MainViewEvent.ShowToast(overview.msg))
+                    }
                 }
             }
         }
@@ -250,6 +283,8 @@ class MainViewModel : ViewModel() {
 
     private fun changeAccount(accountName: String) {
         viewModelScope.launch {
+            repository.stopAllCalls()
+            delay(100)
             AppContext.nowNickname = accountName
             loadData(AppContext.nowNickname)
         }

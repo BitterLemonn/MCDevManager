@@ -258,7 +258,7 @@ class AnalyzeViewModel : ViewModel() {
             )
         ) {
             is NetworkState.Success -> res.data?.let {
-                _viewStates.setState { copy(monthAnalyseList = it.data) }
+                _viewStates.setState { copy(monthAnalyseList = it.data.reversed()) }
             }
 
             is NetworkState.Error -> if (res.e is CookiesExpiredException) {

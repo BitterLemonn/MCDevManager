@@ -33,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -138,11 +139,16 @@ fun AnalyzePage(
                     )
 
                     else -> {
-                        Text(
-                            text = "暂未开放($it)",
-                            color = AppTheme.colors.textColor,
-                            fontSize = 20.sp
-                        )
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "暂未开放",
+                                color = AppTheme.colors.textColor,
+                                fontSize = 20.sp
+                            )
+                        }
                     }
                 }
             }

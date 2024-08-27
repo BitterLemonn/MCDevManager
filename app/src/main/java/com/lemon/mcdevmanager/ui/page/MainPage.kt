@@ -34,6 +34,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.lemon.mcdevmanager.R
 import com.lemon.mcdevmanager.data.common.ANALYZE_PAGE
+import com.lemon.mcdevmanager.data.common.COMMENT_PAGE
 import com.lemon.mcdevmanager.data.common.FEEDBACK_PAGE
 import com.lemon.mcdevmanager.data.common.LOGIN_PAGE
 import com.lemon.mcdevmanager.data.common.MAIN_PAGE
@@ -183,6 +184,11 @@ fun MainPage(
                     }
                     FunctionCard(icon = R.drawable.ic_feedback, title = "玩家反馈") {
                         navController.navigate(FEEDBACK_PAGE) {
+                            launchSingleTop = true
+                        }
+                    }
+                    FunctionCard(icon = R.drawable.ic_comment_line, title = "组件评论"){
+                        navController.navigate(COMMENT_PAGE) {
                             launchSingleTop = true
                         }
                     }

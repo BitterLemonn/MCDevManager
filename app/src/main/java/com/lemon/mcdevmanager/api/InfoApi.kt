@@ -11,6 +11,7 @@ import com.lemon.mcdevmanager.data.netease.user.UserInfoBean
 import com.lemon.mcdevmanager.utils.ResponseData
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
+import retrofit2.Call
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import retrofit2.http.GET
@@ -21,13 +22,13 @@ import java.util.concurrent.TimeUnit
 interface InfoApi {
 
     @GET("/users/me")
-    suspend fun getUserInfo(): ResponseData<UserInfoBean>
+    fun getUserInfo(): Call<ResponseData<UserInfoBean>>
 
     @GET("/data_analysis/overview")
-    suspend fun getOverview(): ResponseData<OverviewBean>
+    fun getOverview(): Call<ResponseData<OverviewBean>>
 
     @GET("/new_level")
-    suspend fun getLevelInfo(): ResponseData<LevelInfoBean>
+    fun getLevelInfo(): Call<ResponseData<LevelInfoBean>>
 
     @GET("/items/categories/{platform}")
     suspend fun getResInfoList(
