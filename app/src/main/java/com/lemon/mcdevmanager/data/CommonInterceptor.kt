@@ -21,14 +21,12 @@ class CommonInterceptor : Interceptor {
             val buffer = okio.Buffer()
             it.writeTo(buffer)
             Logger.d("拦截器:\n发送请求至 ${request.url}\n请求头: ${request.headers}\n请求体: ${buffer.readUtf8()}")
+        } ?: run {
+            Logger.d("拦截器:\n发送请求至 ${request.url}\n请求头: ${request.headers}")
         }
         val response: Response = chain.proceed(request)
         val t2 = System.nanoTime()
-        Logger.d(
-            "拦截器:\n收到返回 ${
-                response.request.url
-            } 耗时 ${(t2 - t1) / 1e6}ms\n回复头: ${response.headers}"
-        )
+        Logger.d("拦截器:\n收到返回 ${response.request.url}\n耗时 ${(t2 - t1) / 1e6}ms\n回复头: ${response.headers}")
         if (response.headers("Set-Cookie").isNotEmpty()) {
             val cookies = response.headers("Set-Cookie")
             CookiesStore.addCookies(cookies)

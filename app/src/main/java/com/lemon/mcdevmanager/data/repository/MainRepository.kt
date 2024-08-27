@@ -17,20 +17,24 @@ class MainRepository {
     }
 
     suspend fun getUserInfo(): NetworkState<UserInfoBean> {
-        return UnifiedExceptionHandler.handleSuspend {
+        return UnifiedExceptionHandler.handleSuspendWithCall {
             InfoApi.create().getUserInfo()
         }
     }
 
     suspend fun getOverview(): NetworkState<OverviewBean> {
-        return UnifiedExceptionHandler.handleSuspend {
+        return UnifiedExceptionHandler.handleSuspendWithCall {
             InfoApi.create().getOverview()
         }
     }
 
     suspend fun getLevelInfo(): NetworkState<LevelInfoBean> {
-        return UnifiedExceptionHandler.handleSuspend {
+        return UnifiedExceptionHandler.handleSuspendWithCall {
             InfoApi.create().getLevelInfo()
         }
+    }
+
+    fun stopAllCalls() {
+        UnifiedExceptionHandler.stopAllCalls()
     }
 }

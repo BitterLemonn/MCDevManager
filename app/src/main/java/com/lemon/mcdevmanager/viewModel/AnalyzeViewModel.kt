@@ -1,6 +1,5 @@
 package com.lemon.mcdevmanager.viewModel
 
-import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.dp
@@ -10,6 +9,7 @@ import com.lemon.mcdevmanager.data.database.database.GlobalDataBase
 import com.lemon.mcdevmanager.data.database.entities.AnalyzeEntity
 import com.lemon.mcdevmanager.data.global.AppContext
 import com.lemon.mcdevmanager.data.netease.resource.ResDetailBean
+import com.lemon.mcdevmanager.data.netease.resource.ResMonthDetailBean
 import com.lemon.mcdevmanager.data.netease.resource.ResourceBean
 import com.lemon.mcdevmanager.data.repository.DetailRepository
 import com.lemon.mcdevmanager.ui.theme.TextWhite
@@ -23,7 +23,6 @@ import com.zj.mvi.core.setState
 import ir.ehsannarmani.compose_charts.models.Bars
 import ir.ehsannarmani.compose_charts.models.DotProperties
 import ir.ehsannarmani.compose_charts.models.Line
-import ir.ehsannarmani.compose_charts.models.PopupProperties
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -36,6 +35,7 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.ZoneId
 import java.time.ZonedDateTime
 
 class AnalyzeViewModel : ViewModel() {
@@ -51,19 +51,30 @@ class AnalyzeViewModel : ViewModel() {
             is AnalyzeAction.GetAllResourceList -> getAllResourceList()
             is AnalyzeAction.UpdateChartColor -> _viewStates.setState { copy(chartColor = action.color) }
             is AnalyzeAction.UpdateStartDate -> _viewStates.setState { copy(startDate = action.date) }
+            is AnalyzeAction.UpdateFromMonth -> _viewStates.setState { copy(fromMonth = action.date) }
+            is AnalyzeAction.UpdateToMonth -> _viewStates.setState { copy(toMonth = action.date) }
 
-            is AnalyzeAction.UpdatePlatform -> {
+            is AnalyzeAction.UpdatePlatformAnalyze -> {
                 _viewStates.setState {
                     copy(
                         platform = action.platform,
                         filterResourceList = emptyList(),
                         lineParams = emptyList(),
-                        barParams = emptyList(),
-                        analyzeList = emptyList()
+                        barParams = emptyList()
                     )
                 }
                 getLastAnalyzeParam()
                 getAllResourceList()
+            }
+
+            is AnalyzeAction.UpdatePlatformOverview -> {
+                _viewStates.setState {
+                    copy(
+                        platform = action.platform,
+                        analyzeList = emptyList()
+                    )
+                }
+                loadMonthAnalyze()
             }
 
             is AnalyzeAction.UpdateEndDate -> _viewStates.setState { copy(endDate = action.date) }
@@ -80,6 +91,8 @@ class AnalyzeViewModel : ViewModel() {
                     _viewStates.setState { copy(filterResourceList = filterResourceList + action.resId) }
                 }
             }
+
+            is AnalyzeAction.GetMonthlyAnalyze -> loadMonthAnalyze()
 
             is AnalyzeAction.LoadAnalyze -> loadAnalyze()
         }
@@ -103,11 +116,12 @@ class AnalyzeViewModel : ViewModel() {
                 GlobalDataBase.database.infoDao().getLastAnalyzeParamsByNicknamePlatform(
                     AppContext.nowNickname, viewStates.value.platform
                 )?.let {
+                    val nowDate = ZonedDateTime.now(ZoneId.of("Asia/Shanghai"))
                     _viewStates.setState {
                         copy(
                             platform = it.platform,
                             startDate = it.startDate,
-                            endDate = it.endDate,
+                            endDate = nowDate.minusDays(1L).toString(),
                             filterResourceList = it.filterResourceList.split(",")
                         )
                     }
@@ -195,6 +209,56 @@ class AnalyzeViewModel : ViewModel() {
                         )
                     )
                 }
+            }
+
+            is NetworkState.Error -> if (res.e is CookiesExpiredException) {
+                _viewEvents.setEvent(AnalyzeEvent.NeedReLogin)
+                _viewEvents.setEvent(AnalyzeEvent.ShowToast("登录过期, 请重新登录"))
+                logout(AppContext.nowNickname)
+            } else {
+                _viewEvents.setEvent(AnalyzeEvent.ShowToast("获取数据分析失败: ${res.msg}"))
+            }
+        }
+    }
+
+    private fun loadMonthAnalyze() {
+        viewModelScope.launch {
+            flow<Unit> {
+                loadMonthAnalyzeLogic()
+            }.onStart {
+                _viewStates.setState { copy(isShowLoading = true) }
+            }.onCompletion {
+                _viewStates.setState { copy(isShowLoading = false) }
+            }.catch {
+                Logger.e(it, "loadMonthAnalyze")
+                _viewEvents.setEvent(
+                    AnalyzeEvent.ShowToast(it.message ?: "获取数据分析失败: 未知错误")
+                )
+            }.flowOn(Dispatchers.IO).collect()
+        }
+    }
+
+    private suspend fun loadMonthAnalyzeLogic() {
+        if (viewStates.value.startDate > viewStates.value.endDate) {
+            _viewEvents.setEvent(AnalyzeEvent.ShowToast("开始日期不能大于结束日期"))
+            return
+        }
+        if (viewStates.value.filterResourceList.isEmpty()) {
+            _viewEvents.setEvent(AnalyzeEvent.ShowToast("请先选择需要对比的组件"))
+            return
+        }
+
+        val fromMonthDate = viewStates.value.fromMonth.replace("-", "") + "01"
+        val toMonthDate = viewStates.value.toMonth.replace("-", "") + "01"
+        when (
+            val res = detailRepository.getMonthDetail(
+                viewStates.value.platform,
+                fromMonthDate,
+                toMonthDate,
+            )
+        ) {
+            is NetworkState.Success -> res.data?.let {
+                _viewStates.setState { copy(monthAnalyseList = it.data.reversed()) }
             }
 
             is NetworkState.Error -> if (res.e is CookiesExpiredException) {
@@ -331,6 +395,10 @@ data class AnalyzeViewState(
     val startDate: String = ZonedDateTime.now().minusDays(7).toString(),
     val endDate: String = ZonedDateTime.now().toString(),
 
+    val fromMonth: String = "2024-07",
+    val toMonth: String = "2024-07",
+    val monthAnalyseList: List<ResMonthDetailBean> = emptyList(),
+
     val analyzeList: List<ResDetailBean> = emptyList(),
     val filterResourceList: List<String> = emptyList(),
     val allResourceList: List<ResourceBean> = emptyList(),
@@ -343,14 +411,19 @@ data class AnalyzeViewState(
 
 sealed class AnalyzeAction {
     data class UpdateChartColor(val color: List<Color>) : AnalyzeAction()
-    data object GetLastAnalyzeParams : AnalyzeAction()
-    data class UpdatePlatform(val platform: String) : AnalyzeAction()
+    data class UpdatePlatformAnalyze(val platform: String) : AnalyzeAction()
+    data class UpdatePlatformOverview(val platform: String) : AnalyzeAction()
     data class UpdateStartDate(val date: String) : AnalyzeAction()
     data class UpdateEndDate(val date: String) : AnalyzeAction()
     data class ChangeResourceList(val resId: String, val isDel: Boolean) : AnalyzeAction()
     data class UpdateFilterType(val type: Int) : AnalyzeAction()
+    data class UpdateFromMonth(val date: String) : AnalyzeAction()
+    data class UpdateToMonth(val date: String) : AnalyzeAction()
+
+    data object GetLastAnalyzeParams : AnalyzeAction()
     data object LoadAnalyze : AnalyzeAction()
     data object GetAllResourceList : AnalyzeAction()
+    data object GetMonthlyAnalyze : AnalyzeAction()
 }
 
 sealed class AnalyzeEvent {

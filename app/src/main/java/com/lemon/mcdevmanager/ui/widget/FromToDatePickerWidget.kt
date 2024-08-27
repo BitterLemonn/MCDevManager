@@ -34,6 +34,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -89,8 +90,8 @@ fun FromToDatePickerWidget(
     )
 
     val hintColor = AppTheme.colors.hintColor
-    val dateSelectorColorList = remember{ mutableStateListOf(hintColor) }
-    val dateSelectorFontSize = remember{ mutableStateListOf(14.sp) }
+    val dateSelectorColorList = arrayListOf(hintColor)
+    val dateSelectorFontSize = arrayListOf(14.sp)
 
     Row(
         modifier = Modifier
@@ -162,10 +163,10 @@ fun FromToDatePickerWidget(
                         DateSelector(
                             state = fromDateSelectorState,
                             cacheSize = 1,
-                            textColors = dateSelectorColorList,
+                            textColors = remember { dateSelectorColorList.toMutableStateList() },
                             selectedTextSize = 14.sp,
                             selectedTextColor = AppTheme.colors.textColor,
-                            textSizes = dateSelectorFontSize
+                            textSizes = remember { dateSelectorFontSize.toMutableStateList() }
                         )
                         Box(
                             modifier = Modifier
@@ -178,11 +179,30 @@ fun FromToDatePickerWidget(
                                     indication = rememberRipple()
                                 ) {
                                     isSelectFromDate = false
-                                    val year = fromDateSelectorState.getYear().toInt()
-                                    val month = fromDateSelectorState.getMonth().toInt()
-                                    val day = fromDateSelectorState.getDay().toInt()
+                                    val year = fromDateSelectorState
+                                        .getYear()
+                                        .toInt()
+                                    val month = fromDateSelectorState
+                                        .getMonth()
+                                        .toInt()
+                                    val day = fromDateSelectorState
+                                        .getDay()
+                                        .toInt()
                                     fromDate = "$year-$month-$day"
-                                    onChangeFromDate(ZonedDateTime.of(year, month, day, 0, 0, 0, 0, ZoneId.of("Asia/Shanghai")).toString())
+                                    onChangeFromDate(
+                                        ZonedDateTime
+                                            .of(
+                                                year,
+                                                month,
+                                                day,
+                                                0,
+                                                0,
+                                                0,
+                                                0,
+                                                ZoneId.of("Asia/Shanghai")
+                                            )
+                                            .toString()
+                                    )
                                     onChanging(false)
                                 }
 
@@ -279,10 +299,10 @@ fun FromToDatePickerWidget(
                         DateSelector(
                             state = toDateSelectorState,
                             cacheSize = 1,
-                            textColors = dateSelectorColorList,
+                            textColors = remember { dateSelectorColorList.toMutableStateList() },
                             selectedTextSize = 14.sp,
                             selectedTextColor = AppTheme.colors.textColor,
-                            textSizes = dateSelectorFontSize
+                            textSizes = remember { dateSelectorFontSize.toMutableStateList() }
                         )
                         Box(
                             modifier = Modifier
@@ -299,7 +319,20 @@ fun FromToDatePickerWidget(
                                     val month = toDateSelectorState.getMonth()
                                     val day = toDateSelectorState.getDay()
                                     toDate = "$year-$month-$day"
-                                    onChangeToDate(ZonedDateTime.of(year.toInt(), month.toInt(), day.toInt(), 0, 0, 0, 0, ZoneId.of("Asia/Shanghai")).toString())
+                                    onChangeToDate(
+                                        ZonedDateTime
+                                            .of(
+                                                year.toInt(),
+                                                month.toInt(),
+                                                day.toInt(),
+                                                0,
+                                                0,
+                                                0,
+                                                0,
+                                                ZoneId.of("Asia/Shanghai")
+                                            )
+                                            .toString()
+                                    )
                                     onChanging(false)
                                 }
                         )

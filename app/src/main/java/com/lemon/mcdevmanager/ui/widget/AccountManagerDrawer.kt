@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -84,8 +85,10 @@ fun AccountManagerDrawer(
                 )
             }
         }
-        DividedLine(
-            Modifier.padding(vertical = 2.dp)
+        HorizontalDivider(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+            color = AppTheme.colors.dividerColor,
+            thickness = 0.5.dp
         )
         LazyColumn(
             modifier = Modifier

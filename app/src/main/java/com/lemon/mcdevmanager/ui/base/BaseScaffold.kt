@@ -32,6 +32,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.lemon.mcdevmanager.data.common.ABOUT_PAGE
 import com.lemon.mcdevmanager.data.common.ANALYZE_PAGE
+import com.lemon.mcdevmanager.data.common.COMMENT_PAGE
 import com.lemon.mcdevmanager.data.common.FEEDBACK_PAGE
 import com.lemon.mcdevmanager.data.common.LICENSE_PAGE
 import com.lemon.mcdevmanager.data.common.LOGIN_PAGE
@@ -43,6 +44,7 @@ import com.lemon.mcdevmanager.data.common.SPLASH_PAGE
 import com.lemon.mcdevmanager.service.DownloadService
 import com.lemon.mcdevmanager.ui.page.AboutPage
 import com.lemon.mcdevmanager.ui.page.AnalyzePage
+import com.lemon.mcdevmanager.ui.page.CommentPage
 import com.lemon.mcdevmanager.ui.page.FeedbackPage
 import com.lemon.mcdevmanager.ui.page.LicensePage
 import com.lemon.mcdevmanager.ui.page.LogViewPage
@@ -152,6 +154,19 @@ fun BaseScaffold() {
                 }
             ) {
                 FeedbackPage(
+                    navController = navController,
+                    showToast = { msg, flag -> showToast(msg, flag) }
+                )
+            }
+            composable(
+                route = COMMENT_PAGE,
+                enterTransition = {
+                    slideInHorizontally(animationSpec = tween(200), initialOffsetX = { -it })
+                }, popExitTransition = {
+                    slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
+                }
+            ) {
+                CommentPage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) }
                 )

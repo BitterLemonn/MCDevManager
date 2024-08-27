@@ -6,21 +6,20 @@ coil = "2.2.2"
 coilCompose = "2.6.0"
 composeCharts = "0.0.13"
 composeviews = "1.6.11.2"
+composeWheelPicker = "1.0.0-beta05"
 converterKotlinxSerialization = "2.11.0"
-kotlin = "1.9.0"
+kotlin = "1.9.22"
 coreKtx = "1.13.1"
 junit = "4.13.2"
 junitVersion = "1.1.5"
 espressoCore = "3.5.1"
 kotlinxSerializationJson = "1.5.0"
-lifecycleRuntimeKtx = "2.7.0"
-activityCompose = "1.9.0"
+lifecycleRuntimeKtx = "2.8.4"
+activityCompose = "1.9.1"
 composeBom = "2024.06.00"
-logger = "2.2.0"
-mpandroidchart = "v3.1.0"
 navigationCompose = "2.7.7"
 retrofit = "2.11.0"
-roomGradlePlugin = "2.7.0-alpha04"
+roomGradlePlugin = "2.7.0-alpha05"
 
 [libraries]
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
@@ -33,6 +32,7 @@ coil = { module = "io.coil-kt:coil", version.ref = "coil" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 coil-gif = { module = "io.coil-kt:coil-gif", version.ref = "coilCompose" }
 compose-charts = { module = "io.github.ehsannarmani:compose-charts", version.ref = "composeCharts" }
+compose-wheel-picker = { module = "com.github.zj565061763:compose-wheel-picker", version.ref = "composeWheelPicker" }
 composeviews = { module = "io.github.ltttttttttttt:ComposeViews", version.ref = "composeviews" }
 converter-kotlinx-serialization = { module = "com.squareup.retrofit2:converter-kotlinx-serialization", version.ref = "converterKotlinxSerialization" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -49,8 +49,6 @@ androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-man
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
-logger = { module = "com.orhanobut:logger", version.ref = "logger" }
-mpandroidchart = { module = "com.github.PhilJay:MPAndroidChart", version.ref = "mpandroidchart" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 
 [plugins]
