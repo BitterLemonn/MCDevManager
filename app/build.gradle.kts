@@ -103,14 +103,8 @@ dependencies {
     // permission
     implementation(libs.accompanist.permissions)
 
-    // logger
-//    implementation(libs.logger)
-
-    // sm4
+    // sm4 加密
     implementation(libs.bcprov.jdk15on)
-
-    // j2v8 js引擎
-//    implementation("com.eclipsesource.j2v8:j2v8:6.2.0@aar")
 
     // coil
     implementation(libs.coil)

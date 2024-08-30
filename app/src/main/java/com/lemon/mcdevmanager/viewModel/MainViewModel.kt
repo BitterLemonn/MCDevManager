@@ -87,7 +87,7 @@ class MainViewModel : ViewModel() {
                     _viewStates.setState {
                         copy(
                             username = it.nickname,
-                            avatarUrl = it.headImg
+                            avatarUrl = it.headImg ?: avatarUrl
                         )
                     }
                 } ?: run {
