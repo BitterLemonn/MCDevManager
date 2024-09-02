@@ -3,7 +3,6 @@ package com.lemon.mcdevmanager.viewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lemon.mcdevmanager.data.netease.income.OneResRealtimeIncomeBean
-import com.lemon.mcdevmanager.data.netease.resource.ResDetailBean
 import com.lemon.mcdevmanager.data.netease.resource.ResourceBean
 import com.lemon.mcdevmanager.data.repository.DetailRepository
 import com.lemon.mcdevmanager.data.repository.RealtimeProfitRepository
@@ -60,7 +59,12 @@ class RealtimeProfitViewModel : ViewModel() {
                 getAllResourceLogic()
                 getOneDayDetailLogic()
             }.onStart {
-                _viewStates.setState { copy(isLoading = true) }
+                _viewStates.setState {
+                    copy(
+                        isLoading = true,
+                        lastRequestTime = System.currentTimeMillis()
+                    )
+                }
             }.catch {
                 _viewEvents.setEvent(
                     RealtimeProfitEvent.ShowToast(it.message ?: "获取实时收益失败")
@@ -99,21 +103,32 @@ class RealtimeProfitViewModel : ViewModel() {
 
     private suspend fun getOneDayDetailLogic() {
         val checkDay = _viewStates.value.checkDay
-        val checkList = _viewStates.value.checkList
-        if (checkDay.isEmpty() || checkList.isEmpty()) {
-            _viewEvents.setEvent(RealtimeProfitEvent.ShowToast("请先选择日期和资源"))
+        var checkList = _viewStates.value.checkList
+        if (checkList.isEmpty()) {
+            Logger.d("checkList为空，使用resList: ${_viewStates.value.resList}")
+            checkList = _viewStates.value.resList.map { it.itemId }
+        }
+        if (checkList.isEmpty()) {
+            _viewEvents.setEvent(RealtimeProfitEvent.ShowToast("暂未查询到资源列表"))
             return
         }
         val platform = _viewStates.value.platform
+        _viewStates.setState { copy(profitMap = emptyMap(), totalPoints = 0, totalDiamond = 0) }
+
         for (iid in checkList) {
             when (val result = realtimeRepository.getOneDayDetail(platform, iid, checkDay)) {
                 is NetworkState.Success -> {
                     result.data?.let {
                         val map = _viewStates.value.profitMap.toMutableMap()
-                        map.getOrDefault(iid, emptyList()).toMutableList().apply {
-                            add(result.data)
+                        map[iid] = it
+                        Logger.d("获取资源${iid}收益成功: 钻石:${it.totalDiamonds}，绿宝石:${it.totalPoints}")
+                        _viewStates.setState {
+                            copy(
+                                profitMap = map,
+                                totalDiamond = totalDiamond + it.totalDiamonds,
+                                totalPoints = totalPoints + it.totalPoints
+                            )
                         }
-                        _viewStates.setState { copy(profitMap = map) }
                     }
                 }
 
@@ -136,10 +151,11 @@ class RealtimeProfitViewModel : ViewModel() {
 data class RealtimeProfitStates(
     val isLoading: Boolean = false,
     val resList: List<ResourceBean> = emptyList(),
-    val profitMap: Map<String, List<OneResRealtimeIncomeBean>> = emptyMap(),
+    val profitMap: Map<String, OneResRealtimeIncomeBean> = emptyMap(),
     val checkList: List<String> = emptyList(),
     val checkDay: String = "",
     val platform: String = "pe",
+    val lastRequestTime: Long = 0,
 
     val totalDiamond: Int = 0,
     val totalPoints: Int = 0

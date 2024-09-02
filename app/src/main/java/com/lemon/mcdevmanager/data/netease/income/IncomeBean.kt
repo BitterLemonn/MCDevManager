@@ -11,12 +11,12 @@ data class IncomeBean(
 
 @Serializable
 data class OneResRealtimeIncomeBean(
-    val count: Int,
-    @SerialName("total_diamond")
-    val totalDiamond: Int,
+    val count: Int = 0,
+    @SerialName("total_diamonds")
+    val totalDiamonds: Int = 0,
     @SerialName("total_points")
-    val totalPoints: Int,
-    val orders: List<OneResRealtimeIncomeOrderBean>
+    val totalPoints: Int = 0,
+    val orders: List<OneResRealtimeIncomeOrderBean> = emptyList()
 )
 
 @Serializable
