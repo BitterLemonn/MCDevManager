@@ -13,8 +13,8 @@ android {
         applicationId = "com.lemon.mcdevmanager"
         minSdk = 26
         targetSdk = 34
-        versionCode = 6
-        versionName = "0.4.0"
+        versionCode = 7
+        versionName = "0.4.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -44,6 +44,22 @@ android {
             }
         }
     }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("../key_store.jks")
+            storePassword = "bitterlemon"
+            keyAlias = "lemon"
+            keyPassword = "bitterlemon"
+        }
+        getByName("debug") {
+            storeFile = file("../key_store.jks")
+            storePassword = "bitterlemon"
+            keyAlias = "lemon"
+            keyPassword = "bitterlemon"
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -60,7 +76,7 @@ android {
     }
     packaging {
         resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "/META-INF/{AL2.0,LGPL3.0}"
         }
     }
 }
@@ -103,14 +119,8 @@ dependencies {
     // permission
     implementation(libs.accompanist.permissions)
 
-    // logger
-//    implementation(libs.logger)
-
-    // sm4
+    // sm4 加密
     implementation(libs.bcprov.jdk15on)
-
-    // j2v8 js引擎
-//    implementation("com.eclipsesource.j2v8:j2v8:6.2.0@aar")
 
     // coil
     implementation(libs.coil)

@@ -8,7 +8,7 @@ data class UserInfoBean(
     val exp: Int,
     val level: Int,
     @SerialName("head_img")
-    val headImg: String,
+    val headImg: String? = null,
     val nickname: String,
     val income: String,
     @SerialName("onsale_item_count")

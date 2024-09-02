@@ -4,6 +4,7 @@ import com.lemon.mcdevmanager.data.AddCookiesInterceptor
 import com.lemon.mcdevmanager.data.CommonInterceptor
 import com.lemon.mcdevmanager.data.common.JSONConverter
 import com.lemon.mcdevmanager.data.common.NETEASE_MC_DEV_LINK
+import com.lemon.mcdevmanager.data.netease.income.OneResRealtimeIncomeBean
 import com.lemon.mcdevmanager.data.netease.resource.ResDetailResponseBean
 import com.lemon.mcdevmanager.data.netease.resource.ResMonthDetailResponseBean
 import com.lemon.mcdevmanager.data.netease.resource.ResourceResponseBean
@@ -52,6 +53,14 @@ interface AnalyzeApi {
         @Query("day_span") daySpan: Int = Int.MAX_VALUE,
         @Query("day_dateid") dayDateId: String
     ): ResponseData<ResMonthDetailResponseBean>
+
+    @GET("/items/categories/{platform}/{iid}/incomes/")
+    suspend fun getOneResRealtimeIncome(
+        @Path("platform") platform: String,
+        @Path("iid") iid: String,
+        @Query("begin_time") beginTime: String,
+        @Query("end_time") endTime: String
+    ): ResponseData<OneResRealtimeIncomeBean>
 
     companion object {
         /**

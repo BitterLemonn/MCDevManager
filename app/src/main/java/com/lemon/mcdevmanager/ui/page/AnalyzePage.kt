@@ -49,6 +49,7 @@ import androidx.navigation.compose.rememberNavController
 import com.lemon.mcdevmanager.R
 import com.lemon.mcdevmanager.data.common.LOGIN_PAGE
 import com.lemon.mcdevmanager.ui.fragPage.AnalysisFragPage
+import com.lemon.mcdevmanager.ui.fragPage.BetaFunctionFragPage
 import com.lemon.mcdevmanager.ui.fragPage.OverviewFragPage
 import com.lemon.mcdevmanager.ui.theme.AppTheme
 import com.lemon.mcdevmanager.ui.theme.MCDevManagerTheme
@@ -138,18 +139,10 @@ fun AnalyzePage(
                         showToast = showToast
                     )
 
-                    else -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "暂未开放",
-                                color = AppTheme.colors.textColor,
-                                fontSize = 20.sp
-                            )
-                        }
-                    }
+                    else -> BetaFunctionFragPage(
+                        navController = navController,
+                        showToast = showToast
+                    )
                 }
             }
             // 底部导航
