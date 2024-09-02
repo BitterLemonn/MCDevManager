@@ -45,6 +45,21 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("../key_store.jks")
+            storePassword = "bitterlemon"
+            keyAlias = "lemon"
+            keyPassword = "bitterlemon"
+        }
+        getByName("debug") {
+            storeFile = file("../key_store.jks")
+            storePassword = "bitterlemon"
+            keyAlias = "lemon"
+            keyPassword = "bitterlemon"
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
