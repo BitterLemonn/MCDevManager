@@ -63,6 +63,7 @@ import java.time.ZonedDateTime
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun OverviewFragPage(
+    targetPage: Int = 0,
     showToast: (String, String) -> Unit = { _, _ -> },
     viewModel: AnalyzeViewModel
 ) {
@@ -75,9 +76,11 @@ fun OverviewFragPage(
     var isShowFilter by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = Unit) {
-        viewModel.dispatch(AnalyzeAction.UpdateFromMonth(getMonthStr(nowDate)))
-        viewModel.dispatch(AnalyzeAction.UpdateToMonth(getMonthStr(nowDate)))
-        viewModel.dispatch(AnalyzeAction.GetMonthlyAnalyze)
+        if (targetPage == 1) {
+            viewModel.dispatch(AnalyzeAction.UpdateFromMonth(getMonthStr(nowDate)))
+            viewModel.dispatch(AnalyzeAction.UpdateToMonth(getMonthStr(nowDate)))
+            viewModel.dispatch(AnalyzeAction.GetMonthlyAnalyze)
+        }
     }
     Box {
         Column(

@@ -38,6 +38,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -65,6 +66,7 @@ import com.lemon.mcdevmanager.ui.theme.TextWhite
 import com.lemon.mcdevmanager.ui.widget.HeaderWidget
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.lemon.mcdevmanager.data.global.AppContext
+import com.lemon.mcdevmanager.ui.base.BasePage
 import com.lemon.mcdevmanager.ui.widget.AppLoadingWidget
 import com.lemon.mcdevmanager.ui.widget.HintDoubleSelectDialog
 import com.lemon.mcdevmanager.ui.widget.SNACK_WARN
@@ -75,6 +77,8 @@ import com.lemon.mcdevmanager.viewModel.LogViewModel
 import com.lt.compose_views.other.VerticalSpace
 import com.orhanobut.logger.Logger
 import com.zj.mvi.core.observeEvent
+import kotlinx.coroutines.Job
+import org.bouncycastle.jcajce.provider.symmetric.ARC4.Base
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -96,7 +100,12 @@ fun LogViewPage(
 
     LaunchedEffect(key1 = Unit) {
         viewModel.dispatch(LogViewAction.UpdateLogDirPath(AppContext.logDirPath))
-        viewModel.viewEvent.observeEvent(lifecycleOwner) { event ->
+        viewModel.dispatch(LogViewAction.LoadLogList)
+    }
+
+    BasePage(
+        viewEvent = viewModel.viewEvent,
+        onEvent = { event ->
             when (event) {
                 is LogViewEvent.ShowToast -> showToast(event.message, event.type)
                 is LogViewEvent.ExportLog -> {
@@ -113,209 +122,208 @@ fun LogViewPage(
                 }
             }
         }
-        viewModel.dispatch(LogViewAction.LoadLogList)
-    }
-
-    Column(Modifier.fillMaxSize()) {
-        HeaderWidget(title = "日志", leftAction = {
-            Box(modifier = Modifier
-                .padding(8.dp)
-                .clip(CircleShape)
-                .clickable(
-                    indication = rememberRipple(),
-                    interactionSource = remember { MutableInteractionSource() },
-                ) {
-                    navController.navigateUp()
-                }) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_back),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .aspectRatio(1f)
-                        .then(it),
-                    contentScale = ContentScale.Crop,
-                    colorFilter = ColorFilter.tint(TextWhite)
-                )
-            }
-        })
-        LazyColumn(
-            Modifier.fillMaxWidth()
-        ) {
-            items(states.logList) {
-                LogFileItem(fileName = it,
-                    isSelected = states.selectedLogList.contains(it),
-                    onSelected = { isSelected ->
-                        viewModel.dispatch(LogViewAction.SelectLog(it, isSelected))
+    ) {
+        Column(Modifier.fillMaxSize()) {
+            HeaderWidget(title = "日志", leftAction = {
+                Box(modifier = Modifier
+                    .padding(8.dp)
+                    .clip(CircleShape)
+                    .clickable(
+                        indication = rememberRipple(),
+                        interactionSource = remember { MutableInteractionSource() },
+                    ) {
+                        navController.navigateUp()
                     }) {
-                    showToast("日志内容可能包含隐私信息，请谨慎分享", SNACK_WARN)
-                    viewModel.dispatch(LogViewAction.LoadLogContent(it))
-                    isShowDetail = true
-                }
-                HorizontalDivider(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    thickness = 0.5.dp,
-                    color = AppTheme.colors.dividerColor
-                )
-            }
-        }
-        Spacer(modifier = Modifier.weight(1f))
-        AnimatedVisibility(
-            visible = states.selectedLogList.isNotEmpty(),
-            enter = slideInVertically(
-                animationSpec = tween(200),
-                initialOffsetY = { it }
-            ) + fadeIn(),
-            exit = slideOutVertically(
-                animationSpec = tween(200),
-                targetOffsetY = { it }
-            ) + fadeOut()
-        ) {
-            HorizontalDivider(
-                modifier = Modifier.fillMaxWidth(),
-                thickness = 1.dp,
-                color = AppTheme.colors.dividerColor
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(AppTheme.colors.card)
-            ) {
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    Box(
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_back),
+                        contentDescription = null,
                         modifier = Modifier
-                            .widthIn(min = 80.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(AppTheme.colors.error)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = rememberRipple()
-                            ) {
-                                isShowDeleteDialog = true
-                            }
-                    ) {
-                        Text(
-                            text = "删除",
-                            fontSize = 14.sp,
-                            color = TextWhite,
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .align(Alignment.Center)
-                        )
-                    }
-                    Spacer(modifier = Modifier.weight(1f))
-                    Box(
-                        modifier = Modifier
-                            .widthIn(min = 80.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(AppTheme.colors.primaryColor)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = rememberRipple()
-                            ) { isShowExportDialog = true }
-                    ) {
-                        Text(
-                            text = "导出",
-                            fontSize = 14.sp,
-                            color = TextWhite,
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .align(Alignment.Center)
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    AnimatedVisibility(
-        visible = isShowDeleteDialog,
-        enter = fadeIn(),
-        exit = fadeOut()
-    ) {
-        HintDoubleSelectDialog(
-            hint = "确定删除选中的日志文件吗？",
-            onCanceled = { isShowDeleteDialog = false }
-        ) {
-            viewModel.dispatch(LogViewAction.DeleteLog)
-            isShowDeleteDialog = false
-        }
-    }
-
-    AnimatedVisibility(visible = isShowExportDialog, enter = fadeIn(), exit = fadeOut()) {
-        HintDoubleSelectDialog(
-            hint = "确定导出选中的${states.selectedLogList.size}个日志文件吗？",
-            onCanceled = { isShowExportDialog = false }
-        ) {
-            viewModel.dispatch(LogViewAction.ExportLog)
-            isShowExportDialog = false
-        }
-    }
-
-    AnimatedVisibility(
-        visible = isShowDetail, enter = fadeIn(), exit = fadeOut()
-    ) {
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.65f))
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() }, indication = null
-            ) { isShowDetail = false })
-    }
-
-    AnimatedVisibility(
-        visible = isShowDetail,
-        enter = slideInVertically(initialOffsetY = { it }),
-        exit = slideOutVertically(targetOffsetY = { it })
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-                    .fillMaxHeight(0.8f), colors = CardDefaults.cardColors(
-                    containerColor = AppTheme.colors.card,
-                ), shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)
-            ) {
-                Column(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(start = 16.dp, end = 16.dp, top = 16.dp)
-                ) {
-                    Text(
-                        text = states.logFileName,
-                        fontSize = 14.sp,
-                        color = AppTheme.colors.hintColor
+                            .fillMaxHeight()
+                            .aspectRatio(1f)
+                            .then(it),
+                        contentScale = ContentScale.Crop,
+                        colorFilter = ColorFilter.tint(TextWhite)
                     )
-                    VerticalSpace(dp = 8)
-                    Column(
+                }
+            })
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth().weight(1f)
+            ) {
+                items(states.logList) {
+                    LogFileItem(fileName = it,
+                        isSelected = states.selectedLogList.contains(it),
+                        onSelected = { isSelected ->
+                            viewModel.dispatch(LogViewAction.SelectLog(it, isSelected))
+                        }) {
+                        showToast("日志内容可能包含隐私信息，请谨慎分享", SNACK_WARN)
+                        viewModel.dispatch(LogViewAction.LoadLogContent(it))
+                        isShowDetail = true
+                    }
+                    HorizontalDivider(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .verticalScroll(rememberScrollState())
+                            .padding(horizontal = 16.dp),
+                        thickness = 0.5.dp,
+                        color = AppTheme.colors.dividerColor
+                    )
+                }
+            }
+            AnimatedVisibility(
+                modifier = Modifier.height(50.dp),
+                visible = states.selectedLogList.isNotEmpty(),
+                enter = slideInVertically(
+                    animationSpec = tween(200),
+                    initialOffsetY = { it }
+                ) + fadeIn(),
+                exit = slideOutVertically(
+                    animationSpec = tween(200),
+                    targetOffsetY = { it }
+                ) + fadeOut()
+            ) {
+                HorizontalDivider(
+                    modifier = Modifier.fillMaxWidth(),
+                    thickness = 1.dp,
+                    color = AppTheme.colors.dividerColor
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(AppTheme.colors.card)
+                ) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
                     ) {
-                        Text(
-                            text = states.logContent,
-                            fontSize = 12.sp,
-                            color = AppTheme.colors.textColor
-                        )
+                        Box(
+                            modifier = Modifier
+                                .widthIn(min = 80.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(AppTheme.colors.error)
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = rememberRipple()
+                                ) {
+                                    isShowDeleteDialog = true
+                                }
+                        ) {
+                            Text(
+                                text = "删除",
+                                fontSize = 14.sp,
+                                color = TextWhite,
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .align(Alignment.Center)
+                            )
+                        }
+                        Spacer(modifier = Modifier.weight(1f))
+                        Box(
+                            modifier = Modifier
+                                .widthIn(min = 80.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(AppTheme.colors.primaryColor)
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = rememberRipple()
+                                ) { isShowExportDialog = true }
+                        ) {
+                            Text(
+                                text = "导出",
+                                fontSize = 14.sp,
+                                color = TextWhite,
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .align(Alignment.Center)
+                            )
+                        }
                     }
                 }
             }
         }
-    }
 
-    AnimatedVisibility(
-        visible = states.isShowLoading,
-        enter = fadeIn(),
-        exit = fadeOut()
-    ) {
-        AppLoadingWidget()
+        AnimatedVisibility(
+            visible = isShowDeleteDialog,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            HintDoubleSelectDialog(
+                hint = "确定删除选中的日志文件吗？",
+                onCanceled = { isShowDeleteDialog = false }
+            ) {
+                viewModel.dispatch(LogViewAction.DeleteLog)
+                isShowDeleteDialog = false
+            }
+        }
+
+        AnimatedVisibility(visible = isShowExportDialog, enter = fadeIn(), exit = fadeOut()) {
+            HintDoubleSelectDialog(
+                hint = "确定导出选中的${states.selectedLogList.size}个日志文件吗？",
+                onCanceled = { isShowExportDialog = false }
+            ) {
+                viewModel.dispatch(LogViewAction.ExportLog)
+                isShowExportDialog = false
+            }
+        }
+
+        AnimatedVisibility(
+            visible = isShowDetail, enter = fadeIn(), exit = fadeOut()
+        ) {
+            Box(modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.65f))
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() }, indication = null
+                ) { isShowDetail = false })
+        }
+
+        AnimatedVisibility(
+            visible = isShowDetail,
+            enter = slideInVertically(initialOffsetY = { it }),
+            exit = slideOutVertically(targetOffsetY = { it })
+        ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                        .fillMaxHeight(0.8f), colors = CardDefaults.cardColors(
+                        containerColor = AppTheme.colors.card,
+                    ), shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)
+                ) {
+                    Column(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(start = 16.dp, end = 16.dp, top = 16.dp)
+                    ) {
+                        Text(
+                            text = states.logFileName,
+                            fontSize = 14.sp,
+                            color = AppTheme.colors.hintColor
+                        )
+                        VerticalSpace(dp = 8)
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .verticalScroll(rememberScrollState())
+                        ) {
+                            Text(
+                                text = states.logContent,
+                                fontSize = 12.sp,
+                                color = AppTheme.colors.textColor
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        AnimatedVisibility(
+            visible = states.isShowLoading,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            AppLoadingWidget()
+        }
     }
 }
 

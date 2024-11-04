@@ -13,8 +13,8 @@ android {
         applicationId = "com.lemon.mcdevmanager"
         minSdk = 26
         targetSdk = 34
-        versionCode = 7
-        versionName = "0.4.1"
+        versionCode = 8
+        versionName = "0.4.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -39,6 +39,14 @@ android {
             }
         }
         debug {
+            // r8混淆
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+
             ndk {
                 abiFilters.clear() // 清除abiFilters，打包所有架构
             }

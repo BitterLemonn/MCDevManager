@@ -13,6 +13,8 @@ const val LOG_PAGE = "LOG_PAGE"
 const val ABOUT_PAGE = "ABOUT_PAGE"
 const val OPEN_SOURCE_INFO_PAGE = "OPEN_SOURCE_INFO_PAGE"
 const val LICENSE_PAGE = "LICENSE_PAGE"
+const val PROFIT_PAGE = "PROFIT_PAGE"
+const val INCENTIVE_PAGE = "INCENTIVE_PAGE"
 
 // 网易用户cookie名
 const val NETEASE_USER_COOKIE = "NTES_SESS"

@@ -135,10 +135,6 @@ class AnalyzeViewModel : ViewModel() {
         viewModelScope.launch {
             flow<Unit> {
                 getAllResourceListLogic()
-            }.onStart {
-                _viewStates.setState { copy(isShowLoading = true) }
-            }.onCompletion {
-                _viewStates.setState { copy(isShowLoading = false) }
             }.catch {
                 _viewEvents.setEvent(
                     AnalyzeEvent.ShowToast(it.message ?: "获取资源列表失败: 未知错误")

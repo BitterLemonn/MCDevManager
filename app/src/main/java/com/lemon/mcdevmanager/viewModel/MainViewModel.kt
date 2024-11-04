@@ -11,7 +11,6 @@ import com.lemon.mcdevmanager.data.global.AppContext
 import com.lemon.mcdevmanager.data.repository.MainRepository
 import com.lemon.mcdevmanager.utils.CookiesExpiredException
 import com.lemon.mcdevmanager.utils.NetworkState
-import com.lemon.mcdevmanager.utils.UnifiedExceptionHandler
 import com.lemon.mcdevmanager.utils.UnifiedExceptionHandler.CancelException
 import com.lemon.mcdevmanager.utils.logout
 import com.orhanobut.logger.Logger
@@ -36,6 +35,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
+import kotlin.math.min
 
 class MainViewModel : ViewModel() {
     private val repository = MainRepository.getInstance()
@@ -80,14 +80,15 @@ class MainViewModel : ViewModel() {
     }
 
     private suspend fun getUserInfoLogic() {
-        when (val userInfo = repository.getUserInfo()) {
+        when (val result = repository.getUserInfo()) {
             is NetworkState.Success -> {
                 getLevelInfoLogic()
-                userInfo.data?.let {
+                result.data?.let { userInfo ->
+                    AppContext.curUserInfo = userInfo
                     _viewStates.setState {
                         copy(
-                            username = it.nickname,
-                            avatarUrl = it.headImg ?: avatarUrl
+                            username = userInfo.nickname,
+                            avatarUrl = userInfo.headImg ?: avatarUrl
                         )
                     }
                 } ?: run {
@@ -98,7 +99,7 @@ class MainViewModel : ViewModel() {
             }
 
             is NetworkState.Error -> {
-                when (userInfo.e) {
+                when (result.e) {
                     is CookiesExpiredException -> {
                         _viewEvents.setEvent(MainViewEvent.RouteToPath(LOGIN_PAGE, true))
                         _viewEvents.setEvent(MainViewEvent.ShowToast("登录过期, 请重新登录"))
@@ -106,11 +107,11 @@ class MainViewModel : ViewModel() {
                     }
 
                     is CancelException -> {
-                        throw CancelException(userInfo.msg)
+                        throw CancelException(result.msg)
                     }
 
                     else -> {
-                        _viewEvents.setEvent(MainViewEvent.ShowToast(userInfo.msg))
+                        _viewEvents.setEvent(MainViewEvent.ShowToast(result.msg))
                     }
                 }
             }
@@ -323,11 +324,22 @@ class MainViewModel : ViewModel() {
     }
 
     private fun getRealMoney(profit: Double): Double {
-        var realMoney = 0.0
-        realMoney += if (profit > 1500) 1500 * 0.65 else profit * 0.65
-        if (profit > 1500) realMoney += (if (profit < 50000) (profit - 1500) * 0.7 else 50000 * 0.7) * 0.65
-        if (profit > 50000) realMoney += (profit - 50000) * 0.75 * 0.65
-        return realMoney
+        // 渠道分成
+        val channelMoney = profit * 0.35
+
+        // 网易阶段分成
+        var level1 = if (profit > 1500) min(profit - 1500, 50000.0) * 0.3 else 0.0
+        var level2 = if (profit > 50000) (profit - 50000) * 0.4 else 0.0
+        val neteaseMoney = level1 + level2
+
+        // 技术服务费
+        level1 = if (profit > 100000) min(profit - 100000, 1000000.0) * 0.1 else 0.0
+        level2 = if (profit > 1000000) min(profit - 1000000, 3000000.0) * 0.15 else 0.0
+        val level3 = if (profit > 3000000) min(profit - 3000000, 5000000.0) * 0.2 else 0.0
+        val level4 = if (profit > 5000000) (profit - 5000000) * 0.25 else 0.0
+        val serviceMoney = level1 + level2 + level3 + level4
+
+        return profit - channelMoney - neteaseMoney - serviceMoney
     }
 
     private fun getTaxMoney(realMoney: Double): Double {
