@@ -92,6 +92,7 @@ import kotlin.math.max
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AnalysisFragPage(
+    targetPage: Int = 0,
     viewModel: AnalyzeViewModel,
     showToast: (String, String) -> Unit = { _, _ -> }
 ) {
@@ -115,8 +116,10 @@ fun AnalysisFragPage(
         .toSortedMap(compareByDescending { it }))
 
     LaunchedEffect(key1 = Unit) {
-        viewModel.dispatch(AnalyzeAction.GetLastAnalyzeParams)
-        viewModel.dispatch(AnalyzeAction.GetAllResourceList)
+        if (targetPage == 0) {
+            viewModel.dispatch(AnalyzeAction.GetLastAnalyzeParams)
+            viewModel.dispatch(AnalyzeAction.GetAllResourceList)
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -701,7 +704,7 @@ private fun AnalysisFragPagePreview() {
                 .onGloballyPositioned { fullHeight = pxToDp(context, it.size.height.toFloat()) }
         ) {
             AnalysisFragPage(
-                viewModel(),
+                viewModel = viewModel(),
                 showToast = { _, _ -> }
             )
         }

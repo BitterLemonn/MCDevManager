@@ -34,11 +34,13 @@ import com.lemon.mcdevmanager.data.common.ABOUT_PAGE
 import com.lemon.mcdevmanager.data.common.ANALYZE_PAGE
 import com.lemon.mcdevmanager.data.common.COMMENT_PAGE
 import com.lemon.mcdevmanager.data.common.FEEDBACK_PAGE
+import com.lemon.mcdevmanager.data.common.INCENTIVE_PAGE
 import com.lemon.mcdevmanager.data.common.LICENSE_PAGE
 import com.lemon.mcdevmanager.data.common.LOGIN_PAGE
 import com.lemon.mcdevmanager.data.common.LOG_PAGE
 import com.lemon.mcdevmanager.data.common.MAIN_PAGE
 import com.lemon.mcdevmanager.data.common.OPEN_SOURCE_INFO_PAGE
+import com.lemon.mcdevmanager.data.common.PROFIT_PAGE
 import com.lemon.mcdevmanager.data.common.REALTIME_PROFIT_PAGE
 import com.lemon.mcdevmanager.data.common.SETTING_PAGE
 import com.lemon.mcdevmanager.data.common.SPLASH_PAGE
@@ -47,11 +49,13 @@ import com.lemon.mcdevmanager.ui.page.AboutPage
 import com.lemon.mcdevmanager.ui.page.AnalyzePage
 import com.lemon.mcdevmanager.ui.page.CommentPage
 import com.lemon.mcdevmanager.ui.page.FeedbackPage
+import com.lemon.mcdevmanager.ui.page.IncentivePage
 import com.lemon.mcdevmanager.ui.page.LicensePage
 import com.lemon.mcdevmanager.ui.page.LogViewPage
 import com.lemon.mcdevmanager.ui.page.LoginPage
 import com.lemon.mcdevmanager.ui.page.MainPage
 import com.lemon.mcdevmanager.ui.page.OpenSourceInfoPage
+import com.lemon.mcdevmanager.ui.page.ProfitPage
 import com.lemon.mcdevmanager.ui.page.RealtimeProfitPage
 import com.lemon.mcdevmanager.ui.page.SettingPage
 import com.lemon.mcdevmanager.ui.page.SplashPage
@@ -126,17 +130,20 @@ fun BaseScaffold() {
                 .padding(padding),
             startDestination = SPLASH_PAGE
         ) {
+            // 启动页
             composable(route = SPLASH_PAGE) {
                 SplashPage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) }
                 )
             }
+            // 登录页
             composable(route = LOGIN_PAGE) {
                 LoginPage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) })
             }
+            // 主页
             composable(
                 route = MAIN_PAGE,
                 exitTransition = {
@@ -147,6 +154,7 @@ fun BaseScaffold() {
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) })
             }
+            // 玩家反馈页
             composable(
                 route = FEEDBACK_PAGE,
                 enterTransition = {
@@ -160,6 +168,7 @@ fun BaseScaffold() {
                     showToast = { msg, flag -> showToast(msg, flag) }
                 )
             }
+            // 玩家评论页
             composable(
                 route = COMMENT_PAGE,
                 enterTransition = {
@@ -173,6 +182,7 @@ fun BaseScaffold() {
                     showToast = { msg, flag -> showToast(msg, flag) }
                 )
             }
+            // 数据分析页
             composable(
                 route = ANALYZE_PAGE,
                 enterTransition = {
@@ -186,6 +196,7 @@ fun BaseScaffold() {
                     showToast = { msg, flag -> showToast(msg, flag) }
                 )
             }
+            // 实时收益页
             composable(
                 route = REALTIME_PROFIT_PAGE,
                 enterTransition = {
@@ -199,6 +210,38 @@ fun BaseScaffold() {
                     showToast = { msg, flag -> showToast(msg, flag) }
                 )
             }
+            // 收益管理页
+            composable(
+                route = PROFIT_PAGE,
+                enterTransition = {
+                    slideInHorizontally(animationSpec = tween(200), initialOffsetX = { -it })
+                }, popExitTransition = {
+                    slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
+                },
+                exitTransition = {
+                    slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
+                }
+            ) {
+                ProfitPage(navController = navController)
+            }
+            // 激励历史页
+            composable(
+                route = INCENTIVE_PAGE,
+                enterTransition = {
+                    slideInHorizontally(animationSpec = tween(200), initialOffsetX = { -it })
+                }, popExitTransition = {
+                    slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
+                },
+                exitTransition = {
+                    slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
+                }
+            ) {
+                IncentivePage(
+                    navController = navController,
+                    showToast = { msg, flag -> showToast(msg, flag) }
+                )
+            }
+            // 设置页
             composable(
                 route = SETTING_PAGE,
                 enterTransition = {
@@ -215,6 +258,7 @@ fun BaseScaffold() {
                     showToast = { msg, flag -> showToast(msg, flag) }
                 )
             }
+            // 日志页
             composable(
                 route = LOG_PAGE,
                 enterTransition = {
@@ -231,6 +275,7 @@ fun BaseScaffold() {
                     showToast = { msg, flag -> showToast(msg, flag) }
                 )
             }
+            // 关于页
             composable(
                 route = ABOUT_PAGE,
                 enterTransition = {
@@ -249,6 +294,7 @@ fun BaseScaffold() {
                     isShowLoading = states.isLoading
                 )
             }
+            // 开源信息页
             composable(
                 route = OPEN_SOURCE_INFO_PAGE,
                 enterTransition = {
@@ -265,6 +311,7 @@ fun BaseScaffold() {
                     showToast = { msg, flag -> showToast(msg, flag) }
                 )
             }
+            // 开源许可页
             composable(
                 route = LICENSE_PAGE,
                 enterTransition = {

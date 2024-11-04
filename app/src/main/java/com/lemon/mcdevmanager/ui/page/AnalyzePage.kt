@@ -136,10 +136,12 @@ fun AnalyzePage(
                     when (it) {
                         0 -> AnalysisFragPage(
                             viewModel = viewModel,
-                            showToast = showToast
+                            showToast = showToast,
+                            targetPage = pageState.currentPage
                         )
 
                         1 -> OverviewFragPage(
+                            targetPage = pageState.currentPage,
                             viewModel = viewModel,
                             showToast = showToast
                         )
@@ -195,6 +197,7 @@ fun AnalyzePage(
 
             // 加载中
             AnimatedVisibility(
+                modifier = Modifier.clickable(interactionSource = null, indication = null) {},
                 visible = states.isShowLoading,
                 enter = fadeIn(),
                 exit = fadeOut(),

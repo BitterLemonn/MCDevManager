@@ -38,6 +38,7 @@ import com.lemon.mcdevmanager.data.common.COMMENT_PAGE
 import com.lemon.mcdevmanager.data.common.FEEDBACK_PAGE
 import com.lemon.mcdevmanager.data.common.LOGIN_PAGE
 import com.lemon.mcdevmanager.data.common.MAIN_PAGE
+import com.lemon.mcdevmanager.data.common.PROFIT_PAGE
 import com.lemon.mcdevmanager.data.common.SETTING_PAGE
 import com.lemon.mcdevmanager.data.global.AppContext
 import com.lemon.mcdevmanager.ui.base.BasePage
@@ -195,11 +196,8 @@ fun MainPage(
                             }
                         }
                         FunctionCard(icon = R.drawable.ic_profit, title = "收益管理") {
-                            coroutineScope.launch {
-                                showToast(
-                                    "更多功能请期待未来更新",
-                                    SNACK_INFO
-                                )
+                            navController.navigate(PROFIT_PAGE) {
+                                launchSingleTop = true
                             }
                         }
                         FunctionCard(icon = R.drawable.ic_setting, title = "设置") {

@@ -191,18 +191,17 @@ object UnifiedExceptionHandler {
 
         return when (result.status) {
             "200", "ok", "OK", "Ok" -> result.data?.let { NetworkState.Success(result.data) }
-                ?: NetworkState.Success(msg = result.status)
+                ?: NetworkState.Success(msg = result.msg ?: result.status)
 
             "201" -> result.data?.let { NetworkState.Success(result.data) }
-                ?: NetworkState.Success(msg = result.status)
+                ?: NetworkState.Success(msg = result.msg ?: result.status)
 
             "401", "no_login" -> NetworkState.Error(
                 "登录过期了，请重新登录",
                 CookiesExpiredException
             )
 
-            else ->
-                NetworkState.Error(result.status)
+            else -> NetworkState.Error(result.msg ?: result.status)
         }
     }
 
