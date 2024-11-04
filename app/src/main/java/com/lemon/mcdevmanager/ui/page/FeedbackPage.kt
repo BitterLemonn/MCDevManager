@@ -48,6 +48,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -83,6 +84,7 @@ import com.lemon.mcdevmanager.R
 import com.lemon.mcdevmanager.data.common.FEEDBACK_PAGE
 import com.lemon.mcdevmanager.data.common.LOGIN_PAGE
 import com.lemon.mcdevmanager.data.netease.feedback.FeedbackBean
+import com.lemon.mcdevmanager.ui.base.BasePage
 import com.lemon.mcdevmanager.ui.theme.AppTheme
 import com.lemon.mcdevmanager.ui.theme.HeaderHeight
 import com.lemon.mcdevmanager.ui.theme.TextWhite
@@ -103,6 +105,7 @@ import com.lt.compose_views.refresh_layout.RefreshLayoutState
 import com.lt.compose_views.refresh_layout.VerticalRefreshableLayout
 import com.lt.compose_views.zoom.ImageViewer
 import com.zj.mvi.core.observeEvent
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -113,7 +116,6 @@ fun FeedbackPage(
     viewModel: FeedbackViewModel = viewModel()
 ) {
     val states by viewModel.viewStates.collectAsState()
-    val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
     val keyboard = LocalSoftwareKeyboardController.current
     val coroutineScope = rememberCoroutineScope()
@@ -138,28 +140,6 @@ fun FeedbackPage(
 
     LaunchedEffect(key1 = Unit) {
         viewModel.dispatch(FeedbackAction.LoadFeedback)
-        viewModel.viewEvents.observeEvent(lifecycleOwner) { event ->
-            when (event) {
-                is FeedbackEvent.ShowToast -> {
-                    showToast(event.msg, if (event.isError) SNACK_ERROR else SNACK_SUCCESS)
-                }
-
-                is FeedbackEvent.RouteToPath -> navController.navigate(event.path) {
-                    launchSingleTop = true
-                    if (event.needPop) popUpTo(FEEDBACK_PAGE) { inclusive = true }
-                }
-
-                is FeedbackEvent.NeedReLogin -> navController.navigate(LOGIN_PAGE) {
-                    launchSingleTop = true
-                    popUpTo(navController.graph.startDestinationId) { inclusive = true }
-                }
-
-                is FeedbackEvent.ReplySuccess -> {
-                    resetDetail()
-                    viewModel.dispatch(FeedbackAction.RefreshFeedback)
-                }
-            }
-        }
     }
 
     val topRefreshState = remember { RefreshLayoutState {} }
@@ -169,400 +149,436 @@ fun FeedbackPage(
         }
     }
 
-    // 玩家反馈列表
-    Column(Modifier.fillMaxSize()) {
-        HeaderWidget(title = "玩家反馈", leftAction = {
-            Box(modifier = Modifier
-                .clip(shape = CircleShape)
-                .padding(4.dp)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = rememberRipple()
-                ) {
-                    keyboard?.hide()
-                    navController.navigateUp()
-                }) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_back),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .aspectRatio(1f)
-                        .then(it),
-                    contentScale = ContentScale.Crop,
-                    colorFilter = ColorFilter.tint(TextWhite)
+    BasePage(
+        viewEvent = viewModel.viewEvents,
+        onEvent = { event ->
+            when (event) {
+                is FeedbackEvent.ShowToast -> showToast(
+                    event.msg, if (event.isError) SNACK_ERROR else SNACK_SUCCESS
                 )
-            }
-        })
-        SearchBarWidget(
-            searchStr = states.keyword,
-            onSearchStrChange = { viewModel.dispatch(FeedbackAction.UpdateKeyword(it)) },
-            onSearch = { viewModel.dispatch(FeedbackAction.RefreshFeedback) },
-            isWithFilter = true,
-            isUseFilter = states.isFilterUsed
-        ) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
-                colors = CardDefaults.cardColors(containerColor = AppTheme.colors.card)
-            ) {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = "反馈时间",
-                        fontSize = 14.sp,
-                        color = AppTheme.colors.textColor,
-                        modifier = Modifier.padding(start = 8.dp, top = 8.dp)
-                    )
-                    FlowRow(Modifier.fillMaxWidth()) {
-                        FlowTabWidget(text = "顺序", isSelected = states.order == "ASC") {
-                            viewModel.dispatch(FeedbackAction.UpdateOrder("ASC"))
-                            viewModel.dispatch(FeedbackAction.RefreshFeedback)
-                        }
-                        FlowTabWidget(text = "倒序", isSelected = states.order == "DESC") {
-                            viewModel.dispatch(FeedbackAction.UpdateOrder("DESC"))
-                            viewModel.dispatch(FeedbackAction.RefreshFeedback)
-                        }
-                    }
-                    Text(
-                        text = "回复次数",
-                        fontSize = 14.sp,
-                        color = AppTheme.colors.textColor,
-                        modifier = Modifier.padding(start = 8.dp, top = 8.dp)
-                    )
-                    FlowRow(Modifier.fillMaxWidth()) {
-                        FlowTabWidget(text = "未回复", isSelected = states.sortReplyCount == 0) {
-                            viewModel.dispatch(FeedbackAction.UpdateSortReplyCount(if (it) -1 else 0))
-                            viewModel.dispatch(FeedbackAction.RefreshFeedback)
-                        }
-                        FlowTabWidget(text = "回复一次", isSelected = states.sortReplyCount == 1) {
-                            viewModel.dispatch(FeedbackAction.UpdateSortReplyCount(if (it) -1 else 1))
-                            viewModel.dispatch(FeedbackAction.RefreshFeedback)
-                        }
-                        FlowTabWidget(text = "回复两次", isSelected = states.sortReplyCount == 2) {
-                            viewModel.dispatch(FeedbackAction.UpdateSortReplyCount(if (it) -1 else 2))
-                            viewModel.dispatch(FeedbackAction.RefreshFeedback)
-                        }
-                    }
-                    VerticalSpace(dp = 8.dp)
-                    Text(
-                        text = "反馈类型",
-                        fontSize = 14.sp,
-                        color = AppTheme.colors.textColor,
-                        modifier = Modifier.padding(start = 8.dp)
-                    )
-                    FlowRow(Modifier.fillMaxWidth()) {
-                        FlowTabWidget(
-                            text = "故障问题反馈",
-                            isSelected = states.types.contains(0)
-                        ) {
-                            viewModel.dispatch(FeedbackAction.UpdateType(0, !it))
-                            viewModel.dispatch(FeedbackAction.RefreshFeedback)
-                        }
-                        FlowTabWidget(
-                            text = "玩法建议与意见",
-                            isSelected = states.types.contains(1)
-                        ) {
-                            viewModel.dispatch(FeedbackAction.UpdateType(1, !it))
-                            viewModel.dispatch(FeedbackAction.RefreshFeedback)
-                        }
-                        FlowTabWidget(
-                            text = "内容被侵权提醒",
-                            isSelected = states.types.contains(2)
-                        ) {
-                            viewModel.dispatch(FeedbackAction.UpdateType(2, !it))
-                            viewModel.dispatch(FeedbackAction.RefreshFeedback)
-                        }
-                        FlowTabWidget(text = "其他", isSelected = states.types.contains(3)) {
-                            viewModel.dispatch(FeedbackAction.UpdateType(3, !it))
-                            viewModel.dispatch(FeedbackAction.RefreshFeedback)
-                        }
-                        FlowTabWidget(text = "组件冲突", isSelected = states.types.contains(4)) {
-                            viewModel.dispatch(FeedbackAction.UpdateType(4, !it))
-                            viewModel.dispatch(FeedbackAction.RefreshFeedback)
-                        }
-                    }
-                    VerticalSpace(dp = 8.dp)
+
+                is FeedbackEvent.NeedReLogin -> navController.navigate(LOGIN_PAGE) {
+                    launchSingleTop = true
+                    popUpTo(navController.graph.startDestinationId) { inclusive = true }
                 }
             }
         }
-        VerticalRefreshableLayout(
-            modifier = Modifier.weight(1f),
-            topRefreshLayoutState = topRefreshState,
-            bottomRefreshLayoutState = bottomRefreshState,
-            bottomIsLoadFinish = !states.isLoadingList,
-            topUserEnable = false
-        ) {
-            LazyColumn(
-                modifier = Modifier.animateContentSize(),
-                state = lazyState
-            ) {
-                if (states.isLoadingList && states.feedbackList.isEmpty()) {
-                    item {
-                        AppLoadingWidget(showBackground = false)
-                    }
-                } else
-                    itemsIndexed(states.feedbackList) { index, item ->
-                        FeedbackCard(
-                            modifier = Modifier.clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = rememberRipple()
-                            ) {
-                                detailItem = item
-                                isShowDetail = true
-                                if (isFocusReply) keyboard?.show()
-                            },
-                            modName = item.resName,
-                            modUid = item.iid,
-                            createTime = item.createTime,
-                            type = item.type,
-                            nickname = item.commitNickname,
-                            content = item.content,
-                            picList = item.picList,
-                            reply = item.reply,
-                            onClickImg = { url ->
-                                bigImageUrl = url
-                            })
-
-                        if (index == states.feedbackList.size - 5) {
-                            viewModel.dispatch(FeedbackAction.LoadFeedback)
-                        }
-                    }
-            }
-        }
-    }
-
-    // 悬浮按钮
-    AnimatedVisibility(visible = firstVisibleItemIndex > 2, enter = fadeIn(), exit = fadeOut()) {
-        FABPositionWidget {
-            FloatingActionButton(
-                onClick = {
-                    coroutineScope.launch { lazyState.animateScrollToItem(0) }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(1f)
-                    .border(2.dp, AppTheme.colors.primaryColor, CircleShape),
-                shape = CircleShape,
-                containerColor = AppTheme.colors.primaryColor,
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_back_to_top),
-                    contentDescription = "up",
-                    modifier = Modifier.size(36.dp),
-                    colorFilter = ColorFilter.tint(TextWhite)
-                )
-            }
-        }
-    }
-
-    // 详情页
-    AnimatedVisibility(
-        visible = isShowDetail,
-        enter = expandVertically() + fadeIn(),
-        exit = shrinkVertically() + fadeOut()
     ) {
-        LaunchedEffect(key1 = Unit) {
-            viewModel.dispatch(FeedbackAction.UpdateReplyId(detailItem.id))
-        }
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.8f))
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) {
-                    resetDetail()
-                }
-                .verticalScroll(rememberScrollState())
-                .imePadding()
-        ) {
-            FeedbackCard(
-                modName = detailItem.resName,
-                modUid = detailItem.iid,
-                createTime = detailItem.createTime,
-                type = detailItem.type,
-                nickname = detailItem.commitNickname,
-                content = detailItem.content,
-                picList = detailItem.picList,
-                reply = detailItem.reply,
-                onClickImg = { url ->
-                    bigImageUrl = url
-                },
-                isShowReply = true,
-                extraContent = {
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                            .border(1.dp, AppTheme.colors.primaryColor, RoundedCornerShape(8.dp))
+        // 玩家反馈列表
+        Column(Modifier.fillMaxSize()) {
+            HeaderWidget(title = "玩家反馈", leftAction = {
+                Box(modifier = Modifier
+                    .clip(shape = CircleShape)
+                    .padding(4.dp)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = rememberRipple()
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .align(Alignment.CenterVertically)
-                                .padding(start = 8.dp)
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null
-                                ) { replyRequester.requestFocus() }
-                        ) {
-                            Text(
-                                text = states.replyContent,
-                                fontSize = 16.sp,
-                                color = AppTheme.colors.textColor,
-                                modifier = Modifier
-                                    .padding(8.dp)
-                                    .align(Alignment.CenterStart)
-                            )
+                        keyboard?.hide()
+                        navController.navigateUp()
+                    }) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_back),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .aspectRatio(1f)
+                            .then(it),
+                        contentScale = ContentScale.Crop,
+                        colorFilter = ColorFilter.tint(TextWhite)
+                    )
+                }
+            })
+            SearchBarWidget(
+                searchStr = states.keyword,
+                onSearchStrChange = { viewModel.dispatch(FeedbackAction.UpdateKeyword(it)) },
+                onSearch = { viewModel.dispatch(FeedbackAction.RefreshFeedback) },
+                isWithFilter = true,
+                isUseFilter = states.isFilterUsed
+            ) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = CardDefaults.cardColors(containerColor = AppTheme.colors.card)
+                ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "反馈时间",
+                            fontSize = 14.sp,
+                            color = AppTheme.colors.textColor,
+                            modifier = Modifier.padding(start = 8.dp, top = 8.dp)
+                        )
+                        FlowRow(Modifier.fillMaxWidth()) {
+                            FlowTabWidget(text = "顺序", isSelected = states.order == "ASC") {
+                                viewModel.dispatch(FeedbackAction.UpdateOrder("ASC"))
+                                viewModel.dispatch(FeedbackAction.RefreshFeedback)
+                            }
+                            FlowTabWidget(text = "倒序", isSelected = states.order == "DESC") {
+                                viewModel.dispatch(FeedbackAction.UpdateOrder("DESC"))
+                                viewModel.dispatch(FeedbackAction.RefreshFeedback)
+                            }
                         }
-                        Box(
-                            modifier = Modifier
-                                .width(80.dp)
-                                .padding(8.dp)
-                                .align(Alignment.CenterVertically)
-                                .clip(RoundedCornerShape(8.dp))
-                                .clickable(
+                        Text(
+                            text = "回复次数",
+                            fontSize = 14.sp,
+                            color = AppTheme.colors.textColor,
+                            modifier = Modifier.padding(start = 8.dp, top = 8.dp)
+                        )
+                        FlowRow(Modifier.fillMaxWidth()) {
+                            FlowTabWidget(
+                                text = "未回复",
+                                isSelected = states.sortReplyCount == 0
+                            ) {
+                                viewModel.dispatch(FeedbackAction.UpdateSortReplyCount(if (it) -1 else 0))
+                                viewModel.dispatch(FeedbackAction.RefreshFeedback)
+                            }
+                            FlowTabWidget(
+                                text = "回复一次",
+                                isSelected = states.sortReplyCount == 1
+                            ) {
+                                viewModel.dispatch(FeedbackAction.UpdateSortReplyCount(if (it) -1 else 1))
+                                viewModel.dispatch(FeedbackAction.RefreshFeedback)
+                            }
+                            FlowTabWidget(
+                                text = "回复两次",
+                                isSelected = states.sortReplyCount == 2
+                            ) {
+                                viewModel.dispatch(FeedbackAction.UpdateSortReplyCount(if (it) -1 else 2))
+                                viewModel.dispatch(FeedbackAction.RefreshFeedback)
+                            }
+                        }
+                        VerticalSpace(dp = 8.dp)
+                        Text(
+                            text = "反馈类型",
+                            fontSize = 14.sp,
+                            color = AppTheme.colors.textColor,
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                        FlowRow(Modifier.fillMaxWidth()) {
+                            FlowTabWidget(
+                                text = "故障问题反馈",
+                                isSelected = states.types.contains(0)
+                            ) {
+                                viewModel.dispatch(FeedbackAction.UpdateType(0, !it))
+                                viewModel.dispatch(FeedbackAction.RefreshFeedback)
+                            }
+                            FlowTabWidget(
+                                text = "玩法建议与意见",
+                                isSelected = states.types.contains(1)
+                            ) {
+                                viewModel.dispatch(FeedbackAction.UpdateType(1, !it))
+                                viewModel.dispatch(FeedbackAction.RefreshFeedback)
+                            }
+                            FlowTabWidget(
+                                text = "内容被侵权提醒",
+                                isSelected = states.types.contains(2)
+                            ) {
+                                viewModel.dispatch(FeedbackAction.UpdateType(2, !it))
+                                viewModel.dispatch(FeedbackAction.RefreshFeedback)
+                            }
+                            FlowTabWidget(text = "其他", isSelected = states.types.contains(3)) {
+                                viewModel.dispatch(FeedbackAction.UpdateType(3, !it))
+                                viewModel.dispatch(FeedbackAction.RefreshFeedback)
+                            }
+                            FlowTabWidget(
+                                text = "组件冲突",
+                                isSelected = states.types.contains(4)
+                            ) {
+                                viewModel.dispatch(FeedbackAction.UpdateType(4, !it))
+                                viewModel.dispatch(FeedbackAction.RefreshFeedback)
+                            }
+                        }
+                        VerticalSpace(dp = 8.dp)
+                    }
+                }
+            }
+            VerticalRefreshableLayout(
+                modifier = Modifier.weight(1f),
+                topRefreshLayoutState = topRefreshState,
+                bottomRefreshLayoutState = bottomRefreshState,
+                bottomIsLoadFinish = !states.isLoadingList,
+                topUserEnable = false
+            ) {
+                LazyColumn(
+                    modifier = Modifier.animateContentSize(),
+                    state = lazyState
+                ) {
+                    if (states.isLoadingList && states.feedbackList.isEmpty()) {
+                        item {
+                            AppLoadingWidget(showBackground = false)
+                        }
+                    } else
+                        itemsIndexed(states.feedbackList) { index, item ->
+                            FeedbackCard(
+                                modifier = Modifier.clickable(
                                     interactionSource = remember { MutableInteractionSource() },
                                     indication = rememberRipple()
                                 ) {
-                                    viewModel.dispatch(FeedbackAction.ReplyFeedback)
-                                    keyboard?.hide()
-                                }
-                        ) {
-                            Text(
-                                text = "回复",
-                                fontSize = 16.sp,
-                                color = AppTheme.colors.primaryColor,
-                                modifier = Modifier
-                                    .padding(8.dp)
-                                    .align(Alignment.Center)
-                            )
+                                    detailItem = item
+                                    isShowDetail = true
+                                    if (isFocusReply) keyboard?.show()
+                                },
+                                modName = item.resName,
+                                modUid = item.iid,
+                                createTime = item.createTime,
+                                type = item.type,
+                                nickname = item.commitNickname,
+                                content = item.content,
+                                picList = item.picList,
+                                reply = item.reply,
+                                onClickImg = { url ->
+                                    bigImageUrl = url
+                                })
+
+                            if (index == states.feedbackList.size - 5) {
+                                viewModel.dispatch(FeedbackAction.LoadFeedback)
+                            }
                         }
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
                 }
-            )
+            }
         }
 
-    }
-
-    // 回复框
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .offset(y = getNavigationBarHeight(context).dp)
-            .imePadding()
-            .alpha(if (isShowDetail && isFocusReply) 1f else 0f)
-    ) {
-        OutlinedTextField(
-            enabled = isShowDetail,
-            value = states.replyContent,
-            onValueChange = {
-                viewModel.dispatch(FeedbackAction.UpdateReplyContent(it))
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .focusRequester(replyRequester)
-                .onFocusChanged {
-                    isFocusReply = it.isFocused
-                },
-            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Send),
-            keyboardActions = KeyboardActions(onSend = {
-                viewModel.dispatch(FeedbackAction.ReplyFeedback)
-                keyboard?.hide()
-                isFocusReply = false
-            }),
-            shape = RoundedCornerShape(8.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = AppTheme.colors.primaryColor,
-                unfocusedBorderColor = AppTheme.colors.card,
-                focusedContainerColor = AppTheme.colors.card,
-                unfocusedContainerColor = AppTheme.colors.card,
-                focusedTextColor = AppTheme.colors.textColor,
-                unfocusedLabelColor = AppTheme.colors.textColor,
-            ),
-            trailingIcon = {
-                Box(
+        // 悬浮按钮
+        AnimatedVisibility(
+            visible = firstVisibleItemIndex > 2,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            FABPositionWidget {
+                FloatingActionButton(
+                    onClick = {
+                        coroutineScope.launch { lazyState.animateScrollToItem(0) }
+                    },
                     modifier = Modifier
-                        .width(80.dp)
-                        .padding(end = 8.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple()
-                        ) {
-                            viewModel.dispatch(FeedbackAction.ReplyFeedback)
-                            keyboard?.hide()
-                            isFocusReply = false
-                        }
+                        .fillMaxWidth()
+                        .aspectRatio(1f)
+                        .border(2.dp, AppTheme.colors.primaryColor, CircleShape),
+                    shape = CircleShape,
+                    containerColor = AppTheme.colors.primaryColor,
                 ) {
-                    Text(
-                        text = "回复",
-                        fontSize = 16.sp,
-                        color = AppTheme.colors.primaryColor,
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .align(Alignment.Center)
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_back_to_top),
+                        contentDescription = "up",
+                        modifier = Modifier.size(36.dp),
+                        colorFilter = ColorFilter.tint(TextWhite)
                     )
                 }
             }
-        )
-    }
+        }
 
-    // 大图预览
-    AnimatedVisibility(
-        visible = !TextUtils.isEmpty(bigImageUrl),
-        enter = fadeIn(animationSpec = tween(300)) + expandIn(
-            animationSpec = tween(800), expandFrom = Alignment.Center
-        ),
-        exit = fadeOut(animationSpec = tween(300)) + shrinkOut(
-            animationSpec = tween(800), shrinkTowards = Alignment.Center
-        )
-    ) {
+        // 详情页
+        AnimatedVisibility(
+            visible = isShowDetail,
+            enter = expandVertically() + fadeIn(),
+            exit = shrinkVertically() + fadeOut()
+        ) {
+            LaunchedEffect(key1 = Unit) {
+                viewModel.dispatch(FeedbackAction.UpdateReplyId(detailItem.id))
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.8f))
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) {
+                        resetDetail()
+                    }
+                    .verticalScroll(rememberScrollState())
+                    .imePadding()
+            ) {
+                FeedbackCard(
+                    modName = detailItem.resName,
+                    modUid = detailItem.iid,
+                    createTime = detailItem.createTime,
+                    type = detailItem.type,
+                    nickname = detailItem.commitNickname,
+                    content = detailItem.content,
+                    picList = detailItem.picList,
+                    reply = detailItem.reply,
+                    onClickImg = { url ->
+                        bigImageUrl = url
+                    },
+                    isShowReply = true,
+                    extraContent = {
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp)
+                                .border(
+                                    1.dp,
+                                    AppTheme.colors.primaryColor,
+                                    RoundedCornerShape(8.dp)
+                                )
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .align(Alignment.CenterVertically)
+                                    .padding(start = 8.dp)
+                                    .clickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = null
+                                    ) { replyRequester.requestFocus() }
+                            ) {
+                                Text(
+                                    text = states.replyContent,
+                                    fontSize = 16.sp,
+                                    color = AppTheme.colors.textColor,
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                        .align(Alignment.CenterStart)
+                                )
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .width(80.dp)
+                                    .padding(8.dp)
+                                    .align(Alignment.CenterVertically)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = rememberRipple()
+                                    ) {
+                                        viewModel.dispatch(FeedbackAction.ReplyFeedback)
+                                        keyboard?.hide()
+                                    }
+                            ) {
+                                Text(
+                                    text = "回复",
+                                    fontSize = 16.sp,
+                                    color = AppTheme.colors.primaryColor,
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                        .align(Alignment.Center)
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                )
+            }
+
+        }
+
+        // 回复框
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.8f))
+                .offset(y = getNavigationBarHeight(context).dp)
+                .imePadding()
+                .alpha(if (isShowDetail && isFocusReply) 1f else 0f)
         ) {
-            ImageViewer(
-                painter = rememberAsyncImagePainter(
-                    model = bigImageUrl, imageLoader = imageLoader
-                ), modifier = Modifier.align(Alignment.Center)
+            OutlinedTextField(
+                enabled = isShowDetail,
+                value = states.replyContent,
+                onValueChange = {
+                    viewModel.dispatch(FeedbackAction.UpdateReplyContent(it))
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .focusRequester(replyRequester)
+                    .onFocusChanged {
+                        isFocusReply = it.isFocused
+                    },
+                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Send),
+                keyboardActions = KeyboardActions(onSend = {
+                    viewModel.dispatch(FeedbackAction.ReplyFeedback)
+                    keyboard?.hide()
+                    isFocusReply = false
+                }),
+                shape = RoundedCornerShape(8.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = AppTheme.colors.primaryColor,
+                    unfocusedBorderColor = AppTheme.colors.card,
+                    focusedContainerColor = AppTheme.colors.card,
+                    unfocusedContainerColor = AppTheme.colors.card,
+                    focusedTextColor = AppTheme.colors.textColor,
+                    unfocusedLabelColor = AppTheme.colors.textColor,
+                ),
+                trailingIcon = {
+                    Box(
+                        modifier = Modifier
+                            .width(80.dp)
+                            .padding(end = 8.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = rememberRipple()
+                            ) {
+                                viewModel.dispatch(FeedbackAction.ReplyFeedback)
+                                keyboard?.hide()
+                                isFocusReply = false
+                            }
+                    ) {
+                        Text(
+                            text = "回复",
+                            fontSize = 16.sp,
+                            color = AppTheme.colors.primaryColor,
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .align(Alignment.Center)
+                        )
+                    }
+                }
             )
+        }
+
+        // 大图预览
+        AnimatedVisibility(
+            visible = !TextUtils.isEmpty(bigImageUrl),
+            enter = fadeIn(animationSpec = tween(300)) + expandIn(
+                animationSpec = tween(800), expandFrom = Alignment.Center
+            ),
+            exit = fadeOut(animationSpec = tween(300)) + shrinkOut(
+                animationSpec = tween(800), shrinkTowards = Alignment.Center
+            )
+        ) {
             Box(
                 modifier = Modifier
-                    .padding(top = HeaderHeight, start = 8.dp, end = 8.dp)
-                    .fillMaxWidth()
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.8f))
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_close),
-                    contentDescription = "close",
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .size(36.dp)
-                        .align(Alignment.CenterStart)
-                        .clip(CircleShape)
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple()
-                        ) {
-                            bigImageUrl = ""
-                        },
+                ImageViewer(
+                    painter = rememberAsyncImagePainter(
+                        model = bigImageUrl, imageLoader = imageLoader
+                    ), modifier = Modifier.align(Alignment.Center)
                 )
+                Box(
+                    modifier = Modifier
+                        .padding(top = HeaderHeight, start = 8.dp, end = 8.dp)
+                        .fillMaxWidth()
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_close),
+                        contentDescription = "close",
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .size(36.dp)
+                            .align(Alignment.CenterStart)
+                            .clip(CircleShape)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = rememberRipple()
+                            ) {
+                                bigImageUrl = ""
+                            },
+                    )
+                }
             }
         }
-    }
 
-    // loading
-    AnimatedVisibility(
-        visible = states.isLoadingReply,
-        enter = fadeIn(),
-        exit = fadeOut()
-    ) {
-        AppLoadingWidget()
+        // loading
+        AnimatedVisibility(
+            visible = states.isLoadingReply,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            AppLoadingWidget()
+        }
     }
 }
 

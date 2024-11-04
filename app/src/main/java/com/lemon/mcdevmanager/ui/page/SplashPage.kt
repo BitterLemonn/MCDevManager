@@ -34,6 +34,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.lemon.mcdevmanager.R
 import com.lemon.mcdevmanager.data.common.SPLASH_PAGE
+import com.lemon.mcdevmanager.ui.base.BasePage
 import com.lemon.mcdevmanager.ui.theme.TextWhite
 import com.lemon.mcdevmanager.ui.widget.GrantPermission
 import com.lemon.mcdevmanager.ui.widget.PermissionType
@@ -42,6 +43,7 @@ import com.lemon.mcdevmanager.viewModel.SplashViewAction
 import com.lemon.mcdevmanager.viewModel.SplashViewEvent
 import com.lemon.mcdevmanager.viewModel.SplashViewModel
 import com.zj.mvi.core.observeEvent
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -54,91 +56,70 @@ fun SplashPage(
     viewmodel: SplashViewModel = viewModel()
 ) {
     var waitingLast = 0
-    val lifecycleOwner = LocalLifecycleOwner.current
-
-//    var showGrantDialog by remember { mutableStateOf(true) }
-//    val activity = LocalContext.current as Activity
-
-//    var isGetPermission by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = Unit) {
-//        if (isGetPermission) {
-            this.launch(Dispatchers.IO) {
-                while (waitingLast < 2) {
-                    waitingLast++
-                    delay(1000)
-                }
+        this.launch(Dispatchers.IO) {
+            while (waitingLast < 2) {
+                waitingLast++
+                delay(1000)
             }
-            viewmodel.dispatch(SplashViewAction.GetDatabase)
-            viewmodel.viewEvents.observeEvent(lifecycleOwner) { event ->
-                when (event) {
-                    is SplashViewEvent.RouteToPath -> {
-                        this.launch(Dispatchers.IO) {
-                            while (waitingLast < 2) {
-                                delay(100)
-                            }
-                            withContext(Dispatchers.Main) {
-                                navController.navigate(event.path) {
-                                    launchSingleTop = true
-                                    popUpTo(SPLASH_PAGE) { inclusive = true }
-                                }
+        }
+        viewmodel.dispatch(SplashViewAction.GetDatabase)
+    }
+
+    BasePage(
+        viewEvent = viewmodel.viewEvents,
+        onEvent = { event ->
+            when (event) {
+                is SplashViewEvent.RouteToPath -> {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        while (waitingLast < 2) {
+                            delay(100)
+                        }
+                        withContext(Dispatchers.Main) {
+                            navController.navigate(event.path) {
+                                launchSingleTop = true
+                                popUpTo(SPLASH_PAGE) { inclusive = true }
                             }
                         }
                     }
                 }
             }
-//        }
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                if (isSystemInDarkTheme()) Color(0xFF417C54)
-                else Color(0xFF50C878)
-            )
+        }
     ) {
-        Column(
-            Modifier
-                .wrapContentHeight()
-                .fillMaxWidth()
-                .align(Alignment.Center)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    if (isSystemInDarkTheme()) Color(0xFF417C54)
+                    else Color(0xFF50C878)
+                )
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_mc),
-                contentDescription = "icon",
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .size(200.dp)
-            )
-            Spacer(modifier = Modifier.height(20.dp))
-            Text(
-                text = "开发者管理器",
-                color = TextWhite,
-                fontSize = 26.sp,
-                fontFamily = FontFamily(Font(R.font.minecraft_ae)),
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                letterSpacing = 2.sp
-            )
+            Column(
+                Modifier
+                    .wrapContentHeight()
+                    .fillMaxWidth()
+                    .align(Alignment.Center)
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_mc),
+                    contentDescription = "icon",
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .size(200.dp)
+                )
+                Spacer(modifier = Modifier.height(20.dp))
+                Text(
+                    text = "开发者管理器",
+                    color = TextWhite,
+                    fontSize = 26.sp,
+                    fontFamily = FontFamily(Font(R.font.minecraft_ae)),
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    letterSpacing = 2.sp
+                )
+            }
         }
     }
-
-//    GrantPermission(
-//        isShow = showGrantDialog,
-//        permissions = listOf(
-//            Pair(PermissionType.READ, "MC开发者管理器需要使用读取权限确保正常读取日志数据"),
-//            Pair(PermissionType.WRITE, "MC开发者管理器需要使用写入权限确保正常写入日志数据")
-//        ),
-//        onCancel = {
-//            showGrantDialog = false
-//            showToast("未获取读写权限, 应用将无法写入日志数据", SNACK_WARN)
-//            isGetPermission = true
-//        },
-//        doAfterPermission = {
-//            showGrantDialog = false
-//            isGetPermission = true
-//        }
-//    )
 }
 
 @Composable

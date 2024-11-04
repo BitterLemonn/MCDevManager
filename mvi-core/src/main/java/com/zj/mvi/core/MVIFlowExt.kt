@@ -1,9 +1,12 @@
 package com.zj.mvi.core
 
+import android.util.Log
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlin.reflect.KProperty1
@@ -75,11 +78,13 @@ suspend fun <T> SharedFlowEvents<T>.setEvent(vararg values: T) {
     this.emit(eventList)
 }
 
-fun <T> SharedFlow<List<T>>.observeEvent(lifecycleOwner: LifecycleOwner, action: (T) -> Unit) {
-    lifecycleOwner.lifecycleScope.launchWhenStarted {
-        this@observeEvent.collect {
-            it.forEach { event ->
-                action.invoke(event)
+fun <T> SharedFlow<List<T>>.observeEvent(lifecycleOwner: LifecycleOwner, action: (T) -> Unit): Job {
+    return lifecycleOwner.lifecycleScope.launch {
+        lifecycleOwner.repeatOnLifecycle(state = Lifecycle.State.STARTED) {
+            this@observeEvent.collect {
+                it.forEach { event ->
+                    action.invoke(event)
+                }
             }
         }
     }

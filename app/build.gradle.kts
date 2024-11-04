@@ -39,6 +39,14 @@ android {
             }
         }
         debug {
+            // r8混淆
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+
             ndk {
                 abiFilters.clear() // 清除abiFilters，打包所有架构
             }

@@ -62,6 +62,7 @@ import com.lt.compose_views.value_selector.date_selector.DateSelectorState
 import java.time.ZonedDateTime
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.lemon.mcdevmanager.data.common.LOGIN_PAGE
+import com.lemon.mcdevmanager.ui.base.BasePage
 import com.lemon.mcdevmanager.ui.widget.AppLoadingWidget
 import com.lemon.mcdevmanager.ui.widget.RealtimeProfitItemCard
 import com.lemon.mcdevmanager.viewModel.RealtimeProfitAction
@@ -80,7 +81,6 @@ fun RealtimeProfitPage(
     viewModel: RealtimeProfitViewModel = viewModel()
 ) {
     val states by viewModel.viewStates.collectAsState()
-    val lifecycleOwner = LocalLifecycleOwner.current
 
     val nowDate = remember { ZonedDateTime.now() }
     val hintColor = AppTheme.colors.hintColor
@@ -95,16 +95,6 @@ fun RealtimeProfitPage(
     var isShowDateSelector by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = Unit) {
-        viewModel.viewEvents.observeEvent(lifecycleOwner) { event ->
-            when (event) {
-                is RealtimeProfitEvent.ShowToast -> showToast(event.message, event.type)
-                is RealtimeProfitEvent.NeedReLogin -> navController.navigate(LOGIN_PAGE) {
-                    launchSingleTop = true
-                    popUpTo(navController.graph.startDestinationId) { inclusive = true }
-                }
-            }
-        }
-
         viewModel.dispatch(
             RealtimeProfitAction.UpdateCheckDay(
                 nowDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
@@ -113,87 +103,164 @@ fun RealtimeProfitPage(
         viewModel.dispatch(RealtimeProfitAction.GetOneDayDetail)
     }
 
-    Column {
-        HeaderWidget(
-            title = "实时收益", leftAction = {
-                Box(modifier = Modifier
-                    .fillMaxHeight()
-                    .aspectRatio(1f)
-                    .clip(CircleShape)
-                    .clickable(indication = rememberRipple(),
-                        interactionSource = remember { MutableInteractionSource() }) { navController.navigateUp() }) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_back),
-                        contentDescription = "back"
-                    )
+    BasePage(
+        viewEvent = viewModel.viewEvents,
+        onEvent = { event ->
+            when (event) {
+                is RealtimeProfitEvent.ShowToast -> showToast(
+                    event.message, event.type
+                )
+
+                is RealtimeProfitEvent.NeedReLogin -> navController.navigate(LOGIN_PAGE) {
+                    launchSingleTop = true
+                    popUpTo(navController.graph.startDestinationId) { inclusive = true }
                 }
             }
-        )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
-        ) {
-            Card(
+        }
+    ) {
+        Column {
+            HeaderWidget(
+                title = "实时收益", leftAction = {
+                    Box(modifier = Modifier
+                        .fillMaxHeight()
+                        .aspectRatio(1f)
+                        .clip(CircleShape)
+                        .clickable(indication = rememberRipple(),
+                            interactionSource = remember { MutableInteractionSource() }) { navController.navigateUp() }) {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_back),
+                            contentDescription = "back"
+                        )
+                    }
+                }
+            )
+            Row(
                 modifier = Modifier
-                    .weight(1f),
-                colors = CardDefaults.cardColors(
-                    containerColor = AppTheme.colors.card
-                ),
-                shape = RoundedCornerShape(8.dp)
+                    .fillMaxWidth()
+                    .padding(8.dp)
             ) {
-                // 收益
-                if (!isShowDateSelector) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(36.dp)
-                            .padding(horizontal = 8.dp)
-                    ) {
+                Card(
+                    modifier = Modifier
+                        .weight(1f),
+                    colors = CardDefaults.cardColors(
+                        containerColor = AppTheme.colors.card
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    // 收益
+                    if (!isShowDateSelector) {
                         Row(
                             modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight(),
-                            horizontalArrangement = Arrangement.End,
-                            verticalAlignment = Alignment.CenterVertically
+                                .fillMaxWidth()
+                                .height(36.dp)
+                                .padding(horizontal = 8.dp)
                         ) {
-                            Text(
-                                text = states.totalDiamond.toString(),
-                                fontSize = 14.sp,
-                                color = hintColor
-                            )
-                            HorizontalSpace(dp = 4)
-                            Image(
-                                painter = painterResource(id = R.drawable.ic_diamond),
-                                contentDescription = "calendar",
-                                modifier = Modifier.size(20.dp)
-                            )
+                            Row(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight(),
+                                horizontalArrangement = Arrangement.End,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = states.totalDiamond.toString(),
+                                    fontSize = 14.sp,
+                                    color = hintColor
+                                )
+                                HorizontalSpace(dp = 4)
+                                Image(
+                                    painter = painterResource(id = R.drawable.ic_diamond),
+                                    contentDescription = "calendar",
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            HorizontalSpace(dp = 8)
+                            Row(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.End
+                            ) {
+                                Text(
+                                    text = states.totalPoints.toString(),
+                                    fontSize = 14.sp,
+                                    color = hintColor
+                                )
+                                HorizontalSpace(dp = 4)
+                                Image(
+                                    painter = painterResource(id = R.drawable.ic_emerald),
+                                    contentDescription = "calendar",
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
                         }
-                        HorizontalSpace(dp = 8)
-                        Row(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.End
-                        ) {
-                            Text(
-                                text = states.totalPoints.toString(),
-                                fontSize = 14.sp,
-                                color = hintColor
+                    }
+                    AnimatedVisibility(
+                        visible = isShowDateSelector,
+                        enter = expandVertically { fullSize -> fullSize },
+                        exit = shrinkHorizontally(
+                            animationSpec = tween(
+                                delayMillis = 300,
+                                durationMillis = 200
                             )
-                            HorizontalSpace(dp = 4)
-                            Image(
-                                painter = painterResource(id = R.drawable.ic_emerald),
-                                contentDescription = "calendar",
-                                modifier = Modifier.size(20.dp)
+                        ) { fullSize -> fullSize }
+                    ) {
+                        Column {
+                            DateSelector(
+                                state = dateState,
+                                modifier = Modifier.fillMaxWidth(),
+                                cacheSize = 1,
+                                textSizes = remember { mutableStateListOf(14.sp) },
+                                selectedTextSize = 16.sp,
+                                textColors = remember { mutableStateListOf(hintColor) },
+                                selectedTextColor = AppTheme.colors.primaryColor
                             )
+                            VerticalSpace(dp = 8)
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable(
+                                        indication = rememberRipple(),
+                                        interactionSource = remember { MutableInteractionSource() }
+                                    ) {
+                                        isShowDateSelector = false
+                                        val month = if (dateState
+                                                .getMonth()
+                                                .toInt() < 10
+                                        )
+                                            "0${dateState.getMonth()}" else dateState.getMonth()
+                                        val day = if (dateState
+                                                .getDay()
+                                                .toInt() < 10
+                                        )
+                                            "0${dateState.getDay()}" else dateState.getDay()
+                                        viewModel.dispatch(RealtimeProfitAction.UpdateCheckDay("${dateState.getYear()}-${month}-${day}"))
+                                        viewModel.dispatch(RealtimeProfitAction.GetOneDayDetail)
+                                    },
+                                colors = CardDefaults.cardColors(
+                                    containerColor = AppTheme.colors.primaryColor
+                                ),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "确定",
+                                        fontSize = 14.sp,
+                                        color = Color.White,
+                                        modifier = Modifier.padding(8.dp)
+                                    )
+                                }
+                            }
                         }
                     }
                 }
                 AnimatedVisibility(
-                    visible = isShowDateSelector,
-                    enter = expandVertically { fullSize -> fullSize },
+                    visible = !isShowDateSelector,
+                    enter = expandHorizontally { fullSize -> fullSize },
                     exit = shrinkHorizontally(
                         animationSpec = tween(
                             delayMillis = 300,
@@ -201,139 +268,81 @@ fun RealtimeProfitPage(
                         )
                     ) { fullSize -> fullSize }
                 ) {
-                    Column {
-                        DateSelector(
-                            state = dateState,
-                            modifier = Modifier.fillMaxWidth(),
-                            cacheSize = 1,
-                            textSizes = remember { mutableStateListOf(14.sp) },
-                            selectedTextSize = 16.sp,
-                            textColors = remember { mutableStateListOf(hintColor) },
-                            selectedTextColor = AppTheme.colors.primaryColor
-                        )
-                        VerticalSpace(dp = 8)
+                    Row {
+                        HorizontalSpace(dp = 8)
                         Card(
+                            shape = CircleShape,
                             modifier = Modifier
-                                .fillMaxWidth()
+                                .clip(CircleShape)
                                 .clickable(
                                     indication = rememberRipple(),
                                     interactionSource = remember { MutableInteractionSource() }
-                                ) {
-                                    isShowDateSelector = false
-                                    val month = if (dateState
-                                            .getMonth()
-                                            .toInt() < 10
-                                    )
-                                        "0${dateState.getMonth()}" else dateState.getMonth()
-                                    val day = if (dateState
-                                            .getDay()
-                                            .toInt() < 10
-                                    )
-                                        "0${dateState.getDay()}" else dateState.getDay()
-                                    viewModel.dispatch(RealtimeProfitAction.UpdateCheckDay("${dateState.getYear()}-${month}-${day}"))
-                                    viewModel.dispatch(RealtimeProfitAction.GetOneDayDetail)
-                                },
-                            colors = CardDefaults.cardColors(
-                                containerColor = AppTheme.colors.primaryColor
-                            ),
-                            shape = RoundedCornerShape(8.dp)
+                                ) { isShowDateSelector = true },
+                            colors = CardDefaults.cardColors(containerColor = AppTheme.colors.card)
                         ) {
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "确定",
-                                    fontSize = 14.sp,
-                                    color = Color.White,
-                                    modifier = Modifier.padding(8.dp)
-                                )
-                            }
+                            Image(
+                                painter = painterResource(id = R.drawable.ic_calendar),
+                                contentDescription = "calendar",
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .padding(8.dp),
+                                colorFilter = ColorFilter.tint(AppTheme.colors.primaryColor)
+                            )
                         }
                     }
                 }
             }
-            AnimatedVisibility(
-                visible = !isShowDateSelector,
-                enter = expandHorizontally { fullSize -> fullSize },
-                exit = shrinkHorizontally(
-                    animationSpec = tween(
-                        delayMillis = 300,
-                        durationMillis = 200
-                    )
-                ) { fullSize -> fullSize }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row {
-                    HorizontalSpace(dp = 8)
-                    Card(
-                        shape = CircleShape,
+                Text(
+                    text = if (states.checkDay == nowDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))) "实时收益 ${
+                        SimpleDateFormat(
+                            "HH:mm:ss",
+                            Locale.CHINA
+                        ).format(Date(states.lastRequestTime))
+                    }" else states.checkDay,
+                    color = hintColor,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                )
+                if (states.checkDay == nowDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))) {
+                    Spacer(modifier = Modifier.weight(1f))
+                    Box(
                         modifier = Modifier
+                            .padding(horizontal = 8.dp)
                             .clip(CircleShape)
                             .clickable(
                                 indication = rememberRipple(),
-                                interactionSource = remember { MutableInteractionSource() }
-                            ) { isShowDateSelector = true },
-                        colors = CardDefaults.cardColors(containerColor = AppTheme.colors.card)
+                                interactionSource = remember { MutableInteractionSource() }) {
+                                viewModel.dispatch(RealtimeProfitAction.GetOneDayDetail)
+                            }
                     ) {
                         Image(
-                            painter = painterResource(id = R.drawable.ic_calendar),
-                            contentDescription = "calendar",
-                            modifier = Modifier
-                                .size(36.dp)
-                                .padding(8.dp),
-                            colorFilter = ColorFilter.tint(AppTheme.colors.primaryColor)
+                            painter = painterResource(id = R.drawable.ic_refresh),
+                            contentDescription = "refresh",
+                            modifier = Modifier.size(24.dp),
+                            colorFilter = ColorFilter.tint(AppTheme.colors.hintColor),
+                        )
+                    }
+                }
+            }
+            LazyColumn(Modifier.fillMaxWidth()) {
+                states.profitMap.forEach { (iid, data) ->
+                    item {
+                        RealtimeProfitItemCard(
+                            iid = iid,
+                            name = states.resList.find { it.itemId == iid }?.itemName ?: "未知资源",
+                            data = data
                         )
                     }
                 }
             }
         }
-        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = if (states.checkDay == nowDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))) "实时收益 ${
-                    SimpleDateFormat(
-                        "HH:mm:ss",
-                        Locale.CHINA
-                    ).format(Date(states.lastRequestTime))
-                }" else states.checkDay,
-                color = hintColor,
-                fontSize = 14.sp,
-                modifier = Modifier.padding(horizontal = 8.dp)
-            )
-            if (states.checkDay == nowDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))) {
-                Spacer(modifier = Modifier.weight(1f))
-                Box(
-                    modifier = Modifier
-                        .padding(horizontal = 8.dp)
-                        .clip(CircleShape)
-                        .clickable(
-                            indication = rememberRipple(),
-                            interactionSource = remember { MutableInteractionSource() }) {
-                            viewModel.dispatch(RealtimeProfitAction.GetOneDayDetail)
-                        }
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_refresh),
-                        contentDescription = "refresh",
-                        modifier = Modifier.size(24.dp),
-                        colorFilter = ColorFilter.tint(AppTheme.colors.hintColor),
-                    )
-                }
-            }
+        AnimatedVisibility(visible = states.isLoading) {
+            AppLoadingWidget()
         }
-        LazyColumn(Modifier.fillMaxWidth()) {
-            states.profitMap.forEach { (iid, data) ->
-                item {
-                    RealtimeProfitItemCard(
-                        iid = iid,
-                        name = states.resList.find { it.itemId == iid }?.itemName ?: "未知资源",
-                        data = data
-                    )
-                }
-            }
-        }
-    }
-    AnimatedVisibility(visible = states.isLoading) {
-        AppLoadingWidget()
     }
 }
 

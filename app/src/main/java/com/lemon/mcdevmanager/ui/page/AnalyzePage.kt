@@ -24,6 +24,7 @@ import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -48,6 +49,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.lemon.mcdevmanager.R
 import com.lemon.mcdevmanager.data.common.LOGIN_PAGE
+import com.lemon.mcdevmanager.ui.base.BasePage
 import com.lemon.mcdevmanager.ui.fragPage.AnalysisFragPage
 import com.lemon.mcdevmanager.ui.fragPage.BetaFunctionFragPage
 import com.lemon.mcdevmanager.ui.fragPage.OverviewFragPage
@@ -63,6 +65,7 @@ import com.lemon.mcdevmanager.viewModel.AnalyzeAction
 import com.lemon.mcdevmanager.viewModel.AnalyzeEvent
 import com.lemon.mcdevmanager.viewModel.AnalyzeViewModel
 import com.zj.mvi.core.observeEvent
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 @Composable
@@ -72,7 +75,6 @@ fun AnalyzePage(
     viewModel: AnalyzeViewModel = viewModel()
 ) {
     val states by viewModel.viewStates.collectAsState()
-    val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
@@ -88,7 +90,11 @@ fun AnalyzePage(
 
     LaunchedEffect(key1 = Unit) {
         viewModel.dispatch(AnalyzeAction.UpdateChartColor(chartColor))
-        viewModel.viewEvents.observeEvent(lifecycleOwner) { event ->
+    }
+
+    BasePage(
+        viewEvent = viewModel.viewEvents,
+        onEvent = { event ->
             when (event) {
                 is AnalyzeEvent.ShowToast -> showToast(
                     event.msg, if (event.isError) SNACK_ERROR else SNACK_INFO
@@ -100,101 +106,101 @@ fun AnalyzePage(
                 }
             }
         }
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .onGloballyPositioned { fullHeight = pxToDp(context, it.size.height.toFloat()) }
     ) {
-        Column {
-            // 标题
-            HeaderWidget(title = "数据分析", leftAction = {
-                Box(modifier = Modifier
-                    .fillMaxHeight()
-                    .aspectRatio(1f)
-                    .clip(CircleShape)
-                    .clickable(indication = rememberRipple(),
-                        interactionSource = remember { MutableInteractionSource() }) { navController.navigateUp() }) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_back),
-                        contentDescription = "back"
-                    )
-                }
-            })
-            // 页面内容
-            HorizontalPager(
-                state = pageState,
-                userScrollEnabled = false,
-                modifier = Modifier.weight(1f)
-            ) {
-                when (it) {
-                    0 -> AnalysisFragPage(
-                        viewModel = viewModel,
-                        showToast = showToast
-                    )
-
-                    1 -> OverviewFragPage(
-                        viewModel = viewModel,
-                        showToast = showToast
-                    )
-
-                    else -> BetaFunctionFragPage(
-                        navController = navController,
-                        showToast = showToast
-                    )
-                }
-            }
-            // 底部导航
-            Column {
-                HorizontalDivider(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = AppTheme.colors.dividerColor,
-                    thickness = 0.5.dp
-                )
-                BottomNavigation(
-                    backgroundColor = AppTheme.colors.card,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(animateNavHeight.dp),
-                    elevation = 0.dp
-                ) {
-                    Spacer(modifier = Modifier.weight(0.5f))
-                    NavigationItem(
-                        title = "分析",
-                        icon = R.drawable.ic_analyze,
-                        isSelected = nowPage == 0
-                    ) {
-                        coroutineScope.launch { pageState.animateScrollToPage(0) }
-                    }
-                    Spacer(modifier = Modifier.weight(1f))
-                    NavigationItem(
-                        title = "总览",
-                        icon = R.drawable.ic_total,
-                        isSelected = nowPage == 1
-                    ) {
-                        coroutineScope.launch { pageState.animateScrollToPage(1) }
-                    }
-                    Spacer(modifier = Modifier.weight(1f))
-                    NavigationItem(
-                        title = "Beta",
-                        icon = R.drawable.ic_beta,
-                        isSelected = nowPage == 2
-                    ) {
-                        coroutineScope.launch { pageState.animateScrollToPage(2) }
-                    }
-                    Spacer(modifier = Modifier.weight(0.5f))
-                }
-            }
-        }
-
-        // 加载中
-        AnimatedVisibility(
-            visible = states.isShowLoading,
-            enter = fadeIn(),
-            exit = fadeOut(),
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .onGloballyPositioned { fullHeight = pxToDp(context, it.size.height.toFloat()) }
         ) {
-            AppLoadingWidget()
+            Column {
+                // 标题
+                HeaderWidget(title = "数据分析", leftAction = {
+                    Box(modifier = Modifier
+                        .fillMaxHeight()
+                        .aspectRatio(1f)
+                        .clip(CircleShape)
+                        .clickable(indication = rememberRipple(),
+                            interactionSource = remember { MutableInteractionSource() }) { navController.navigateUp() }) {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_back),
+                            contentDescription = "back"
+                        )
+                    }
+                })
+                // 页面内容
+                HorizontalPager(
+                    state = pageState,
+                    userScrollEnabled = false,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    when (it) {
+                        0 -> AnalysisFragPage(
+                            viewModel = viewModel,
+                            showToast = showToast
+                        )
+
+                        1 -> OverviewFragPage(
+                            viewModel = viewModel,
+                            showToast = showToast
+                        )
+
+                        else -> BetaFunctionFragPage(
+                            navController = navController,
+                            showToast = showToast
+                        )
+                    }
+                }
+                // 底部导航
+                Column {
+                    HorizontalDivider(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = AppTheme.colors.dividerColor,
+                        thickness = 0.5.dp
+                    )
+                    BottomNavigation(
+                        backgroundColor = AppTheme.colors.card,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(animateNavHeight.dp),
+                        elevation = 0.dp
+                    ) {
+                        Spacer(modifier = Modifier.weight(0.5f))
+                        NavigationItem(
+                            title = "分析",
+                            icon = R.drawable.ic_analyze,
+                            isSelected = nowPage == 0
+                        ) {
+                            coroutineScope.launch { pageState.animateScrollToPage(0) }
+                        }
+                        Spacer(modifier = Modifier.weight(1f))
+                        NavigationItem(
+                            title = "总览",
+                            icon = R.drawable.ic_total,
+                            isSelected = nowPage == 1
+                        ) {
+                            coroutineScope.launch { pageState.animateScrollToPage(1) }
+                        }
+                        Spacer(modifier = Modifier.weight(1f))
+                        NavigationItem(
+                            title = "Beta",
+                            icon = R.drawable.ic_beta,
+                            isSelected = nowPage == 2
+                        ) {
+                            coroutineScope.launch { pageState.animateScrollToPage(2) }
+                        }
+                        Spacer(modifier = Modifier.weight(0.5f))
+                    }
+                }
+            }
+
+            // 加载中
+            AnimatedVisibility(
+                visible = states.isShowLoading,
+                enter = fadeIn(),
+                exit = fadeOut(),
+            ) {
+                AppLoadingWidget()
+            }
         }
     }
 }
