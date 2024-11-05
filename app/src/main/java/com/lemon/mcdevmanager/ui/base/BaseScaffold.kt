@@ -24,12 +24,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.lemon.mcdevmanager.MainActivity
 import com.lemon.mcdevmanager.data.common.ABOUT_PAGE
 import com.lemon.mcdevmanager.data.common.ANALYZE_PAGE
 import com.lemon.mcdevmanager.data.common.COMMENT_PAGE
@@ -75,6 +78,8 @@ import java.io.File
 
 @Composable
 fun BaseScaffold() {
+    val activity = LocalContext.current as MainActivity
+
     val snackBarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val navController = rememberNavController()
@@ -132,6 +137,10 @@ fun BaseScaffold() {
         ) {
             // 启动页
             composable(route = SPLASH_PAGE) {
+                activity.overrideStatusBarStyle(
+                    lightColor = Color(0xFF50C878).toArgb(),
+                    darkColor = Color(0xFF417C54).toArgb()
+                )
                 SplashPage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) }
@@ -139,6 +148,10 @@ fun BaseScaffold() {
             }
             // 登录页
             composable(route = LOGIN_PAGE) {
+                activity.overrideStatusBarStyle(
+                    lightColor = Color.Transparent.toArgb(),
+                    darkColor = Color.Transparent.toArgb()
+                )
                 LoginPage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) })
@@ -150,6 +163,10 @@ fun BaseScaffold() {
                     slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
                 }
             ) {
+                activity.overrideStatusBarStyle(
+                    lightColor = Color.Transparent.toArgb(),
+                    darkColor = Color.Transparent.toArgb()
+                )
                 MainPage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) })
@@ -163,6 +180,7 @@ fun BaseScaffold() {
                     slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
                 }
             ) {
+                activity.resetStatusBarStyle()
                 FeedbackPage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) }
@@ -177,6 +195,7 @@ fun BaseScaffold() {
                     slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
                 }
             ) {
+                activity.resetStatusBarStyle()
                 CommentPage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) }
@@ -191,6 +210,7 @@ fun BaseScaffold() {
                     slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
                 }
             ) {
+                activity.resetStatusBarStyle()
                 AnalyzePage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) }
@@ -205,6 +225,7 @@ fun BaseScaffold() {
                     slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
                 }
             ) {
+                activity.resetStatusBarStyle()
                 RealtimeProfitPage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) }
@@ -222,6 +243,7 @@ fun BaseScaffold() {
                     slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
                 }
             ) {
+                activity.resetStatusBarStyle()
                 ProfitPage(navController = navController)
             }
             // 激励历史页
@@ -236,6 +258,7 @@ fun BaseScaffold() {
                     slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
                 }
             ) {
+                activity.resetStatusBarStyle()
                 IncentivePage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) }
@@ -253,6 +276,7 @@ fun BaseScaffold() {
                     slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
                 }
             ) {
+                activity.resetStatusBarStyle()
                 SettingPage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) }
@@ -270,6 +294,7 @@ fun BaseScaffold() {
                     slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
                 }
             ) {
+                activity.resetStatusBarStyle()
                 LogViewPage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) }
@@ -287,6 +312,7 @@ fun BaseScaffold() {
                     slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
                 }
             ) {
+                activity.resetStatusBarStyle()
                 AboutPage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) },
@@ -306,6 +332,7 @@ fun BaseScaffold() {
                     slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
                 }
             ) {
+                activity.resetStatusBarStyle()
                 OpenSourceInfoPage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) }
@@ -323,6 +350,7 @@ fun BaseScaffold() {
                     slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
                 }
             ) {
+                activity.resetStatusBarStyle()
                 LicensePage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) }

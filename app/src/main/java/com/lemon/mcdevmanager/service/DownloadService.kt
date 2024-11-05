@@ -3,12 +3,14 @@ package com.lemon.mcdevmanager.service
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Environment
 import android.os.IBinder
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.content.FileProvider
 import com.lemon.mcdevmanager.R
@@ -29,7 +31,7 @@ class DownloadService : Service() {
     private val TIPS_NOTIFICATION_ID = 2
 
     private val repository = UpdateRepository.getInstance()
-    private lateinit var notificationManager : NotificationManager
+    private lateinit var notificationManager: NotificationManager
 
     override fun onBind(intent: Intent?): IBinder? {
         return null
@@ -44,7 +46,7 @@ class DownloadService : Service() {
         startForeground(DOWNLOAD_NOTIFICATION_ID, createDownloadNotification(0, 0))
         if (downloadUrl != null && targetPath != null) {
             Thread { downloadFile(downloadUrl, targetPath) }.start()
-        }else{
+        } else {
             sendNotification("下载失败, 无法获取下载链接或目标路径")
             Logger.d("下载地址或目标路径为空")
         }
@@ -76,15 +78,13 @@ class DownloadService : Service() {
             }
 
             stopForeground(STOP_FOREGROUND_REMOVE)
-            notificationManager.cancel(DOWNLOAD_NOTIFICATION_ID)
-            updateNotification(100)
+            cancelDownloadNotification()
 
             if (!packageManager.canRequestPackageInstalls()) {
                 // 复制文件到下载目录
                 val downloadFolderPath =
                     Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath
-                copyFileToDownloadFolder(
-                    context = this,
+                copyFileToDownloadFolder(context = this,
                     sourcePath = targetPath.substringBeforeLast("/"),
                     targetPath = downloadFolderPath,
                     fileName = downloadLink.substringAfterLast("/"),
@@ -92,20 +92,18 @@ class DownloadService : Service() {
                         Logger.d("移动安装包至下载目录成功")
                         sendNotification(
                             "下载完成, 安装包路径: $downloadFolderPath/${
-                                downloadLink.substringAfterLast("/")}"
+                                downloadLink.substringAfterLast("/")
+                            }"
                         )
                         File(targetPath).delete()
                     },
                     onFail = {
                         Logger.d("移动安装包至下载目录失败")
                         sendNotification("下载完成, 安装包路径: $targetPath")
-                    }
-                )
+                    })
             } else {
-                sendNotification("下载完成, 即将开始安装")
                 installApk(targetPath)
             }
-            installApk(targetPath)
         } catch (e: Exception) {
             sendNotification("下载失败, 请重试")
             stopForeground(STOP_FOREGROUND_REMOVE)
@@ -116,45 +114,75 @@ class DownloadService : Service() {
     }
 
     private fun installApk(apkPath: String) {
+        val intent = getInstallIntent(apkPath)
+        val pendingIntent =
+            PendingIntent.getActivity(
+                this,
+                0,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+        sendNotificationWithIntent("下载完成, 正在进行安装", pendingIntent)
+        startActivity(intent)
+    }
+
+    private fun getInstallIntent(apkPath: String): Intent {
         val apkFile = File(apkPath)
+        if (!apkFile.exists()) {
+            Logger.e("安装包不存在")
+            Toast.makeText(this, "安装包不存在", Toast.LENGTH_SHORT).show()
+        }
+        apkFile.setReadable(true, false)
         val intent = Intent(Intent.ACTION_VIEW)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         val apkUri: Uri =
             FileProvider.getUriForFile(baseContext, "${baseContext.packageName}.provider", apkFile)
-
         intent.setDataAndType(apkUri, "application/vnd.android.package-archive")
-        startActivity(intent)
+        return intent
     }
 
     private fun createDownloadNotification(progress: Int, maxProgress: Int): Notification {
         val builder = NotificationCompat.Builder(this, DOWNLOAD_NOTIFICATION_CHANNEL_ID)
-            .setContentTitle("MC开发者管理器")
-            .setContentText("下载中... $progress%")
-            .setSmallIcon(R.drawable.ic_mc)
-            .setProgress(maxProgress, progress, false)
+            .setContentTitle("MC开发者管理器").setContentText("下载中... $progress%")
+            .setSmallIcon(R.drawable.ic_mc).setProgress(maxProgress, progress, false)
         return builder.build()
     }
 
     private fun createTipsNotification(tips: String): Notification {
         val builder = NotificationCompat.Builder(this, TIPS_NOTIFICATION_CHANNEL_ID)
-            .setContentTitle("MC开发者管理器")
-            .setContentText(tips)
-            .setSmallIcon(R.drawable.ic_mc)
+            .setContentTitle("MC开发者管理器").setContentText(tips).setSmallIcon(R.drawable.ic_mc)
         return builder.build()
+    }
+
+    private fun createTipsWithIntentNotification(
+        tips: String, intent: PendingIntent
+    ): Notification {
+        val builder = NotificationCompat.Builder(this, TIPS_NOTIFICATION_CHANNEL_ID)
+            .setContentTitle("MC开发者管理器").setContentText(tips).setSmallIcon(R.drawable.ic_mc)
+            .setContentIntent(intent)
+        return builder.build()
+    }
+
+    private fun cancelDownloadNotification() {
+        notificationManager.cancel(DOWNLOAD_NOTIFICATION_ID)
     }
 
     private fun updateNotification(progress: Int) {
         notificationManager.notify(
-            DOWNLOAD_NOTIFICATION_ID,
-            createDownloadNotification(progress, 100)
+            DOWNLOAD_NOTIFICATION_ID, createDownloadNotification(progress, 100)
         )
     }
 
     private fun sendNotification(tips: String) {
         notificationManager.notify(
-            TIPS_NOTIFICATION_ID,
-            createTipsNotification(tips)
+            TIPS_NOTIFICATION_ID, createTipsNotification(tips)
+        )
+    }
+
+    private fun sendNotificationWithIntent(tips: String, intent: PendingIntent) {
+        notificationManager.notify(
+            TIPS_NOTIFICATION_ID, createTipsWithIntentNotification(tips, intent)
         )
     }
 

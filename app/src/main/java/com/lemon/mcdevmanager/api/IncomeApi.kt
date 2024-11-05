@@ -6,6 +6,7 @@ import com.lemon.mcdevmanager.data.common.JSONConverter
 import com.lemon.mcdevmanager.data.common.NETEASE_MC_DEV_LINK
 import com.lemon.mcdevmanager.data.netease.income.IncentiveBean
 import com.lemon.mcdevmanager.data.netease.income.IncentiveListBean
+import com.lemon.mcdevmanager.data.netease.income.IncomeDetailBean
 import com.lemon.mcdevmanager.utils.NoNeedData
 import com.lemon.mcdevmanager.utils.ResponseData
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -26,6 +27,14 @@ interface IncomeApi {
     suspend fun applyIncome(
         @Body request: RequestBody
     ): ResponseData<NoNeedData>
+
+    // 获取结算信息
+    @GET("/incomes")
+    suspend fun getIncome(
+        @Query("platform") platform: String = "pe",
+        @Query("start") start: Int = 0,
+        @Query("span") span: Int = Int.MAX_VALUE
+    ): ResponseData<IncomeDetailBean>
 
     // 获取激励金
     @GET("/incentive_fund/detail")

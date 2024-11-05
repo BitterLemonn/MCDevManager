@@ -14,5 +14,7 @@ data class UserInfoBean(
     @SerialName("onsale_item_count")
     val onSaleItemCount: Int,
     @SerialName("cur_month_incentive_fund")
-    val curMonthIncentiveFund: Double
+    val curMonthIncentiveFund: Double,
+    @SerialName("unextract_income")
+    val unExtractIncome: String
 )
