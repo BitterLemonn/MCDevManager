@@ -84,6 +84,7 @@ import ir.ehsannarmani.compose_charts.models.AnimationMode
 import ir.ehsannarmani.compose_charts.models.BarProperties
 import ir.ehsannarmani.compose_charts.models.GridProperties
 import ir.ehsannarmani.compose_charts.models.HorizontalIndicatorProperties
+import ir.ehsannarmani.compose_charts.models.IndicatorCount
 import ir.ehsannarmani.compose_charts.models.LabelHelperProperties
 import ir.ehsannarmani.compose_charts.models.LabelProperties
 import java.time.ZonedDateTime
@@ -280,7 +281,8 @@ fun AnalysisFragPage(
                                     enabled = true,
                                     color = SolidColor(AppTheme.colors.hintColor.copy(alpha = 0.5f)),
                                     lineCount = states.chartDateList.size
-                                ), xAxisProperties = GridProperties.AxisProperties(
+                                ),
+                                xAxisProperties = GridProperties.AxisProperties(
                                     enabled = true,
                                     color = SolidColor(AppTheme.colors.hintColor.copy(alpha = 0.5f)),
                                     lineCount = analyzeHeight / 40
@@ -288,10 +290,12 @@ fun AnalysisFragPage(
                             ),
                             labelHelperProperties = LabelHelperProperties(
                                 textStyle = TextStyle(
-                                    fontSize = 12.sp, color = AppTheme.colors.textColor
+                                    fontSize = 12.sp,
+                                    color = AppTheme.colors.textColor
                                 )
                             ),
-                            indicatorProperties = HorizontalIndicatorProperties(count = analyzeHeight / 40,
+                            indicatorProperties = HorizontalIndicatorProperties(
+                                count = IndicatorCount.CountBased(analyzeHeight / 40),
                                 textStyle = TextStyle(
                                     fontSize = 12.sp, color = AppTheme.colors.textColor
                                 ),
@@ -343,7 +347,8 @@ fun AnalysisFragPage(
                                     fontSize = 12.sp, color = AppTheme.colors.textColor
                                 )
                             ),
-                            indicatorProperties = HorizontalIndicatorProperties(count = analyzeHeight / 40,
+                            indicatorProperties = HorizontalIndicatorProperties(
+                                count = IndicatorCount.CountBased(analyzeHeight / 40),
                                 textStyle = TextStyle(
                                     fontSize = 12.sp, color = AppTheme.colors.textColor
                                 ),

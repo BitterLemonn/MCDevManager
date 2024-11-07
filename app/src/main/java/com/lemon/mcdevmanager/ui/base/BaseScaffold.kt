@@ -38,6 +38,7 @@ import com.lemon.mcdevmanager.data.common.ANALYZE_PAGE
 import com.lemon.mcdevmanager.data.common.COMMENT_PAGE
 import com.lemon.mcdevmanager.data.common.FEEDBACK_PAGE
 import com.lemon.mcdevmanager.data.common.INCENTIVE_PAGE
+import com.lemon.mcdevmanager.data.common.INCOME_DETAIL_PAGE
 import com.lemon.mcdevmanager.data.common.LICENSE_PAGE
 import com.lemon.mcdevmanager.data.common.LOGIN_PAGE
 import com.lemon.mcdevmanager.data.common.LOG_PAGE
@@ -53,6 +54,7 @@ import com.lemon.mcdevmanager.ui.page.AnalyzePage
 import com.lemon.mcdevmanager.ui.page.CommentPage
 import com.lemon.mcdevmanager.ui.page.FeedbackPage
 import com.lemon.mcdevmanager.ui.page.IncentivePage
+import com.lemon.mcdevmanager.ui.page.IncomePage
 import com.lemon.mcdevmanager.ui.page.LicensePage
 import com.lemon.mcdevmanager.ui.page.LogViewPage
 import com.lemon.mcdevmanager.ui.page.LoginPage
@@ -169,7 +171,8 @@ fun BaseScaffold() {
                 )
                 MainPage(
                     navController = navController,
-                    showToast = { msg, flag -> showToast(msg, flag) })
+                    showToast = { msg, flag -> showToast(msg, flag) }
+                )
             }
             // 玩家反馈页
             composable(
@@ -245,6 +248,21 @@ fun BaseScaffold() {
             ) {
                 activity.resetStatusBarStyle()
                 ProfitPage(navController = navController)
+            }
+            // 收益详情页
+            composable(
+                route = INCOME_DETAIL_PAGE,
+                enterTransition = {
+                    slideInHorizontally(animationSpec = tween(200), initialOffsetX = { -it })
+                }, popExitTransition = {
+                    slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
+                },
+                exitTransition = {
+                    slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
+                }
+            ) {
+                activity.resetStatusBarStyle()
+                IncomePage(navController = navController)
             }
             // 激励历史页
             composable(

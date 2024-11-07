@@ -66,7 +66,9 @@ class IncomeDetailViewModel : ViewModel() {
         when (val result = repository.getIncomeDetail("pe")) {
             is NetworkState.Success -> {
                 result.data?.let {
-                    _viewStates.setState { copy(peDetailList = it.incomes) }
+                    _viewStates.setState {
+                        copy(peDetailList = it.incomes.sortedBy { it.dataMonth }.reversed())
+                    }
                 }
             }
 
@@ -79,7 +81,9 @@ class IncomeDetailViewModel : ViewModel() {
         when (val result = repository.getIncomeDetail("pc")) {
             is NetworkState.Success -> {
                 result.data?.let {
-                    _viewStates.setState { copy(pcDetailList = it.incomes) }
+                    _viewStates.setState {
+                        copy(pcDetailList = it.incomes.sortedBy { it.dataMonth }.reversed())
+                    }
                 }
             }
 

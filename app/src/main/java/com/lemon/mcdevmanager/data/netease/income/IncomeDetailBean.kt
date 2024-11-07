@@ -24,10 +24,11 @@ data class IncomeBean(
     val income: String = "0.00",
     @SerialName("op_time")
     val opTime: String = "",
-    val platform: String = "",
+    val platform: String = "pe",
     @SerialName("play_plan_income")
     val playPlanIncome: String = "0.00",
-    val status: String = "",
+    @SerialName("status")
+    private val _status: String = "",
     val tax: String = "0.00",
     @SerialName("tech_service_fee")
     val techServiceFee: Double = 0.0,
@@ -36,7 +37,10 @@ data class IncomeBean(
     @SerialName("total_usage_price")
     val totalUsagePrice: Double = 0.0,
     val type: String = ""
-)
+) {
+    val status: String
+        get() = if (_status == "init") "未结算" else if (_status == "fail") "结算失败" else if (_status == "applying") "结算中" else if (_status == "pay_success") "已打款" else if (_status == "pay_fail") "打款失败" else if (_status == "need_modify") "结算信息待更正" else "---"
+}
 
 @Serializable
 data class IncomeAvailableDetail(
