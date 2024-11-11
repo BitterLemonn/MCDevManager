@@ -4,6 +4,7 @@ import com.lemon.mcdevmanager.data.AddCookiesInterceptor
 import com.lemon.mcdevmanager.data.CommonInterceptor
 import com.lemon.mcdevmanager.data.common.JSONConverter
 import com.lemon.mcdevmanager.data.common.NETEASE_MC_DEV_LINK
+import com.lemon.mcdevmanager.data.netease.income.ApplyIncomeDetailBean
 import com.lemon.mcdevmanager.data.netease.income.IncentiveBean
 import com.lemon.mcdevmanager.data.netease.income.IncentiveListBean
 import com.lemon.mcdevmanager.data.netease.income.IncomeDetailBean
@@ -17,6 +18,7 @@ import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.PUT
+import retrofit2.http.Path
 import retrofit2.http.Query
 import java.util.concurrent.TimeUnit
 
@@ -35,6 +37,12 @@ interface IncomeApi {
         @Query("start") start: Int = 0,
         @Query("span") span: Int = Int.MAX_VALUE
     ): ResponseData<IncomeDetailBean>
+
+    // 获取结算详情
+    @GET("/incomes/{id}")
+    suspend fun getApplyDetail(
+        @Path("id") id: String
+    ): ResponseData<ApplyIncomeDetailBean>
 
     // 获取激励金
     @GET("/incentive_fund/detail")

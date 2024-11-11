@@ -9,6 +9,7 @@ data class ApplyIncomeBean(
     val incomeIds: List<String>
 )
 
+// 实时收益
 @Serializable
 data class OneResRealtimeIncomeBean(
     val count: Int = 0,

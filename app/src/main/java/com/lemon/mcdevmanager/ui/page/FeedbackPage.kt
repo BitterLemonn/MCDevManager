@@ -161,6 +161,11 @@ fun FeedbackPage(
                     launchSingleTop = true
                     popUpTo(navController.graph.startDestinationId) { inclusive = true }
                 }
+
+                is FeedbackEvent.ReplySuccess -> {
+                    resetDetail()
+                    viewModel.dispatch(FeedbackAction.RefreshFeedback)
+                }
             }
         }
     ) {
@@ -565,6 +570,10 @@ fun FeedbackPage(
         // loading
         AnimatedVisibility(
             visible = states.isLoadingReply,
+            modifier = Modifier.clickable(
+                indication = null,
+                interactionSource = null
+            ){},
             enter = fadeIn(),
             exit = fadeOut()
         ) {

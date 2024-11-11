@@ -72,6 +72,16 @@ fun HeaderWidget(
                     leftAction(Modifier.align(Alignment.Center))
                 }
             }
+            if (rightAction != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .align(Alignment.CenterEnd)
+                        .padding(5.dp)
+                ) {
+                    rightAction(Modifier.align(Alignment.Center))
+                }
+            }
         }
         Box(
             modifier = Modifier
@@ -103,8 +113,7 @@ private fun HeaderWidgetPreview() {
                             .fillMaxHeight()
                             .aspectRatio(1f)
                             .then(it),
-                        contentScale = ContentScale.Crop,
-                        colorFilter = ColorFilter.tint(AppTheme.colors.textColor)
+                        contentScale = ContentScale.Crop
                     )
                 }
             )

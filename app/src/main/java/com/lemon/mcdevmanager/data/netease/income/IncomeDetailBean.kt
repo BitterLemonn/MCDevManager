@@ -11,6 +11,8 @@ data class IncomeDetailBean(
 
 @Serializable
 data class IncomeBean(
+    @SerialName("_id")
+    val id: String = "",
     @SerialName("adjust_diamond")
     val adjustDiamond: Int = 0,
     @SerialName("available_detail")

@@ -12,13 +12,14 @@ import com.lemon.mcdevmanager.ui.theme.AppTheme
 
 @Composable
 fun DividedLine(
-    modifier: Modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp)
+    modifier: Modifier = Modifier
 ) {
     Box(
         modifier = Modifier
-            .then(modifier)
             .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 2.dp)
             .height(1.dp)
             .background(AppTheme.colors.hintColor.copy(alpha = 0.35f))
+            .then(modifier)
     )
 }
