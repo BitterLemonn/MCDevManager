@@ -2,10 +2,8 @@ package com.lemon.mcdevmanager.ui.page
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.Image
@@ -36,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -54,7 +53,6 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.toFontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -89,10 +87,14 @@ fun IncomePage(
     var nowPlatform by remember { mutableStateOf("pe") }
 
     val states by viewModel.viewStates.collectAsState()
-    val dataList by rememberUpdatedState(
-        if (nowPlatform == "pe") states.peDetailList else states.pcDetailList
-    )
-    val detailList by rememberUpdatedState(states.applyIncomeDetail)
+    val dataList by remember {
+        derivedStateOf {
+            if (nowPlatform == "pe") states.peDetailList else states.pcDetailList
+        }
+    }
+    val detailList by remember {
+        derivedStateOf { states.applyIncomeDetail }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.dispatch(IncomeDetailActions.LoadIncomeDetail)
@@ -105,19 +107,26 @@ fun IncomePage(
     }) {
         Column(modifier = Modifier.fillMaxSize()) {
             // 标题
-            HeaderWidget(title = "收益详情", leftAction = {
-                Box(modifier = Modifier
-                    .fillMaxHeight()
-                    .aspectRatio(1f)
-                    .clip(CircleShape)
-                    .clickable(indication = rememberRipple(),
-                        interactionSource = remember { MutableInteractionSource() }) { navController.navigateUp() }) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_back),
-                        contentDescription = "back"
-                    )
+            HeaderWidget(
+                title = "收益详情",
+                leftAction = {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .aspectRatio(1f)
+                            .clip(CircleShape)
+                            .clickable(
+                                indication = rememberRipple(),
+                                interactionSource = remember { MutableInteractionSource() }
+                            ) { navController.navigateUp() }
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_back),
+                            contentDescription = "back"
+                        )
+                    }
                 }
-            })
+            )
             Row(
                 modifier = Modifier.padding(horizontal = 8.dp),
                 verticalAlignment = Alignment.CenterVertically

@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
 
 class IncomeDetailViewModel : ViewModel() {
     private val repository = IncomeRepository.getInstance()
-    private val _viewStates = MutableStateFlow(IncomeDetailStates())
+    val _viewStates = MutableStateFlow(IncomeDetailStates())
     val viewStates = _viewStates.asStateFlow()
     private val _viewEvents = SharedFlowEvents<IncomeDetailEvents>()
     val viewEvents = _viewEvents.asSharedFlow()
@@ -165,7 +165,21 @@ class IncomeDetailViewModel : ViewModel() {
     private fun applyIncome(incomeIds: List<String>) {
         viewModelScope.launch {
             flow<Unit> {
+                when (val result = repository.applyIncome(incomeIds)) {
+                    is NetworkState.Success -> {
+                        _viewStates.setState { copy(applyIncomeDetail = emptyList()) }
+                        loadIncomeDetail()
+                    }
 
+                    is NetworkState.Error -> {
+                        _viewEvents.setEvent(
+                            IncomeDetailEvents.ShowToast(
+                                "申请结算失败:${result.msg}",
+                                SNACK_ERROR
+                            )
+                        )
+                    }
+                }
             }.catch { e ->
                 Logger.e("申请结算失败: $e")
                 _viewEvents.setEvent(
@@ -199,4 +213,5 @@ sealed class IncomeDetailActions {
 
 sealed class IncomeDetailEvents {
     data class ShowToast(val message: String, val type: String) : IncomeDetailEvents()
+    data object DismissApplyDetail : IncomeDetailEvents()
 }
