@@ -4,9 +4,10 @@ import com.lemon.mcdevmanager.api.IncomeApi
 import com.lemon.mcdevmanager.data.common.CookiesStore
 import com.lemon.mcdevmanager.data.common.NETEASE_USER_COOKIE
 import com.lemon.mcdevmanager.data.global.AppContext
-import com.lemon.mcdevmanager.data.netease.income.IncentiveBean
 import com.lemon.mcdevmanager.data.netease.income.IncentiveListBean
-import com.lemon.mcdevmanager.data.netease.income.IncomeBean
+import com.lemon.mcdevmanager.data.netease.income.ApplyIncomeBean
+import com.lemon.mcdevmanager.data.netease.income.ApplyIncomeDetailBean
+import com.lemon.mcdevmanager.data.netease.income.IncomeDetailBean
 import com.lemon.mcdevmanager.utils.CookiesExpiredException
 import com.lemon.mcdevmanager.utils.NetworkState
 import com.lemon.mcdevmanager.utils.NoNeedData
@@ -30,10 +31,30 @@ class IncomeRepository {
         cookie?.let {
             CookiesStore.addCookie(NETEASE_USER_COOKIE, cookie)
 
-            val incomeData = dataJsonToString(IncomeBean(incomeIds))
+            val incomeData = dataJsonToString(ApplyIncomeBean(incomeIds))
             val incomeBody = incomeData.toRequestBody("application/json".toMediaTypeOrNull())
             return UnifiedExceptionHandler.handleSuspend {
                 IncomeApi.create().applyIncome(incomeBody)
+            }
+        } ?: return NetworkState.Error("无法获取用户cookie, 请重新登录", CookiesExpiredException)
+    }
+
+    suspend fun getApplyIncomeDetail(id: String): NetworkState<ApplyIncomeDetailBean> {
+        val cookie = AppContext.cookiesStore[AppContext.nowNickname]
+        cookie?.let {
+            CookiesStore.addCookie(NETEASE_USER_COOKIE, cookie)
+            return UnifiedExceptionHandler.handleSuspend {
+                IncomeApi.create().getApplyDetail(id)
+            }
+        } ?: return NetworkState.Error("无法获取用户cookie, 请重新登录", CookiesExpiredException)
+    }
+
+    suspend fun getIncomeDetail(platform: String = "pe"): NetworkState<IncomeDetailBean> {
+        val cookie = AppContext.cookiesStore[AppContext.nowNickname]
+        cookie?.let {
+            CookiesStore.addCookie(NETEASE_USER_COOKIE, cookie)
+            return UnifiedExceptionHandler.handleSuspend {
+                IncomeApi.create().getIncome(platform)
             }
         } ?: return NetworkState.Error("无法获取用户cookie, 请重新登录", CookiesExpiredException)
     }

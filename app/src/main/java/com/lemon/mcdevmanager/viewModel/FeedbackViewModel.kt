@@ -85,9 +85,9 @@ class FeedbackViewModel : ViewModel() {
                 flow<Unit> {
                     loadFeedbackLogic()
                 }.onStart {
-                    _viewStates.value = _viewStates.value.copy(isLoadingList = true)
+                    _viewStates.setState { copy(isLoadingReply = true) }
                 }.onCompletion {
-                    _viewStates.value = _viewStates.value.copy(isLoadingList = false)
+                    _viewStates.setState { copy(isLoadingReply = false) }
                 }.catch {
                     _viewEvents.setEvent(FeedbackEvent.ShowToast(it.message ?: "获取反馈失败: $it"))
                 }.flowOn(Dispatchers.IO).collect()
@@ -131,10 +131,10 @@ class FeedbackViewModel : ViewModel() {
                 }
                 replyFeedbackLogic()
             }.onStart {
-                _viewStates.value = _viewStates.value.copy(isLoadingReply = true)
+                _viewStates.setState { copy(isLoadingReply = true) }
             }.catch {
                 _viewEvents.setEvent(FeedbackEvent.ShowToast(it.message ?: "回复反馈失败: $it"))
-                _viewStates.value = _viewStates.value.copy(isLoadingReply = false)
+                _viewStates.setState { copy(isLoadingReply = false) }
             }.flowOn(Dispatchers.IO).collect()
         }
     }
@@ -144,8 +144,8 @@ class FeedbackViewModel : ViewModel() {
             repository.sendReply(_viewStates.value.replyId, _viewStates.value.replyContent)) {
             is NetworkState.Success -> {
                 _viewEvents.setEvent(FeedbackEvent.ShowToast("回复成功", false))
+                _viewStates.setState { copy(isLoadingReply = false) }
                 _viewEvents.setEvent(FeedbackEvent.ReplySuccess)
-                _viewStates.value = _viewStates.value.copy(isLoadingReply = false)
             }
 
             is NetworkState.Error -> {
@@ -201,6 +201,6 @@ data class FeedbackViewState(
 sealed class FeedbackEvent {
     data class ShowToast(val msg: String, val isError: Boolean = true) : FeedbackEvent()
     data class RouteToPath(val path: String, val needPop: Boolean = false) : FeedbackEvent()
-    data object NeedReLogin: FeedbackEvent()
+    data object NeedReLogin : FeedbackEvent()
     data object ReplySuccess : FeedbackEvent()
 }

@@ -15,7 +15,6 @@ data class ResponseData<T>(val status: String, val data: T? = null, val msg: Str
  * 响应处理包装通用类
  * 成功时返回 NetworkState.Success 包含响应返回的数据
  * 失败时返回 NetworkState.Error 包含响应返回的错误信息
- * 无视返回值 NetworkState.NoNeedResponse 包含响应返回的信息
  * @param T 响应体包含的数据的类型
  */
 sealed class NetworkState<out T> {

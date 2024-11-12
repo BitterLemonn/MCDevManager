@@ -39,6 +39,7 @@ import com.lemon.mcdevmanager.utils.pxToDp
 
 @Composable
 fun SelectTextCard(
+    modifier: Modifier = Modifier,
     initSelectLeft: Boolean = true,
     leftName: String,
     rightName: String,
@@ -46,6 +47,7 @@ fun SelectTextCard(
 ) {
     val isSelectLeft by rememberUpdatedState(initSelectLeft)
     SelectCard(
+        modifier = modifier,
         initSelectLeft = initSelectLeft,
         leftContain = {
             Text(
@@ -115,7 +117,7 @@ fun SelectCard(
                         .height(selectableItemHeight.dp)
                 )
             }
-            Row{
+            Row {
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -161,14 +163,20 @@ private fun SelectCardPreview() {
             Image(
                 painter = painterResource(id = R.drawable.ic_line_chart),
                 contentDescription = "line chart",
-                modifier = Modifier.size(36.dp).padding(4.dp).align(Alignment.Center)
+                modifier = Modifier
+                    .size(36.dp)
+                    .padding(4.dp)
+                    .align(Alignment.Center)
             )
         },
         rightContain = {
             Image(
                 painter = painterResource(id = R.drawable.ic_bar_chart),
                 contentDescription = "bar chart",
-                modifier = Modifier.size(36.dp).padding(4.dp).align(Alignment.Center)
+                modifier = Modifier
+                    .size(36.dp)
+                    .padding(4.dp)
+                    .align(Alignment.Center)
             )
         }
     )

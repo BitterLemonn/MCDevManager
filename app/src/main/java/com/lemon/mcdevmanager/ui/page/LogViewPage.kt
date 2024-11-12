@@ -124,25 +124,17 @@ fun LogViewPage(
         }
     ) {
         Column(Modifier.fillMaxSize()) {
+            // 标题
             HeaderWidget(title = "日志", leftAction = {
                 Box(modifier = Modifier
-                    .padding(8.dp)
+                    .fillMaxHeight()
+                    .aspectRatio(1f)
                     .clip(CircleShape)
-                    .clickable(
-                        indication = rememberRipple(),
-                        interactionSource = remember { MutableInteractionSource() },
-                    ) {
-                        navController.navigateUp()
-                    }) {
+                    .clickable(indication = rememberRipple(),
+                        interactionSource = remember { MutableInteractionSource() }) { navController.navigateUp() }) {
                     Image(
                         painter = painterResource(id = R.drawable.ic_back),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .aspectRatio(1f)
-                            .then(it),
-                        contentScale = ContentScale.Crop,
-                        colorFilter = ColorFilter.tint(TextWhite)
+                        contentDescription = "back"
                     )
                 }
             })

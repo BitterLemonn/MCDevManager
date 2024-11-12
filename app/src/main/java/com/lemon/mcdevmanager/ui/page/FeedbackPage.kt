@@ -161,31 +161,27 @@ fun FeedbackPage(
                     launchSingleTop = true
                     popUpTo(navController.graph.startDestinationId) { inclusive = true }
                 }
+
+                is FeedbackEvent.ReplySuccess -> {
+                    resetDetail()
+                    viewModel.dispatch(FeedbackAction.RefreshFeedback)
+                }
             }
         }
     ) {
         // 玩家反馈列表
         Column(Modifier.fillMaxSize()) {
+            // 标题
             HeaderWidget(title = "玩家反馈", leftAction = {
                 Box(modifier = Modifier
-                    .clip(shape = CircleShape)
-                    .padding(4.dp)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = rememberRipple()
-                    ) {
-                        keyboard?.hide()
-                        navController.navigateUp()
-                    }) {
+                    .fillMaxHeight()
+                    .aspectRatio(1f)
+                    .clip(CircleShape)
+                    .clickable(indication = rememberRipple(),
+                        interactionSource = remember { MutableInteractionSource() }) { navController.navigateUp() }) {
                     Image(
                         painter = painterResource(id = R.drawable.ic_back),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .aspectRatio(1f)
-                            .then(it),
-                        contentScale = ContentScale.Crop,
-                        colorFilter = ColorFilter.tint(TextWhite)
+                        contentDescription = "back"
                     )
                 }
             })
@@ -574,6 +570,10 @@ fun FeedbackPage(
         // loading
         AnimatedVisibility(
             visible = states.isLoadingReply,
+            modifier = Modifier.clickable(
+                indication = null,
+                interactionSource = null
+            ){},
             enter = fadeIn(),
             exit = fadeOut()
         ) {

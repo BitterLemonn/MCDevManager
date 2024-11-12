@@ -40,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
@@ -58,10 +59,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.lemon.mcdevmanager.MainActivity
 import com.lemon.mcdevmanager.R
 import com.lemon.mcdevmanager.data.common.LOGIN_PAGE
 import com.lemon.mcdevmanager.ui.base.BasePage
 import com.lemon.mcdevmanager.ui.theme.AppTheme
+import com.lemon.mcdevmanager.ui.theme.MCDevManagerTheme
 import com.lemon.mcdevmanager.ui.theme.TextWhite
 import com.lemon.mcdevmanager.ui.widget.AppLoadingWidget
 import com.lemon.mcdevmanager.ui.widget.BottomNameInput
@@ -77,7 +81,7 @@ import kotlinx.coroutines.Job
 
 @Composable
 fun LoginPage(
-    navController: NavController,
+    navController: NavController = rememberNavController(),
     viewModel: LoginViewModel = viewModel(),
     showToast: (String, String) -> Unit = { _, _ -> },
 ) {
@@ -316,7 +320,9 @@ fun LoginPage(
 @Composable
 @Preview(showBackground = true, showSystemUi = true)
 private fun LoginPagePreview() {
-    val context = LocalContext.current
-    val navController = NavController(context)
-    LoginPage(navController)
+    MCDevManagerTheme {
+        Box(Modifier.fillMaxSize().background(AppTheme.colors.background)){
+            LoginPage()
+        }
+    }
 }

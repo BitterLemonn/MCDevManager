@@ -77,22 +77,20 @@ fun OpenSourceInfoPage(
     )
 
     Column {
-        HeaderWidget(
-            title = "开源库",
-            leftAction = {
-                Box(modifier = Modifier
-                    .fillMaxHeight()
-                    .aspectRatio(1f)
-                    .clip(CircleShape)
-                    .clickable(indication = rememberRipple(),
-                        interactionSource = remember { MutableInteractionSource() }) { navController.navigateUp() }) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_back),
-                        contentDescription = "back"
-                    )
-                }
+        // 标题
+        HeaderWidget(title = "开源库", leftAction = {
+            Box(modifier = Modifier
+                .fillMaxHeight()
+                .aspectRatio(1f)
+                .clip(CircleShape)
+                .clickable(indication = rememberRipple(),
+                    interactionSource = remember { MutableInteractionSource() }) { navController.navigateUp() }) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_back),
+                    contentDescription = "back"
+                )
             }
-        )
+        })
         Box(
             modifier = Modifier
                 .fillMaxHeight(0.25f)

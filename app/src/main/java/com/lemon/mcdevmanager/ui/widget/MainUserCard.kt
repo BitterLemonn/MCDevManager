@@ -1,6 +1,9 @@
 package com.lemon.mcdevmanager.ui.widget
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -182,184 +185,190 @@ fun MainUserCard(
                 }
             }
         }
-        if (isShowLevelInfo) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp)
-            ) {
-                Column {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 8.dp, end = 8.dp, bottom = 4.dp)
-                    ) {
-                        Text(
-                            text = "${DecimalFormat("0.0").format(currentExp)}/ ${
-                                DecimalFormat("0.0").format(maxLevelExp)
-                            }",
-                            fontSize = if ("$currentExp".length + "/$maxLevelExp".length > 15) 12.sp else 14.sp,
-                            color = AppTheme.colors.textColor,
-                            modifier = Modifier.align(Alignment.BottomStart),
-                            fontFamily = Font(R.font.minecraft_ae).toFontFamily()
-                        )
-                        Text(
-                            text = "升阶任务 ${if (canLevelUp) "已完成" else "未完成"}",
-                            fontSize = 14.sp,
-                            color = AppTheme.colors.textColor,
-                            modifier = Modifier.align(Alignment.BottomEnd)
+        AnimatedVisibility(
+            visible = isShowLevelInfo,
+            enter = expandVertically(),
+            exit = shrinkVertically()
+        ) {
+            Column {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp)
+                ) {
+                    Column {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 8.dp, end = 8.dp, bottom = 4.dp)
+                        ) {
+                            Text(
+                                text = "${DecimalFormat("0.0").format(currentExp)}/ ${
+                                    DecimalFormat("0.0").format(maxLevelExp)
+                                }",
+                                fontSize = if ("$currentExp".length + "/$maxLevelExp".length > 15) 12.sp else 14.sp,
+                                color = AppTheme.colors.textColor,
+                                modifier = Modifier.align(Alignment.BottomStart),
+                                fontFamily = Font(R.font.minecraft_ae).toFontFamily()
+                            )
+                            Text(
+                                text = "升阶任务 ${if (canLevelUp) "已完成" else "未完成"}",
+                                fontSize = 14.sp,
+                                color = AppTheme.colors.textColor,
+                                modifier = Modifier.align(Alignment.BottomEnd)
+                            )
+                        }
+                        LinearProgressIndicator(
+                            progress = { (currentExp / maxLevelExp).toFloat() },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp)
+                                .padding(horizontal = 8.dp)
+                                .clip(CircleShape),
+                            color = if (canLevelUp) AppTheme.colors.success else AppTheme.colors.primaryColor
                         )
                     }
-                    LinearProgressIndicator(
-                        progress = { (currentExp / maxLevelExp).toFloat() },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(6.dp)
-                            .padding(horizontal = 8.dp)
-                            .clip(CircleShape),
-                        color = if (canLevelUp) AppTheme.colors.success else AppTheme.colors.primaryColor
+                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                ) {
+                    Text(
+                        text = "月度贡献",
+                        fontSize = 14.sp,
+                        color = AppTheme.colors.textColor,
+                        modifier = Modifier.align(Alignment.CenterStart)
+                    )
+                    Text(
+                        text = "统计时间 $dataDate",
+                        fontSize = 12.sp,
+                        color = AppTheme.colors.hintColor,
+                        modifier = Modifier.align(Alignment.CenterEnd)
                     )
                 }
-            }
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-            ) {
-                Text(
-                    text = "月度贡献",
-                    fontSize = 14.sp,
-                    color = AppTheme.colors.textColor,
-                    modifier = Modifier.align(Alignment.CenterStart)
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
+                    color = AppTheme.colors.dividerColor,
+                    thickness = 0.5.dp
                 )
-                Text(
-                    text = "统计时间 $dataDate",
-                    fontSize = 12.sp,
-                    color = AppTheme.colors.hintColor,
-                    modifier = Modifier.align(Alignment.CenterEnd)
-                )
-            }
-            HorizontalDivider(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
-                color = AppTheme.colors.dividerColor,
-                thickness = 0.5.dp
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp)
-            ) {
-                Row {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 8.dp, end = 8.dp, bottom = 4.dp)
-                        ) {
-                            Text(
-                                text = "组件贡献分数",
-                                fontSize = 14.sp,
-                                color = AppTheme.colors.textColor,
-                                modifier = Modifier.align(Alignment.BottomStart)
-                            )
-                            Text(
-                                text = DecimalFormat("0.0").format(contributeScore.toDouble()),
-                                fontSize = 14.sp,
-                                color = AppTheme.colors.primaryColor,
-                                modifier = Modifier.align(Alignment.BottomEnd)
-                            )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp)
+                ) {
+                    Row {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 8.dp, end = 8.dp, bottom = 4.dp)
+                            ) {
+                                Text(
+                                    text = "组件贡献分数",
+                                    fontSize = 14.sp,
+                                    color = AppTheme.colors.textColor,
+                                    modifier = Modifier.align(Alignment.BottomStart)
+                                )
+                                Text(
+                                    text = DecimalFormat("0.0").format(contributeScore.toDouble()),
+                                    fontSize = 14.sp,
+                                    color = AppTheme.colors.primaryColor,
+                                    modifier = Modifier.align(Alignment.BottomEnd)
+                                )
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 8.dp, end = 8.dp, bottom = 4.dp)
+                            ) {
+                                Text(
+                                    text = "组件贡献排名",
+                                    fontSize = 14.sp,
+                                    color = AppTheme.colors.textColor,
+                                    modifier = Modifier.align(Alignment.BottomStart)
+                                )
+                                Text(
+                                    text = "$contributeRank",
+                                    fontSize = 14.sp,
+                                    color = AppTheme.colors.primaryColor,
+                                    modifier = Modifier.align(Alignment.BottomEnd)
+                                )
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 8.dp, end = 8.dp, bottom = 4.dp)
+                            ) {
+                                Text(
+                                    text = "组件贡献等级",
+                                    fontSize = 14.sp,
+                                    color = AppTheme.colors.textColor,
+                                    modifier = Modifier.align(Alignment.BottomStart)
+                                )
+                                Text(
+                                    text = contributeClassStr,
+                                    fontSize = 14.sp,
+                                    color = AppTheme.colors.primaryColor,
+                                    modifier = Modifier.align(Alignment.BottomEnd)
+                                )
+                            }
                         }
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 8.dp, end = 8.dp, bottom = 4.dp)
-                        ) {
-                            Text(
-                                text = "组件贡献排名",
-                                fontSize = 14.sp,
-                                color = AppTheme.colors.textColor,
-                                modifier = Modifier.align(Alignment.BottomStart)
-                            )
-                            Text(
-                                text = "$contributeRank",
-                                fontSize = 14.sp,
-                                color = AppTheme.colors.primaryColor,
-                                modifier = Modifier.align(Alignment.BottomEnd)
-                            )
-                        }
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 8.dp, end = 8.dp, bottom = 4.dp)
-                        ) {
-                            Text(
-                                text = "组件贡献等级",
-                                fontSize = 14.sp,
-                                color = AppTheme.colors.textColor,
-                                modifier = Modifier.align(Alignment.BottomStart)
-                            )
-                            Text(
-                                text = contributeClassStr,
-                                fontSize = 14.sp,
-                                color = AppTheme.colors.primaryColor,
-                                modifier = Modifier.align(Alignment.BottomEnd)
-                            )
-                        }
-                    }
-                    Column(modifier = Modifier.weight(1f)) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 8.dp, end = 8.dp, bottom = 4.dp)
-                        ) {
-                            Text(
-                                text = "网络游戏分数",
-                                fontSize = 14.sp,
-                                color = AppTheme.colors.textColor,
-                                modifier = Modifier.align(Alignment.BottomStart)
-                            )
-                            Text(
-                                text = DecimalFormat("0.0").format(netGameScore.toDouble()),
-                                fontSize = 14.sp,
-                                color = AppTheme.colors.primaryColor,
-                                modifier = Modifier.align(Alignment.BottomEnd)
-                            )
-                        }
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 8.dp, end = 8.dp, bottom = 4.dp)
-                        ) {
-                            Text(
-                                text = "网络游戏排名",
-                                fontSize = 14.sp,
-                                color = AppTheme.colors.textColor,
-                                modifier = Modifier.align(Alignment.BottomStart)
-                            )
-                            Text(
-                                text = "$netGameRank",
-                                fontSize = 14.sp,
-                                color = AppTheme.colors.primaryColor,
-                                modifier = Modifier.align(Alignment.BottomEnd)
-                            )
-                        }
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 8.dp, end = 8.dp, bottom = 4.dp)
-                        ) {
-                            Text(
-                                text = "网络游戏等级",
-                                fontSize = 14.sp,
-                                color = AppTheme.colors.textColor,
-                                modifier = Modifier.align(Alignment.BottomStart)
-                            )
-                            Text(
-                                text = netGameClassStr,
-                                fontSize = 14.sp,
-                                color = AppTheme.colors.primaryColor,
-                                modifier = Modifier.align(Alignment.BottomEnd)
-                            )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 8.dp, end = 8.dp, bottom = 4.dp)
+                            ) {
+                                Text(
+                                    text = "网络游戏分数",
+                                    fontSize = 14.sp,
+                                    color = AppTheme.colors.textColor,
+                                    modifier = Modifier.align(Alignment.BottomStart)
+                                )
+                                Text(
+                                    text = DecimalFormat("0.0").format(netGameScore.toDouble()),
+                                    fontSize = 14.sp,
+                                    color = AppTheme.colors.primaryColor,
+                                    modifier = Modifier.align(Alignment.BottomEnd)
+                                )
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 8.dp, end = 8.dp, bottom = 4.dp)
+                            ) {
+                                Text(
+                                    text = "网络游戏排名",
+                                    fontSize = 14.sp,
+                                    color = AppTheme.colors.textColor,
+                                    modifier = Modifier.align(Alignment.BottomStart)
+                                )
+                                Text(
+                                    text = "$netGameRank",
+                                    fontSize = 14.sp,
+                                    color = AppTheme.colors.primaryColor,
+                                    modifier = Modifier.align(Alignment.BottomEnd)
+                                )
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 8.dp, end = 8.dp, bottom = 4.dp)
+                            ) {
+                                Text(
+                                    text = "网络游戏等级",
+                                    fontSize = 14.sp,
+                                    color = AppTheme.colors.textColor,
+                                    modifier = Modifier.align(Alignment.BottomStart)
+                                )
+                                Text(
+                                    text = netGameClassStr,
+                                    fontSize = 14.sp,
+                                    color = AppTheme.colors.primaryColor,
+                                    modifier = Modifier.align(Alignment.BottomEnd)
+                                )
+                            }
                         }
                     }
                 }

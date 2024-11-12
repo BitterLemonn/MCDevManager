@@ -4,11 +4,12 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class IncomeBean(
+data class ApplyIncomeBean(
     @SerialName("income_id")
     val incomeIds: List<String>
 )
 
+// 实时收益
 @Serializable
 data class OneResRealtimeIncomeBean(
     val count: Int = 0,
