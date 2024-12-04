@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.lemon.mcdevmanager.ui.widget.SNACK_ERROR
 import com.lemon.mcdevmanager.ui.widget.SNACK_SUCCESS
 import com.lemon.mcdevmanager.ui.widget.SNACK_WARN
+import com.orhanobut.logger.Logger
 import com.zj.mvi.core.SharedFlowEvents
 import com.zj.mvi.core.setEvent
 import com.zj.mvi.core.setState
@@ -46,7 +47,7 @@ class LogViewModel : ViewModel() {
             is LogViewAction.LoadLogContent -> loadLogContent(action.filename)
             is LogViewAction.ExportLog -> exportLog()
             is LogViewAction.DeleteLog -> deleteLog()
-            is LogViewAction.DeleteSevenDaysAgoLog -> deleteSevenDaysAgoLog()
+            is LogViewAction.DeleteThreeDaysAgoLog -> deleteThreeDaysAgoLog()
         }
     }
 
@@ -92,7 +93,7 @@ class LogViewModel : ViewModel() {
                 return@launch
             } else {
                 val logList =
-                    logDir.listFiles()?.filter { it.isFile }?.map { it.name } ?: emptyList()
+                    logDir.listFiles()?.filter { it.isFile }?.sortedBy { it.name }?.map { it.name } ?: emptyList()
                 _viewState.setState { copy(logList = logList) }
             }
         }
@@ -142,7 +143,7 @@ class LogViewModel : ViewModel() {
         }
     }
 
-    private fun deleteSevenDaysAgoLog() {
+    private fun deleteThreeDaysAgoLog() {
         viewModelScope.launch(Dispatchers.IO) {
             val logDir = File(viewState.value.logDirPath)
             if (!logDir.exists() || !logDir.isDirectory) {
@@ -151,7 +152,7 @@ class LogViewModel : ViewModel() {
             } else {
                 val logList =
                     logDir.listFiles()?.filter { it.isFile }?.map { it.name } ?: emptyList()
-                val sevenDaysAgo = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000
+                val sevenDaysAgo = System.currentTimeMillis() - 3 * 24 * 60 * 60 * 1000
                 logList.forEach {
                     val logFile = File(viewState.value.logDirPath, it)
                     if (logFile.lastModified() < sevenDaysAgo) {
@@ -188,7 +189,7 @@ sealed class LogViewAction {
     data class LoadLogContent(val filename: String) : LogViewAction()
     data object ExportLog : LogViewAction()
     data object DeleteLog : LogViewAction()
-    data object DeleteSevenDaysAgoLog : LogViewAction()
+    data object DeleteThreeDaysAgoLog : LogViewAction()
 }
 
 sealed class LogViewEvent {
