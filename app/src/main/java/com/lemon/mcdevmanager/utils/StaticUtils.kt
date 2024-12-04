@@ -52,18 +52,24 @@ fun getNoScaleTextSize(context: Context, textSize: Float): Float {
     return textSize
 }
 
+// 获取平均分布的元素 必须包含第一个和最后一个
 fun <T> getAvgItems(list: List<T>, count: Int): List<T> {
-    if (count <= 0 || list.isEmpty()) {
-        return emptyList()
+    val result = mutableListOf<T>()
+    val size = list.size
+    if (size <= count) {
+        return list
     }
-    val step = list.size / count
-    val selectedItems = mutableListOf<T>()
-    var index = 0
-    while (index < list.size && selectedItems.size < count) {
-        selectedItems.add(list[index])
-        index += step
+    val step = size / (count - 1)
+    for (i in 0 until count) {
+        val index = i * step
+        if (index < size) {
+            result.add(list[index])
+        }
     }
-    return selectedItems
+    if (list.last() != result.last()) {
+        result.add(list.last())
+    }
+    return result
 }
 
 fun getFontScale(context: Context): Float {

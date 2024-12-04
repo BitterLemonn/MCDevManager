@@ -30,7 +30,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -150,7 +150,7 @@ fun AnalysisFragPage(
                     .align(Alignment.CenterVertically)
                     .clip(CircleShape)
                     .background(AppTheme.colors.primaryColor)
-                    .clickable(indication = rememberRipple(),
+                    .clickable(indication = ripple(),
                         interactionSource = remember { MutableInteractionSource() }) {
                         isShowFilter = !isShowFilter
                     }
@@ -270,11 +270,13 @@ fun AnalysisFragPage(
                             animationMode = AnimationMode.Together(),
                             animationDelay = 0,
                             labelProperties = LabelProperties(
-                                labels = getAvgItems(states.chartDateList, analyzeWidth / 80),
+                                labels = getAvgItems(states.chartDateList, analyzeWidth / 50),
                                 enabled = true,
                                 textStyle = TextStyle(
                                     fontSize = 12.sp, color = AppTheme.colors.textColor
-                                )
+                                ),
+                                rotationDegreeOnSizeConflict = -45f,
+                                forceRotation = true
                             ),
                             gridProperties = GridProperties(
                                 yAxisProperties = GridProperties.AxisProperties(
@@ -409,7 +411,7 @@ fun AnalysisFragPage(
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
                         .clickable(
-                            indication = rememberRipple(),
+                            indication = ripple(),
                             interactionSource = remember { MutableInteractionSource() }
                         ) {
                             isShowDetail = !isShowDetail
@@ -556,7 +558,7 @@ fun AnalysisFragPage(
                                         AppTheme.colors.primaryColor,
                                         RoundedCornerShape(8.dp)
                                     )
-                                    .clickable(indication = rememberRipple(),
+                                    .clickable(indication = ripple(),
                                         interactionSource = remember { MutableInteractionSource() }) {
                                         isShowResPicker = true
                                     }
@@ -587,7 +589,7 @@ fun AnalysisFragPage(
                             .padding(8.dp)
                             .clip(RoundedCornerShape(8.dp))
                             .background(AppTheme.colors.primaryColor)
-                            .clickable(indication = rememberRipple(),
+                            .clickable(indication = ripple(),
                                 interactionSource = remember { MutableInteractionSource() }) {
                                 viewModel.dispatch(AnalyzeAction.LoadAnalyze)
                                 isShowFilter = false
@@ -648,7 +650,7 @@ fun AnalysisFragPage(
                             .size(40.dp)
                             .padding(8.dp)
                             .clip(CircleShape)
-                            .clickable(indication = rememberRipple(),
+                            .clickable(indication = ripple(),
                                 interactionSource = remember { MutableInteractionSource() }) {
                                 isShowResPicker = false
                             }

@@ -17,7 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -56,7 +56,7 @@ fun LicensePage(
                 .fillMaxHeight()
                 .aspectRatio(1f)
                 .clip(CircleShape)
-                .clickable(indication = rememberRipple(),
+                .clickable(indication = ripple(),
                     interactionSource = remember { MutableInteractionSource() }) { navController.navigateUp() }) {
                 Image(
                     painter = painterResource(id = R.drawable.ic_back),

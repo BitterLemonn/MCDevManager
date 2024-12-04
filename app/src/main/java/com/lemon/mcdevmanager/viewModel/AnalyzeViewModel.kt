@@ -35,8 +35,11 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.util.Calendar
+import java.util.Locale
 
 class AnalyzeViewModel : ViewModel() {
     private val detailRepository = DetailRepository.getInstance()
@@ -319,10 +322,16 @@ class AnalyzeViewModel : ViewModel() {
             val xValue = mutableListOf<String>()
             for (data in item.value) {
                 yValue.add(data.second)
-                val xValueStr = data.first.substring(5)
-                val date = xValueStr.substring(xValueStr.length - 2, xValueStr.length)
-                val month = xValueStr.substring(0, xValueStr.length - date.length)
-                xValue.add("$month/$date")
+                val sdf = SimpleDateFormat("yyyyMMdd", Locale.CHINESE)
+                val date = sdf.parse(data.first)
+                val calendar = Calendar.getInstance().apply { time = date }
+
+                val month = calendar.get(Calendar.MONTH) + 1
+                var day = calendar.get(Calendar.DAY_OF_MONTH).toString()
+                if (day.toInt() < 10) {
+                    day = "0$day"
+                }
+                xValue.add("$month/$day")
             }
             analyzeYValueList.add(yValue.map { it.toDouble() })
             analyzeXValueList.add(xValue)
@@ -348,6 +357,7 @@ class AnalyzeViewModel : ViewModel() {
                     )
                 )
             }
+            Logger.d("analyzeXValueList: $analyzeXValueList")
 
             for (dateIndex in analyzeXValueList[0].indices) {
                 val barData = mutableListOf<Bars.Data>()

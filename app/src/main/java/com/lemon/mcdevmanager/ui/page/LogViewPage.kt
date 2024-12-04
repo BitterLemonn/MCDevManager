@@ -32,7 +32,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -54,6 +54,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -96,7 +97,10 @@ fun LogViewPage(
 
     var isShowDetail by remember { mutableStateOf(false) }
     var isShowDeleteDialog by remember { mutableStateOf(false) }
+    var isShowDeleteSevenDialog by remember { mutableStateOf(false) }
     var isShowExportDialog by remember { mutableStateOf(false) }
+
+    var isShowSelect by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = Unit) {
         viewModel.dispatch(LogViewAction.UpdateLogDirPath(AppContext.logDirPath))
@@ -130,23 +134,51 @@ fun LogViewPage(
                     .fillMaxHeight()
                     .aspectRatio(1f)
                     .clip(CircleShape)
-                    .clickable(indication = rememberRipple(),
+                    .clickable(indication = ripple(),
                         interactionSource = remember { MutableInteractionSource() }) { navController.navigateUp() }) {
                     Image(
                         painter = painterResource(id = R.drawable.ic_back),
                         contentDescription = "back"
                     )
                 }
+            }, rightAction = {
+                Box(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .clickable(
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() }
+                        ) {
+                            isShowSelect = !isShowSelect
+                            if (!isShowSelect) {
+                                viewModel.dispatch(LogViewAction.ClearSelectedLog)
+                            }
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = if (isShowSelect) "取消" else "选择",
+                        color = TextWhite,
+                        fontSize = 14.sp,
+                        modifier = Modifier.fillMaxHeight(),
+                        textAlign = TextAlign.Center
+                    )
+                }
             })
             LazyColumn(
-                modifier = Modifier.fillMaxWidth().weight(1f)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
             ) {
                 items(states.logList) {
-                    LogFileItem(fileName = it,
+                    LogFileItem(
+                        fileName = it,
                         isSelected = states.selectedLogList.contains(it),
+                        showSelect = isShowSelect,
                         onSelected = { isSelected ->
                             viewModel.dispatch(LogViewAction.SelectLog(it, isSelected))
-                        }) {
+                        }
+                    ) {
                         showToast("日志内容可能包含隐私信息，请谨慎分享", SNACK_WARN)
                         viewModel.dispatch(LogViewAction.LoadLogContent(it))
                         isShowDetail = true
@@ -162,7 +194,7 @@ fun LogViewPage(
             }
             AnimatedVisibility(
                 modifier = Modifier.height(50.dp),
-                visible = states.selectedLogList.isNotEmpty(),
+                visible = isShowSelect,
                 enter = slideInVertically(
                     animationSpec = tween(200),
                     initialOffsetY = { it }
@@ -191,10 +223,14 @@ fun LogViewPage(
                             modifier = Modifier
                                 .widthIn(min = 80.dp)
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(AppTheme.colors.error)
+                                .background(
+                                    if (states.selectedLogList.isNotEmpty()) AppTheme.colors.error
+                                    else AppTheme.colors.dividerColor
+                                )
                                 .clickable(
+                                    enabled = states.selectedLogList.isNotEmpty(),
                                     interactionSource = remember { MutableInteractionSource() },
-                                    indication = rememberRipple()
+                                    indication = ripple()
                                 ) {
                                     isShowDeleteDialog = true
                                 }
@@ -208,15 +244,41 @@ fun LogViewPage(
                                     .align(Alignment.Center)
                             )
                         }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Box(
+                            modifier = Modifier
+                                .widthIn(min = 80.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(AppTheme.colors.error)
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = ripple()
+                                ) {
+                                    isShowDeleteSevenDialog = true
+                                }
+                        ) {
+                            Text(
+                                text = "删除七天前",
+                                fontSize = 14.sp,
+                                color = TextWhite,
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .align(Alignment.Center)
+                            )
+                        }
                         Spacer(modifier = Modifier.weight(1f))
                         Box(
                             modifier = Modifier
                                 .widthIn(min = 80.dp)
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(AppTheme.colors.primaryColor)
+                                .background(
+                                    if (states.selectedLogList.isNotEmpty()) AppTheme.colors.primaryColor
+                                    else AppTheme.colors.dividerColor
+                                )
                                 .clickable(
+                                    enabled = states.selectedLogList.isNotEmpty(),
                                     interactionSource = remember { MutableInteractionSource() },
-                                    indication = rememberRipple()
+                                    indication = ripple()
                                 ) { isShowExportDialog = true }
                         ) {
                             Text(
@@ -230,6 +292,20 @@ fun LogViewPage(
                         }
                     }
                 }
+            }
+        }
+
+        AnimatedVisibility(
+            visible = isShowDeleteSevenDialog,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            HintDoubleSelectDialog(
+                hint = "确定删除七天前的日志文件吗？",
+                onCanceled = { isShowDeleteSevenDialog = false }
+            ) {
+                viewModel.dispatch(LogViewAction.DeleteSevenDaysAgoLog)
+                isShowDeleteSevenDialog = false
             }
         }
 
@@ -264,7 +340,8 @@ fun LogViewPage(
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.65f))
                 .clickable(
-                    interactionSource = remember { MutableInteractionSource() }, indication = null
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
                 ) { isShowDetail = false })
         }
 
@@ -321,7 +398,11 @@ fun LogViewPage(
 
 @Composable
 private fun LogFileItem(
-    fileName: String, isSelected: Boolean, onSelected: (Boolean) -> Unit, onClick: () -> Unit
+    fileName: String,
+    showSelect: Boolean,
+    isSelected: Boolean,
+    onSelected: (Boolean) -> Unit,
+    onClick: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -332,7 +413,7 @@ private fun LogFileItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable(onClick = onClick,
-                    indication = rememberRipple(),
+                    indication = ripple(),
                     interactionSource = remember { MutableInteractionSource() }),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -343,27 +424,30 @@ private fun LogFileItem(
                 fontSize = 16.sp
             )
             Spacer(modifier = Modifier.weight(1f))
-            Box(modifier = Modifier
-                .height(50.dp)
-                .width(80.dp)
-                .padding(8.dp)
-                .clickable(
-                    indication = null,
-                    interactionSource = remember { MutableInteractionSource() }) {
-                    onSelected(!isSelected)
-                }) {
-                Image(
-                    painter = painterResource(
-                        id = if (isSelected) R.drawable.ic_selected else R.drawable.ic_unselect
-                    ),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .padding(4.dp)
-                        .align(Alignment.Center)
-                        .aspectRatio(1f),
-                    contentScale = ContentScale.Crop,
-                    colorFilter = ColorFilter.tint(AppTheme.colors.primaryColor)
-                )
+            if (showSelect) {
+                Box(modifier = Modifier
+                    .height(50.dp)
+                    .width(80.dp)
+                    .padding(8.dp)
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }) {
+                        onSelected(!isSelected)
+                    }) {
+                    Image(
+                        painter = painterResource(
+                            id = if (isSelected) R.drawable.ic_selected
+                            else R.drawable.ic_unselect
+                        ),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .align(Alignment.Center)
+                            .aspectRatio(1f),
+                        contentScale = ContentScale.Crop,
+                        colorFilter = ColorFilter.tint(AppTheme.colors.primaryColor)
+                    )
+                }
             }
         }
     }
@@ -374,12 +458,13 @@ private fun LogFileItem(
 private fun LogFileItemPreview() {
     var isSelected by remember { mutableStateOf(false) }
     MCDevManagerTheme {
-        LogFileItem(fileName = "2021-09-01 12:00:00_log.txt",
+        LogFileItem(
+            fileName = "2021-09-01 12:00:00_log.txt",
             isSelected = isSelected,
-            onSelected = {
-                isSelected = it
-            },
-            onClick = {})
+            onSelected = { isSelected = it },
+            showSelect = false,
+            onClick = {}
+        )
     }
 }
 

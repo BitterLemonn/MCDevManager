@@ -40,7 +40,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
@@ -177,7 +177,7 @@ fun FeedbackPage(
                     .fillMaxHeight()
                     .aspectRatio(1f)
                     .clip(CircleShape)
-                    .clickable(indication = rememberRipple(),
+                    .clickable(indication = ripple(),
                         interactionSource = remember { MutableInteractionSource() }) { navController.navigateUp() }) {
                     Image(
                         painter = painterResource(id = R.drawable.ic_back),
@@ -308,7 +308,7 @@ fun FeedbackPage(
                             FeedbackCard(
                                 modifier = Modifier.clickable(
                                     interactionSource = remember { MutableInteractionSource() },
-                                    indication = rememberRipple()
+                                    indication = ripple()
                                 ) {
                                     detailItem = item
                                     isShowDetail = true
@@ -436,7 +436,7 @@ fun FeedbackPage(
                                     .clip(RoundedCornerShape(8.dp))
                                     .clickable(
                                         interactionSource = remember { MutableInteractionSource() },
-                                        indication = rememberRipple()
+                                        indication = ripple()
                                     ) {
                                         viewModel.dispatch(FeedbackAction.ReplyFeedback)
                                         keyboard?.hide()
@@ -503,7 +503,7 @@ fun FeedbackPage(
                             .clip(RoundedCornerShape(8.dp))
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
-                                indication = rememberRipple()
+                                indication = ripple()
                             ) {
                                 viewModel.dispatch(FeedbackAction.ReplyFeedback)
                                 keyboard?.hide()
@@ -558,7 +558,7 @@ fun FeedbackPage(
                             .clip(CircleShape)
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
-                                indication = rememberRipple()
+                                indication = ripple()
                             ) {
                                 bigImageUrl = ""
                             },

@@ -19,7 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -76,7 +76,7 @@ fun SettingPage(
                 .fillMaxHeight()
                 .aspectRatio(1f)
                 .clip(CircleShape)
-                .clickable(indication = rememberRipple(),
+                .clickable(indication = ripple(),
                     interactionSource = remember { MutableInteractionSource() }) { navController.navigateUp() }) {
                 Image(
                     painter = painterResource(id = R.drawable.ic_back),
@@ -196,7 +196,7 @@ private fun SettingItem(
             .clip(RoundedCornerShape(4.dp))
             .clickable(
                 onClick = onClick,
-                indication = rememberRipple(),
+                indication = ripple(),
                 interactionSource = remember { MutableInteractionSource() }
             )
             .padding(horizontal = 16.dp, vertical = 16.dp)

@@ -20,7 +20,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
@@ -82,7 +82,7 @@ fun IncentivePage(
                     .fillMaxHeight()
                     .aspectRatio(1f)
                     .clip(CircleShape)
-                    .clickable(indication = rememberRipple(),
+                    .clickable(indication = ripple(),
                         interactionSource = remember { MutableInteractionSource() }) { navController.navigateUp() }) {
                     Image(
                         painter = painterResource(id = R.drawable.ic_back),

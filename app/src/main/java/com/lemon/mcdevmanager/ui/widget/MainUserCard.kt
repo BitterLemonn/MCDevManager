@@ -16,7 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -131,7 +131,7 @@ fun MainUserCard(
                     .clickable(
                         enabled = enableAvatarClick,
                         interactionSource = remember { MutableInteractionSource() },
-                        indication = rememberRipple()
+                        indication = ripple()
                     ) { onClickAvatar() }
             ) {
                 AsyncImage(
@@ -162,7 +162,7 @@ fun MainUserCard(
                         .clip(RoundedCornerShape(4.dp))
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple()
+                            indication = ripple()
                         ) { isShowLevelInfo = !isShowLevelInfo }
                 ) {
                     Text(
