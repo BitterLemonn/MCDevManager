@@ -1,9 +1,6 @@
 package com.lemon.mcdevmanager.ui.page
 
-import android.content.ContentValues
-import android.os.Build
 import android.os.Environment
-import android.provider.MediaStore
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -38,7 +35,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -76,14 +72,7 @@ import com.lemon.mcdevmanager.viewModel.LogViewAction
 import com.lemon.mcdevmanager.viewModel.LogViewEvent
 import com.lemon.mcdevmanager.viewModel.LogViewModel
 import com.lt.compose_views.other.VerticalSpace
-import com.orhanobut.logger.Logger
-import com.zj.mvi.core.observeEvent
-import kotlinx.coroutines.Job
-import org.bouncycastle.jcajce.provider.symmetric.ARC4.Base
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.io.IOException
 
 @Composable
 fun LogViewPage(
@@ -249,8 +238,12 @@ fun LogViewPage(
                             modifier = Modifier
                                 .widthIn(min = 80.dp)
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(AppTheme.colors.error)
+                                .background(
+                                    if (states.selectedLogList.isEmpty()) AppTheme.colors.error
+                                    else AppTheme.colors.dividerColor
+                                )
                                 .clickable(
+                                    enabled = states.selectedLogList.isEmpty(),
                                     interactionSource = remember { MutableInteractionSource() },
                                     indication = ripple()
                                 ) {
@@ -258,7 +251,7 @@ fun LogViewPage(
                                 }
                         ) {
                             Text(
-                                text = "删除七天前",
+                                text = "删除三天前",
                                 fontSize = 14.sp,
                                 color = TextWhite,
                                 modifier = Modifier
@@ -301,10 +294,10 @@ fun LogViewPage(
             exit = fadeOut()
         ) {
             HintDoubleSelectDialog(
-                hint = "确定删除七天前的日志文件吗？",
+                hint = "确定删除三天前的日志文件吗？",
                 onCanceled = { isShowDeleteSevenDialog = false }
             ) {
-                viewModel.dispatch(LogViewAction.DeleteSevenDaysAgoLog)
+                viewModel.dispatch(LogViewAction.DeleteThreeDaysAgoLog)
                 isShowDeleteSevenDialog = false
             }
         }
@@ -407,7 +400,9 @@ private fun LogFileItem(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(AppTheme.colors.card)
+            .height(50.dp)
+            .background(AppTheme.colors.card),
+        contentAlignment = Alignment.CenterStart
     ) {
         Row(
             modifier = Modifier
