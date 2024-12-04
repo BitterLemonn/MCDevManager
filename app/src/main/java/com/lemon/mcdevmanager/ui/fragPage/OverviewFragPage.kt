@@ -21,8 +21,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.Divider
 import androidx.compose.material.Text
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -110,7 +111,7 @@ fun OverviewFragPage(
                     .clip(CircleShape)
                     .background(AppTheme.colors.primaryColor)
                     .clickable(
-                        indication = rememberRipple(),
+                        indication = ripple(),
                         interactionSource = remember { MutableInteractionSource() }
                     ) {
                         isShowFilter = !isShowFilter
@@ -188,14 +189,14 @@ fun OverviewFragPage(
                                     ),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    DividedLine(modifier = Modifier.width(24.dp))
+                                    Divider(modifier = Modifier.padding(horizontal = 8.dp))
                                     Text(
                                         text = item.key,
                                         modifier = Modifier.padding(8.dp),
                                         color = AppTheme.colors.hintColor,
                                         fontSize = 14.sp
                                     )
-                                    DividedLine(modifier = Modifier.weight(1f))
+                                    Divider(modifier = Modifier.weight(1f))
                                 }
                             }
                             items(item.value) { bean ->

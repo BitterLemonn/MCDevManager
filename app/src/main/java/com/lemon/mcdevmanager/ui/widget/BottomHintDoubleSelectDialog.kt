@@ -16,7 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
@@ -107,7 +107,7 @@ fun BottomHintDialog(
                         modifier = Modifier
                             .weight(1f)
                             .clickable(
-                                indication = rememberRipple(),
+                                indication = ripple(),
                                 interactionSource = remember { MutableInteractionSource() },
                                 onClick = onCancel
                             )
@@ -132,7 +132,7 @@ fun BottomHintDialog(
                         modifier = Modifier
                             .weight(1f)
                             .clickable(
-                                indication = rememberRipple(),
+                                indication = ripple(),
                                 interactionSource = remember { MutableInteractionSource() },
                                 onClick = onConfirm
                             )

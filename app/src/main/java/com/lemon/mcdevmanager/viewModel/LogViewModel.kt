@@ -46,6 +46,7 @@ class LogViewModel : ViewModel() {
             is LogViewAction.LoadLogContent -> loadLogContent(action.filename)
             is LogViewAction.ExportLog -> exportLog()
             is LogViewAction.DeleteLog -> deleteLog()
+            is LogViewAction.DeleteSevenDaysAgoLog -> deleteSevenDaysAgoLog()
         }
     }
 
@@ -63,15 +64,21 @@ class LogViewModel : ViewModel() {
                 if (failedNum == viewState.value.selectedLogList.size) {
                     _viewEvent.setEvent(LogViewEvent.ShowToast("日志文件导出失败", SNACK_ERROR))
                 } else
-                if (failedNum > 0) {
-                    _viewEvent.setEvent(
-                        LogViewEvent.ShowToast(
-                            "日志文件导出完成, 有$failedNum 个文件导出失败, 文件已保存至下载目录MCDevManager文件夹", SNACK_WARN
+                    if (failedNum > 0) {
+                        _viewEvent.setEvent(
+                            LogViewEvent.ShowToast(
+                                "日志文件导出完成, 有$failedNum 个文件导出失败, 文件已保存至下载目录MCDevManager文件夹",
+                                SNACK_WARN
+                            )
                         )
-                    )
-                } else {
-                    _viewEvent.setEvent(LogViewEvent.ShowToast("日志文件导出完成, 文件已保存至下载目录MCDevManager文件夹", SNACK_SUCCESS))
-                }
+                    } else {
+                        _viewEvent.setEvent(
+                            LogViewEvent.ShowToast(
+                                "日志文件导出完成, 文件已保存至下载目录MCDevManager文件夹",
+                                SNACK_SUCCESS
+                            )
+                        )
+                    }
                 _viewState.setState { copy(selectedLogList = emptyList(), isShowLoading = false) }
             }
         }
@@ -135,6 +142,28 @@ class LogViewModel : ViewModel() {
         }
     }
 
+    private fun deleteSevenDaysAgoLog() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val logDir = File(viewState.value.logDirPath)
+            if (!logDir.exists() || !logDir.isDirectory) {
+                _viewEvent.setEvent(LogViewEvent.ShowToast("日志目录${logDir}不存在"))
+                return@launch
+            } else {
+                val logList =
+                    logDir.listFiles()?.filter { it.isFile }?.map { it.name } ?: emptyList()
+                val sevenDaysAgo = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000
+                logList.forEach {
+                    val logFile = File(viewState.value.logDirPath, it)
+                    if (logFile.lastModified() < sevenDaysAgo) {
+                        logFile.delete()
+                    }
+                }
+                _viewState.setState { copy(selectedLogList = emptyList()) }
+                loadLogList()
+            }
+        }
+    }
+
 }
 
 data class LogViewState(
@@ -159,6 +188,7 @@ sealed class LogViewAction {
     data class LoadLogContent(val filename: String) : LogViewAction()
     data object ExportLog : LogViewAction()
     data object DeleteLog : LogViewAction()
+    data object DeleteSevenDaysAgoLog : LogViewAction()
 }
 
 sealed class LogViewEvent {

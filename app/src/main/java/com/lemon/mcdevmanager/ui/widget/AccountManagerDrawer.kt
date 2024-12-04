@@ -16,7 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -71,7 +71,7 @@ fun AccountManagerDrawer(
                     .clip(CircleShape)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
-                        indication = rememberRipple()
+                        indication = ripple()
                     ) { onRightClick() }
             ) {
                 Image(
@@ -110,7 +110,7 @@ fun AccountManagerDrawer(
                 .background(AppTheme.colors.error)
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
-                    indication = rememberRipple()
+                    indication = ripple()
                 ) { onLogout() }
         ) {
             Text(
@@ -151,7 +151,7 @@ private fun AccountItem(
                 .clickable(
                     enabled = account != AppContext.nowNickname,
                     interactionSource = remember { MutableInteractionSource() },
-                    indication = rememberRipple()
+                    indication = ripple()
                 ) { onClick(account) }
         ) {
             Text(
@@ -177,7 +177,7 @@ private fun SwipeBackgroundContent(
         .background(AppTheme.colors.error)
         .clickable(
             interactionSource = remember { MutableInteractionSource() },
-            indication = rememberRipple()
+            indication = ripple()
         ) {
             onDismiss()
         }) {

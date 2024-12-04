@@ -24,13 +24,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -48,7 +45,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -63,7 +59,6 @@ import com.lemon.mcdevmanager.ui.theme.AppTheme
 import com.lemon.mcdevmanager.ui.theme.MCDevManagerTheme
 import com.lemon.mcdevmanager.utils.getFontScale
 import com.lemon.mcdevmanager.utils.pxToDp
-import com.lemon.mcdevmanager.viewModel.FeedbackAction
 import com.orhanobut.logger.Logger
 import java.time.Instant
 import java.time.ZoneId
@@ -239,7 +234,7 @@ fun FeedbackCard(
                             .clip(RoundedCornerShape(8.dp))
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
-                                indication = rememberRipple()
+                                indication = ripple()
                             ) {
                                 onClickImg(it)
                             },
@@ -293,7 +288,7 @@ private fun PreviewFeedbackCard() {
                             .border(1.dp, AppTheme.colors.hintColor, RoundedCornerShape(8.dp))
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
-                                indication = rememberRipple()
+                                indication = ripple()
                             ) {}
                     ) {
                         Row(Modifier.fillMaxWidth()) {
@@ -320,7 +315,7 @@ private fun PreviewFeedbackCard() {
                                     .clip(RoundedCornerShape(8.dp))
                                     .clickable(
                                         interactionSource = remember { MutableInteractionSource() },
-                                        indication = rememberRipple()
+                                        indication = ripple()
                                     ) { }
                             ) {
                                 Text(

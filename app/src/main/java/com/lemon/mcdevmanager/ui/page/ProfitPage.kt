@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
@@ -49,7 +49,7 @@ fun ProfitPage(
                 .fillMaxHeight()
                 .aspectRatio(1f)
                 .clip(CircleShape)
-                .clickable(indication = rememberRipple(),
+                .clickable(indication = ripple(),
                     interactionSource = remember { MutableInteractionSource() }) { navController.navigateUp() }) {
                 Image(
                     painter = painterResource(id = R.drawable.ic_back),
@@ -84,7 +84,7 @@ fun ProfitPage(
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(4.dp))
                         .clickable(
-                            indication = rememberRipple(),
+                            indication = ripple(),
                             interactionSource = remember { MutableInteractionSource() }
                         ) {
                             navController.navigate(INCOME_DETAIL_PAGE) {
@@ -127,7 +127,7 @@ fun ProfitPage(
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(4.dp))
                         .clickable(
-                            indication = rememberRipple(),
+                            indication = ripple(),
                             interactionSource = remember { MutableInteractionSource() }
                         ) {
                             navController.navigate(INCENTIVE_PAGE) {

@@ -13,7 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.Divider
+import androidx.compose.material.ripple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
@@ -32,6 +33,7 @@ import com.lemon.mcdevmanager.R
 import com.lemon.mcdevmanager.data.common.REALTIME_PROFIT_PAGE
 import com.lemon.mcdevmanager.ui.theme.AppTheme
 import com.lemon.mcdevmanager.ui.theme.MCDevManagerTheme
+import com.lemon.mcdevmanager.ui.widget.DividedLine
 import com.lemon.mcdevmanager.ui.widget.HeaderWidget
 import com.lemon.mcdevmanager.utils.getNoScaleTextSize
 import com.lt.compose_views.other.VerticalSpace
@@ -76,7 +78,7 @@ fun BetaFunctionFragPage(
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(4.dp))
                             .clickable(
-                                indication = rememberRipple(),
+                                indication = ripple(),
                                 interactionSource = remember { MutableInteractionSource() }
                             ) {
                                 navController.navigate(REALTIME_PROFIT_PAGE) {
@@ -91,6 +93,27 @@ fun BetaFunctionFragPage(
                             fontSize = getNoScaleTextSize(context, 16f).sp
                         )
                     }
+//                    Divider(modifier = Modifier.padding(vertical = 4.dp))
+//                    Box(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .clip(RoundedCornerShape(4.dp))
+//                            .clickable(
+//                                indication = ripple(),
+//                                interactionSource = remember { MutableInteractionSource() }
+//                            ) {
+//                                navController.navigate(REALTIME_PROFIT_PAGE) {
+//                                    launchSingleTop = true
+//                                }
+//                            }
+//                    ) {
+//                        Text(
+//                            text = "一键价格申诉",
+//                            color = AppTheme.colors.textColor,
+//                            modifier = Modifier.padding(vertical = 8.dp),
+//                            fontSize = getNoScaleTextSize(context, 16f).sp
+//                        )
+//                    }
                 }
             }
         }

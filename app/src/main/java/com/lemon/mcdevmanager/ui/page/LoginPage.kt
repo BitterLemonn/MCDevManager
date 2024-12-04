@@ -199,7 +199,7 @@ fun LoginPage(
                             label = { Text(text = if (isUseCookies) "Cookies" else "密码") },
                             keyboardOptions = KeyboardOptions(
                                 imeAction = ImeAction.Done,
-                                shouldShowKeyboardOnFocus = false,
+                                showKeyboardOnFocus = false,
                                 keyboardType = KeyboardType.Ascii
                             ),
                             visualTransformation = if (!isUseCookies && !isShowPassword) PasswordVisualTransformation()

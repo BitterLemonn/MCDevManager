@@ -29,7 +29,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.material.TextFieldDefaults
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
@@ -110,7 +110,7 @@ fun SearchBarWidget(
                             .clip(RoundedCornerShape(8.dp))
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
-                                indication = rememberRipple(),
+                                indication = ripple(),
                                 onClick = onSearch
                             )
                     ) {
@@ -132,7 +132,7 @@ fun SearchBarWidget(
                 .clip(CircleShape)
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
-                    indication = rememberRipple()
+                    indication = ripple()
                 ) { isShowContent = !isShowContent }) {
                 Image(
                     painter = painterResource(

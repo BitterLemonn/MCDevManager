@@ -25,7 +25,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
@@ -125,7 +125,7 @@ fun RealtimeProfitPage(
                         .fillMaxHeight()
                         .aspectRatio(1f)
                         .clip(CircleShape)
-                        .clickable(indication = rememberRipple(),
+                        .clickable(indication = ripple(),
                             interactionSource = remember { MutableInteractionSource() }) { navController.navigateUp() }) {
                         Image(
                             painter = painterResource(id = R.drawable.ic_back),
@@ -211,6 +211,7 @@ fun RealtimeProfitPage(
                                 state = dateState,
                                 modifier = Modifier.fillMaxWidth(),
                                 cacheSize = 1,
+                                isLoop = true,
                                 textSizes = remember { mutableStateListOf(14.sp) },
                                 selectedTextSize = 16.sp,
                                 textColors = remember { mutableStateListOf(hintColor) },
@@ -221,7 +222,7 @@ fun RealtimeProfitPage(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable(
-                                        indication = rememberRipple(),
+                                        indication = ripple(),
                                         interactionSource = remember { MutableInteractionSource() }
                                     ) {
                                         isShowDateSelector = false
@@ -275,7 +276,7 @@ fun RealtimeProfitPage(
                             modifier = Modifier
                                 .clip(CircleShape)
                                 .clickable(
-                                    indication = rememberRipple(),
+                                    indication = ripple(),
                                     interactionSource = remember { MutableInteractionSource() }
                                 ) { isShowDateSelector = true },
                             colors = CardDefaults.cardColors(containerColor = AppTheme.colors.card)
@@ -314,7 +315,7 @@ fun RealtimeProfitPage(
                             .padding(horizontal = 8.dp)
                             .clip(CircleShape)
                             .clickable(
-                                indication = rememberRipple(),
+                                indication = ripple(),
                                 interactionSource = remember { MutableInteractionSource() }) {
                                 viewModel.dispatch(RealtimeProfitAction.GetOneDayDetail)
                             }

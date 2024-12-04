@@ -17,7 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Text
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -83,7 +83,7 @@ fun OpenSourceInfoPage(
                 .fillMaxHeight()
                 .aspectRatio(1f)
                 .clip(CircleShape)
-                .clickable(indication = rememberRipple(),
+                .clickable(indication = ripple(),
                     interactionSource = remember { MutableInteractionSource() }) { navController.navigateUp() }) {
                 Image(
                     painter = painterResource(id = R.drawable.ic_back),
