@@ -34,7 +34,7 @@ interface AnalyzeApi {
         @Query("end_date") endDate: String,
         @Query("item_list_str") itemListStr: String,
         @Query("sort") sort: String = "dateid",
-        @Query("order") order: String = "ASC",
+        @Query("order") order: String = "DESC",
         @Query("start") start: Int = 0,
         @Query("span") span: Int = Int.MAX_VALUE
     ): ResponseData<ResDetailResponseBean>

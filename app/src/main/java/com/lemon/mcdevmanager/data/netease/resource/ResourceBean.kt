@@ -36,7 +36,7 @@ data class ResDetailBean(
     @SerialName("diamond")
     val diamond: Int,
     @SerialName("download_num")
-    val downloadNum: Int,
+    val downloadNum: Int = 0,
     @SerialName("iid")
     val iid: String,
     @SerialName("platform")

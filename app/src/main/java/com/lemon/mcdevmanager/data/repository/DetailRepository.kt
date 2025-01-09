@@ -45,7 +45,7 @@ class DetailRepository {
         endDate: String,
         itemList: List<String>,
         sort: String = "dateid",
-        order: String = "ASC",
+        order: String = "DESC",
         start: Int = 0,
         span: Int = Int.MAX_VALUE
     ): NetworkState<ResDetailResponseBean> {
@@ -74,7 +74,7 @@ class DetailRepository {
         startMonth: String,
         endMonth: String,
         sort: String = "monthid",
-        order: String = "ASC",
+        order: String = "DESC",
         start: Int = 0,
         span: Int = Int.MAX_VALUE
     ): NetworkState<ResMonthDetailResponseBean> {

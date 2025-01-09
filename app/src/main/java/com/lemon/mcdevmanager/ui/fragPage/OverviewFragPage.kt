@@ -180,16 +180,23 @@ fun OverviewFragPage(
                         }
                     } else {
                         val map = states.monthAnalyseList.groupBy { it.monthId }
-                        for (item in map.entries) {
+                        for (item in map.entries.reversed()) {
                             item {
                                 Row(
-                                    modifier = Modifier.padding(
-                                        vertical = 8.dp,
-                                        horizontal = 16.dp
-                                    ),
+                                    modifier = Modifier
+                                        .padding(
+                                            top = 8.dp,
+                                            bottom = 2.dp,
+                                            start = 8.dp,
+                                            end = 8.dp
+                                        ),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Divider(modifier = Modifier.padding(horizontal = 8.dp))
+                                    Divider(
+                                        modifier = Modifier
+                                            .padding(horizontal = 8.dp)
+                                            .fillMaxWidth(0.1f)
+                                    )
                                     Text(
                                         text = item.key,
                                         modifier = Modifier.padding(8.dp),
