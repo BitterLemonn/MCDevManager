@@ -7,11 +7,14 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -50,7 +53,11 @@ fun LicensePage(
 ) {
     var isSelectEN by remember { mutableStateOf(true) }
     val context = LocalContext.current
-    Column {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(WindowInsets.navigationBars.asPaddingValues())
+    ) {
         HeaderWidget(title = "开源协议", leftAction = {
             Box(modifier = Modifier
                 .fillMaxHeight()
@@ -137,9 +144,11 @@ fun LicensePage(
 @Preview(showBackground = true, showSystemUi = true)
 fun LicensePagePreview() {
     MCDevManagerTheme {
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .background(AppTheme.colors.background)) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(AppTheme.colors.background)
+        ) {
             LicensePage()
         }
     }

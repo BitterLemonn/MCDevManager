@@ -11,11 +11,15 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -104,7 +108,7 @@ fun AnalyzePage(
                 }
             }
         }
-    ) {
+    ) { modifier ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -161,6 +165,8 @@ fun AnalyzePage(
                         backgroundColor = AppTheme.colors.card,
                         modifier = Modifier
                             .fillMaxWidth()
+                            .background(AppTheme.colors.card)
+                            .padding(WindowInsets.navigationBars.asPaddingValues())
                             .height(animateNavHeight.dp),
                         elevation = 0.dp
                     ) {

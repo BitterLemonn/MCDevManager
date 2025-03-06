@@ -7,11 +7,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -53,6 +57,7 @@ fun AccountManagerDrawer(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(AppTheme.colors.card)
+                .padding(WindowInsets.statusBars.asPaddingValues())
         ) {
             Text(
                 text = "账号管理",
@@ -86,7 +91,9 @@ fun AccountManagerDrawer(
             }
         }
         HorizontalDivider(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp),
             color = AppTheme.colors.dividerColor,
             thickness = 0.5.dp
         )
@@ -106,8 +113,9 @@ fun AccountManagerDrawer(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(60.dp)
                 .background(AppTheme.colors.error)
+                .padding(WindowInsets.navigationBars.asPaddingValues())
+                .height(60.dp)
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = ripple()

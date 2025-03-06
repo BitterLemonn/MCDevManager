@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.lemon.mcdevmanager.R
+import com.lemon.mcdevmanager.data.common.ALL_MOD_SELECT_PAGE
 import com.lemon.mcdevmanager.data.common.REALTIME_PROFIT_PAGE
 import com.lemon.mcdevmanager.ui.theme.AppTheme
 import com.lemon.mcdevmanager.ui.theme.MCDevManagerTheme
@@ -89,7 +90,7 @@ fun BetaFunctionFragPage(
                         Text(
                             text = "实时收益",
                             color = AppTheme.colors.textColor,
-                            modifier = Modifier.padding(vertical = 8.dp),
+                            modifier = Modifier.padding(8.dp),
                             fontSize = getNoScaleTextSize(context, 16f).sp
                         )
                     }
@@ -114,6 +115,30 @@ fun BetaFunctionFragPage(
 //                            fontSize = getNoScaleTextSize(context, 16f).sp
 //                        )
 //                    }
+                    Divider(
+                        modifier = Modifier.padding(vertical = 4.dp),
+                        color = AppTheme.colors.background
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(4.dp))
+                            .clickable(
+                                indication = ripple(),
+                                interactionSource = remember { MutableInteractionSource() }
+                            ) {
+                                navController.navigate(ALL_MOD_SELECT_PAGE) {
+                                    launchSingleTop = true
+                                }
+                            }
+                    ) {
+                        Text(
+                            text = "组件数据",
+                            color = AppTheme.colors.textColor,
+                            modifier = Modifier.padding(8.dp),
+                            fontSize = getNoScaleTextSize(context, 16f).sp
+                        )
+                    }
                 }
             }
         }

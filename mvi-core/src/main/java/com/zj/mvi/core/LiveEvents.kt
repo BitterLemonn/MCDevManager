@@ -63,7 +63,7 @@ class LiveEvents<T> : MutableLiveData<List<T>>() {
 
         private val pending = AtomicBoolean(false)
         private val eventList = mutableListOf<List<T>>()
-        override fun onChanged(t: List<T>?) {
+        override fun onChanged(value: List<T>) {
             if (pending.compareAndSet(true, false)) {
                 observer.onChanged(eventList.flatten())
                 eventList.clear()

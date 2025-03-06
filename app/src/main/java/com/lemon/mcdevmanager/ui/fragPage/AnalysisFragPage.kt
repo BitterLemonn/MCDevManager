@@ -174,9 +174,9 @@ fun AnalysisFragPage(
                 FlowTabWidget(text = "新增购买", isSelected = states.filterType == 0, onClick = {
                     viewModel.dispatch(AnalyzeAction.UpdateFilterType(0))
                 })
-//                FlowTabWidget(text = "销售总量", isSelected = states.filterType == 1, onClick = {
-//                    viewModel.dispatch(AnalyzeAction.UpdateFilterType(1))
-//                })
+                FlowTabWidget(text = "销售总量", isSelected = states.filterType == 1, onClick = {
+                    viewModel.dispatch(AnalyzeAction.UpdateFilterType(1))
+                })
                 FlowTabWidget(text = "收益", isSelected = states.filterType == 2, onClick = {
                     viewModel.dispatch(AnalyzeAction.UpdateFilterType(2))
                 })
