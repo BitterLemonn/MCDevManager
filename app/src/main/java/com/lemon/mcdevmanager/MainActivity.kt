@@ -7,7 +7,18 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.core.view.WindowCompat
 import com.lemon.mcdevmanager.data.global.AppContext
 import com.lemon.mcdevmanager.ui.base.BaseScaffold
 import com.lemon.mcdevmanager.ui.theme.AppTheme
@@ -26,6 +37,7 @@ import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        // 初始化日志
         val formatStrategy: FormatStrategy =
             PrettyFormatStrategy.newBuilder().showThreadInfo(true).methodCount(4).tag("MCDevLogger")
                 .build()
@@ -39,44 +51,27 @@ class MainActivity : ComponentActivity() {
         AppContext.logDirPath = logDirPath
         Logger.addLogAdapter(DiskLogAdapter(fileName, logDirPath))
 
-        resetStatusBarStyle()
+        // 允许在状态栏渲染内容
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        enableEdgeToEdge(
+            // 透明状态栏
+            statusBarStyle = SystemBarStyle.auto(
+                android.graphics.Color.TRANSPARENT,
+                android.graphics.Color.TRANSPARENT,
+            ),
+            // 透明导航栏
+            navigationBarStyle = SystemBarStyle.auto(
+                android.graphics.Color.TRANSPARENT,
+                android.graphics.Color.TRANSPARENT,
+            )
+        )
+
         super.onCreate(savedInstanceState)
         setContent {
             MCDevManagerTheme {
                 BaseScaffold()
             }
-        }
-    }
-
-    private fun isNightMode(context: Context): Boolean {
-        val currentNightMode =
-            context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
-        return currentNightMode == Configuration.UI_MODE_NIGHT_YES
-    }
-
-    fun overrideStatusBarStyle(lightColor: Int, darkColor: Int) {
-        if (isNightMode(this)) {
-            enableEdgeToEdge(statusBarStyle = SystemBarStyle.dark(darkColor))
-        } else {
-            enableEdgeToEdge(statusBarStyle = SystemBarStyle.light(lightColor, darkColor))
-        }
-    }
-
-    fun resetStatusBarStyle() {
-        if (isNightMode(this)) {
-            enableEdgeToEdge(
-                statusBarStyle = SystemBarStyle.dark(Purple40.toArgb()),
-                navigationBarStyle = SystemBarStyle.light(
-                    android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT
-                )
-            )
-        } else {
-            enableEdgeToEdge(
-                statusBarStyle = SystemBarStyle.light(Purple200.toArgb(), Purple40.toArgb()),
-                navigationBarStyle = SystemBarStyle.light(
-                    android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT
-                )
-            )
         }
     }
 }

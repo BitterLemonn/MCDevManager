@@ -5,6 +5,8 @@ import com.lemon.mcdevmanager.data.common.CookiesStore
 import com.lemon.mcdevmanager.data.common.NETEASE_USER_COOKIE
 import com.lemon.mcdevmanager.data.global.AppContext
 import com.lemon.mcdevmanager.data.netease.income.OneResRealtimeIncomeBean
+import com.lemon.mcdevmanager.data.netease.resource.NewResDetailBean
+import com.lemon.mcdevmanager.data.netease.resource.NewResDetailResponseBean
 import com.lemon.mcdevmanager.data.netease.resource.ResDetailResponseBean
 import com.lemon.mcdevmanager.data.netease.resource.ResMonthDetailResponseBean
 import com.lemon.mcdevmanager.data.netease.resource.ResourceResponseBean
@@ -69,12 +71,41 @@ class DetailRepository {
         } ?: return NetworkState.Error("无法获取用户cookie, 请重新登录", CookiesExpiredException)
     }
 
+    suspend fun getNewDailyDetail(
+        platform: String,
+        startDate: String,
+        endDate: String,
+        item: String,
+        sort: String = "dateid",
+        order: String = "ASC",
+        start: Int = 0,
+        span: Int = Int.MAX_VALUE
+    ): NetworkState<NewResDetailResponseBean> {
+        val cookie = AppContext.cookiesStore[AppContext.nowNickname]
+        cookie?.let {
+            CookiesStore.addCookie(NETEASE_USER_COOKIE, cookie)
+            return UnifiedExceptionHandler.handleSuspend {
+                AnalyzeApi.create().getNewDayDetail(
+                    platform = platform,
+                    category = if (platform == "pe") "pe" else "comp",
+                    startDate = startDate,
+                    endDate = endDate,
+                    itemListStr = item,
+                    sort = sort,
+                    order = order,
+                    start = start,
+                    span = span
+                )
+            }
+        } ?: return NetworkState.Error("无法获取用户cookie, 请重新登录", CookiesExpiredException)
+    }
+
     suspend fun getMonthDetail(
         platform: String,
         startMonth: String,
         endMonth: String,
         sort: String = "monthid",
-        order: String = "ASC",
+        order: String = "DESC",
         start: Int = 0,
         span: Int = Int.MAX_VALUE
     ): NetworkState<ResMonthDetailResponseBean> {

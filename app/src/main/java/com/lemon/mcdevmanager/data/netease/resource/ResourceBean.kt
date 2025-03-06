@@ -36,7 +36,7 @@ data class ResDetailBean(
     @SerialName("diamond")
     val diamond: Int,
     @SerialName("download_num")
-    val downloadNum: Int,
+    val downloadNum: Int = 0,
     @SerialName("iid")
     val iid: String,
     @SerialName("platform")
@@ -75,6 +75,61 @@ data class ResMonthDetailBean(
     val totalPoints: Int,
     @SerialName("upload_time")
     val uploadTime: String = "UNKNOWN"
+)
+
+@Serializable
+data class NewResDetailBean(
+    @SerialName("DAU")
+    val dau: Int,
+    @SerialName("avg_first_type_buy")
+    val avgFirstTypeBuy: Double,
+    @SerialName("avg_first_type_diamond")
+    val avgFirstTypeDiamond: Double,
+    @SerialName("avg_first_type_focus")
+    val avgFirstTypeFocus: Double,
+    @SerialName("avg_first_type_role_play")
+    val avgFirstTypeRolePlay: Double,
+    @SerialName("avg_playtime")
+    val avgPlaytime: Double,
+    @SerialName("avg_total_first_type_buy")
+    val avgTotalFirstTypeBuy: Double,
+    @SerialName("cnt_buy")
+    val cntBuy: Int,
+    @SerialName("dateid")
+    val dateId: String,
+    val diamond: Int,
+    @SerialName("download_num")
+    val downloadNum: Int,
+    @SerialName("first_type_avg_role_time")
+    val firstTypeAvgRoleTime: Double,
+    @SerialName("focus_cnt")
+    val focusCnt: Int,
+    val iid: String,
+    @SerialName("pass_avg_role_time_ratio")
+    val passAvgRoleTimeRatio: Double,
+    @SerialName("pass_buy_cnt_ratio")
+    val passBuyCntRatio: Double,
+    @SerialName("pass_cnt_role_play_ratio")
+    val passCntRolePlayRatio: Double,
+    @SerialName("pass_focus_cnt_ratio")
+    val passFocusCntRatio: Double,
+    @SerialName("pass_pay_diamond_ratio")
+    val passPayDiamondRatio: Double,
+    val platform: String,
+    val points: Int,
+    @SerialName("refund_rate")
+    val refundRate: Double,
+    @SerialName("res_name")
+    val resName: String,
+    @SerialName("star_adjusted")
+    val starAdjusted: Double,
+    @SerialName("upload_time")
+    val uploadTime: String
+)
+
+@Serializable
+data class NewResDetailResponseBean(
+    val data: List<NewResDetailBean>
 )
 
 @Serializable

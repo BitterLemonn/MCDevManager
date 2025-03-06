@@ -11,7 +11,6 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -24,8 +23,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -34,6 +31,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.lemon.mcdevmanager.MainActivity
 import com.lemon.mcdevmanager.data.common.ABOUT_PAGE
+import com.lemon.mcdevmanager.data.common.ALL_MOD_SELECT_PAGE
 import com.lemon.mcdevmanager.data.common.ANALYZE_PAGE
 import com.lemon.mcdevmanager.data.common.COMMENT_PAGE
 import com.lemon.mcdevmanager.data.common.FEEDBACK_PAGE
@@ -43,6 +41,7 @@ import com.lemon.mcdevmanager.data.common.LICENSE_PAGE
 import com.lemon.mcdevmanager.data.common.LOGIN_PAGE
 import com.lemon.mcdevmanager.data.common.LOG_PAGE
 import com.lemon.mcdevmanager.data.common.MAIN_PAGE
+import com.lemon.mcdevmanager.data.common.MOD_DATA_DETAIL_PAGE
 import com.lemon.mcdevmanager.data.common.OPEN_SOURCE_INFO_PAGE
 import com.lemon.mcdevmanager.data.common.PROFIT_PAGE
 import com.lemon.mcdevmanager.data.common.REALTIME_PROFIT_PAGE
@@ -59,6 +58,8 @@ import com.lemon.mcdevmanager.ui.page.LicensePage
 import com.lemon.mcdevmanager.ui.page.LogViewPage
 import com.lemon.mcdevmanager.ui.page.LoginPage
 import com.lemon.mcdevmanager.ui.page.MainPage
+import com.lemon.mcdevmanager.ui.page.ModSelectPage
+import com.lemon.mcdevmanager.ui.page.NewAnalyzePage
 import com.lemon.mcdevmanager.ui.page.OpenSourceInfoPage
 import com.lemon.mcdevmanager.ui.page.ProfitPage
 import com.lemon.mcdevmanager.ui.page.RealtimeProfitPage
@@ -75,6 +76,7 @@ import com.lemon.mcdevmanager.ui.widget.popupSnackBar
 import com.lemon.mcdevmanager.viewModel.UpdateViewActions
 import com.lemon.mcdevmanager.viewModel.UpdateViewEvents
 import com.lemon.mcdevmanager.viewModel.UpdateViewmodel
+import com.orhanobut.logger.Logger
 import com.zj.mvi.core.observeEvent
 import java.io.File
 
@@ -133,16 +135,11 @@ fun BaseScaffold() {
             navController = navController,
             modifier = Modifier
                 .background(color = AppTheme.colors.background)
-                .fillMaxSize()
-                .padding(padding),
+                .fillMaxSize(),
             startDestination = SPLASH_PAGE
         ) {
             // 启动页
             composable(route = SPLASH_PAGE) {
-                activity.overrideStatusBarStyle(
-                    lightColor = Color(0xFF50C878).toArgb(),
-                    darkColor = Color(0xFF417C54).toArgb()
-                )
                 SplashPage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) }
@@ -150,10 +147,6 @@ fun BaseScaffold() {
             }
             // 登录页
             composable(route = LOGIN_PAGE) {
-                activity.overrideStatusBarStyle(
-                    lightColor = Color.Transparent.toArgb(),
-                    darkColor = Color.Transparent.toArgb()
-                )
                 LoginPage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) })
@@ -165,10 +158,6 @@ fun BaseScaffold() {
                     slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
                 }
             ) {
-                activity.overrideStatusBarStyle(
-                    lightColor = Color.Transparent.toArgb(),
-                    darkColor = Color.Transparent.toArgb()
-                )
                 MainPage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) }
@@ -183,7 +172,6 @@ fun BaseScaffold() {
                     slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
                 }
             ) {
-                activity.resetStatusBarStyle()
                 FeedbackPage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) }
@@ -198,7 +186,6 @@ fun BaseScaffold() {
                     slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
                 }
             ) {
-                activity.resetStatusBarStyle()
                 CommentPage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) }
@@ -213,7 +200,6 @@ fun BaseScaffold() {
                     slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
                 }
             ) {
-                activity.resetStatusBarStyle()
                 AnalyzePage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) }
@@ -228,10 +214,39 @@ fun BaseScaffold() {
                     slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
                 }
             ) {
-                activity.resetStatusBarStyle()
                 RealtimeProfitPage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) }
+                )
+            }
+            // 组件数据 选择模组页
+            composable(
+                route = ALL_MOD_SELECT_PAGE,
+                enterTransition = {
+                    slideInHorizontally(animationSpec = tween(200), initialOffsetX = { -it })
+                }, popExitTransition = {
+                    slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
+                }
+            ) {
+                ModSelectPage(
+                    navController = navController,
+                    showToast = { msg, flag -> showToast(msg, flag) }
+                )
+            }
+            // 组件数据 数据页
+            composable(
+                route = "$MOD_DATA_DETAIL_PAGE/{modId}",
+                enterTransition = {
+                    slideInHorizontally(animationSpec = tween(200), initialOffsetX = { -it })
+                }, popExitTransition = {
+                    slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
+                }
+            ) {
+                val modId = it.arguments?.getString("modId")
+                NewAnalyzePage(
+                    navController = navController,
+                    showToast = { msg, flag -> showToast(msg, flag) },
+                    iid = modId ?: ""
                 )
             }
             // 收益管理页
@@ -246,7 +261,6 @@ fun BaseScaffold() {
                     slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
                 }
             ) {
-                activity.resetStatusBarStyle()
                 ProfitPage(navController = navController)
             }
             // 收益详情页
@@ -261,7 +275,6 @@ fun BaseScaffold() {
                     slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
                 }
             ) {
-                activity.resetStatusBarStyle()
                 IncomePage(navController = navController)
             }
             // 激励历史页
@@ -276,7 +289,6 @@ fun BaseScaffold() {
                     slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
                 }
             ) {
-                activity.resetStatusBarStyle()
                 IncentivePage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) }
@@ -294,7 +306,6 @@ fun BaseScaffold() {
                     slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
                 }
             ) {
-                activity.resetStatusBarStyle()
                 SettingPage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) }
@@ -312,7 +323,6 @@ fun BaseScaffold() {
                     slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
                 }
             ) {
-                activity.resetStatusBarStyle()
                 LogViewPage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) }
@@ -330,7 +340,6 @@ fun BaseScaffold() {
                     slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
                 }
             ) {
-                activity.resetStatusBarStyle()
                 AboutPage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) },
@@ -350,7 +359,6 @@ fun BaseScaffold() {
                     slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
                 }
             ) {
-                activity.resetStatusBarStyle()
                 OpenSourceInfoPage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) }
@@ -368,7 +376,6 @@ fun BaseScaffold() {
                     slideOutHorizontally(animationSpec = tween(200), targetOffsetX = { -it })
                 }
             ) {
-                activity.resetStatusBarStyle()
                 LicensePage(
                     navController = navController,
                     showToast = { msg, flag -> showToast(msg, flag) }

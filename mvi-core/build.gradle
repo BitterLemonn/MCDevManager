@@ -37,5 +37,6 @@ dependencies {
     implementation 'com.google.android.material:material:1.5.0'
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.4.1"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.4.1"
+    implementation libs.androidx.lifecycle.runtime.android
     testImplementation 'junit:junit:4.12'
 }

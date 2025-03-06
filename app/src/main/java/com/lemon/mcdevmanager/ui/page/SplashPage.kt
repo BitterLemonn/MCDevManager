@@ -36,6 +36,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.lemon.mcdevmanager.MainActivity
 import com.lemon.mcdevmanager.R
+import com.lemon.mcdevmanager.data.common.MAIN_PAGE
 import com.lemon.mcdevmanager.data.common.SPLASH_PAGE
 import com.lemon.mcdevmanager.ui.base.BasePage
 import com.lemon.mcdevmanager.ui.theme.AppColors
@@ -66,6 +67,12 @@ fun SplashPage(
             while (waitingLast < 2) {
                 waitingLast++
                 delay(1000)
+            }
+            withContext(Dispatchers.Main){
+                navController.navigate(MAIN_PAGE) {
+                    launchSingleTop = true
+                    popUpTo(SPLASH_PAGE) { inclusive = true }
+                }
             }
         }
         viewmodel.dispatch(SplashViewAction.GetDatabase)
