@@ -136,7 +136,7 @@ fun IncomePage(
                     shape = RoundedCornerShape(8.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = AppTheme.colors.card
-                    )
+                    ),
                 ) {
                     Row(
                         modifier = Modifier

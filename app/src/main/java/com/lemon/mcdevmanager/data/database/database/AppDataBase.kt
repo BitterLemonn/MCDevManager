@@ -13,7 +13,7 @@ import com.lemon.mcdevmanager.data.database.entities.UserEntity
 
 @Database(
     entities = [UserEntity::class, OverviewEntity::class, AnalyzeEntity::class],
-    version = 2
+    version = 3
 )
 abstract class AppDataBase : RoomDatabase() {
     companion object {
@@ -30,6 +30,11 @@ abstract class AppDataBase : RoomDatabase() {
                     DATABASE_NAME
                 ).addMigrations(Migration(1, 2) {
                     it.execSQL("CREATE TABLE IF NOT EXISTS `analyzeEntity` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nickname` TEXT NOT NULL, `filterType` INTEGER NOT NULL, `platform` TEXT NOT NULL, `startDate` TEXT NOT NULL, `endDate` TEXT NOT NULL, `filterResourceList` TEXT NOT NULL, `createTime` INTEGER NOT NULL)")
+                }).addMigrations(Migration(2, 3) {
+                    it.execSQL("ALTER TABLE `overviewEntity` ADD COLUMN `lastMonthProfit` TEXT NOT NULL DEFAULT '0.00'")
+                    it.execSQL("ALTER TABLE `overviewEntity` ADD COLUMN `lastMonthTax` DOUBLE NOT NULL DEFAULT '0.00'")
+                    it.execSQL("ALTER TABLE `overviewEntity` ADD COLUMN `thisMonthProfit` DOUBLE NOT NULL DEFAULT '0.00'")
+                    it.execSQL("ALTER TABLE `overviewEntity` ADD COLUMN `thisMonthTax` DOUBLE NOT NULL DEFAULT '0.00'")
                 }).build().also { instance = it }
             }
         }

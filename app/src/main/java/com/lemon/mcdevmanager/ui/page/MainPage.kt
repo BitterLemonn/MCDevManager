@@ -73,7 +73,7 @@ fun MainPage(
 
     val states = viewModel.viewStates.collectAsState().value
     var isShowNotice by remember { mutableStateOf(false) }
-    var isShowLastMonthProfit by remember { mutableStateOf(false) }
+    var isShowLastMonthProfit by remember { mutableStateOf(true) }
 
     LaunchedEffect(key1 = Unit) {
         viewModel.dispatch(MainViewAction.LoadData(AppContext.nowNickname))
@@ -93,12 +93,14 @@ fun MainPage(
             }
         }
     ) {
-        ModalDrawer(modifier = Modifier.fillMaxWidth(0.5f),
+        ModalDrawer(
+            modifier = Modifier.fillMaxWidth(0.5f),
             drawerState = drawerState,
             drawerBackgroundColor = Color.Transparent,
             drawerElevation = 0.dp,
             drawerContent = {
-                AccountManagerDrawer(accountList = AppContext.accountList,
+                AccountManagerDrawer(
+                    accountList = AppContext.accountList,
                     onClick = { viewModel.dispatch(MainViewAction.ChangeAccount(it)) },
                     onDismiss = { viewModel.dispatch(MainViewAction.DeleteAccount(it)) },
                     onLogout = { viewModel.dispatch(MainViewAction.DeleteAccount(AppContext.nowNickname)) },
@@ -169,7 +171,7 @@ fun MainPage(
                             title = "本月收益速算",
                             realMoney = states.realMoney,
                             taxMoney = states.taxMoney,
-                            isLoading = states.isLoadingOverview
+                            isLoading = states.isLoadingProfit
                         )
                         AnimatedVisibility(
                             visible = isShowLastMonthProfit,
@@ -184,7 +186,7 @@ fun MainPage(
                                 title = "上月收益速算",
                                 realMoney = states.lastRealMoney,
                                 taxMoney = states.lastTaxMoney,
-                                isLoading = states.isLoadingOverview
+                                isLoading = states.isLoadingProfit
                             )
                         }
                         FunctionCard(icon = R.drawable.ic_analyze, title = "数据分析") {
