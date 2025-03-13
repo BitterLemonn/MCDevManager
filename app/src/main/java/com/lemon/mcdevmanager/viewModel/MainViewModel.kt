@@ -8,9 +8,13 @@ import com.lemon.mcdevmanager.data.common.NETEASE_USER_COOKIE
 import com.lemon.mcdevmanager.data.database.database.GlobalDataBase
 import com.lemon.mcdevmanager.data.database.entities.OverviewEntity
 import com.lemon.mcdevmanager.data.global.AppContext
+import com.lemon.mcdevmanager.data.netease.resource.ResourceBean
+import com.lemon.mcdevmanager.data.repository.DetailRepository
 import com.lemon.mcdevmanager.data.repository.MainRepository
+import com.lemon.mcdevmanager.data.repository.RealtimeProfitRepository
 import com.lemon.mcdevmanager.utils.CookiesExpiredException
 import com.lemon.mcdevmanager.utils.NetworkState
+import com.lemon.mcdevmanager.utils.UnifiedExceptionHandler
 import com.lemon.mcdevmanager.utils.UnifiedExceptionHandler.CancelException
 import com.lemon.mcdevmanager.utils.logout
 import com.orhanobut.logger.Logger
@@ -32,13 +36,16 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.DecimalFormat
 import java.time.Instant
+import java.time.Month
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 import kotlin.math.min
 
 class MainViewModel : ViewModel() {
-    private val repository = MainRepository.getInstance()
+    private val mainRepository = MainRepository.getInstance()
+    private val realtimeProfitRepository = RealtimeProfitRepository.getInstance()
+    private val overviewRepository = DetailRepository.getInstance()
 
     private val _viewStates = MutableStateFlow(MainViewState())
     val viewStates = _viewStates.asStateFlow()
@@ -63,7 +70,12 @@ class MainViewModel : ViewModel() {
                 getUserInfoLogic()
                 getOverviewLogic()
             }.onStart {
-                _viewStates.setState { copy(isLoadingOverview = true) }
+                _viewStates.setState {
+                    copy(
+                        isLoadingOverview = true,
+                        isLoadingProfit = true
+                    )
+                }
                 CookiesStore.clearCookies()
             }.catch {
                 if (it !is CancelException) {
@@ -80,7 +92,7 @@ class MainViewModel : ViewModel() {
     }
 
     private suspend fun getUserInfoLogic() {
-        when (val result = repository.getUserInfo()) {
+        when (val result = mainRepository.getUserInfo()) {
             is NetworkState.Success -> {
                 getLevelInfoLogic()
                 result.data?.let { userInfo ->
@@ -119,7 +131,7 @@ class MainViewModel : ViewModel() {
     }
 
     private suspend fun getLevelInfoLogic() {
-        when (val levelInfo = repository.getLevelInfo()) {
+        when (val levelInfo = mainRepository.getLevelInfo()) {
             is NetworkState.Success -> {
                 levelInfo.data?.let {
                     val levelText = when (it.currentClass) {
@@ -196,19 +208,25 @@ class MainViewModel : ViewModel() {
                         yesterdayProfit = overviewEntity.yesterdayDiamond,
                         halfAvgProfit = overviewEntity.days14AverageDiamond,
                         yesterdayDl = overviewEntity.yesterdayDownload,
-                        halfAvgDl = overviewEntity.days14AverageDownload
+                        halfAvgDl = overviewEntity.days14AverageDownload,
+                        realMoney = overviewEntity.thisMonthProfit,
+                        taxMoney = overviewEntity.thisMonthTax,
+                        lastRealMoney = overviewEntity.lastMonthProfit,
+                        lastTaxMoney = overviewEntity.lastMonthTax,
+                        isLoadingProfit = false
                     )
                 }
             } else getOverviewByServer()
         } else getOverviewByServer()
-        computeMoney()
 
         if (ZonedDateTime.now().dayOfMonth <= 10)
             _viewEvents.setEvent(MainViewEvent.ShowLastMonthProfit)
     }
 
     private suspend fun getOverviewByServer() {
-        when (val overview = repository.getOverview()) {
+        // 只有需要请求概览数据时才请求资源列表
+        getResListLogic()
+        when (val overview = mainRepository.getOverview()) {
             is NetworkState.Success -> {
                 overview.data?.let {
                     _viewStates.setState {
@@ -273,6 +291,25 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    private suspend fun getResListLogic() {
+        when (val result = overviewRepository.getAllResource("pe")) {
+            is NetworkState.Success -> {
+                result.data?.let { _viewStates.setState { copy(resList = it.item.filter { it.onlineTime != "UNKNOWN" }) } }
+                computeMoney()
+            }
+
+            is NetworkState.Error -> {
+                Logger.e("获取资源列表失败: ${result.msg}")
+                if (result.e is CookiesExpiredException) {
+                    _viewEvents.setEvent(MainViewEvent.RouteToPath(LOGIN_PAGE, true))
+                    throw result.e
+                } else {
+                    throw Exception("获取资源列表失败: ${result.msg}")
+                }
+            }
+        }
+    }
+
     private fun deleteAccount(accountName: String) {
         val isLogout = accountName == AppContext.nowNickname
         viewModelScope.launch {
@@ -284,7 +321,7 @@ class MainViewModel : ViewModel() {
 
     private fun changeAccount(accountName: String) {
         viewModelScope.launch {
-            repository.stopAllCalls()
+            mainRepository.stopAllCalls()
             delay(100)
             AppContext.nowNickname = accountName
             loadData(AppContext.nowNickname)
@@ -292,26 +329,82 @@ class MainViewModel : ViewModel() {
     }
 
     private fun computeMoney() {
-        val lastMonthProfit = viewStates.value.lastMonthProfit / 100.0
-        val thisMonthProfit = viewStates.value.curMonthProfit / 100.0
+        viewModelScope.launch {
+            val thisMonthProfit =
+                getOneMonthProfit(ZonedDateTime.now().year, ZonedDateTime.now().monthValue) / 100.0
+            val lastMonth = ZonedDateTime.now().minusMonths(1)
+            val lastMonthProfit = getOneMonthProfit(lastMonth.year, lastMonth.monthValue) / 100.0
 
-        val realMoney = getRealMoney(thisMonthProfit)
-        val taxMoney = getTaxMoney(realMoney)
-        val lastRealMoney = getRealMoney(lastMonthProfit)
-        val lastTaxMoney = getTaxMoney(lastRealMoney)
-        val df = DecimalFormat("0.00")
-        val taxMoneyStr = df.format(taxMoney)
-        val realMoneyStr = df.format(realMoney - taxMoney)
-        val lastTaxMoneyStr = df.format(lastTaxMoney)
-        val lastRealMoneyStr = df.format(lastRealMoney - lastTaxMoney)
-        _viewStates.setState {
-            copy(
-                realMoney = realMoneyStr,
-                taxMoney = taxMoneyStr,
-                lastRealMoney = lastRealMoneyStr,
-                lastTaxMoney = lastTaxMoneyStr
-            )
+            val realMoney = getRealMoney(thisMonthProfit)
+            val taxMoney = getTaxMoney(realMoney)
+            val lastRealMoney = getRealMoney(lastMonthProfit)
+            val lastTaxMoney = getTaxMoney(lastRealMoney)
+            val df = DecimalFormat("0.00")
+            val taxMoneyStr = df.format(taxMoney)
+            val realMoneyStr = df.format(realMoney - taxMoney)
+            val lastTaxMoneyStr = df.format(lastTaxMoney)
+            val lastRealMoneyStr = df.format(lastRealMoney - lastTaxMoney)
+            _viewStates.setState {
+                copy(
+                    isLoadingProfit = false,
+                    realMoney = realMoneyStr,
+                    taxMoney = taxMoneyStr,
+                    lastRealMoney = lastRealMoneyStr,
+                    lastTaxMoney = lastTaxMoneyStr
+                )
+            }
+
+            withContext(Dispatchers.IO) {
+                val dataBase = GlobalDataBase.database.infoDao()
+                val latestOverview = dataBase.getLatestOverviewByNickname(AppContext.nowNickname)
+                if (latestOverview != null) {
+                    val updatedOverview = latestOverview.copy(
+                        thisMonthProfit = realMoneyStr,
+                        thisMonthTax = taxMoneyStr,
+                        lastMonthProfit = lastRealMoneyStr,
+                        lastMonthTax = lastTaxMoneyStr,
+                        timestamp = System.currentTimeMillis()
+                    )
+                    dataBase.insertOverview(updatedOverview)
+                }
+            }
         }
+    }
+
+    private suspend fun getOneMonthProfit(year: Int, month: Int): Double {
+        var monthProfit = 0.0
+        flow {
+            for (itemId in viewStates.value.resList) {
+                when (val result =
+                    realtimeProfitRepository.getOneMonthDetail("pe", itemId.itemId, year, month)) {
+                    is NetworkState.Success -> {
+                        result.data?.let { profit ->
+                            emit(profit.totalDiamonds)
+                        } ?: throw Exception("获取收益失败")
+                    }
+
+                    is NetworkState.Error -> {
+                        Logger.e("获取收益失败: ${result.msg}")
+                        if (result.e is CookiesExpiredException) {
+                            _viewEvents.setEvent(MainViewEvent.RouteToPath(LOGIN_PAGE, true))
+                            throw result.e
+                        } else {
+                            throw Exception("获取收益失败: ${result.msg}")
+                        }
+                    }
+                }
+            }
+        }.catch {
+            if (it !is CancelException) {
+                _viewEvents.setEvent(MainViewEvent.ShowToast(it.message ?: "未知错误"))
+                _viewStates.setState { copy(isLoadingProfit = false) }
+            } else {
+                Logger.d(it.message ?: "未知错误")
+            }
+        }.flowOn(Dispatchers.IO).collect {
+            monthProfit += it
+        }
+        return monthProfit
     }
 
     private fun isDifferentDay(timestamp: Long): Boolean {
@@ -326,11 +419,13 @@ class MainViewModel : ViewModel() {
     private fun getRealMoney(profit: Double): Double {
         // 渠道分成
         val channelMoney = profit * 0.35
+        val lastMoney = profit - channelMoney
 
         // 网易阶段分成
         var level1 = if (profit > 1500) min(profit - 1500, 50000.0) * 0.3 else 0.0
         var level2 = if (profit > 50000) (profit - 50000) * 0.4 else 0.0
         val neteaseMoney = level1 + level2
+        val neteasePercent = if (profit > 0) neteaseMoney / profit else 0.0
 
         // 技术服务费
         level1 = if (profit > 100000) min(profit - 100000, 1000000.0) * 0.1 else 0.0
@@ -338,8 +433,9 @@ class MainViewModel : ViewModel() {
         val level3 = if (profit > 3000000) min(profit - 3000000, 5000000.0) * 0.2 else 0.0
         val level4 = if (profit > 5000000) (profit - 5000000) * 0.25 else 0.0
         val serviceMoney = level1 + level2 + level3 + level4
+        val servicePercent = if (profit > 0) serviceMoney / profit else 0.0
 
-        return profit - channelMoney - neteaseMoney - serviceMoney
+        return lastMoney - (lastMoney * neteasePercent) - (lastMoney * servicePercent)
     }
 
     private fun getTaxMoney(realMoney: Double): Double {
@@ -376,11 +472,15 @@ data class MainViewState(
     val contributionRank: Int = 0,
     val contributionScore: String = "0",
 
+    val resList: List<ResourceBean> = emptyList(),
+
     val realMoney: String = "0.00",
     val taxMoney: String = "0.00",
 
     val lastRealMoney: String = "0.00",
-    val lastTaxMoney: String = "0.00"
+    val lastTaxMoney: String = "0.00",
+
+    val isLoadingProfit: Boolean = false
 )
 
 sealed class MainViewEvent {

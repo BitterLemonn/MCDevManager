@@ -21,7 +21,10 @@ object UnifiedExceptionHandler {
     private val callSet = mutableSetOf<Call<*>>()
 
     fun stopAllCalls() {
-        callSet.forEach { it.cancel() }
+        callSet.forEach {
+            Logger.d("$TAG:取消请求 $it")
+            it.cancel()
+        }
         callSet.clear()
     }
 

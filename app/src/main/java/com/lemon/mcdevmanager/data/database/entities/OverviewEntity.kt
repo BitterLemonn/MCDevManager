@@ -18,5 +18,9 @@ data class OverviewEntity(
     @ColumnInfo val thisMonthDownload: Int,
     @ColumnInfo val yesterdayDiamond: Int,
     @ColumnInfo val yesterdayDownload: Int,
+    @ColumnInfo val lastMonthProfit: String = "0.00",
+    @ColumnInfo val lastMonthTax: String = "0.00",
+    @ColumnInfo val thisMonthProfit: String = "0.00",
+    @ColumnInfo val thisMonthTax: String = "0.00",
     @ColumnInfo val timestamp: Long = System.currentTimeMillis()
 )
