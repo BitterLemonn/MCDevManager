@@ -32,9 +32,9 @@ abstract class AppDataBase : RoomDatabase() {
                     it.execSQL("CREATE TABLE IF NOT EXISTS `analyzeEntity` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nickname` TEXT NOT NULL, `filterType` INTEGER NOT NULL, `platform` TEXT NOT NULL, `startDate` TEXT NOT NULL, `endDate` TEXT NOT NULL, `filterResourceList` TEXT NOT NULL, `createTime` INTEGER NOT NULL)")
                 }).addMigrations(Migration(2, 3) {
                     it.execSQL("ALTER TABLE `overviewEntity` ADD COLUMN `lastMonthProfit` TEXT NOT NULL DEFAULT '0.00'")
-                    it.execSQL("ALTER TABLE `overviewEntity` ADD COLUMN `lastMonthTax` DOUBLE NOT NULL DEFAULT '0.00'")
-                    it.execSQL("ALTER TABLE `overviewEntity` ADD COLUMN `thisMonthProfit` DOUBLE NOT NULL DEFAULT '0.00'")
-                    it.execSQL("ALTER TABLE `overviewEntity` ADD COLUMN `thisMonthTax` DOUBLE NOT NULL DEFAULT '0.00'")
+                    it.execSQL("ALTER TABLE `overviewEntity` ADD COLUMN `lastMonthTax` TEXT NOT NULL DEFAULT '0.00'")
+                    it.execSQL("ALTER TABLE `overviewEntity` ADD COLUMN `thisMonthProfit` TEXT NOT NULL DEFAULT '0.00'")
+                    it.execSQL("ALTER TABLE `overviewEntity` ADD COLUMN `thisMonthTax` TEXT NOT NULL DEFAULT '0.00'")
                 }).build().also { instance = it }
             }
         }
