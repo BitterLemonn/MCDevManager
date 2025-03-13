@@ -73,7 +73,7 @@ fun MainPage(
 
     val states = viewModel.viewStates.collectAsState().value
     var isShowNotice by remember { mutableStateOf(false) }
-    var isShowLastMonthProfit by remember { mutableStateOf(true) }
+    var isShowLastMonthProfit by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = Unit) {
         viewModel.dispatch(MainViewAction.LoadData(AppContext.nowNickname))
