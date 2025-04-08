@@ -14,7 +14,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.io.BufferedReader
 import java.io.File
+import java.io.FileReader
 
 class LogViewModel : ViewModel() {
     private val _viewState = MutableStateFlow(LogViewState())
@@ -45,6 +47,7 @@ class LogViewModel : ViewModel() {
             }
 
             is LogViewAction.LoadLogContent -> loadLogContent(action.filename)
+            is LogViewAction.LoadMoreLogContent -> loadMoreLogContent()
             is LogViewAction.ExportLog -> exportLog()
             is LogViewAction.DeleteLog -> deleteLog()
             is LogViewAction.DeleteThreeDaysAgoLog -> deleteThreeDaysAgoLog()
@@ -93,7 +96,8 @@ class LogViewModel : ViewModel() {
                 return@launch
             } else {
                 val logList =
-                    logDir.listFiles()?.filter { it.isFile }?.sortedBy { it.name }?.map { it.name } ?: emptyList()
+                    logDir.listFiles()?.filter { it.isFile }?.sortedBy { it.name }?.map { it.name }
+                        ?: emptyList()
                 _viewState.setState { copy(logList = logList) }
             }
         }
@@ -106,8 +110,58 @@ class LogViewModel : ViewModel() {
                 _viewEvent.setEvent(LogViewEvent.ShowToast("日志文件${filename}不存在"))
                 return@launch
             } else {
-                val logContent = logFile.readText()
-                _viewState.setState { copy(logContent = logContent, logFileName = filename) }
+                try {
+                    _viewState.setState {
+                        copy(
+                            currentLogFile = logFile,
+                            logFileName = filename,
+                            logContent = "",
+                            isLoadingMore = true
+                        )
+                    }
+
+                    val reader = BufferedReader(FileReader(logFile))
+                    _viewState.setState { copy(currentReader = reader) }
+
+                    loadMoreLogContent()
+                } catch (e: Exception) {
+                    _viewEvent.setEvent(LogViewEvent.ShowToast("读取日志文件失败: ${e.message}"))
+                }
+            }
+        }
+    }
+
+    private fun loadMoreLogContent() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                _viewState.setState { copy(isLoadingMore = true) }
+                val reader = viewState.value.currentReader ?: return@launch
+                val buffer = StringBuilder(viewState.value.logContent)
+                var counter = 0
+                var line: String? = null
+
+                while (counter < LOG_CHUNK_SIZE && reader.readLine().also { line = it } != null) {
+                    buffer.append(line).append("\n")
+                    counter++
+                }
+
+                val hasMoreContent = line != null
+
+                _viewState.setState {
+                    copy(
+                        logContent = buffer.toString(),
+                        hasMoreContent = hasMoreContent,
+                        isLoadingMore = false
+                    )
+                }
+
+                if (!hasMoreContent) {
+                    reader.close()
+                    _viewState.setState { copy(currentReader = null) }
+                }
+            } catch (e: Exception) {
+                _viewEvent.setEvent(LogViewEvent.ShowToast("读取日志文件失败: ${e.message}"))
+                _viewState.setState { copy(isLoadingMore = false) }
             }
         }
     }
@@ -165,6 +219,14 @@ class LogViewModel : ViewModel() {
         }
     }
 
+    override fun onCleared() {
+        super.onCleared()
+        viewState.value.currentReader?.close()
+    }
+
+    companion object {
+        private const val LOG_CHUNK_SIZE = 1000
+    }
 }
 
 data class LogViewState(
@@ -175,8 +237,12 @@ data class LogViewState(
     val logDirPath: String = "",
     val downloadOverNum: Int = 0,
     val downloadFailNum: Int = 0,
+    val isShowLoading: Boolean = false,
 
-    val isShowLoading: Boolean = false
+    val currentLogFile: File? = null,
+    val currentReader: BufferedReader? = null,
+    val hasMoreContent: Boolean = false,
+    val isLoadingMore: Boolean = false
 )
 
 sealed class LogViewAction {
@@ -187,6 +253,7 @@ sealed class LogViewAction {
     data class SelectLog(val filename: String, val isSelect: Boolean = true) : LogViewAction()
     data object ClearSelectedLog : LogViewAction()
     data class LoadLogContent(val filename: String) : LogViewAction()
+    data object LoadMoreLogContent : LogViewAction()
     data object ExportLog : LogViewAction()
     data object DeleteLog : LogViewAction()
     data object DeleteThreeDaysAgoLog : LogViewAction()
