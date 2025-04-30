@@ -116,19 +116,25 @@ fun AnalyzePage(
         ) {
             Column {
                 // 标题
-                HeaderWidget(title = "数据分析", leftAction = {
-                    Box(modifier = Modifier
-                        .fillMaxHeight()
-                        .aspectRatio(1f)
-                        .clip(CircleShape)
-                        .clickable(indication = ripple(),
-                            interactionSource = remember { MutableInteractionSource() }) { navController.navigateUp() }) {
-                        Image(
-                            painter = painterResource(id = R.drawable.ic_back),
-                            contentDescription = "back"
-                        )
+                HeaderWidget(
+                    title = "数据分析",
+                    leftAction = {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .aspectRatio(1f)
+                                .clip(CircleShape)
+                                .clickable(
+                                    indication = ripple(),
+                                    interactionSource = remember { MutableInteractionSource() }) { navController.navigateUp() }
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.ic_back),
+                                contentDescription = "back"
+                            )
+                        }
                     }
-                })
+                )
                 // 页面内容
                 HorizontalPager(
                     state = pageState,

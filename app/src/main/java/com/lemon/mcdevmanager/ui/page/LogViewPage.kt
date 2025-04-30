@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -323,9 +324,11 @@ fun LogViewPage(
                     modifier = Modifier
                         .fillMaxWidth()
                         .align(Alignment.BottomCenter)
-                        .fillMaxHeight(0.8f), colors = CardDefaults.cardColors(
+                        .fillMaxHeight(0.8f), 
+                    colors = CardDefaults.cardColors(
                         containerColor = AppTheme.colors.card,
-                    ), shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)
+                    ), 
+                    shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)
                 ) {
                     Column(
                         Modifier
@@ -338,16 +341,54 @@ fun LogViewPage(
                             color = AppTheme.colors.hintColor
                         )
                         VerticalSpace(dp = 8)
+                        
+                        val scrollState = rememberScrollState()
+                        
+                        // 检测是否滚动到底部，以触发加载更多
+                        LaunchedEffect(scrollState.maxValue, scrollState.value) {
+                            if (states.hasMoreContent && 
+                                !states.isLoadingMore && 
+                                scrollState.value > 0 &&
+                                scrollState.value >= scrollState.maxValue - 500) {
+                                viewModel.dispatch(LogViewAction.LoadMoreLogContent)
+                            }
+                        }
+                        
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .verticalScroll(rememberScrollState())
+                                .weight(1f)
+                                .verticalScroll(scrollState)
                         ) {
                             Text(
                                 text = states.logContent,
                                 fontSize = 12.sp,
                                 color = AppTheme.colors.textColor
                             )
+                            
+                            // 显示加载更多的指示器
+                            if (states.hasMoreContent) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 8.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (states.isLoadingMore) {
+                                        androidx.compose.material3.CircularProgressIndicator(
+                                            modifier = Modifier.size(24.dp),
+                                            color = AppTheme.colors.primaryColor,
+                                            strokeWidth = 2.dp
+                                        )
+                                    } else {
+                                        Text(
+                                            text = "滑动加载更多",
+                                            fontSize = 12.sp,
+                                            color = AppTheme.colors.hintColor
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
