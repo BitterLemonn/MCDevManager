@@ -56,7 +56,7 @@ class LoginRepository {
         username: String,
         password: String,
         ticket: String,
-        pvResultBean: PVResultStrBean
+//        pvResultBean: PVResultStrBean
     ): NetworkState<String> {
         return UnifiedExceptionHandler.handleSuspendWithNeteaseData {
             val encodePw = rsaEncrypt(password, RSAKey)
@@ -65,7 +65,7 @@ class LoginRepository {
                 pw = encodePw,
                 tk = ticket,
                 topURL = "https://mcdev.webapp.163.com/#/login",
-                pvParam = pvResultBean
+//                pvParam = pvResultBean
             )
             val encode = sm4Encrypt(dataJsonToString(loginRequest), SM4Key)
             val encParams = EncParams(encode)
