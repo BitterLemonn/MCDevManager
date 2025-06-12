@@ -82,7 +82,7 @@ class LoginViewModel : ViewModel() {
         val init = repository.init("https://mcdev.webapp.163.com/#/login")
         when (init) {
             is NetworkState.Success -> {
-                getPowerLogic()
+                getTicket()
             }
 
             is NetworkState.Error -> {
@@ -91,6 +91,7 @@ class LoginViewModel : ViewModel() {
         }
     }
 
+    @Deprecated("网易不再使用此计算方式")
     private suspend fun getPowerLogic() {
         Logger.d("开始获取权限")
         val power = repository.getPower(
@@ -100,31 +101,6 @@ class LoginViewModel : ViewModel() {
             is NetworkState.Success -> {
                 power.data?.let {
                     val pvInfo = JSONConverter.decodeFromString<PVInfo>(it)
-//                    val e = """
-//                    var e = {
-//                        sid: "${pvInfo.sid}",
-//                        hashFunc: "${pvInfo.hashFunc}",
-//                        needCheck: ${pvInfo.needCheck},
-//                        args: ${dataJsonToString(pvInfo.args)},
-//                        maxTime: ${pvInfo.maxTime},
-//                        minTime: ${pvInfo.minTime}
-//                    };
-//                    var e = vdfFun(e);
-//                    """.trimIndent()
-//                    V8.createV8Runtime().use { runtime ->
-//                        runtime.executeVoidScript(_viewState.value.powerScript)
-//                        runtime.executeVoidScript(e)
-//                        (runtime.executeScript("e") as V8Object).use { result ->
-//                            pvResultBean = PVResultStrBean(
-//                                maxTime = result.getInteger("maxTime"),
-//                                args = result.getString("args"),
-//                                puzzle = result.getString("puzzle"),
-//                                runTimes = result.getInteger("runTimes"),
-//                                sid = result.getString("sid"),
-//                                spendTime = result.getInteger("spendTime")
-//                            )
-//                        }
-//                    }
                     pvResultBean = vdfAsync(pvInfo)
                     Logger.d("pvResultBean: $pvResultBean")
                     getTicket()
@@ -167,7 +143,7 @@ class LoginViewModel : ViewModel() {
     private suspend fun safeLoginLogic() {
         Logger.d("开始安全登录")
         when (val login = repository.loginWithTicket(
-            _viewState.value.username, _viewState.value.password, tk, pvResultBean
+            _viewState.value.username, _viewState.value.password, tk
         )) {
             is NetworkState.Success -> {
                 _viewEvent.setEvent(LoginViewEvent.LoginSuccess("登录成功"))
@@ -175,16 +151,9 @@ class LoginViewModel : ViewModel() {
             }
 
             is NetworkState.Error -> {
-                val errorState = Array(4) { "80${it + 1}" }
-                if (errorState.contains(login.msg) && retryCount < 3) {
-                    getPowerLogic()
-                    retryCount++
-                } else {
-                    retryCount = 0
-                    when (login.msg) {
-                        "413" -> throw Exception("邮箱或密码错误")
-                        else -> throw Exception("登录失败, 请重试")
-                    }
+                when (login.msg) {
+                    "413" -> throw Exception("邮箱或密码错误")
+                    else -> throw Exception("登录失败, 请重试")
                 }
             }
         }

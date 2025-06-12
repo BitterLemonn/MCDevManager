@@ -29,7 +29,7 @@ data class LoginRequestBean(
     val pwdKeyUp: Int = 1,
     val pkid: String = PKID,
     val domains: String = "",
-    val pvParam: PVResultStrBean,
+//    val pvParam: PVResultStrBean,
     val channel: Int = CHANNEL,
     val topURL: String,
     val rtid: String = getRandomTid()
