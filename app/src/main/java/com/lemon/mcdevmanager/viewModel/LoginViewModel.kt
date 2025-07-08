@@ -2,8 +2,6 @@ package com.lemon.mcdevmanager.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-//import com.eclipsesource.v8.V8
-//import com.eclipsesource.v8.V8Object
 import com.lemon.mcdevmanager.data.common.CookiesStore
 import com.lemon.mcdevmanager.data.common.JSONConverter
 import com.lemon.mcdevmanager.data.common.MAIN_PAGE
@@ -15,7 +13,8 @@ import com.lemon.mcdevmanager.data.netease.login.PVInfo
 import com.lemon.mcdevmanager.data.netease.login.PVResultStrBean
 import com.lemon.mcdevmanager.data.repository.LoginRepository
 import com.lemon.mcdevmanager.utils.NetworkState
-import com.lemon.mcdevmanager.utils.dataJsonToString
+import com.lemon.mcdevmanager.utils.dumpAndGetCookiesValue
+import com.lemon.mcdevmanager.utils.isValidCookiesStr
 import com.lemon.mcdevmanager.utils.vdfAsync
 import com.orhanobut.logger.Logger
 import com.zj.mvi.core.SharedFlowEvents
@@ -61,7 +60,14 @@ class LoginViewModel : ViewModel() {
 
         viewModelScope.launch {
             if (_viewState.value.cookies.isNotEmpty()) {
-                CookiesStore.addCookie(NETEASE_USER_COOKIE, _viewState.value.cookies)
+                val text = _viewState.value.cookies
+                val cookie = if (text.isValidCookiesStr())
+                    text.dumpAndGetCookiesValue(NETEASE_USER_COOKIE) else text
+                if (cookie == null) {
+                    _viewEvent.setEvent(LoginViewEvent.LoginFailed("无效的Cookie"))
+                    return@launch
+                }
+                CookiesStore.addCookie(NETEASE_USER_COOKIE, cookie)
                 _viewEvent.setEvent(LoginViewEvent.LoginSuccess("登录成功"))
             } else {
                 flow<Unit> {
@@ -82,7 +88,7 @@ class LoginViewModel : ViewModel() {
         val init = repository.init("https://mcdev.webapp.163.com/#/login")
         when (init) {
             is NetworkState.Success -> {
-                getTicket()
+                getPowerLogic()
             }
 
             is NetworkState.Error -> {
@@ -91,7 +97,6 @@ class LoginViewModel : ViewModel() {
         }
     }
 
-    @Deprecated("网易不再使用此计算方式")
     private suspend fun getPowerLogic() {
         Logger.d("开始获取权限")
         val power = repository.getPower(
@@ -143,7 +148,7 @@ class LoginViewModel : ViewModel() {
     private suspend fun safeLoginLogic() {
         Logger.d("开始安全登录")
         when (val login = repository.loginWithTicket(
-            _viewState.value.username, _viewState.value.password, tk
+            _viewState.value.username, _viewState.value.password, tk,pvResultBean
         )) {
             is NetworkState.Success -> {
                 _viewEvent.setEvent(LoginViewEvent.LoginSuccess("登录成功"))
@@ -151,9 +156,16 @@ class LoginViewModel : ViewModel() {
             }
 
             is NetworkState.Error -> {
-                when (login.msg) {
-                    "413" -> throw Exception("邮箱或密码错误")
-                    else -> throw Exception("登录失败, 请重试")
+                val errorState = Array(4) { "80${it + 1}" }
+                if (errorState.contains(login.msg) && retryCount < 3) {
+                    getPowerLogic()
+                    retryCount++
+                } else {
+                    retryCount = 0
+                    when (login.msg) {
+                        "413" -> throw Exception("邮箱或密码错误")
+                        else -> throw Exception("登录失败, 请重试")
+                    }
                 }
             }
         }
