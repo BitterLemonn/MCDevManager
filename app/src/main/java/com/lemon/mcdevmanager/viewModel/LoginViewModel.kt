@@ -61,8 +61,13 @@ class LoginViewModel : ViewModel() {
 
         viewModelScope.launch {
             if (_viewState.value.cookies.isNotEmpty()) {
-                CookiesStore.addCookie(NETEASE_USER_COOKIE, _viewState.value.cookies)
-                _viewEvent.setEvent(LoginViewEvent.LoginSuccess("登录成功"))
+                val processedCookies = processCookies(_viewState.value.cookies)
+                if (processedCookies.isNotEmpty()) {
+                    CookiesStore.addCookie(NETEASE_USER_COOKIE, processedCookies)
+                    _viewEvent.setEvent(LoginViewEvent.LoginSuccess("登录成功"))
+                } else {
+                    _viewEvent.setEvent(LoginViewEvent.LoginFailed("Cookies格式无效或缺少必要信息"))
+                }
             } else {
                 flow<Unit> {
                     initLogic()
@@ -193,6 +198,40 @@ class LoginViewModel : ViewModel() {
                     _viewEvent.setEvent(LoginViewEvent.LoginFailed(it.message ?: "未知错误"))
                 }.collect()
             }
+        }
+    }
+
+    private fun processCookies(rawCookies: String): String {
+        try {
+            val trimmedCookies = rawCookies.trim()
+            
+            if (trimmedCookies.contains("NTES_SESS=")) {
+                val regex = Regex("""NTES_SESS=([^;]+)""")
+                val matchResult = regex.find(trimmedCookies)
+                
+                return if (matchResult != null) {
+                    val value = matchResult.groupValues[1].trim()
+                    if (value.isNotEmpty()) {
+                        value
+                    } else {
+                        Logger.w("NTES_SESS值为空")
+                        ""
+                    }
+                } else {
+                    Logger.w("NTES_SESS格式错误")
+                    ""
+                }
+            } else {
+                return if (trimmedCookies.isNotEmpty()) {
+                    trimmedCookies
+                } else {
+                    Logger.w("传入的cookies值为空")
+                    ""
+                }
+            }
+        } catch (e: Exception) {
+            Logger.e("处理Cookies时发生错误: ${e.message}")
+            return ""
         }
     }
 }
