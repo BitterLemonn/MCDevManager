@@ -1,0 +1,106 @@
+package com.lemon.mcdevmanagermp.data.api
+
+import com.lemon.mcdevmanagermp.utils.CookiesStore
+import com.lemon.mcdevmanagermp.data.common.JSONConverter
+import com.lemon.mcdevmanagermp.utils.Logger
+import de.jensklingenberg.ktorfit.Ktorfit
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.api.createClientPlugin
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.cookies.CookiesStorage
+import io.ktor.client.plugins.cookies.HttpCookies
+import io.ktor.http.Cookie
+import io.ktor.http.Url
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.util.AttributeKey
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
+
+object ApiFactory {
+
+    private val cookiesStorage = object : CookiesStorage {
+        override suspend fun addCookie(requestUrl: Url, cookie: Cookie) {
+            CookiesStore.addCookie(cookie.name, cookie.value)
+        }
+
+        override suspend fun get(requestUrl: Url): List<Cookie> {
+            val cookies = CookiesStore.getAllCookiesMap()
+            return cookies.map { Cookie(it.key, it.value) }
+        }
+
+        override fun close() {}
+    }
+
+    private val TimeMonitorPlugin = createClientPlugin("TimeMonitorPlugin") {
+        onRequest { request, _ ->
+            // 在请求属性中记录开始时间
+            request.attributes.put(AttributeKey("StartTime"), TimeSource.Monotonic.markNow())
+        }
+
+        onResponse { response ->
+            val startTime =
+                response.call.request.attributes.getOrNull(AttributeKey<TimeMark>("StartTime"))
+            startTime?.let {
+                val elapsed = it.elapsedNow().inWholeMilliseconds
+                Logger.d("拦截器:\n请求 ${response.call.request.url} 耗时: ${elapsed}ms")
+            }
+        }
+    }
+
+    private val jsonHttpClient: HttpClient by lazy {
+        HttpClient {
+            install(ContentNegotiation) { json(JSONConverter) }
+            install(TimeMonitorPlugin)
+            install(HttpTimeout) {
+                connectTimeoutMillis = 15_000
+                requestTimeoutMillis = 15_000
+                socketTimeoutMillis = 15_000
+            }
+            install(HttpCookies) {
+                storage = cookiesStorage
+            }
+            // 3. 日志打印 (替代 CommonInterceptor 中的 body/header 打印)
+//            install(Logging) {
+//                logger = object : KtorLogger {
+//                    override fun log(message: String) {
+//                        // 使用你自己的 Logger 输出，Ktor 会自动格式化好 请求头/体/响应
+//                        Logger.d("KtorLog:\n$message")
+//                    }
+//                }
+//                // 打印级别：ALL (包含 Headers 和 Body)，对应你原来的 peekBody
+//                level = LogLevel.ALL
+//            }
+        }
+    }
+
+    private val downloadHttpClient: HttpClient by lazy {
+        HttpClient {
+            install(HttpTimeout) {
+                connectTimeoutMillis = 15_000 // 连接超时还是要有的
+                requestTimeoutMillis = Long.MAX_VALUE  // 请求时间无限，防止下载大文件中断
+                socketTimeoutMillis = Long.MAX_VALUE
+            }
+
+            install(HttpCookies) {
+                storage = cookiesStorage
+            }
+        }
+    }
+
+
+    fun provideKtorfit(baseUrl: String): Ktorfit {
+        return Ktorfit.Builder()
+            .baseUrl(baseUrl)
+            .httpClient(jsonHttpClient)
+            .build()
+    }
+
+
+    fun provideDownloadKtorfit(): Ktorfit {
+        return Ktorfit.Builder()
+            .baseUrl("https://localhost/") // 占位符，实际会被 @Url 覆盖
+            .httpClient(downloadHttpClient)
+            .build()
+    }
+}
