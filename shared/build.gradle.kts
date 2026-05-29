@@ -77,7 +77,9 @@ kotlin {
             // bignum
             implementation(libs.bignum)
             // navigation
-            implementation(libs.navigation3.runtime)
+            implementation(libs.navigation.compose)
+            // window size class
+            implementation(libs.material3.window.size)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

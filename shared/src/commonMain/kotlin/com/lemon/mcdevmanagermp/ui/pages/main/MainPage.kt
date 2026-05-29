@@ -1,71 +1,478 @@
 package com.lemon.mcdevmanagermp.ui.pages.main
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberDrawerState
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.lemon.mcdevmanagermp.ui.components.AppScaffold
+import com.lemon.mcdevmanagermp.ui.components.ExpandableNavigateItem
+import com.lemon.mcdevmanagermp.ui.components.MainUserCard
+import com.lemon.mcdevmanagermp.ui.components.ProfitSplitWidget
+import com.lemon.mcdevmanagermp.ui.components.ProfitWidget
+import com.lemon.mcdevmanagermp.ui.components.TipsCard
+import com.lemon.mcdevmanagermp.ui.navigation.Route
+import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
+import kotlinx.coroutines.launch
+import mcdevmanagermpr.shared.generated.resources.Res
+import mcdevmanagermpr.shared.generated.resources.ic_menu
+import mcdevmanagermpr.shared.generated.resources.ic_notice
+import org.jetbrains.compose.resources.painterResource
+
+private val CollapsedWidth = 80.dp
+private val ExpandedWidth = 240.dp
 
 @Composable
-fun MainPage() {
+fun MainPage(
+    onNavigateToLogin: () -> Unit = {},
+    onNavigateToSubPage: (Route) -> Unit = {}
+) {
     val viewModel = remember { MainViewModel() }
     val state by viewModel.state.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
-    Scaffold(
-        bottomBar = {
-            NavigationBar {
-                MainTab.entries.forEach { tab ->
-                    NavigationBarItem(
-                        selected = state.selectedTab == tab,
-                        onClick = { viewModel.dispatch(MainAction.SelectTab(tab)) },
-                        icon = { Text(tab.icon) },
-                        label = { Text(tab.label) }
+    AppScaffold(
+        viewEffect = viewModel.effect,
+        onEffect = { effect ->
+            when (effect) {
+                is MainEffect.ShowToast -> {
+                    scope.launch { snackbarHostState.showSnackbar(effect.message) }
+                }
+                is MainEffect.NavigateTo -> onNavigateToSubPage(effect.route)
+                MainEffect.SessionExpired -> onNavigateToLogin()
+            }
+        }
+    ) { innerPadding ->
+        Scaffold(
+            snackbarHost = {
+                SnackbarHost(hostState = snackbarHostState) { data ->
+                    val colors = LocalAppColors.current
+                    Snackbar(
+                        snackbarData = data,
+                        shape = RoundedCornerShape(8.dp),
+                        containerColor = colors.surface,
+                        contentColor = colors.onSurface
+                    )
+                }
+            },
+            modifier = Modifier.padding(innerPadding)
+        ) { scaffoldPadding ->
+            BoxWithConstraints(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(scaffoldPadding)
+            ) {
+                val widthSizeClass = when {
+                    maxWidth < 600.dp -> WindowWidthSizeClass.Compact
+                    maxWidth < 840.dp -> WindowWidthSizeClass.Medium
+                    else -> WindowWidthSizeClass.Expanded
+                }
+                when (widthSizeClass) {
+                    WindowWidthSizeClass.Compact -> CompactLayout(
+                        state = state,
+                        onAction = viewModel::dispatch,
+                        onNavigateToSubPage = onNavigateToSubPage
+                    )
+                    else -> MediumLayout(
+                        state = state,
+                        onAction = viewModel::dispatch,
+                        onNavigateToSubPage = onNavigateToSubPage
                     )
                 }
             }
         }
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            contentAlignment = Alignment.Center
-        ) {
-            when (state.selectedTab) {
-                MainTab.Home -> HomeTabContent()
-                MainTab.Profile -> ProfileTabContent()
-                MainTab.Settings -> SettingsTabContent()
+    }
+}
+
+// ============================================================
+// Compact Layout (mobile) — Bottom NavigationBar + Drawer
+// ============================================================
+
+@Composable
+private fun CompactLayout(
+    state: MainState,
+    onAction: (MainAction) -> Unit,
+    onNavigateToSubPage: (Route) -> Unit
+) {
+    val colors = LocalAppColors.current
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        gesturesEnabled = false,
+        drawerContent = {
+            ModalDrawerSheet {
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        "账号管理",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        "暂无多账号功能",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colors.onSurfaceVariant
+                    )
+                }
+            }
+        }
+    ) {
+        Scaffold(
+            bottomBar = {
+                TabNavigationBar(
+                    selectedTab = state.selectedTab,
+                    onTabSelect = { onAction(MainAction.SelectTab(it)) }
+                )
+            },
+            containerColor = colors.background
+        ) { innerPadding ->
+            AnimatedContent(
+                targetState = state.selectedTab,
+                label = "tab_content"
+            ) { targetTab ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                ) {
+                    when (targetTab) {
+                        MainTab.Home -> CompactHomeTabContent(
+                            state = state,
+                            onAction = onAction,
+                            onAvatarClick = {
+                                // TODO: Open drawer
+                            }
+                        )
+                        MainTab.Analyze -> PlaceholderTabContent("数据分析")
+                        MainTab.Feedback -> PlaceholderTabContent("玩家反馈")
+                        MainTab.Comment -> PlaceholderTabContent("组件评论")
+                        MainTab.Settings -> PlaceholderTabContent("设置")
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun HomeTabContent() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("首页", style = MaterialTheme.typography.headlineMedium)
+private fun TabNavigationBar(
+    selectedTab: MainTab,
+    onTabSelect: (MainTab) -> Unit
+) {
+    NavigationBar {
+        MainTab.entries.forEach { tab ->
+            NavigationBarItem(
+                selected = selectedTab == tab,
+                onClick = { onTabSelect(tab) },
+                icon = {
+                    Icon(
+                        painter = painterResource(tab.icon),
+                        contentDescription = tab.label,
+                        modifier = Modifier.size(24.dp)
+                    )
+                },
+                label = { Text(tab.label, fontSize = 11.sp) }
+            )
+        }
     }
 }
 
 @Composable
-private fun ProfileTabContent() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("我的", style = MaterialTheme.typography.headlineMedium)
+private fun CompactHomeTabContent(
+    state: MainState,
+    onAction: (MainAction) -> Unit,
+    onAvatarClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        MainUserCard(
+            userInfo = state.userInfo,
+            levelInfo = state.levelInfo,
+            isLoading = state.isRefreshing,
+            onAvatarClick = onAvatarClick
+        )
+
+        ProfitWidget(
+            overview = state.overview,
+            isLoading = state.isRefreshing
+        )
+
+        AnimatedVisibility(
+            visible = !state.tipsDismissed && hasStaleData(state),
+            enter = fadeIn(tween(300)) + slideInHorizontally(tween(300)),
+            exit = fadeOut(tween(300)) + slideOutHorizontally(tween(300))
+        ) {
+            TipsCard(
+                headerIcon = Res.drawable.ic_notice,
+                content = "昨日数据可能未更新",
+                onDismiss = { onAction(MainAction.DismissTips) }
+            )
+        }
+
+        Spacer(Modifier.height(8.dp))
+    }
+}
+
+// ============================================================
+// Medium Layout (desktop/tablet) — Expandable NavigationRail
+// ============================================================
+
+@Composable
+private fun MediumLayout(
+    state: MainState,
+    onAction: (MainAction) -> Unit,
+    onNavigateToSubPage: (Route) -> Unit
+) {
+    val colors = LocalAppColors.current
+    var isExpanded by remember { mutableStateOf(false) }
+    val userNickname = (state.userInfo as? com.lemon.mcdevmanagermp.data.common.NetworkState.Success)?.data?.nickname
+
+    val sidebarWidth by animateDpAsState(
+        targetValue = if (isExpanded) ExpandedWidth else CollapsedWidth,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioLowBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        ),
+        label = "SidebarWidth"
+    )
+
+    Row(modifier = Modifier.fillMaxSize().background(colors.surface)) {
+        NavigationRail(
+            modifier = Modifier
+                .width(sidebarWidth)
+                .fillMaxHeight(),
+            containerColor = colors.surface
+        ) {
+            Column(
+                modifier = Modifier.padding(horizontal = 4.dp),
+                horizontalAlignment = Alignment.Start
+            ) {
+                ExpandableNavigateItem(
+                    title = "MCDEV",
+                    titleWeight = FontWeight.ExtraBold,
+                    titleColor = colors.primary,
+                    icon = Res.drawable.ic_menu,
+                    expanded = isExpanded
+                ) { isExpanded = !isExpanded }
+
+                HorizontalDivider(color = colors.outline, thickness = 1.dp)
+                Spacer(Modifier.height(12.dp))
+
+                MainTab.entries.filter { it != MainTab.Settings }.forEachIndexed { index, tab ->
+                    ExpandableNavigateItem(
+                        title = tab.label,
+                        icon = tab.icon,
+                        expanded = isExpanded,
+                        selected = state.selectedTab == tab,
+                        titleWeight = if (tab == MainTab.Home) FontWeight.SemiBold else FontWeight.Normal
+                    ) {
+                        onAction(MainAction.SelectTab(tab))
+                    }
+                }
+
+                Spacer(Modifier.weight(1f))
+
+                ExpandableNavigateItem(
+                    title = "设置",
+                    icon = MainTab.Settings.icon,
+                    expanded = isExpanded,
+                    selected = state.selectedTab == MainTab.Settings
+                ) {
+                    onAction(MainAction.SelectTab(MainTab.Settings))
+                }
+
+                Spacer(Modifier.height(4.dp))
+
+                HorizontalDivider(color = colors.outline, thickness = 1.dp)
+
+                Spacer(Modifier.height(4.dp))
+
+                ExpandableNavigateItem(
+                    title = userNickname ?: "开发者",
+                    icon = null,
+                    isTinted = false,
+                    expanded = isExpanded
+                ) {}
+
+                Spacer(Modifier.height(4.dp))
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .clip(RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp))
+                .background(colors.background)
+        ) {
+            AnimatedContent(
+                targetState = state.selectedTab,
+                transitionSpec = {
+                    val direction = if (
+                        MainTab.entries.indexOf(targetState) > MainTab.entries.indexOf(initialState)
+                    ) 1 else -1
+                    (fadeIn(tween(300)) + slideInHorizontally(tween(300)) { direction * it })
+                        .togetherWith(fadeOut(tween(300)) + slideOutHorizontally(tween(300)) { -direction * it })
+                },
+                label = "tab_content_medium"
+            ) { targetTab ->
+                when (targetTab) {
+                    MainTab.Home -> MediumHomeTabContent(
+                        state = state,
+                        onAction = onAction
+                    )
+                    MainTab.Analyze -> PlaceholderTabContent("数据分析")
+                    MainTab.Feedback -> PlaceholderTabContent("玩家反馈")
+                    MainTab.Comment -> PlaceholderTabContent("组件评论")
+                    MainTab.Settings -> PlaceholderTabContent("设置")
+                }
+            }
+        }
     }
 }
 
 @Composable
-private fun SettingsTabContent() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("设置", style = MaterialTheme.typography.headlineMedium)
+private fun MediumHomeTabContent(
+    state: MainState,
+    onAction: (MainAction) -> Unit
+) {
+    val colors = LocalAppColors.current
+    val userNickname = (state.userInfo as? com.lemon.mcdevmanagermp.data.common.NetworkState.Success)?.data?.nickname
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(160.dp)
+                .background(colors.primary)
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Text(
+                    text = "Hi, ${userNickname ?: "开发者"}!",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = MaterialTheme.typography.headlineMedium.fontSize,
+                    color = colors.onPrimary,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            ProfitSplitWidget(
+                overview = state.overview,
+                isLoading = state.isRefreshing,
+                onClick = { onAction(MainAction.RefreshData) }
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            AnimatedVisibility(
+                visible = !state.tipsDismissed && hasStaleData(state),
+                enter = fadeIn(tween(300)) + slideInHorizontally(tween(300)),
+                exit = fadeOut(tween(300)) + slideOutHorizontally(tween(300))
+            ) {
+                TipsCard(
+                    headerIcon = Res.drawable.ic_notice,
+                    content = "昨日数据可能未更新",
+                    onDismiss = { onAction(MainAction.DismissTips) }
+                )
+            }
+        }
+    }
+}
+
+// ============================================================
+// Shared utilities
+// ============================================================
+
+private fun hasStaleData(state: MainState): Boolean {
+    val overview = (state.overview as? com.lemon.mcdevmanagermp.data.common.NetworkState.Success)?.data
+    return overview != null && overview.yesterdayDiamond == 0 && overview.yesterdayDownload == 0
+}
+
+@Composable
+private fun PlaceholderTabContent(name: String) {
+    val colors = LocalAppColors.current
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = name,
+            style = MaterialTheme.typography.headlineMedium,
+            color = colors.onSurface.copy(alpha = 0.5f)
+        )
     }
 }

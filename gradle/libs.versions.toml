@@ -25,7 +25,7 @@ logback = "1.5.32"
 okio = "3.17.0"
 kotlinx-datetime = "0.8.0"
 bignum = "0.3.10"
-androidx-navigation3 = "1.1.2"
+androidx-navigation = "2.9.2"
 kotlinxSerializationJson = "1.11.0"
 
 [libraries]
@@ -67,7 +67,9 @@ kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.
 # bignum
 bignum = { module = "com.ionspin.kotlin:bignum", version.ref = "bignum" }
 # navigation
-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "androidx-navigation3"}
+navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "androidx-navigation"}
+# window size class
+material3-window-size = { module = "org.jetbrains.compose.material3:material3-window-size-class", version.ref = "material3" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

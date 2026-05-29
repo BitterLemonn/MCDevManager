@@ -12,4 +12,16 @@ sealed interface Route {
 
     @Serializable
     data object Main : Route
+
+    @Serializable
+    data object Analyze : Route
+
+    @Serializable
+    data object Feedback : Route
+
+    @Serializable
+    data object Comment : Route
+
+    @Serializable
+    data object Settings : Route
 }
