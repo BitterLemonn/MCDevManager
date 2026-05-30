@@ -9,8 +9,44 @@ data class ProfitData(
     val developerProfit: Double = 0.0,
     val profitSubsidy: Double = 0.0,
     val subsidyProfit: Map<String, Double> = emptyMap(),
-    val subsidyPercent: Double = 0.0
+    val subsidyPercent: Double = 0.0,
+    val moduleDiamonds: Map<String, Double> = emptyMap()
 )
+
+data class ModuleIncomeDetail(
+    val moduleName: String,
+    val flowIncome: Double,
+    val developerShare: Double,
+    val shareReturn: Double,
+    val subsidyAmount: Double,
+    val totalIncome: Double
+)
+
+private fun getSharedProfit(profit: Double): Double = when {
+    profit < 1_000_000 -> 0.5
+    profit < 10_000_000 -> 0.525
+    else -> 0.55
+}
+
+fun ProfitData.toModuleIncomeDetails(): List<ModuleIncomeDetail> {
+    if (subsidyPercent == 0.0 && moduleDiamonds.isEmpty()) return emptyList()
+    return moduleDiamonds
+        .filter { (_, revenue) -> revenue > 0 }
+        .map { (name, revenue) ->
+            val sharedProfit = getSharedProfit(revenue)
+            val shareReturnDiamonds = revenue * 0.7 * (1 - sharedProfit) * subsidyPercent
+            val shareRmb = getDeveloperProfit(revenue, subsidyPercent) / 100.0
+            val subsidy = subsidyProfit[name] ?: 0.0
+            ModuleIncomeDetail(
+                moduleName = name,
+                flowIncome = revenue / 100.0,
+                developerShare = shareRmb,
+                shareReturn = shareReturnDiamonds / 100.0,
+                subsidyAmount = subsidy,
+                totalIncome = shareRmb + subsidy
+            )
+        }.sortedByDescending { it.flowIncome }
+}
 
 fun calculateProfit(itemProfitMap: Map<String, Double>): ProfitData {
     val sumProfit = itemProfitMap.values.sum()
@@ -33,7 +69,8 @@ fun calculateProfit(itemProfitMap: Map<String, Double>): ProfitData {
         totalProfit = totalSharedProfit / 100,
         developerProfit = totalSharedProfit,
         subsidyProfit = emptyMap(),
-        subsidyPercent = 0.0
+        subsidyPercent = 0.0,
+        moduleDiamonds = itemProfitMap
     )
 
     val subsidyValues = mutableMapOf<String, Double>()
@@ -78,7 +115,8 @@ fun calculateProfit(itemProfitMap: Map<String, Double>): ProfitData {
         developerProfit = totalSharedProfit,
         profitSubsidy = profitSubsidy,
         subsidyProfit = subsidyValues,
-        subsidyPercent = subsidyPercent
+        subsidyPercent = subsidyPercent,
+        moduleDiamonds = itemProfitMap
     )
 }
 

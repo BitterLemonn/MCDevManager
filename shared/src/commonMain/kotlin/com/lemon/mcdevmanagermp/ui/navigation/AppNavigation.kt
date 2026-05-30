@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.IncomeDetailPage
 import com.lemon.mcdevmanagermp.ui.pages.login.LoginPage
 import com.lemon.mcdevmanagermp.ui.pages.main.MainPage
 import com.lemon.mcdevmanagermp.ui.pages.splash.SplashPage
@@ -109,6 +110,10 @@ fun AppNavigation(modifier: Modifier = Modifier) {
 
         composable<Route.Settings> {
             PlaceholderPage("设置") { navController.popBackStack() }
+        }
+
+        composable<Route.IncomeDetail> {
+            IncomeDetailPage(onBack = { navController.popBackStack() })
         }
     }
 }

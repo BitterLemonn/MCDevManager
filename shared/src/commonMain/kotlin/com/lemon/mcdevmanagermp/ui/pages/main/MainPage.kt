@@ -215,6 +215,9 @@ private fun CompactLayout(
                             onAction = onAction,
                             onAvatarClick = {
                                 // TODO: Open drawer
+                            },
+                            onNavigateToIncomeDetail = {
+                                onNavigateToSubPage(Route.IncomeDetail)
                             }
                         )
                         MainTab.Analyze -> PlaceholderTabContent("数据分析")
@@ -255,7 +258,8 @@ private fun TabNavigationBar(
 private fun CompactHomeTabContent(
     state: MainState,
     onAction: (MainAction) -> Unit,
-    onAvatarClick: () -> Unit
+    onAvatarClick: () -> Unit,
+    onNavigateToIncomeDetail: () -> Unit = {}
 ) {
     val colors = LocalAppColors.current
     val user = (state.userInfo as? NetworkState.Success)?.data
@@ -361,7 +365,8 @@ private fun CompactHomeTabContent(
                     profitData = state.profitData ?: ProfitData(),
                     isLoading = state.isProfitLoading,
                     expanded = state.profitExpanded,
-                    onToggleExpand = { onAction(MainAction.ToggleProfitExpand) }
+                    onToggleExpand = { onAction(MainAction.ToggleProfitExpand) },
+                    onNavigateToDetail = onNavigateToIncomeDetail
                 )
 
                 if (state.showLastMonthProfit) {
@@ -477,7 +482,10 @@ private fun MediumLayout(
                 when (targetTab) {
                     MainTab.Home -> MediumHomeTabContent(
                         state = state,
-                        onAction = onAction
+                        onAction = onAction,
+                        onNavigateToIncomeDetail = {
+                            onNavigateToSubPage(Route.IncomeDetail)
+                        }
                     )
                     MainTab.Analyze -> PlaceholderTabContent("数据分析")
                     MainTab.Feedback -> PlaceholderTabContent("玩家反馈")
@@ -492,7 +500,8 @@ private fun MediumLayout(
 @Composable
 private fun MediumHomeTabContent(
     state: MainState,
-    onAction: (MainAction) -> Unit
+    onAction: (MainAction) -> Unit,
+    onNavigateToIncomeDetail: () -> Unit = {}
 ) {
     val colors = LocalAppColors.current
     val userNickname = (state.userInfo as? NetworkState.Success)?.data?.nickname
@@ -539,7 +548,8 @@ private fun MediumHomeTabContent(
                     profitData = state.profitData ?: ProfitData(),
                     isLoading = state.isProfitLoading,
                     expanded = state.profitExpanded,
-                    onToggleExpand = { onAction(MainAction.ToggleProfitExpand) }
+                    onToggleExpand = { onAction(MainAction.ToggleProfitExpand) },
+                    onNavigateToDetail = onNavigateToIncomeDetail
                 )
 
                 Spacer(Modifier.height(12.dp))
@@ -672,7 +682,10 @@ private fun ExpandedLayout(
                 when (targetTab) {
                     MainTab.Home -> ExpandedHomeTabContent(
                         state = state,
-                        onAction = onAction
+                        onAction = onAction,
+                        onNavigateToIncomeDetail = {
+                            onNavigateToSubPage(Route.IncomeDetail)
+                        }
                     )
                     MainTab.Analyze -> PlaceholderTabContent("数据分析")
                     MainTab.Feedback -> PlaceholderTabContent("玩家反馈")
@@ -687,7 +700,8 @@ private fun ExpandedLayout(
 @Composable
 private fun ExpandedHomeTabContent(
     state: MainState,
-    onAction: (MainAction) -> Unit
+    onAction: (MainAction) -> Unit,
+    onNavigateToIncomeDetail: () -> Unit = {}
 ) {
     val colors = LocalAppColors.current
     val userNickname = (state.userInfo as? NetworkState.Success)?.data?.nickname
@@ -743,7 +757,8 @@ private fun ExpandedHomeTabContent(
                         profitData = state.profitData ?: ProfitData(),
                         isLoading = state.isProfitLoading,
                         expanded = state.profitExpanded,
-                        onToggleExpand = { onAction(MainAction.ToggleProfitExpand) }
+                        onToggleExpand = { onAction(MainAction.ToggleProfitExpand) },
+                        onNavigateToDetail = onNavigateToIncomeDetail
                     )
                     if (state.showLastMonthProfit) {
                         ProfitCard(

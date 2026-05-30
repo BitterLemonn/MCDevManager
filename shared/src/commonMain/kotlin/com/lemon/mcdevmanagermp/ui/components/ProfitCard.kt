@@ -28,13 +28,17 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Icon
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -59,7 +63,8 @@ fun ProfitCard(
     profitData: ProfitData,
     isLoading: Boolean = true,
     expanded: Boolean = false,
-    onToggleExpand: () -> Unit = {}
+    onToggleExpand: () -> Unit = {},
+    onNavigateToDetail: (() -> Unit)? = null
 ) {
     val colors = LocalAppColors.current
 
@@ -96,6 +101,20 @@ fun ProfitCard(
                         color = colors.textColor
                     )
                     Spacer(modifier = Modifier.weight(1f))
+                    if (onNavigateToDetail != null) {
+                        IconButton(
+                            onClick = onNavigateToDetail,
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = "查看详情",
+                                tint = colors.onSurfaceVariant,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(4.dp))
+                    }
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
                             text = profitData.totalProfit.formatDecimal(2),
@@ -128,8 +147,8 @@ fun ProfitCard(
                         DetailSection(
                             color = colors.surfaceContainerHighest,
                             rows = listOf(
-                                "月总流水" to "${profitData.sumProfit.toInt()}",
-                                "开发者分成" to "${profitData.developerProfit.toInt()}"
+                                "月总流水(元)" to (profitData.sumProfit / 100.0).formatDecimal(2),
+                                "开发者分成(元)" to (profitData.developerProfit / 100.0).formatDecimal(2)
                             )
                         )
 

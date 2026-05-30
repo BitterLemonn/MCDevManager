@@ -1,7 +1,7 @@
 [versions]
-agp = "9.0.1"
+agp = "9.2.1"
 versions-name = "0.13.0"
-android-compileSdk = "36"
+android-compileSdk = "37"
 android-minSdk = "24"
 android-targetSdk = "38"
 androidx-activity = "1.13.0"

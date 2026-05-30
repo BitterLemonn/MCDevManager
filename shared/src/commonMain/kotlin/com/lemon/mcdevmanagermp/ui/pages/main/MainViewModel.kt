@@ -8,6 +8,7 @@ import com.lemon.mcdevmanagermp.data.repository.RankListRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.UserRepositoryImpl
 import com.lemon.mcdevmanagermp.domain.main.MainUseCase
+import com.lemon.mcdevmanagermp.utils.ProfitData
 import com.lemon.mcdevmanagermp.domain.rankList.RankListUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
 import kotlinx.coroutines.async
@@ -18,6 +19,11 @@ import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 
 class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState()) {
+
+    companion object {
+        var cachedProfitData: ProfitData? = null
+        var cachedMonthLabel: String? = null
+    }
 
     private val mainUseCase = MainUseCase(
         userRepository = UserRepositoryImpl.INSTANCE,
@@ -85,6 +91,8 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
                 val timeZone = TimeZone.of("Asia/Shanghai")
                 val now = Clock.System.now().toLocalDateTime(timeZone)
                 val result = mainUseCase.computeProfit(now.year, now.monthNumber)
+                cachedProfitData = result.thisMonth
+                cachedMonthLabel = "${now.year}年${now.monthNumber}月"
                 setState {
                     copy(
                         profitData = result.thisMonth,
