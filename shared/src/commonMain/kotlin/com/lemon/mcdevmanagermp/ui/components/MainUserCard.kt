@@ -77,6 +77,7 @@ fun MainUserCard(
                         fallback(Res.drawable.img_avatar)
                         crossfade()
                         error(Res.drawable.img_avatar)
+                        sizeMultiplier(2.0f)
                     }),
                     contentDescription = "头像",
                     modifier = Modifier.fillMaxSize(),

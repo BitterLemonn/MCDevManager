@@ -51,6 +51,8 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.github.panpf.sketch.AsyncImage
+import com.github.panpf.sketch.rememberAsyncImageState
+import com.github.panpf.sketch.request.ComposableImageOptions
 import com.lemon.mcdevmanagermp.data.page.RankCategoryContent
 import com.lemon.mcdevmanagermp.data.page.RankCategoryData
 import com.lemon.mcdevmanagermp.data.page.RankCategoryTypeEnum
@@ -89,8 +91,9 @@ fun MultiLevelRankingCard(
         when (currentContent) {
             is RankCategoryContent.Single -> currentContent.list
             is RankCategoryContent.Multi -> {
-                val group = currentContent.groups.find { it.categoryName == selectedSubCategoryName }
-                    ?: currentContent.groups.firstOrNull()
+                val group =
+                    currentContent.groups.find { it.categoryName == selectedSubCategoryName }
+                        ?: currentContent.groups.firstOrNull()
                 group?.data ?: emptyList()
             }
         }
@@ -206,7 +209,8 @@ fun MultiLevelRankingCard(
                 }
             }
 
-            val displayList = if (!isShowAll && currentList.size > 3) currentList.take(3) else currentList
+            val displayList =
+                if (!isShowAll && currentList.size > 3) currentList.take(3) else currentList
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -274,6 +278,9 @@ private fun RankingListItem(item: com.lemon.mcdevmanagermp.data.page.RankListIte
         if (!item.imgUrl.isNullOrBlank()) {
             AsyncImage(
                 uri = item.imgUrl,
+                state = rememberAsyncImageState(ComposableImageOptions {
+                    sizeMultiplier(2.0f)
+                }),
                 contentDescription = null,
                 modifier = Modifier
                     .size(32.dp)

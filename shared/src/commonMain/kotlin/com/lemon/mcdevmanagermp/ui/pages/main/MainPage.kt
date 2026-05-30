@@ -25,11 +25,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
@@ -54,23 +56,30 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.github.panpf.sketch.AsyncImage
+import com.github.panpf.sketch.rememberAsyncImageState
+import com.github.panpf.sketch.request.ComposableImageOptions
+import com.github.panpf.sketch.request.error
+import com.github.panpf.sketch.request.fallback
+import com.github.panpf.sketch.request.placeholder
 import com.lemon.mcdevmanagermp.data.common.NetworkState
+import com.lemon.mcdevmanagermp.data.consts.getLevelName
 import com.lemon.mcdevmanagermp.ui.components.AppScaffold
 import com.lemon.mcdevmanagermp.ui.components.ExpandableNavigateItem
-import com.lemon.mcdevmanagermp.ui.components.MainUserCard
 import com.lemon.mcdevmanagermp.ui.components.MultiLevelRankingCard
 import com.lemon.mcdevmanagermp.ui.components.ProfitCard
 import com.lemon.mcdevmanagermp.ui.components.ProfitSplitWidget
-import com.lemon.mcdevmanagermp.ui.components.ProfitWidget
 import com.lemon.mcdevmanagermp.ui.navigation.Route
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import com.lemon.mcdevmanagermp.utils.ProfitData
 import kotlinx.coroutines.launch
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_menu
+import mcdevmanagermpr.shared.generated.resources.img_avatar
 import org.jetbrains.compose.resources.painterResource
 
 private val CollapsedWidth = 80.dp
@@ -248,26 +257,135 @@ private fun CompactHomeTabContent(
     onAction: (MainAction) -> Unit,
     onAvatarClick: () -> Unit
 ) {
+    val colors = LocalAppColors.current
+    val user = (state.userInfo as? NetworkState.Success)?.data
+    val level = (state.levelInfo as? NetworkState.Success)?.data
+    val userNickname = user?.nickname
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        MainUserCard(
-            userInfo = state.userInfo,
-            levelInfo = state.levelInfo,
-            isLoading = state.isRefreshing,
-            onAvatarClick = onAvatarClick
-        )
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(140.dp)
+                    .background(
+                        colors.primary,
+                        RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)
+                    )
+            )
 
-        ProfitWidget(
-            overview = state.overview,
-            isLoading = state.isRefreshing
-        )
+            Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Hi, ${userNickname ?: "开发者"}!",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = MaterialTheme.typography.headlineSmall.fontSize,
+                            color = colors.textColor
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        val lv = level?.currentLevel ?: user?.level ?: 0
+                        val levelText = if (level != null) {
+                            "${getLevelName(level.currentClass)} · Lv.$lv"
+                        } else {
+                            "Lv.$lv"
+                        }
+                        Text(
+                            text = levelText,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colors.textColor.copy(alpha = 0.8f)
+                        )
+                    }
 
-        Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.width(12.dp))
+
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                    ) {
+                        AsyncImage(
+                            uri = user?.headImg,
+                            state = rememberAsyncImageState(ComposableImageOptions {
+                                placeholder(Res.drawable.img_avatar)
+                                fallback(Res.drawable.img_avatar)
+                                crossfade()
+                                error(Res.drawable.img_avatar)
+                                sizeMultiplier(2.0f)
+                            }),
+                            contentDescription = "头像",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                }
+
+                if (level != null) {
+                    Spacer(Modifier.height(8.dp))
+                    LinearProgressIndicator(
+                        progress = {
+                            val progress = if (level.expCeiling > level.expFloor) {
+                                ((level.totalExp - level.expFloor) / (level.expCeiling - level.expFloor))
+                                    .coerceIn(0.0, 1.0).toFloat()
+                            } else 0f
+                            progress
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(2.dp)),
+                        color = colors.textColor.copy(alpha = 0.9f),
+                        trackColor = colors.textColor.copy(alpha = 0.2f)
+                    )
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                ProfitSplitWidget(
+                    overview = state.overview,
+                    isLoading = state.isRefreshing,
+                    onClick = { onAction(MainAction.RefreshData) }
+                )
+
+                Spacer(Modifier.height(12.dp))
+
+                ProfitCard(
+                    title = "本月收益速算",
+                    profitData = state.profitData ?: ProfitData(),
+                    isLoading = state.isProfitLoading,
+                    expanded = state.profitExpanded,
+                    onToggleExpand = { onAction(MainAction.ToggleProfitExpand) }
+                )
+
+                if (state.showLastMonthProfit) {
+                    Spacer(Modifier.height(12.dp))
+
+                    ProfitCard(
+                        title = "上月收益速算",
+                        profitData = state.lastProfitData ?: ProfitData(),
+                        isLoading = state.isProfitLoading
+                    )
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                MultiLevelRankingCard(
+                    data = state.rankListData,
+                    onChange = { category, subCategory ->
+                        onAction(MainAction.GetRankData(category, subCategory))
+                    }
+                )
+
+                Spacer(Modifier.height(8.dp))
+            }
+        }
     }
 }
 

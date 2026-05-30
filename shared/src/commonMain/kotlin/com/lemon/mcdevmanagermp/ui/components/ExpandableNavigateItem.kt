@@ -113,10 +113,11 @@ fun ExpandableNavigateItem(
                         fallback(Res.drawable.img_avatar)
                         crossfade()
                         error(Res.drawable.img_avatar)
+                        sizeMultiplier(2.0f)
                     }),
                     contentDescription = title,
                     modifier = iconModifier
-                        .then(Modifier.size(24.dp))
+                        .then(Modifier.size(32.dp))
                         .clip(CircleShape),
                     contentScale = ContentScale.Crop
                 )
