@@ -1,6 +1,7 @@
 package com.lemon.mcdevmanagermp.platform
 
 import android.content.Context
+import com.lemon.mcdevmanagermp.utils.CrashHandler
 import java.lang.ref.WeakReference
 
 object AndroidLogContext {
@@ -23,7 +24,7 @@ actual fun getLogDirectory(): String {
 actual fun setupUncaughtExceptionHandler() {
     val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
     Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
-        com.lemon.mcdevmanagermp.utils.CrashHandler.handleException(throwable)
+        CrashHandler.handleException(throwable)
         defaultHandler?.uncaughtException(thread, throwable)
     }
 }

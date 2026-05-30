@@ -114,8 +114,8 @@ object UnifiedExceptionHandler {
 
     private fun refreshCookiesIfChanged() {
         val returnCookies = CookiesStore.getCookie(NETEASE_USER_COOKIE) ?: return
-        // Cookie 持久化将在数据层实现后接入
-        Logger.d("Cookie 已更新")
+        // Cookie 持久化
+//        Logger.d("Cookie 已更新")
         AppContext.cookiesStore.addCookie(NETEASE_USER_COOKIE, returnCookies)
     }
 

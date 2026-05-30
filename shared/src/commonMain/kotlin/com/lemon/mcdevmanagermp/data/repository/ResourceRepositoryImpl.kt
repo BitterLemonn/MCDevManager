@@ -1,0 +1,39 @@
+package com.lemon.mcdevmanagermp.data.repository
+
+import com.lemon.mcdevmanagermp.data.api.AnalyzeApi
+import com.lemon.mcdevmanagermp.data.common.NetworkState
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.NewResDetailVO
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceVO
+import com.lemon.mcdevmanagermp.domain.resource.ResourceRepository
+import com.lemon.mcdevmanagermp.utils.UnifiedExceptionHandler
+
+class ResourceRepositoryImpl : ResourceRepository {
+    companion object {
+        val INSTANCE by lazy { ResourceRepositoryImpl() }
+        private val analyzeApi = AnalyzeApi.INSTANCE
+    }
+
+    override suspend fun getAllResources(platform: String): NetworkState<ResourceVO> {
+        return UnifiedExceptionHandler.handleRequest {
+            analyzeApi.getAllResource(platform = platform)
+        }
+    }
+
+    override suspend fun getNewDayDetail(
+        platform: String,
+        category: String,
+        startDate: String,
+        endDate: String,
+        itemListStr: String
+    ): NetworkState<NewResDetailVO> {
+        return UnifiedExceptionHandler.handleRequest {
+            analyzeApi.getNewDayDetail(
+                platform = platform,
+                category = category,
+                startDate = startDate,
+                endDate = endDate,
+                itemListStr = itemListStr
+            )
+        }
+    }
+}

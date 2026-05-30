@@ -15,5 +15,6 @@ sealed interface SplashAction : IUiAction {
 }
 
 sealed interface SplashEffect : IUiEffect {
+    data object NavigateToLogin : SplashEffect
     data object NavigateToMain : SplashEffect
 }

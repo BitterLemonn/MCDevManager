@@ -57,8 +57,13 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             popExitTransition = { fadeOut(tween(500)) }
         ) {
             SplashPage(
-                onNavigateToMain = {
+                onNavigateToLogin = {
                     navController.navigate(Route.Login) {
+                        popUpTo<Route.Splash> { inclusive = true }
+                    }
+                },
+                onNavigateToMain = {
+                    navController.navigate(Route.Main) {
                         popUpTo<Route.Splash> { inclusive = true }
                     }
                 }

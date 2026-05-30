@@ -57,18 +57,20 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.ui.components.AppScaffold
 import com.lemon.mcdevmanagermp.ui.components.ExpandableNavigateItem
 import com.lemon.mcdevmanagermp.ui.components.MainUserCard
+import com.lemon.mcdevmanagermp.ui.components.MultiLevelRankingCard
+import com.lemon.mcdevmanagermp.ui.components.ProfitCard
 import com.lemon.mcdevmanagermp.ui.components.ProfitSplitWidget
 import com.lemon.mcdevmanagermp.ui.components.ProfitWidget
-import com.lemon.mcdevmanagermp.ui.components.TipsCard
 import com.lemon.mcdevmanagermp.ui.navigation.Route
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
+import com.lemon.mcdevmanagermp.utils.ProfitData
 import kotlinx.coroutines.launch
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_menu
-import mcdevmanagermpr.shared.generated.resources.ic_notice
 import org.jetbrains.compose.resources.painterResource
 
 private val CollapsedWidth = 80.dp
@@ -260,18 +262,6 @@ private fun CompactHomeTabContent(
             isLoading = state.isRefreshing
         )
 
-        AnimatedVisibility(
-            visible = !state.tipsDismissed && hasStaleData(state),
-            enter = fadeIn(tween(300)) + slideInHorizontally(tween(300)),
-            exit = fadeOut(tween(300)) + slideOutHorizontally(tween(300))
-        ) {
-            TipsCard(
-                headerIcon = Res.drawable.ic_notice,
-                content = "昨日数据可能未更新",
-                onDismiss = { onAction(MainAction.DismissTips) }
-            )
-        }
-
         Spacer(Modifier.height(8.dp))
     }
 }
@@ -288,7 +278,7 @@ private fun MediumLayout(
 ) {
     val colors = LocalAppColors.current
     var isExpanded by remember { mutableStateOf(false) }
-    val userNickname = (state.userInfo as? com.lemon.mcdevmanagermp.data.common.NetworkState.Success)?.data?.nickname
+    val userNickname = (state.userInfo as? NetworkState.Success)?.data?.nickname
 
     val sidebarWidth by animateDpAsState(
         targetValue = if (isExpanded) ExpandedWidth else CollapsedWidth,
@@ -400,7 +390,7 @@ private fun MediumHomeTabContent(
     onAction: (MainAction) -> Unit
 ) {
     val colors = LocalAppColors.current
-    val userNickname = (state.userInfo as? com.lemon.mcdevmanagermp.data.common.NetworkState.Success)?.data?.nickname
+    val userNickname = (state.userInfo as? NetworkState.Success)?.data?.nickname
 
     Box(modifier = Modifier.fillMaxSize()) {
         Box(
@@ -423,7 +413,7 @@ private fun MediumHomeTabContent(
                     text = "Hi, ${userNickname ?: "开发者"}!",
                     fontWeight = FontWeight.Bold,
                     fontSize = MaterialTheme.typography.headlineMedium.fontSize,
-                    color = colors.onPrimary,
+                    color = colors.textColor,
                     modifier = Modifier.padding(end = 8.dp)
                 )
             }
@@ -438,16 +428,39 @@ private fun MediumHomeTabContent(
 
             Spacer(Modifier.height(8.dp))
 
-            AnimatedVisibility(
-                visible = !state.tipsDismissed && hasStaleData(state),
-                enter = fadeIn(tween(300)) + slideInHorizontally(tween(300)),
-                exit = fadeOut(tween(300)) + slideOutHorizontally(tween(300))
+            Spacer(Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth().weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                TipsCard(
-                    headerIcon = Res.drawable.ic_notice,
-                    content = "昨日数据可能未更新",
-                    onDismiss = { onAction(MainAction.DismissTips) }
-                )
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    ProfitCard(
+                        title = "本月收益速算",
+                        profitData = state.profitData ?: ProfitData(),
+                        isLoading = state.isProfitLoading,
+                        expanded = state.profitExpanded,
+                        onToggleExpand = { onAction(MainAction.ToggleProfitExpand) }
+                    )
+                    if (state.showLastMonthProfit) {
+                        ProfitCard(
+                            title = "上月收益速算",
+                            profitData = state.lastProfitData ?: ProfitData(),
+                            isLoading = state.isProfitLoading
+                        )
+                    }
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    MultiLevelRankingCard(
+                        data = state.rankListData,
+                        onChange = { category, subCategory ->
+                            onAction(MainAction.GetRankData(category, subCategory))
+                        }
+                    )
+                }
             }
         }
     }
@@ -456,11 +469,6 @@ private fun MediumHomeTabContent(
 // ============================================================
 // Shared utilities
 // ============================================================
-
-private fun hasStaleData(state: MainState): Boolean {
-    val overview = (state.overview as? com.lemon.mcdevmanagermp.data.common.NetworkState.Success)?.data
-    return overview != null && overview.yesterdayDiamond == 0 && overview.yesterdayDownload == 0
-}
 
 @Composable
 private fun PlaceholderTabContent(name: String) {

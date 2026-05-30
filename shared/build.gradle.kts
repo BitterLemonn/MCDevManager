@@ -1,5 +1,4 @@
 import org.gradle.kotlin.dsl.withType
-import org.jetbrains.compose.desktop.application.tasks.AbstractJPackageTask
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -10,6 +9,11 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.ktorfit)
+    alias(libs.plugins.room)
+}
+
+room {
+    schemaDirectory("$projectDir/schemas")
 }
 
 kotlin {
@@ -80,6 +84,14 @@ kotlin {
             implementation(libs.navigation.compose)
             // window size class
             implementation(libs.material3.window.size)
+            // room
+            implementation(libs.room)
+            implementation(libs.sqlite.bundled)
+            // sketch
+            implementation(libs.sketch.http)
+            implementation(libs.sketch.compose)
+            implementation(libs.sketch.compose.resources)
+            implementation(libs.sketch.webp)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -89,36 +101,8 @@ kotlin {
 
 dependencies {
     androidRuntimeClasspath(libs.compose.uiTooling)
-}
-
-val appName = "MCDevManager"
-val appVersion = libs.versions.versions.name.get()
-
-tasks.register<Zip>("packagePortable") {
-    group = "distribution"
-    description = "Create a portable zip archive (免安装版)"
-    dependsOn("createDistributable")
-
-    from(layout.buildDirectory.dir("compose/binaries/main/app"))
-    into(appName)
-    archiveFileName.set("$appName-$appVersion-portable.zip")
-    destinationDirectory.set(layout.buildDirectory.dir("distributions"))
-}
-
-tasks.register("packageInstaller") {
-    group = "distribution"
-    description = "Create an installer (安装版)"
-    dependsOn("packageExe")
-
-    doLast {
-        println("Installer created at: ${layout.buildDirectory.dir("compose/binaries/main/exe").get().asFile.absolutePath}")
-    }
-}
-
-// 强制指定打包使用的 JDK 路径，解决 Android Studio JBR 缺少 jpackage 的问题
-tasks.withType<AbstractJPackageTask>().configureEach {
-    val targetJdk = File("C:/Users/sqn_android/.jdks/ms-17.0.15")
-    if (targetJdk.exists()) {
-        javaHome.set(targetJdk.absolutePath)
-    }
+    add("kspAndroid", libs.room.compiler)
+    add("kspJvm", libs.room.compiler)
+    add("kspIosArm64", libs.room.compiler)
+    add("kspIosSimulatorArm64", libs.room.compiler)
 }

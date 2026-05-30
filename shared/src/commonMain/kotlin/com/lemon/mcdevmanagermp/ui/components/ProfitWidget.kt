@@ -27,6 +27,7 @@ import mcdevmanagermpr.shared.generated.resources.ic_arrow_down
 import mcdevmanagermpr.shared.generated.resources.ic_arrow_up
 import mcdevmanagermpr.shared.generated.resources.ic_diamond
 import mcdevmanagermpr.shared.generated.resources.ic_download
+import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
@@ -88,7 +89,7 @@ private fun ProfitSmallCard(
     title: String,
     value: Int?,
     diff: Int?,
-    icon: org.jetbrains.compose.resources.DrawableResource,
+    icon: DrawableResource,
     isLoading: Boolean,
     modifier: Modifier = Modifier
 ) {

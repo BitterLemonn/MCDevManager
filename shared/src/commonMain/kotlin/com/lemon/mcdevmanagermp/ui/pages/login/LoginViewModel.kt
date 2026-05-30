@@ -1,8 +1,10 @@
 package com.lemon.mcdevmanagermp.ui.pages.login
 
 import androidx.lifecycle.viewModelScope
+import com.lemon.mcdevmanagermp.data.repository.AccountRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.LoginRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.UserRepositoryImpl
+import com.lemon.mcdevmanagermp.domain.account.SaveAccountUseCase
 import com.lemon.mcdevmanagermp.domain.login.LoginUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
 import com.lemon.mcdevmanagermp.ui.navigation.Route
@@ -12,6 +14,11 @@ class LoginViewModel : BaseViewModel<LoginState, LoginAction, LoginEffect>(Login
 
     private val loginUseCase = LoginUseCase(
         loginRepository = LoginRepositoryImpl.INSTANCE,
+        userRepository = UserRepositoryImpl.INSTANCE
+    )
+
+    private val saveAccountUseCase = SaveAccountUseCase(
+        accountRepository = AccountRepositoryImpl.INSTANCE,
         userRepository = UserRepositoryImpl.INSTANCE
     )
 
@@ -52,6 +59,7 @@ class LoginViewModel : BaseViewModel<LoginState, LoginAction, LoginEffect>(Login
                 } else {
                     loginUseCase(email = s.email, password = s.password)
                 }
+                saveAccountUseCase(s.email)
                 sendEffect(LoginEffect.ShowToast("登录成功"))
                 sendEffect(LoginEffect.NavigateTo(Route.Main, Route.Splash))
             } catch (e: Exception) {

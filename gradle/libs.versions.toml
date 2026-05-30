@@ -17,16 +17,19 @@ kotlinx-coroutines = "1.11.0"
 material3 = "1.11.0-alpha07"
 
 material-icon-extend = "1.7.3"
-kotlin-ksp="2.3.9"
+kotlin-ksp = "2.3.9"
 ktorfit = "2.7.3"
 ktor = "3.5.0"
-logging = "8.0.03"
-logback = "1.5.32"
+logging = "8.0.4"
+logback = "1.5.33"
 okio = "3.17.0"
 kotlinx-datetime = "0.8.0"
 bignum = "0.3.10"
 androidx-navigation = "2.9.2"
 kotlinxSerializationJson = "1.11.0"
+room = "2.8.4"
+sqlite = "2.6.2"
+sketch = "4.5.0-alpha03"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -67,9 +70,19 @@ kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.
 # bignum
 bignum = { module = "com.ionspin.kotlin:bignum", version.ref = "bignum" }
 # navigation
-navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "androidx-navigation"}
+navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "androidx-navigation" }
 # window size class
 material3-window-size = { module = "org.jetbrains.compose.material3:material3-window-size-class", version.ref = "material3" }
+# room
+room = { module = "androidx.room:room-runtime", version.ref = "room" }
+room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+# sql
+sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "sqlite" }
+# sketch
+sketch-compose = { module = "io.github.panpf.sketch4:sketch-compose", version.ref = "sketch" }
+sketch-http = { module = "io.github.panpf.sketch4:sketch-http", version.ref = "sketch" }
+sketch-webp = { module = "io.github.panpf.sketch4:sketch-animated-webp", version.ref = "sketch" }
+sketch-compose-resources = { module = "io.github.panpf.sketch4:sketch-compose-resources", version.ref = "sketch" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
@@ -81,3 +94,4 @@ kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref =
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ktorfit = { id = "de.jensklingenberg.ktorfit", version.ref = "ktorfit" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "kotlin-ksp" }
+room = { id = "androidx.room", version.ref = "room" }

@@ -22,7 +22,10 @@ import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import androidx.compose.runtime.collectAsState
 
 @Composable
-fun SplashPage(onNavigateToMain: () -> Unit) {
+fun SplashPage(
+    onNavigateToLogin: () -> Unit,
+    onNavigateToMain: () -> Unit
+) {
     val viewModel = remember { SplashViewModel() }
     val state by viewModel.state.collectAsState()
 
@@ -30,6 +33,7 @@ fun SplashPage(onNavigateToMain: () -> Unit) {
         viewEffect = viewModel.effect,
         onEffect = { effect ->
             when (effect) {
+                SplashEffect.NavigateToLogin -> onNavigateToLogin()
                 SplashEffect.NavigateToMain -> onNavigateToMain()
             }
         }
