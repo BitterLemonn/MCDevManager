@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,9 +30,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.github.panpf.sketch.AsyncImage
+import com.github.panpf.sketch.rememberAsyncImageState
+import com.github.panpf.sketch.request.ComposableImageOptions
+import com.github.panpf.sketch.request.error
+import com.github.panpf.sketch.request.fallback
+import com.github.panpf.sketch.request.placeholder
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.img_avatar
@@ -95,13 +103,27 @@ fun ExpandableNavigateItem(
                     tint = if (isTinted) {
                         if (selected) colors.primary else colors.onSurfaceVariant
                     } else Color.Transparent,
-                    modifier = iconModifier.then(Modifier.requiredSize(24.dp))
+                    modifier = iconModifier.then(Modifier.size(24.dp))
+                )
+            } else if (icon is String) {
+                AsyncImage(
+                    uri = icon,
+                    state = rememberAsyncImageState(ComposableImageOptions {
+                        placeholder(Res.drawable.img_avatar)
+                        fallback(Res.drawable.img_avatar)
+                        crossfade()
+                        error(Res.drawable.img_avatar)
+                    }),
+                    contentDescription = title,
+                    modifier = iconModifier
+                        .then(Modifier.size(24.dp))
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
                 )
             } else {
                 Image(
                     painter = painterResource(Res.drawable.img_avatar),
-                    contentDescription = title,
-                    modifier = iconModifier.then(Modifier.requiredSize(24.dp))
+                    contentDescription = "avatar"
                 )
             }
 
