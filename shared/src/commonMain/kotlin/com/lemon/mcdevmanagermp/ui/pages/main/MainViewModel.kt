@@ -8,13 +8,14 @@ import com.lemon.mcdevmanagermp.data.repository.RankListRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.UserRepositoryImpl
 import com.lemon.mcdevmanagermp.domain.main.MainUseCase
-import com.lemon.mcdevmanagermp.utils.ProfitData
 import com.lemon.mcdevmanagermp.domain.rankList.RankListUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
+import com.lemon.mcdevmanagermp.utils.ProfitData
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 
@@ -46,10 +47,12 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
                 loadDashboard()
                 loadProfit()
             }
+
             MainAction.RefreshData -> {
                 loadDashboard()
                 loadProfit()
             }
+
             MainAction.ToggleDrawer -> setState { copy(showDrawer = !showDrawer) }
             is MainAction.GetRankData -> loadRankCategory(action.category, action.subCategory)
             MainAction.ToggleProfitExpand -> setState { copy(profitExpanded = !profitExpanded) }
@@ -69,7 +72,12 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
                         isRefreshing = false
                     )
                 }
-                if (mainUseCase.isSessionExpired(result.userInfo, result.overview, result.levelInfo)) {
+                if (mainUseCase.isSessionExpired(
+                        result.userInfo,
+                        result.overview,
+                        result.levelInfo
+                    )
+                ) {
                     sendEffect(MainEffect.SessionExpired)
                 } else {
                     val overview = (result.overview as? NetworkState.Success)?.data
@@ -90,9 +98,9 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
             try {
                 val timeZone = TimeZone.of("Asia/Shanghai")
                 val now = Clock.System.now().toLocalDateTime(timeZone)
-                val result = mainUseCase.computeProfit(now.year, now.monthNumber)
+                val result = mainUseCase.computeProfit(now.year, now.month.number)
                 cachedProfitData = result.thisMonth
-                cachedMonthLabel = "${now.year}年${now.monthNumber}月"
+                cachedMonthLabel = "${now.year}年${now.month.number}月"
                 setState {
                     copy(
                         profitData = result.thisMonth,

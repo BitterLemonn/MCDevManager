@@ -15,6 +15,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
+import kotlinx.datetime.number
 import kotlinx.datetime.plus
 
 data class MainDashboardData(
@@ -47,7 +48,10 @@ class MainUseCase(
     suspend fun computeProfit(year: Int, month: Int): ProfitResult = coroutineScope {
         val thisMonthDiamonds = getOneMonthComponentDiamonds(year, month)
         val lastMonthDate = LocalDate(year, month, 1).minus(1, DateTimeUnit.MONTH)
-        val lastMonthDiamonds = getOneMonthComponentDiamonds(lastMonthDate.year, lastMonthDate.monthNumber)
+        val lastMonthDiamonds = getOneMonthComponentDiamonds(
+            lastMonthDate.year,
+            lastMonthDate.month.number
+        )
 
         ProfitResult(
             thisMonth = calculateProfit(thisMonthDiamonds),
@@ -58,7 +62,8 @@ class MainUseCase(
     private suspend fun getOneMonthComponentDiamonds(year: Int, month: Int): Map<String, Double> =
         coroutineScope {
             val resources = resourceRepository.getAllResources()
-            val resList = if (resources is NetworkState.Success) resources.data?.item ?: emptyList() else emptyList()
+            val resList = if (resources is NetworkState.Success) resources.data?.item
+                ?: emptyList() else emptyList()
 
             val dateRange = monthDateRange(year, month)
 
@@ -72,7 +77,8 @@ class MainUseCase(
                         itemListStr = res.itemId
                     )
                     if (result is NetworkState.Success) {
-                        res.itemName to (result.data?.data?.sumOf { it.diamond * (1 - it.refundRate) } ?: 0.0)
+                        res.itemName to (result.data?.data?.sumOf { it.diamond * (1 - it.refundRate) }
+                            ?: 0.0)
                     } else {
                         res.itemName to 0.0
                     }
@@ -90,7 +96,7 @@ class MainUseCase(
     fun isSessionExpired(vararg states: NetworkState<*>): Boolean {
         return states.any { state ->
             state is NetworkState.Error &&
-                (state.e is CookiesExpiredException || state.e is LoginException)
+                    (state.e is CookiesExpiredException || state.e is LoginException)
         }
     }
 }
