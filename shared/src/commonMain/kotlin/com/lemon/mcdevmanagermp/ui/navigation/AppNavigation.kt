@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
+import androidx.navigation.toRoute
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.IncomeDetailPage
@@ -113,7 +114,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
         }
 
         composable<Route.IncomeDetail> {
-            IncomeDetailPage(onBack = { navController.popBackStack() })
+            IncomeDetailPage(isLastMonth = it.toRoute<Route.IncomeDetail>().isLastMonth, onBack = { navController.popBackStack() })
         }
     }
 }

@@ -15,6 +15,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 
@@ -23,6 +24,8 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
     companion object {
         var cachedProfitData: ProfitData? = null
         var cachedMonthLabel: String? = null
+        var cachedLastMonthProfitData: ProfitData? = null
+        var cachedLastMonthLabel: String? = null
     }
 
     private val mainUseCase = MainUseCase(
@@ -53,6 +56,7 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
             MainAction.ToggleDrawer -> setState { copy(showDrawer = !showDrawer) }
             is MainAction.GetRankData -> loadRankCategory(action.category, action.subCategory)
             MainAction.ToggleProfitExpand -> setState { copy(profitExpanded = !profitExpanded) }
+            MainAction.ToggleLastProfitExpand -> setState { copy(lastProfitExpanded = !lastProfitExpanded) }
         }
     }
 
@@ -85,14 +89,18 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
     }
 
     private fun loadProfit() {
-        setState { copy(isProfitLoading = true, profitExpanded = false) }
+        setState { copy(isProfitLoading = true, profitExpanded = false, lastProfitExpanded = false) }
         viewModelScope.launch {
             try {
                 val timeZone = TimeZone.of("Asia/Shanghai")
                 val now = Clock.System.now().toLocalDateTime(timeZone)
-                val result = mainUseCase.computeProfit(now.year, now.monthNumber)
+                val result = mainUseCase.computeProfit(now.year, now.month.number)
                 cachedProfitData = result.thisMonth
-                cachedMonthLabel = "${now.year}年${now.monthNumber}月"
+                cachedMonthLabel = "${now.year}年${now.month.number}月"
+                cachedLastMonthProfitData = result.lastMonth
+                val lastMonthNumber = if (now.month.number == 1) 12 else now.month.number - 1
+                val lastMonthYear = if (now.month.number == 1) now.year - 1 else now.year
+                cachedLastMonthLabel = "${lastMonthYear}年${lastMonthNumber}月"
                 setState {
                     copy(
                         profitData = result.thisMonth,

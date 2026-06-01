@@ -11,6 +11,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -32,6 +33,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.panpf.sketch.AsyncImage
@@ -55,46 +57,30 @@ fun ExpandableNavigateItem(
     iconModifier: Modifier = Modifier,
     isTinted: Boolean = true,
     expanded: Boolean = false,
+    showLabel: Boolean = false,
     selected: Boolean = false,
     onClick: () -> Unit
 ) {
     val colors = LocalAppColors.current
 
-    Row(
-        modifier = Modifier
-            .padding(vertical = 2.dp, horizontal = 4.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(
-                if (selected && expanded) colors.primary.copy(alpha = 0.12f)
-                else Color.Transparent
-            )
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = ripple(),
-                onClick = onClick
-            )
-            .fillMaxWidth()
-            .height(48.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Selected indicator bar
-        if (selected) {
-            Box(
-                modifier = Modifier
-                    .padding(start = 4.dp)
-                    .width(3.dp)
-                    .fillMaxHeight(0.5f)
-                    .clip(CircleShape)
-                    .background(colors.primary)
-            )
-        } else {
-            Box(modifier = Modifier.width(7.dp))
-        }
-
-        Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start
+    if (showLabel && !expanded) {
+        Column(
+            modifier = Modifier
+                .padding(vertical = 2.dp, horizontal = 4.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(
+                    if (selected) colors.primary.copy(alpha = 0.12f)
+                    else Color.Transparent
+                )
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = ripple(),
+                    onClick = onClick
+                )
+                .fillMaxWidth()
+                .height(56.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             if (icon is DrawableResource) {
                 Icon(
@@ -117,31 +103,105 @@ fun ExpandableNavigateItem(
                     }),
                     contentDescription = title,
                     modifier = iconModifier
-                        .then(Modifier.size(32.dp))
+                        .then(Modifier.size(28.dp))
                         .clip(CircleShape),
                     contentScale = ContentScale.Crop
                 )
-            } else {
-                Image(
-                    painter = painterResource(Res.drawable.img_avatar),
-                    contentDescription = "avatar"
-                )
             }
 
-            AnimatedVisibility(
-                visible = expanded,
-                enter = fadeIn() + expandHorizontally(),
-                exit = fadeOut() + shrinkHorizontally(),
-                modifier = Modifier.padding(start = 12.dp)
-            ) {
-                Text(
-                    text = title,
-                    color = if (selected) colors.primary else titleColor,
-                    maxLines = 1,
-                    softWrap = false,
-                    fontSize = 14.sp,
-                    fontWeight = titleWeight
+            Text(
+                text = title,
+                color = if (selected) colors.primary else colors.onSurfaceVariant,
+                maxLines = 1,
+                softWrap = false,
+                fontSize = 11.sp,
+                fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal,
+                textAlign = TextAlign.Center
+            )
+        }
+    } else {
+        Row(
+            modifier = Modifier
+                .padding(vertical = 2.dp, horizontal = 4.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(
+                    if (selected && expanded) colors.primary.copy(alpha = 0.12f)
+                    else Color.Transparent
                 )
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = ripple(),
+                    onClick = onClick
+                )
+                .fillMaxWidth()
+                .height(48.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (selected) {
+                Box(
+                    modifier = Modifier
+                        .padding(start = 4.dp)
+                        .width(3.dp)
+                        .fillMaxHeight(0.5f)
+                        .clip(CircleShape)
+                        .background(colors.primary)
+                )
+            } else {
+                Box(modifier = Modifier.width(7.dp))
+            }
+
+            Row(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start
+            ) {
+                if (icon is DrawableResource) {
+                    Icon(
+                        painter = painterResource(icon),
+                        contentDescription = title,
+                        tint = if (isTinted) {
+                            if (selected) colors.primary else colors.onSurfaceVariant
+                        } else Color.Transparent,
+                        modifier = iconModifier.then(Modifier.size(24.dp))
+                    )
+                } else if (icon is String) {
+                    AsyncImage(
+                        uri = icon,
+                        state = rememberAsyncImageState(ComposableImageOptions {
+                            placeholder(Res.drawable.img_avatar)
+                            fallback(Res.drawable.img_avatar)
+                            crossfade()
+                            error(Res.drawable.img_avatar)
+                            sizeMultiplier(2.0f)
+                        }),
+                        contentDescription = title,
+                        modifier = iconModifier
+                            .then(Modifier.size(32.dp))
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Image(
+                        painter = painterResource(Res.drawable.img_avatar),
+                        contentDescription = "avatar"
+                    )
+                }
+
+                AnimatedVisibility(
+                    visible = expanded,
+                    enter = fadeIn() + expandHorizontally(),
+                    exit = fadeOut() + shrinkHorizontally(),
+                    modifier = Modifier.padding(start = 12.dp)
+                ) {
+                    Text(
+                        text = title,
+                        color = if (selected) colors.primary else titleColor,
+                        maxLines = 1,
+                        softWrap = false,
+                        fontSize = 14.sp,
+                        fontWeight = titleWeight
+                    )
+                }
             }
         }
     }

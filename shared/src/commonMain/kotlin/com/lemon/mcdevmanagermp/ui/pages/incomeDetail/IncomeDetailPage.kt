@@ -44,10 +44,18 @@ import mcdevmanagermpr.shared.generated.resources.ic_money
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
-fun IncomeDetailPage(onBack: () -> Unit) {
+fun IncomeDetailPage(isLastMonth: Boolean = false, onBack: () -> Unit) {
     val colors = LocalAppColors.current
-    val profitData = MainViewModel.cachedProfitData ?: ProfitData()
-    val monthLabel = MainViewModel.cachedMonthLabel ?: ""
+    val profitData = if (isLastMonth) {
+        MainViewModel.cachedLastMonthProfitData ?: ProfitData()
+    } else {
+        MainViewModel.cachedProfitData ?: ProfitData()
+    }
+    val monthLabel = if (isLastMonth) {
+        MainViewModel.cachedLastMonthLabel ?: ""
+    } else {
+        MainViewModel.cachedMonthLabel ?: ""
+    }
     val modules = profitData.toModuleIncomeDetails()
 
     Column(modifier = Modifier.fillMaxSize().background(colors.background)) {

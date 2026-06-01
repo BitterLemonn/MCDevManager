@@ -26,5 +26,5 @@ sealed interface Route {
     data object Settings : Route
 
     @Serializable
-    data object IncomeDetail : Route
+    data class IncomeDetail(val isLastMonth: Boolean = false) : Route
 }

@@ -217,7 +217,10 @@ private fun CompactLayout(
                                 // TODO: Open drawer
                             },
                             onNavigateToIncomeDetail = {
-                                onNavigateToSubPage(Route.IncomeDetail)
+                                onNavigateToSubPage(Route.IncomeDetail())
+                            },
+                            onNavigateToLastMonthDetail = {
+                                onNavigateToSubPage(Route.IncomeDetail(isLastMonth = true))
                             }
                         )
                         MainTab.Analyze -> PlaceholderTabContent("数据分析")
@@ -259,7 +262,8 @@ private fun CompactHomeTabContent(
     state: MainState,
     onAction: (MainAction) -> Unit,
     onAvatarClick: () -> Unit,
-    onNavigateToIncomeDetail: () -> Unit = {}
+    onNavigateToIncomeDetail: () -> Unit = {},
+    onNavigateToLastMonthDetail: () -> Unit = {}
 ) {
     val colors = LocalAppColors.current
     val user = (state.userInfo as? NetworkState.Success)?.data
@@ -375,7 +379,10 @@ private fun CompactHomeTabContent(
                     ProfitCard(
                         title = "上月收益速算",
                         profitData = state.lastProfitData ?: ProfitData(),
-                        isLoading = state.isProfitLoading
+                        isLoading = state.isProfitLoading,
+                        expanded = state.lastProfitExpanded,
+                        onToggleExpand = { onAction(MainAction.ToggleLastProfitExpand) },
+                        onNavigateToDetail = onNavigateToLastMonthDetail
                     )
                 }
 
@@ -426,6 +433,7 @@ private fun MediumLayout(
                         title = tab.label,
                         icon = tab.icon,
                         expanded = false,
+                        showLabel = true,
                         selected = state.selectedTab == tab,
                         titleWeight = if (tab == MainTab.Home) FontWeight.SemiBold else FontWeight.Normal
                     ) {
@@ -439,6 +447,7 @@ private fun MediumLayout(
                     title = "设置",
                     icon = MainTab.Settings.icon,
                     expanded = false,
+                    showLabel = true,
                     selected = state.selectedTab == MainTab.Settings
                 ) {
                     onAction(MainAction.SelectTab(MainTab.Settings))
@@ -484,7 +493,10 @@ private fun MediumLayout(
                         state = state,
                         onAction = onAction,
                         onNavigateToIncomeDetail = {
-                            onNavigateToSubPage(Route.IncomeDetail)
+                            onNavigateToSubPage(Route.IncomeDetail())
+                        },
+                        onNavigateToLastMonthDetail = {
+                            onNavigateToSubPage(Route.IncomeDetail(isLastMonth = true))
                         }
                     )
                     MainTab.Analyze -> PlaceholderTabContent("数据分析")
@@ -501,7 +513,8 @@ private fun MediumLayout(
 private fun MediumHomeTabContent(
     state: MainState,
     onAction: (MainAction) -> Unit,
-    onNavigateToIncomeDetail: () -> Unit = {}
+    onNavigateToIncomeDetail: () -> Unit = {},
+    onNavigateToLastMonthDetail: () -> Unit = {}
 ) {
     val colors = LocalAppColors.current
     val userNickname = (state.userInfo as? NetworkState.Success)?.data?.nickname
@@ -558,7 +571,10 @@ private fun MediumHomeTabContent(
                     ProfitCard(
                         title = "上月收益速算",
                         profitData = state.lastProfitData ?: ProfitData(),
-                        isLoading = state.isProfitLoading
+                        isLoading = state.isProfitLoading,
+                        expanded = state.lastProfitExpanded,
+                        onToggleExpand = { onAction(MainAction.ToggleLastProfitExpand) },
+                        onNavigateToDetail = onNavigateToLastMonthDetail
                     )
 
                     Spacer(Modifier.height(12.dp))
@@ -684,7 +700,10 @@ private fun ExpandedLayout(
                         state = state,
                         onAction = onAction,
                         onNavigateToIncomeDetail = {
-                            onNavigateToSubPage(Route.IncomeDetail)
+                            onNavigateToSubPage(Route.IncomeDetail())
+                        },
+                        onNavigateToLastMonthDetail = {
+                            onNavigateToSubPage(Route.IncomeDetail(isLastMonth = true))
                         }
                     )
                     MainTab.Analyze -> PlaceholderTabContent("数据分析")
@@ -701,7 +720,8 @@ private fun ExpandedLayout(
 private fun ExpandedHomeTabContent(
     state: MainState,
     onAction: (MainAction) -> Unit,
-    onNavigateToIncomeDetail: () -> Unit = {}
+    onNavigateToIncomeDetail: () -> Unit = {},
+    onNavigateToLastMonthDetail: () -> Unit = {}
 ) {
     val colors = LocalAppColors.current
     val userNickname = (state.userInfo as? NetworkState.Success)?.data?.nickname
@@ -764,7 +784,10 @@ private fun ExpandedHomeTabContent(
                         ProfitCard(
                             title = "上月收益速算",
                             profitData = state.lastProfitData ?: ProfitData(),
-                            isLoading = state.isProfitLoading
+                            isLoading = state.isProfitLoading,
+                            expanded = state.lastProfitExpanded,
+                            onToggleExpand = { onAction(MainAction.ToggleLastProfitExpand) },
+                            onNavigateToDetail = onNavigateToLastMonthDetail
                         )
                     }
                 }

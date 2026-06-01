@@ -25,6 +25,7 @@ data class MainState(
     val lastProfitData: ProfitData? = null,
     val isProfitLoading: Boolean = true,
     val profitExpanded: Boolean = false,
+    val lastProfitExpanded: Boolean = false,
     val showLastMonthProfit: Boolean = false
 ) : IUiState
 
@@ -38,6 +39,7 @@ sealed interface MainAction : IUiAction {
         val subCategory: RankSubCategoryTypeEnum? = null
     ) : MainAction
     data object ToggleProfitExpand : MainAction
+    data object ToggleLastProfitExpand : MainAction
 }
 
 sealed interface MainEffect : IUiEffect {
