@@ -22,7 +22,21 @@ actual class ThemeRepository actual constructor() {
         prefs.flush()
     }
 
+    actual fun getSeedColor(): Long {
+        return prefs.getLong(KEY_SEED_COLOR, DefaultSeedColorLong)
+    }
+
+    actual fun setSeedColor(color: Long) {
+        prefs.putLong(KEY_SEED_COLOR, color)
+        prefs.flush()
+    }
+
+    actual fun getUseDynamicColor(): Boolean = false
+
+    actual fun setUseDynamicColor(use: Boolean) {}
+
     companion object {
         private const val KEY_THEME_MODE = "theme_mode"
+        private const val KEY_SEED_COLOR = "seed_color"
     }
 }

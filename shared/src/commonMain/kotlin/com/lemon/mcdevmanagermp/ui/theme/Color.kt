@@ -12,6 +12,24 @@ import kotlin.math.min
 // Seed Color — 项目主色调，所有 Material3 颜色由此派生
 // ============================================================
 val DefaultSeedColor = Color(0xFF4F378B)
+const val DefaultSeedColorLong = 0xFF4F378BL
+
+data class SeedColorOption(val name: String, val color: Color, val colorLong: Long)
+
+val PredefinedSeedColors = listOf(
+    SeedColorOption("Mauve",     Color(0xFF4F378B), 0xFF4F378BL),
+    SeedColorOption("Basil",     Color(0xFF2D6A4F), 0xFF2D6A4FL),
+    SeedColorOption("Cerulean",  Color(0xFF1B4965), 0xFF1B4965L),
+    SeedColorOption("Crimson",   Color(0xFF9A1B29), 0xFF9A1B29L),
+    SeedColorOption("Tangerine", Color(0xFFBF4E00), 0xFFBF4E00L),
+    SeedColorOption("Marigold",  Color(0xFF8B6914), 0xFF8B6914L),
+    SeedColorOption("Rose",      Color(0xFF8B2252), 0xFF8B2252L),
+    SeedColorOption("Lavender",  Color(0xFF6750A4), 0xFF6750A4L),
+    SeedColorOption("Sage",      Color(0xFF4A6741), 0xFF4A6741L),
+    SeedColorOption("Teal",      Color(0xFF00696F), 0xFF00696FL),
+    SeedColorOption("Slate",     Color(0xFF4A5467), 0xFF4A5467L),
+    SeedColorOption("Cocoa",     Color(0xFF6B3A2A), 0xFF6B3A2AL),
+)
 
 // ============================================================
 // ExtendedColors — 不属于 Material3 标准色板的业务语义颜色

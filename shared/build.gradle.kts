@@ -37,7 +37,7 @@ kotlin {
     
     jvm()
     
-    androidLibrary {
+    android {
        namespace = "com.lemon.mcdevmanagermp.shared"
        compileSdk = libs.versions.android.compileSdk.get().toInt()
        minSdk = libs.versions.android.minSdk.get().toInt()
@@ -56,6 +56,7 @@ kotlin {
     sourceSets {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
+            implementation(libs.androidx.activity.compose)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)

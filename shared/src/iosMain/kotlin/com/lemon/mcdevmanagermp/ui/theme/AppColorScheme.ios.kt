@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.Color
 actual fun appColorScheme(
     seedColor: Color,
     isDark: Boolean,
+    useDynamicColor: Boolean,
 ): ColorScheme {
     return if (isDark) seedDarkColorScheme(seedColor) else seedLightColorScheme(seedColor)
 }

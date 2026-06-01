@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.lemon.mcdevmanagermp.platform.AndroidLogContext
+import com.lemon.mcdevmanagermp.ui.theme.ThemeRepository
 import com.lemon.mcdevmanagermp.utils.CrashHandler
 
 class MainActivity : ComponentActivity() {
@@ -16,6 +17,9 @@ class MainActivity : ComponentActivity() {
 
         // 初始化 Android 上下文（日志目录需要）
         AndroidLogContext.setContext(applicationContext)
+
+        // 初始化主题持久化
+        ThemeRepository.init(applicationContext)
 
         // 注册全局异常捕获
         CrashHandler.init()

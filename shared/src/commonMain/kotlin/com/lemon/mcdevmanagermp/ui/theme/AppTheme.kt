@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import com.lemon.mcdevmanagermp.utils.extension.applyDefaultFont
 import mcdevmanagermpr.shared.generated.resources.MiSans_Regular
@@ -25,12 +26,16 @@ fun AppTheme(
     content: @Composable () -> Unit,
 ) {
     val themeMode by viewModel.themeMode.collectAsState()
-    AppTheme(themeMode = themeMode, content = content)
+    val seedColor by viewModel.seedColor.collectAsState()
+    val useDynamicColor by viewModel.useDynamicColor.collectAsState()
+    AppTheme(themeMode = themeMode, seedColor = seedColor, useDynamicColor = useDynamicColor, content = content)
 }
 
 @Composable
 fun AppTheme(
     themeMode: ThemeMode,
+    seedColor: Color = DefaultSeedColor,
+    useDynamicColor: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val isDark = when (themeMode) {
@@ -39,7 +44,7 @@ fun AppTheme(
         ThemeMode.LIGHT -> false
     }
 
-    val colorScheme = appColorScheme(isDark = isDark)
+    val colorScheme = appColorScheme(seedColor = seedColor, isDark = isDark, useDynamicColor = useDynamicColor)
     val extendedColors = if (isDark) darkExtendedColors() else lightExtendedColors()
     val appColors = AppColors(scheme = colorScheme, extended = extendedColors)
 

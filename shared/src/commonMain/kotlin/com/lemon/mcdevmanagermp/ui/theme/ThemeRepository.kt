@@ -10,4 +10,8 @@ package com.lemon.mcdevmanagermp.ui.theme
 expect class ThemeRepository() {
     fun getThemeMode(): ThemeMode
     fun setThemeMode(mode: ThemeMode)
+    fun getSeedColor(): Long
+    fun setSeedColor(color: Long)
+    fun getUseDynamicColor(): Boolean
+    fun setUseDynamicColor(use: Boolean)
 }

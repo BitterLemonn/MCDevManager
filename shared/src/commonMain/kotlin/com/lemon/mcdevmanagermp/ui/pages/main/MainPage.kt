@@ -76,6 +76,7 @@ import com.lemon.mcdevmanagermp.ui.components.MultiLevelRankingCard
 import com.lemon.mcdevmanagermp.ui.components.ProfitCard
 import com.lemon.mcdevmanagermp.ui.components.ProfitSplitWidget
 import com.lemon.mcdevmanagermp.ui.navigation.Route
+import com.lemon.mcdevmanagermp.ui.pages.settings.SettingsContent
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import com.lemon.mcdevmanagermp.utils.ProfitData
 import kotlinx.coroutines.launch
@@ -191,6 +192,13 @@ private fun CompactLayout(
         Column(modifier = Modifier.fillMaxSize().background(colors.background)) {
             AnimatedContent(
                 targetState = state.selectedTab,
+                transitionSpec = {
+                    val direction = if (
+                        MainTab.entries.indexOf(targetState) > MainTab.entries.indexOf(initialState)
+                    ) 1 else -1
+                    (fadeIn(tween(300)) + slideInHorizontally(tween(300)) { direction * it })
+                        .togetherWith(fadeOut(tween(300)) + slideOutHorizontally(tween(300)) { -direction * it })
+                },
                 label = "tab_content",
                 modifier = Modifier.weight(1f)
             ) { targetTab ->
@@ -213,7 +221,7 @@ private fun CompactLayout(
                         MainTab.Analyze -> PlaceholderTabContent("数据分析")
                         MainTab.Feedback -> PlaceholderTabContent("玩家反馈")
                         MainTab.Comment -> PlaceholderTabContent("组件评论")
-                        MainTab.Settings -> PlaceholderTabContent("设置")
+                        MainTab.Settings -> SettingsContent()
                     }
                 }
             }
@@ -288,7 +296,7 @@ private fun CompactHomeTabContent(
                             text = "Hi, ${userNickname ?: "开发者"}!",
                             fontWeight = FontWeight.Bold,
                             fontSize = MaterialTheme.typography.headlineSmall.fontSize,
-                            color = colors.textColor
+                            color = colors.onPrimary
                         )
                         Spacer(Modifier.height(4.dp))
                         val lv = level?.currentLevel ?: user?.level ?: 0
@@ -300,7 +308,7 @@ private fun CompactHomeTabContent(
                         Text(
                             text = levelText,
                             style = MaterialTheme.typography.bodySmall,
-                            color = colors.textColor.copy(alpha = 0.8f)
+                            color = colors.onPrimary.copy(alpha = 0.8f)
                         )
                     }
 
@@ -495,7 +503,7 @@ private fun MediumLayout(
                     MainTab.Analyze -> PlaceholderTabContent("数据分析")
                     MainTab.Feedback -> PlaceholderTabContent("玩家反馈")
                     MainTab.Comment -> PlaceholderTabContent("组件评论")
-                    MainTab.Settings -> PlaceholderTabContent("设置")
+                    MainTab.Settings -> SettingsContent()
                 }
             }
         }
@@ -537,7 +545,7 @@ private fun MediumHomeTabContent(
                         text = "Hi, ${userNickname ?: "开发者"}!",
                         fontWeight = FontWeight.Bold,
                         fontSize = MaterialTheme.typography.headlineMedium.fontSize,
-                        color = colors.textColor,
+                        color = colors.onPrimary,
                         modifier = Modifier.padding(end = 8.dp)
                     )
                 }
@@ -706,7 +714,7 @@ private fun ExpandedLayout(
                     MainTab.Analyze -> PlaceholderTabContent("数据分析")
                     MainTab.Feedback -> PlaceholderTabContent("玩家反馈")
                     MainTab.Comment -> PlaceholderTabContent("组件评论")
-                    MainTab.Settings -> PlaceholderTabContent("设置")
+                    MainTab.Settings -> SettingsContent()
                 }
             }
         }
@@ -748,7 +756,7 @@ private fun ExpandedHomeTabContent(
                     text = "Hi, ${userNickname ?: "开发者"}!",
                     fontWeight = FontWeight.Bold,
                     fontSize = MaterialTheme.typography.headlineMedium.fontSize,
-                    color = colors.textColor,
+                    color = colors.onPrimary,
                     modifier = Modifier.padding(end = 8.dp)
                 )
             }

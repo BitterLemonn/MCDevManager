@@ -1,6 +1,7 @@
 package com.lemon.mcdevmanagermp.ui.theme
 
 import platform.Foundation.NSUserDefaults
+import platform.Foundation.NSNumber
 
 actual class ThemeRepository actual constructor() {
 
@@ -20,7 +21,22 @@ actual class ThemeRepository actual constructor() {
         defaults.synchronize()
     }
 
+    actual fun getSeedColor(): Long {
+        return (defaults.objectForKey(KEY_SEED_COLOR) as? NSNumber)?.longValue
+            ?: DefaultSeedColorLong
+    }
+
+    actual fun setSeedColor(color: Long) {
+        defaults.setObject(color, forKey = KEY_SEED_COLOR)
+        defaults.synchronize()
+    }
+
+    actual fun getUseDynamicColor(): Boolean = false
+
+    actual fun setUseDynamicColor(use: Boolean) {}
+
     companion object {
         private const val KEY_THEME_MODE = "theme_mode"
+        private const val KEY_SEED_COLOR = "seed_color"
     }
 }

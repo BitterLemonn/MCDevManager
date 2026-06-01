@@ -2,19 +2,21 @@ package com.lemon.mcdevmanagermp.ui.pages.incomeDetail
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,20 +28,23 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.lemon.mcdevmanagermp.ui.components.AppScaffold
+import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.pages.main.MainViewModel
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
+import com.lemon.mcdevmanagermp.utils.extension.IUiEffect
 import com.lemon.mcdevmanagermp.utils.ModuleIncomeDetail
 import com.lemon.mcdevmanagermp.utils.ProfitData
 import com.lemon.mcdevmanagermp.utils.extension.formatDecimal
 import com.lemon.mcdevmanagermp.utils.toModuleIncomeDetails
 import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_back
 import mcdevmanagermpr.shared.generated.resources.ic_money
 import org.jetbrains.compose.resources.painterResource
 
@@ -57,75 +62,55 @@ fun IncomeDetailPage(isLastMonth: Boolean = false, onBack: () -> Unit) {
         MainViewModel.cachedMonthLabel ?: ""
     }
     val modules = profitData.toModuleIncomeDetails()
+    val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
-    Column(modifier = Modifier.fillMaxSize().background(colors.background)) {
-        TopBar(monthLabel = monthLabel, onBack = onBack)
-
-        BoxWithConstraints(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp)
-        ) {
-            val widthSizeClass = when {
-                maxWidth < 600.dp -> WindowWidthSizeClass.Compact
-                maxWidth < 840.dp -> WindowWidthSizeClass.Medium
-                else -> WindowWidthSizeClass.Expanded
-            }
-
-            val columns = when (widthSizeClass) {
-                WindowWidthSizeClass.Compact -> 1
-                WindowWidthSizeClass.Medium -> 2
-                else -> 3
-            }
-
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                SummaryCard(profitData, modules)
-                ModuleList(modules, columns)
-            }
+    val scrollState = rememberScrollState()
+    val topBarAlpha by remember {
+        derivedStateOf {
+            (scrollState.value.toFloat() / 100f).coerceIn(0f, 1f)
         }
     }
-}
 
-@Composable
-private fun TopBar(monthLabel: String, onBack: () -> Unit) {
-    val colors = LocalAppColors.current
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp)
-            .background(colors.primary),
-        contentAlignment = Alignment.CenterStart
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
+    AppScaffold<IUiEffect> {
+        Box(modifier = Modifier.fillMaxSize().background(colors.background)) {
+            Column(
                 modifier = Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(20.dp))
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = onBack
-                    ),
-                contentAlignment = Alignment.Center
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
             ) {
-                Image(
-                    painter = painterResource(Res.drawable.ic_back),
-                    contentDescription = "返回",
-                    modifier = Modifier.size(24.dp)
-                )
+                Spacer(Modifier.height(statusBarTop))
+                Spacer(Modifier.height(56.dp))
+
+                BoxWithConstraints(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = navBarBottom + 16.dp)
+                ) {
+                    val widthSizeClass = when {
+                        maxWidth < 600.dp -> WindowWidthSizeClass.Compact
+                        maxWidth < 840.dp -> WindowWidthSizeClass.Medium
+                        else -> WindowWidthSizeClass.Expanded
+                    }
+
+                    val columns = when (widthSizeClass) {
+                        WindowWidthSizeClass.Compact -> 1
+                        WindowWidthSizeClass.Medium -> 2
+                        else -> 3
+                    }
+
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        SummaryCard(profitData, modules)
+                        ModuleList(modules, columns)
+                    }
+                }
             }
-            Text(
-                text = "收益详情 - $monthLabel",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = colors.textColor,
-                modifier = Modifier.weight(1f)
+
+            CollapsingTopBar(
+                title = "收益详情 - $monthLabel",
+                alpha = topBarAlpha,
+                onBack = onBack
             )
         }
     }

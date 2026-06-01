@@ -8,4 +8,5 @@ import androidx.compose.ui.graphics.Color
 expect fun appColorScheme(
     seedColor: Color = DefaultSeedColor,
     isDark: Boolean,
+    useDynamicColor: Boolean = false,
 ): ColorScheme
