@@ -66,7 +66,9 @@ class RankListUseCase(
         val result = fetcher(firstType)
         return if (result is NetworkState.Success) {
             @Suppress("UNCHECKED_CAST")
-            val data = (result.data as? com.lemon.mcdevmanagermp.data.vo.netease.ranklist.RankListVO<CommonRankListData>)?.data ?: emptyList()
+            val data =
+                (result.data as? com.lemon.mcdevmanagermp.data.vo.netease.ranklist.RankListVO<CommonRankListData>)?.data
+                    ?: emptyList()
             val mapped = data.map { it.toRankListItem() }
             buildContent(mapped, subCategory)
         } else emptyMultiContent
@@ -78,7 +80,7 @@ class RankListUseCase(
     ): RankCategoryContent {
         return if (subCategory != null) {
             commonRankCategoryContent.let {
-                val groups = (it as RankCategoryContent.Multi).groups.map { group ->
+                val groups = it.groups.map { group ->
                     if (group.categoryName == subCategory.typeName) group.copy(data = items)
                     else group
                 }
@@ -130,6 +132,7 @@ class RankListUseCase(
                     RankSubCategoryTypeEnum.RESOURCE_PACK -> 3
                     RankSubCategoryTypeEnum.SERVER -> 6
                 }
+
                 RankCategoryTypeEnum.PC_DOWNLOAD, RankCategoryTypeEnum.PC_LIKE -> when (this) {
                     RankSubCategoryTypeEnum.MOD -> 3
                     RankSubCategoryTypeEnum.MAP -> 5

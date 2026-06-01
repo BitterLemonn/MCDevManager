@@ -8,9 +8,9 @@ import com.lemon.mcdevmanagermp.data.repository.RankListRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.UserRepositoryImpl
 import com.lemon.mcdevmanagermp.domain.main.MainUseCase
-import com.lemon.mcdevmanagermp.utils.ProfitData
 import com.lemon.mcdevmanagermp.domain.rankList.RankListUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
+import com.lemon.mcdevmanagermp.utils.ProfitData
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -49,10 +49,12 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
                 loadDashboard()
                 loadProfit()
             }
+
             MainAction.RefreshData -> {
                 loadDashboard()
                 loadProfit()
             }
+
             MainAction.ToggleDrawer -> setState { copy(showDrawer = !showDrawer) }
             is MainAction.GetRankData -> loadRankCategory(action.category, action.subCategory)
             MainAction.ToggleProfitExpand -> setState { copy(profitExpanded = !profitExpanded) }
@@ -73,7 +75,12 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
                         isRefreshing = false
                     )
                 }
-                if (mainUseCase.isSessionExpired(result.userInfo, result.overview, result.levelInfo)) {
+                if (mainUseCase.isSessionExpired(
+                        result.userInfo,
+                        result.overview,
+                        result.levelInfo
+                    )
+                ) {
                     sendEffect(MainEffect.SessionExpired)
                 } else {
                     val overview = (result.overview as? NetworkState.Success)?.data
