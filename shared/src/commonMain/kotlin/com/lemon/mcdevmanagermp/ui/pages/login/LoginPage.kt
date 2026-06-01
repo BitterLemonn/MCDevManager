@@ -18,15 +18,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
@@ -76,6 +73,7 @@ fun LoginPage(onNavigateToMain: () -> Unit) {
                 is LoginEffect.ShowToast -> {
                     scope.launch { snackbarHostState.showSnackbar(effect.message) }
                 }
+
                 is LoginEffect.NavigateTo -> onNavigateToMain()
             }
         }
@@ -92,7 +90,7 @@ fun LoginPage(onNavigateToMain: () -> Unit) {
                     )
                 }
             },
-            contentWindowInsets = WindowInsets(0)
+            contentWindowInsets = WindowInsets(0, 0, 0, 0)
         ) { scaffoldPadding ->
             LoginContent(
                 state = state,

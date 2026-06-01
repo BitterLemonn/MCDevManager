@@ -17,6 +17,10 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -38,7 +42,6 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationRail
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -55,7 +58,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -102,52 +104,47 @@ fun MainPage(
                 is MainEffect.ShowToast -> {
                     scope.launch { snackbarHostState.showSnackbar(effect.message) }
                 }
+
                 is MainEffect.NavigateTo -> onNavigateToSubPage(effect.route)
                 MainEffect.SessionExpired -> onNavigateToLogin()
             }
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                val colors = LocalAppColors.current
+                Snackbar(
+                    snackbarData = data,
+                    shape = RoundedCornerShape(8.dp),
+                    containerColor = colors.surface,
+                    contentColor = colors.onSurface
+                )
+            }
         }
-    ) { innerPadding ->
-        Scaffold(
-            snackbarHost = {
-                SnackbarHost(hostState = snackbarHostState) { data ->
-                    val colors = LocalAppColors.current
-                    Snackbar(
-                        snackbarData = data,
-                        shape = RoundedCornerShape(8.dp),
-                        containerColor = colors.surface,
-                        contentColor = colors.onSurface
-                    )
-                }
-            },
-            modifier = Modifier.padding(innerPadding)
-        ) { scaffoldPadding ->
-            BoxWithConstraints(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(scaffoldPadding)
-            ) {
-                val widthSizeClass = when {
-                    maxWidth < 600.dp -> WindowWidthSizeClass.Compact
-                    maxWidth < 840.dp -> WindowWidthSizeClass.Medium
-                    else -> WindowWidthSizeClass.Expanded
-                }
-                when (widthSizeClass) {
-                    WindowWidthSizeClass.Compact -> CompactLayout(
-                        state = state,
-                        onAction = viewModel::dispatch,
-                        onNavigateToSubPage = onNavigateToSubPage
-                    )
-                    WindowWidthSizeClass.Medium -> MediumLayout(
-                        state = state,
-                        onAction = viewModel::dispatch,
-                        onNavigateToSubPage = onNavigateToSubPage
-                    )
-                    else -> ExpandedLayout(
-                        state = state,
-                        onAction = viewModel::dispatch,
-                        onNavigateToSubPage = onNavigateToSubPage
-                    )
-                }
+    ) {
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val widthSizeClass = when {
+                maxWidth < 600.dp -> WindowWidthSizeClass.Compact
+                maxWidth < 840.dp -> WindowWidthSizeClass.Medium
+                else -> WindowWidthSizeClass.Expanded
+            }
+            when (widthSizeClass) {
+                WindowWidthSizeClass.Compact -> CompactLayout(
+                    state = state,
+                    onAction = viewModel::dispatch,
+                    onNavigateToSubPage = onNavigateToSubPage
+                )
+
+                WindowWidthSizeClass.Medium -> MediumLayout(
+                    state = state,
+                    onAction = viewModel::dispatch,
+                    onNavigateToSubPage = onNavigateToSubPage
+                )
+
+                else -> ExpandedLayout(
+                    state = state,
+                    onAction = viewModel::dispatch,
+                    onNavigateToSubPage = onNavigateToSubPage
+                )
             }
         }
     }
@@ -191,24 +188,13 @@ private fun CompactLayout(
             }
         }
     ) {
-        Scaffold(
-            bottomBar = {
-                TabNavigationBar(
-                    selectedTab = state.selectedTab,
-                    onTabSelect = { onAction(MainAction.SelectTab(it)) }
-                )
-            },
-            containerColor = colors.background
-        ) { innerPadding ->
+        Column(modifier = Modifier.fillMaxSize().background(colors.background)) {
             AnimatedContent(
                 targetState = state.selectedTab,
-                label = "tab_content"
+                label = "tab_content",
+                modifier = Modifier.weight(1f)
             ) { targetTab ->
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-                ) {
+                Box(modifier = Modifier.fillMaxSize()) {
                     when (targetTab) {
                         MainTab.Home -> CompactHomeTabContent(
                             state = state,
@@ -220,6 +206,7 @@ private fun CompactLayout(
                                 onNavigateToSubPage(Route.IncomeDetail)
                             }
                         )
+
                         MainTab.Analyze -> PlaceholderTabContent("数据分析")
                         MainTab.Feedback -> PlaceholderTabContent("玩家反馈")
                         MainTab.Comment -> PlaceholderTabContent("组件评论")
@@ -227,6 +214,10 @@ private fun CompactLayout(
                     }
                 }
             }
+            TabNavigationBar(
+                selectedTab = state.selectedTab,
+                onTabSelect = { onAction(MainAction.SelectTab(it)) }
+            )
         }
     }
 }
@@ -265,6 +256,7 @@ private fun CompactHomeTabContent(
     val user = (state.userInfo as? NetworkState.Success)?.data
     val level = (state.levelInfo as? NetworkState.Success)?.data
     val userNickname = user?.nickname
+    val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
     Column(
         modifier = Modifier
@@ -275,14 +267,14 @@ private fun CompactHomeTabContent(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(140.dp)
+                    .height(140.dp + statusBarTop)
                     .background(
                         colors.primary,
                         RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)
                     )
             )
 
-            Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+            Column(modifier = Modifier.fillMaxWidth().padding(top = statusBarTop).padding(16.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
@@ -487,6 +479,7 @@ private fun MediumLayout(
                             onNavigateToSubPage(Route.IncomeDetail)
                         }
                     )
+
                     MainTab.Analyze -> PlaceholderTabContent("数据分析")
                     MainTab.Feedback -> PlaceholderTabContent("玩家反馈")
                     MainTab.Comment -> PlaceholderTabContent("组件评论")
@@ -505,21 +498,24 @@ private fun MediumHomeTabContent(
 ) {
     val colors = LocalAppColors.current
     val userNickname = (state.userInfo as? NetworkState.Success)?.data?.nickname
+    val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
+            .padding(bottom = navBarBottom)
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(160.dp)
+                    .height(160.dp + statusBarTop)
                     .background(colors.primary)
             )
 
-            Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+            Column(modifier = Modifier.fillMaxWidth().padding(top = statusBarTop).padding(16.dp)) {
                 Box(
                     modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.CenterEnd
@@ -687,6 +683,7 @@ private fun ExpandedLayout(
                             onNavigateToSubPage(Route.IncomeDetail)
                         }
                     )
+
                     MainTab.Analyze -> PlaceholderTabContent("数据分析")
                     MainTab.Feedback -> PlaceholderTabContent("玩家反馈")
                     MainTab.Comment -> PlaceholderTabContent("组件评论")
@@ -705,19 +702,23 @@ private fun ExpandedHomeTabContent(
 ) {
     val colors = LocalAppColors.current
     val userNickname = (state.userInfo as? NetworkState.Success)?.data?.nickname
+    val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
     Box(modifier = Modifier.fillMaxSize()) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(160.dp)
+                .height(160.dp + statusBarTop)
                 .background(colors.primary)
         )
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(top = statusBarTop)
                 .padding(16.dp)
+                .padding(bottom = navBarBottom)
         ) {
             Box(
                 modifier = Modifier.fillMaxWidth(),
