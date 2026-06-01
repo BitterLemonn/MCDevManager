@@ -75,12 +75,15 @@ fun AppNavigation(modifier: Modifier = Modifier) {
         composable<Route.Login>(
             enterTransition = { fadeIn(tween(500)) }
         ) {
+            val hasPrevious = navController.previousBackStackEntry != null
             LoginPage(
                 onNavigateToMain = {
                     navController.navigate(Route.Main) {
                         popUpTo<Route.Login> { inclusive = true }
+                        launchSingleTop = true
                     }
-                }
+                },
+                onBack = if (hasPrevious) {{ navController.popBackStack() }} else null
             )
         }
 
@@ -90,6 +93,9 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                     navController.navigate(Route.Login) {
                         popUpTo<Route.Main> { inclusive = true }
                     }
+                },
+                onNavigateToAddAccount = {
+                    navController.navigate(Route.Login)
                 },
                 onNavigateToSubPage = { route ->
                     navController.navigate(route)

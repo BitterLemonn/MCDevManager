@@ -91,6 +91,7 @@ private val ExpandedWidth = 240.dp
 @Composable
 fun MainPage(
     onNavigateToLogin: () -> Unit = {},
+    onNavigateToAddAccount: () -> Unit = {},
     onNavigateToSubPage: (Route) -> Unit = {}
 ) {
     val viewModel = remember { MainViewModel() }
@@ -132,19 +133,28 @@ fun MainPage(
                 WindowWidthSizeClass.Compact -> CompactLayout(
                     state = state,
                     onAction = viewModel::dispatch,
-                    onNavigateToSubPage = onNavigateToSubPage
+                    onNavigateToSubPage = onNavigateToSubPage,
+                    onNavigateToLogin = onNavigateToLogin,
+                    onNavigateToAddAccount = onNavigateToAddAccount,
+                    onAccountSwitched = { viewModel.dispatch(MainAction.RefreshData) }
                 )
 
                 WindowWidthSizeClass.Medium -> MediumLayout(
                     state = state,
                     onAction = viewModel::dispatch,
-                    onNavigateToSubPage = onNavigateToSubPage
+                    onNavigateToSubPage = onNavigateToSubPage,
+                    onNavigateToLogin = onNavigateToLogin,
+                    onNavigateToAddAccount = onNavigateToAddAccount,
+                    onAccountSwitched = { viewModel.dispatch(MainAction.RefreshData) }
                 )
 
                 else -> ExpandedLayout(
                     state = state,
                     onAction = viewModel::dispatch,
-                    onNavigateToSubPage = onNavigateToSubPage
+                    onNavigateToSubPage = onNavigateToSubPage,
+                    onNavigateToLogin = onNavigateToLogin,
+                    onNavigateToAddAccount = onNavigateToAddAccount,
+                    onAccountSwitched = { viewModel.dispatch(MainAction.RefreshData) }
                 )
             }
         }
@@ -159,7 +169,10 @@ fun MainPage(
 private fun CompactLayout(
     state: MainState,
     onAction: (MainAction) -> Unit,
-    onNavigateToSubPage: (Route) -> Unit
+    onNavigateToSubPage: (Route) -> Unit,
+    onNavigateToLogin: () -> Unit = {},
+    onNavigateToAddAccount: () -> Unit = {},
+    onAccountSwitched: () -> Unit = {}
 ) {
     val colors = LocalAppColors.current
     val drawerState = rememberDrawerState(DrawerValue.Closed)
@@ -221,7 +234,11 @@ private fun CompactLayout(
                         MainTab.Analyze -> PlaceholderTabContent("数据分析")
                         MainTab.Feedback -> PlaceholderTabContent("玩家反馈")
                         MainTab.Comment -> PlaceholderTabContent("组件评论")
-                        MainTab.Settings -> SettingsContent()
+                        MainTab.Settings -> SettingsContent(
+                        onNavigateToLogin = onNavigateToLogin,
+                        onNavigateToAddAccount = onNavigateToAddAccount,
+                        onAccountSwitched = onAccountSwitched
+                    )
                     }
                 }
             }
@@ -409,7 +426,10 @@ private fun CompactHomeTabContent(
 private fun MediumLayout(
     state: MainState,
     onAction: (MainAction) -> Unit,
-    onNavigateToSubPage: (Route) -> Unit
+    onNavigateToSubPage: (Route) -> Unit,
+    onNavigateToLogin: () -> Unit = {},
+    onNavigateToAddAccount: () -> Unit = {},
+    onAccountSwitched: () -> Unit = {}
 ) {
     val colors = LocalAppColors.current
     val userNickname = (state.userInfo as? NetworkState.Success)?.data?.nickname
@@ -503,7 +523,11 @@ private fun MediumLayout(
                     MainTab.Analyze -> PlaceholderTabContent("数据分析")
                     MainTab.Feedback -> PlaceholderTabContent("玩家反馈")
                     MainTab.Comment -> PlaceholderTabContent("组件评论")
-                    MainTab.Settings -> SettingsContent()
+                    MainTab.Settings -> SettingsContent(
+                        onNavigateToLogin = onNavigateToLogin,
+                        onNavigateToAddAccount = onNavigateToAddAccount,
+                        onAccountSwitched = onAccountSwitched
+                    )
                 }
             }
         }
@@ -603,7 +627,10 @@ private fun MediumHomeTabContent(
 private fun ExpandedLayout(
     state: MainState,
     onAction: (MainAction) -> Unit,
-    onNavigateToSubPage: (Route) -> Unit
+    onNavigateToSubPage: (Route) -> Unit,
+    onNavigateToLogin: () -> Unit = {},
+    onNavigateToAddAccount: () -> Unit = {},
+    onAccountSwitched: () -> Unit = {}
 ) {
     val colors = LocalAppColors.current
     var isExpanded by remember { mutableStateOf(false) }
@@ -714,7 +741,11 @@ private fun ExpandedLayout(
                     MainTab.Analyze -> PlaceholderTabContent("数据分析")
                     MainTab.Feedback -> PlaceholderTabContent("玩家反馈")
                     MainTab.Comment -> PlaceholderTabContent("组件评论")
-                    MainTab.Settings -> SettingsContent()
+                    MainTab.Settings -> SettingsContent(
+                        onNavigateToLogin = onNavigateToLogin,
+                        onNavigateToAddAccount = onNavigateToAddAccount,
+                        onAccountSwitched = onAccountSwitched
+                    )
                 }
             }
         }

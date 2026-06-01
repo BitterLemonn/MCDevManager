@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lemon.mcdevmanagermp.ui.components.BackHandler
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
+import com.lemon.mcdevmanagermp.ui.pages.settings.account.AccountManagementPage
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import com.lemon.mcdevmanagermp.ui.theme.LocalThemeViewModel
 import com.lemon.mcdevmanagermp.ui.theme.PredefinedSeedColors
@@ -70,12 +71,17 @@ import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_back
 import mcdevmanagermpr.shared.generated.resources.ic_correct
 import mcdevmanagermpr.shared.generated.resources.ic_setting
+import mcdevmanagermpr.shared.generated.resources.ic_user
 import org.jetbrains.compose.resources.painterResource
 
-private enum class SettingsSubPage { List, Theme }
+private enum class SettingsSubPage { List, Theme, Account }
 
 @Composable
-fun SettingsContent() {
+fun SettingsContent(
+    onNavigateToLogin: () -> Unit = {},
+    onNavigateToAddAccount: () -> Unit = {},
+    onAccountSwitched: () -> Unit = {}
+) {
     var currentSubPage by remember { mutableStateOf(SettingsSubPage.List) }
 
     BackHandler(enabled = currentSubPage != SettingsSubPage.List) {
@@ -97,11 +103,19 @@ fun SettingsContent() {
     ) { page ->
         when (page) {
             SettingsSubPage.List -> SettingsListPage(
-                onNavigateToTheme = { currentSubPage = SettingsSubPage.Theme }
+                onNavigateToTheme = { currentSubPage = SettingsSubPage.Theme },
+                onNavigateToAccount = { currentSubPage = SettingsSubPage.Account }
             )
 
             SettingsSubPage.Theme -> ThemeSettingsPage(
                 onBack = { currentSubPage = SettingsSubPage.List }
+            )
+
+            SettingsSubPage.Account -> AccountManagementPage(
+                onBack = { currentSubPage = SettingsSubPage.List },
+                onNavigateToLogin = onNavigateToLogin,
+                onNavigateToAddAccount = onNavigateToAddAccount,
+                onAccountSwitched = onAccountSwitched
             )
         }
     }
@@ -113,7 +127,8 @@ fun SettingsContent() {
 
 @Composable
 private fun SettingsListPage(
-    onNavigateToTheme: () -> Unit
+    onNavigateToTheme: () -> Unit,
+    onNavigateToAccount: () -> Unit = {}
 ) {
     val colors = LocalAppColors.current
     val viewModel = LocalThemeViewModel.current
@@ -140,6 +155,19 @@ private fun SettingsListPage(
         Spacer(Modifier.height(4.dp))
 
         SettingsGroupCard {
+            SettingsItem(
+                icon = Res.drawable.ic_user,
+                title = "账号管理",
+                subtitle = "切换、添加或退出账号",
+                onClick = onNavigateToAccount
+            )
+
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                color = colors.outlineVariant,
+                thickness = 0.5.dp
+            )
+
             SettingsItem(
                 icon = Res.drawable.ic_setting,
                 title = "主题与色彩",

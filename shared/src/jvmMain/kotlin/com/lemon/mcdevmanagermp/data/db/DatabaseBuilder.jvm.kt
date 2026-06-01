@@ -17,4 +17,5 @@ actual fun createAppDatabaseBuilder(): RoomDatabase.Builder<AppDatabase> {
         name = dbFile.absolutePath,
         factory = AppDatabaseConstructor::initialize
     ).setDriver(BundledSQLiteDriver())
+        .addMigrations(MIGRATION_1_2)
 }

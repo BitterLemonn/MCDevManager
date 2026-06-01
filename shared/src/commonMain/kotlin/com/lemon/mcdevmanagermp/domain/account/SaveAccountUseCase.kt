@@ -17,21 +17,24 @@ class SaveAccountUseCase(
         val cookies = AppContext.cookiesStore.getAllCookiesMap()
         val cookiesJson = JSONConverter.encodeToString(serializer<Map<String, String>>(), cookies)
         val now = Clock.System.now().toEpochMilliseconds()
-        val accountEmail = email.ifBlank {
-            runCatching {
-                val result = userRepository.getUserInfo()
-                (result as? NetworkState.Success)?.data?.nickname ?: ""
-            }.getOrDefault("")
-        }
+        val userInfo = runCatching {
+            val result = userRepository.getUserInfo()
+            (result as? NetworkState.Success)?.data
+        }.getOrNull()
+        val accountEmail = email.ifBlank { userInfo?.nickname ?: "" }
+        val headImg = userInfo?.headImg
         val existing = accountRepository.getAccountByEmail(accountEmail)
         if (existing != null) {
-            accountRepository.upsertAccount(existing.copy(cookiesJson = cookiesJson, lastLoginTime = now))
+            accountRepository.upsertAccount(
+                existing.copy(cookiesJson = cookiesJson, lastLoginTime = now, headImg = headImg)
+            )
         } else {
             accountRepository.upsertAccount(
                 AccountEntity(
                     email = accountEmail,
                     cookiesJson = cookiesJson,
                     lastLoginTime = now,
+                    headImg = headImg
                 )
             )
         }

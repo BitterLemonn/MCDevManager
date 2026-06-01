@@ -3,6 +3,8 @@ package com.lemon.mcdevmanagermp.ui.pages.login
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -54,13 +56,17 @@ import com.lemon.mcdevmanagermp.ui.components.LoginOutlineTextField
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import kotlinx.coroutines.launch
 import mcdevmanagermpr.shared.generated.resources.Res
+import mcdevmanagermpr.shared.generated.resources.ic_back
 import mcdevmanagermpr.shared.generated.resources.ic_mc
 import mcdevmanagermpr.shared.generated.resources.ic_no_show
 import mcdevmanagermpr.shared.generated.resources.ic_show
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
-fun LoginPage(onNavigateToMain: () -> Unit) {
+fun LoginPage(
+    onNavigateToMain: () -> Unit,
+    onBack: (() -> Unit)? = null
+) {
     val viewModel = remember { LoginViewModel() }
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -95,6 +101,7 @@ fun LoginPage(onNavigateToMain: () -> Unit) {
             LoginContent(
                 state = state,
                 onAction = viewModel::dispatch,
+                onBack = onBack,
                 modifier = Modifier.padding(innerPadding).padding(scaffoldPadding)
             )
         }
@@ -105,7 +112,8 @@ fun LoginPage(onNavigateToMain: () -> Unit) {
 private fun LoginContent(
     state: LoginState,
     onAction: (LoginAction) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onBack: (() -> Unit)? = null
 ) {
     val colors = LocalAppColors.current
 
@@ -115,6 +123,30 @@ private fun LoginContent(
             .background(colors.background),
         contentAlignment = Alignment.Center
     ) {
+        // Back button
+        if (onBack != null) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(16.dp)
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = onBack
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_back),
+                    contentDescription = "返回",
+                    tint = colors.onSurface,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
@@ -153,11 +185,7 @@ private fun LoginContent(
                     onClick = { onAction(LoginAction.Login) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(48.dp)
-                        .shadow(
-                            elevation = 6.dp,
-                            shape = RoundedCornerShape(10.dp)
-                        ),
+                        .height(48.dp),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = colors.primary,
@@ -211,11 +239,7 @@ private fun LoginContent(
                     onClick = { onAction(LoginAction.ToggleCookies) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(48.dp)
-                        .shadow(
-                            elevation = 4.dp,
-                            shape = RoundedCornerShape(10.dp)
-                        ),
+                        .height(48.dp),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = colors.danger,

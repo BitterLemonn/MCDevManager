@@ -10,4 +10,5 @@ data class AccountEntity(
     val email: String,
     val cookiesJson: String,
     val lastLoginTime: Long,
+    val headImg: String? = null,
 )
