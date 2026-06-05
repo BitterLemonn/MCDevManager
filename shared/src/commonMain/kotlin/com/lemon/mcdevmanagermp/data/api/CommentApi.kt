@@ -6,6 +6,7 @@ import com.lemon.mcdevmanagermp.data.vo.netease.comment.CommentListVO
 import com.lemon.mcdevmanagermp.data.dto.netease.feedback.ReplyDTO
 import de.jensklingenberg.ktorfit.http.Body
 import de.jensklingenberg.ktorfit.http.GET
+import de.jensklingenberg.ktorfit.http.Headers
 import de.jensklingenberg.ktorfit.http.PUT
 import de.jensklingenberg.ktorfit.http.Path
 import de.jensklingenberg.ktorfit.http.Query
@@ -23,6 +24,7 @@ interface CommentApi {
         @Query("end_date") endDate: String? = null
     ): ResponseData<CommentListVO>
 
+    @Headers("Content-Type: application/json")
     @PUT("items/comment/pe/{id}/reply")
     suspend fun replyComment(
         @Path("id") commentId: String,

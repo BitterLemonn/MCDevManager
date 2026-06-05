@@ -7,6 +7,9 @@ import com.lemon.mcdevmanagermp.data.page.RankCategoryTypeEnum
 import com.lemon.mcdevmanagermp.data.repository.RankListRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.UserRepositoryImpl
+import com.lemon.mcdevmanagermp.data.vo.netease.user.LevelInfoVO
+import com.lemon.mcdevmanagermp.data.vo.netease.user.OverviewVO
+import com.lemon.mcdevmanagermp.data.vo.netease.user.UserInfoVO
 import com.lemon.mcdevmanagermp.domain.main.MainUseCase
 import com.lemon.mcdevmanagermp.domain.rankList.RankListUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
@@ -22,10 +25,59 @@ import kotlin.time.Clock
 class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState()) {
 
     companion object {
+        private val cacheTimeZone = TimeZone.of("Asia/Shanghai")
+
+        // Cache dates (day-of-year based, e.g. "2026-06-04")
+        private var cachedDashboardDate: String? = null
+        private var cachedRankListDate: String? = null
+        private var cachedProfitDate: String? = null
+
+        // Dashboard cache
+        var cachedUserInfo: NetworkState<UserInfoVO>? = null
+            private set
+        var cachedOverview: NetworkState<OverviewVO>? = null
+            private set
+        var cachedLevelInfo: NetworkState<LevelInfoVO>? = null
+            private set
+
+        // Profit cache
         var cachedProfitData: ProfitData? = null
+            private set
         var cachedMonthLabel: String? = null
+            private set
         var cachedLastMonthProfitData: ProfitData? = null
+            private set
         var cachedLastMonthLabel: String? = null
+            private set
+
+        // Rank list cache
+        var cachedRankListData: List<RankCategoryData> = emptyList()
+            private set
+
+        // Other cached state
+        var cachedShowLastMonthProfit: Boolean = false
+            private set
+
+        private fun todayString(): String {
+            val now = Clock.System.now().toLocalDateTime(cacheTimeZone)
+            return "${now.year}-${now.month.number}-${now.day}"
+        }
+
+        fun invalidateCache() {
+            cachedDashboardDate = null
+            cachedRankListDate = null
+            cachedProfitDate = null
+        }
+
+        fun invalidateAllCache() {
+            invalidateCache()
+            cachedUserInfo = null
+            cachedOverview = null
+            cachedLevelInfo = null
+            cachedProfitData = null
+            cachedLastMonthProfitData = null
+            cachedRankListData = emptyList()
+        }
     }
 
     private val mainUseCase = MainUseCase(
@@ -37,20 +89,55 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
     )
 
     init {
-        loadDashboard()
-        loadRankList()
-        loadProfit()
+        val today = todayString()
+
+        // Restore dashboard from cache if cached today
+        if (today == cachedDashboardDate && cachedUserInfo != null) {
+            setState {
+                copy(
+                    userInfo = cachedUserInfo,
+                    overview = cachedOverview,
+                    levelInfo = cachedLevelInfo,
+                    isRefreshing = false
+                )
+            }
+        } else {
+            loadDashboard()
+        }
+
+        // Restore rank list from cache if cached today
+        if (today == cachedRankListDate && cachedRankListData.isNotEmpty()) {
+            setState { copy(rankListData = cachedRankListData) }
+        } else {
+            loadRankList()
+        }
+
+        // Restore profit data from cache if cached today
+        if (today == cachedProfitDate && cachedProfitData != null) {
+            setState {
+                copy(
+                    profitData = cachedProfitData,
+                    lastProfitData = cachedLastMonthProfitData,
+                    isProfitLoading = false,
+                    showLastMonthProfit = cachedShowLastMonthProfit
+                )
+            }
+        } else {
+            loadProfit()
+        }
     }
 
     override fun dispatch(action: MainAction) {
         when (action) {
             is MainAction.SelectTab -> setState { copy(selectedTab = action.tab) }
             MainAction.LoadData -> {
+                invalidateAllCache()
                 loadDashboard()
                 loadProfit()
             }
 
             MainAction.RefreshData -> {
+                invalidateCache()
                 loadDashboard()
                 loadProfit()
             }
@@ -67,6 +154,10 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
         viewModelScope.launch {
             try {
                 val result = mainUseCase.loadDashboard()
+                cachedUserInfo = result.userInfo
+                cachedOverview = result.overview
+                cachedLevelInfo = result.levelInfo
+                cachedDashboardDate = todayString()
                 setState {
                     copy(
                         userInfo = result.userInfo,
@@ -108,12 +199,14 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
                 val lastMonthNumber = if (now.month.number == 1) 12 else now.month.number - 1
                 val lastMonthYear = if (now.month.number == 1) now.year - 1 else now.year
                 cachedLastMonthLabel = "${lastMonthYear}年${lastMonthNumber}月"
+                cachedShowLastMonthProfit = now.day <= 10
+                cachedProfitDate = todayString()
                 setState {
                     copy(
                         profitData = result.thisMonth,
                         lastProfitData = result.lastMonth,
                         isProfitLoading = false,
-                        showLastMonthProfit = now.day <= 10
+                        showLastMonthProfit = cachedShowLastMonthProfit
                     )
                 }
             } catch (_: Exception) {
@@ -130,16 +223,15 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
                     async { category to rankListUseCase.getRankData(category) }
                 }.associate { it.await() }
             }
-            setState {
-                copy(
-                    rankListData = categories.map {
-                        results[it] ?: RankCategoryData(
-                            it.typeName,
-                            com.lemon.mcdevmanagermp.data.page.commonRankCategoryContent
-                        )
-                    }
+            val rankData = categories.map {
+                results[it] ?: RankCategoryData(
+                    it.typeName,
+                    com.lemon.mcdevmanagermp.data.page.commonRankCategoryContent
                 )
             }
+            cachedRankListData = rankData
+            cachedRankListDate = todayString()
+            setState { copy(rankListData = rankData) }
         }
     }
 

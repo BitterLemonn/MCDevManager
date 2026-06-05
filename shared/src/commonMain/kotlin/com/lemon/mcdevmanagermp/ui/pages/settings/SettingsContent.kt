@@ -52,7 +52,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -67,8 +66,10 @@ import com.lemon.mcdevmanagermp.ui.theme.ThemeMode
 import com.lemon.mcdevmanagermp.ui.theme.seedDarkColorScheme
 import com.lemon.mcdevmanagermp.ui.theme.seedLightColorScheme
 import com.lemon.mcdevmanagermp.supportsDynamicColor
+import com.lemon.mcdevmanagermp.ui.pages.settings.layout.CompactThemeLayout
+import com.lemon.mcdevmanagermp.ui.pages.settings.layout.ExpandedThemeLayout
+import com.lemon.mcdevmanagermp.ui.pages.settings.layout.MediumThemeLayout
 import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_back
 import mcdevmanagermpr.shared.generated.resources.ic_correct
 import mcdevmanagermpr.shared.generated.resources.ic_setting
 import mcdevmanagermpr.shared.generated.resources.ic_user
@@ -342,75 +343,11 @@ private fun ThemeSettingsPage(
 }
 
 // ============================================================
-// Theme Layouts (responsive)
-// ============================================================
-
-@Composable
-private fun CompactThemeLayout(
-    themeMode: ThemeMode,
-    seedColor: Color,
-    useDynamicColor: Boolean,
-    onThemeModeChange: (ThemeMode) -> Unit,
-    onSeedColorChange: (Color) -> Unit,
-    onDynamicColorChange: (Boolean) -> Unit
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        ThemeModeSection(themeMode, onThemeModeChange)
-        SeedColorSection(seedColor, useDynamicColor, onSeedColorChange, onDynamicColorChange)
-    }
-}
-
-@Composable
-private fun MediumThemeLayout(
-    themeMode: ThemeMode,
-    seedColor: Color,
-    useDynamicColor: Boolean,
-    onThemeModeChange: (ThemeMode) -> Unit,
-    onSeedColorChange: (Color) -> Unit,
-    onDynamicColorChange: (Boolean) -> Unit
-) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.TopCenter
-    ) {
-        Column(
-            modifier = Modifier.width(560.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            ThemeModeSection(themeMode, onThemeModeChange)
-            SeedColorSection(seedColor, useDynamicColor, onSeedColorChange, onDynamicColorChange)
-        }
-    }
-}
-
-@Composable
-private fun ExpandedThemeLayout(
-    themeMode: ThemeMode,
-    seedColor: Color,
-    useDynamicColor: Boolean,
-    onThemeModeChange: (ThemeMode) -> Unit,
-    onSeedColorChange: (Color) -> Unit,
-    onDynamicColorChange: (Boolean) -> Unit
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Box(modifier = Modifier.weight(1f)) {
-            ThemeModeSection(themeMode, onThemeModeChange)
-        }
-        Box(modifier = Modifier.weight(1f)) {
-            SeedColorSection(seedColor, useDynamicColor, onSeedColorChange, onDynamicColorChange)
-        }
-    }
-}
-
-// ============================================================
 // Section: Theme Mode
 // ============================================================
 
 @Composable
-private fun ThemeModeSection(
+internal fun ThemeModeSection(
     selectedMode: ThemeMode,
     onModeSelected: (ThemeMode) -> Unit
 ) {
@@ -571,7 +508,7 @@ private fun ThemeModeCard(
 // ============================================================
 
 @Composable
-private fun SeedColorSection(
+internal fun SeedColorSection(
     selectedColor: Color,
     useDynamicColor: Boolean,
     onColorSelected: (Color) -> Unit,

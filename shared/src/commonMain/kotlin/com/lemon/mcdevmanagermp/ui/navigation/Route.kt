@@ -17,14 +17,11 @@ sealed interface Route {
     data object Analyze : Route
 
     @Serializable
-    data object Feedback : Route
-
-    @Serializable
-    data object Comment : Route
-
-    @Serializable
     data object Settings : Route
 
     @Serializable
     data class IncomeDetail(val isLastMonth: Boolean = false) : Route
+
+    @Serializable
+    data object Income : Route
 }

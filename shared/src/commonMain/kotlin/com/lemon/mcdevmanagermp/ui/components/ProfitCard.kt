@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import com.lemon.mcdevmanagermp.utils.ProfitData
 import com.lemon.mcdevmanagermp.utils.extension.formatDecimal
+import com.lemon.mcdevmanagermp.utils.getTaxMoney
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_money
 import org.jetbrains.compose.resources.painterResource
@@ -123,7 +124,7 @@ fun ProfitCard(
                             color = colors.primary
                         )
                         Text(
-                            text = "含扣税 ${(profitData.totalProfit - getTaxMoney(profitData)).formatDecimal(2)}",
+                            text = "含扣税 ${(profitData.totalProfit - getTaxMoney(profitData.totalProfit)).formatDecimal(2)}",
                             style = MaterialTheme.typography.bodySmall,
                             color = colors.onSurfaceVariant
                         )
@@ -319,14 +320,5 @@ private fun DetailRow(
             fontWeight = FontWeight.Medium,
             color = valueColor
         )
-    }
-}
-
-private fun getTaxMoney(profitData: ProfitData): Double {
-    val realMoney = profitData.totalProfit
-    return when {
-        realMoney < 800 -> 0.0
-        realMoney < 4000 -> (realMoney - 800) * 0.2
-        else -> (realMoney * 0.8) * 0.2
     }
 }

@@ -9,6 +9,7 @@ import com.lemon.mcdevmanagermp.data.vo.netease.feedback.FeedbackVO
 import com.lemon.mcdevmanagermp.data.dto.netease.feedback.ReplyDTO
 import de.jensklingenberg.ktorfit.http.Body
 import de.jensklingenberg.ktorfit.http.GET
+import de.jensklingenberg.ktorfit.http.Headers
 import de.jensklingenberg.ktorfit.http.POST
 import de.jensklingenberg.ktorfit.http.PUT
 import de.jensklingenberg.ktorfit.http.Path
@@ -27,6 +28,7 @@ interface FeedbackApi {
         @Query("reply_count") replyCount: Int? = null
     ): ResponseData<FeedbackVO>
 
+    @Headers("Content-Type: application/json")
     @PUT("/items/feedback/pe/{id}/reply")
     suspend fun sendReply(
         @Path("id") feedbackId: String,

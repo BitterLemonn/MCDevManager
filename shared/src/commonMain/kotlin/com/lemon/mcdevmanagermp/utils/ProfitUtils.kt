@@ -124,6 +124,14 @@ fun getSubsidyAmount(subsidyLevel: Int): Double = when (subsidyLevel) {
     1 -> 100.0; 2 -> 500.0; 3 -> 1_000.0; 4 -> 3_000.0; 5 -> 5_000.0; else -> 0.0
 }
 
+fun getTaxMoney(totalProfit: Double): Double {
+    return when {
+        totalProfit < 800 -> 0.0
+        totalProfit < 4000 -> (totalProfit - 800) * 0.2
+        else -> (totalProfit * 0.8) * 0.2
+    }
+}
+
 fun getDeveloperProfit(profit: Double, subsidyPercent: Double): Double {
     val sharedProfit = when {
         profit < 1_000_000 -> 0.5

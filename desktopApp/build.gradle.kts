@@ -33,6 +33,15 @@ compose.desktop {
             windows {
                 menuGroup = appName
                 upgradeUuid = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                iconFile.set(project.file("icons/icon-windows.ico"))
+            }
+
+            macOS {
+                iconFile.set(project.file("icons/icon-mac.icns"))
+            }
+
+            linux {
+                iconFile.set(project.file("icons/icon-linux.png"))
             }
         }
     }

@@ -31,7 +31,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -56,6 +55,9 @@ import com.github.panpf.sketch.request.fallback
 import com.github.panpf.sketch.request.placeholder
 import com.lemon.mcdevmanagermp.data.db.entity.AccountEntity
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
+import com.lemon.mcdevmanagermp.ui.pages.settings.account.layout.CompactAccountLayout
+import com.lemon.mcdevmanagermp.ui.pages.settings.account.layout.ExpandedAccountLayout
+import com.lemon.mcdevmanagermp.ui.pages.settings.account.layout.MediumAccountLayout
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import com.lemon.mcdevmanagermp.utils.extension.collectEffect
 import kotlinx.datetime.TimeZone
@@ -178,101 +180,11 @@ fun AccountManagementPage(
 }
 
 // ============================================================
-// Compact Layout
-// ============================================================
-
-@Composable
-private fun CompactAccountLayout(
-    state: AccountState,
-    onAction: (AccountAction) -> Unit,
-    onNavigateToLogin: () -> Unit,
-    onNavigateToAddAccount: () -> Unit
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        CurrentAccountSection(
-            state = state,
-            onAction = onAction,
-            onNavigateToLogin = onNavigateToLogin
-        )
-        SavedAccountsSection(
-            state = state,
-            onAction = onAction,
-            onNavigateToAddAccount = onNavigateToAddAccount
-        )
-    }
-}
-
-// ============================================================
-// Medium Layout
-// ============================================================
-
-@Composable
-private fun MediumAccountLayout(
-    state: AccountState,
-    onAction: (AccountAction) -> Unit,
-    onNavigateToLogin: () -> Unit,
-    onNavigateToAddAccount: () -> Unit
-) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.TopCenter
-    ) {
-        Column(
-            modifier = Modifier.width(560.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            CurrentAccountSection(
-                state = state,
-                onAction = onAction,
-                onNavigateToLogin = onNavigateToLogin
-            )
-            SavedAccountsSection(
-                state = state,
-                onAction = onAction,
-                onNavigateToAddAccount = onNavigateToAddAccount
-            )
-        }
-    }
-}
-
-// ============================================================
-// Expanded Layout
-// ============================================================
-
-@Composable
-private fun ExpandedAccountLayout(
-    state: AccountState,
-    onAction: (AccountAction) -> Unit,
-    onNavigateToLogin: () -> Unit,
-    onNavigateToAddAccount: () -> Unit
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Box(modifier = Modifier.weight(1f)) {
-            CurrentAccountSection(
-                state = state,
-                onAction = onAction,
-                onNavigateToLogin = onNavigateToLogin
-            )
-        }
-        Box(modifier = Modifier.weight(1f)) {
-            SavedAccountsSection(
-                state = state,
-                onAction = onAction,
-                onNavigateToAddAccount = onNavigateToAddAccount
-            )
-        }
-    }
-}
-
-// ============================================================
 // Current Account Section
 // ============================================================
 
 @Composable
-private fun CurrentAccountSection(
+internal fun CurrentAccountSection(
     state: AccountState,
     onAction: (AccountAction) -> Unit,
     onNavigateToLogin: () -> Unit
@@ -360,7 +272,7 @@ private fun CurrentAccountSection(
 // ============================================================
 
 @Composable
-private fun SavedAccountsSection(
+internal fun SavedAccountsSection(
     state: AccountState,
     onAction: (AccountAction) -> Unit,
     onNavigateToAddAccount: () -> Unit

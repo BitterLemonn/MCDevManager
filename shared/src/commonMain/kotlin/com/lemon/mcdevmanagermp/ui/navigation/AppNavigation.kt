@@ -15,6 +15,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.toRoute
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.lemon.mcdevmanagermp.ui.pages.income.IncomePage
 import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.IncomeDetailPage
 import com.lemon.mcdevmanagermp.ui.pages.login.LoginPage
 import com.lemon.mcdevmanagermp.ui.pages.main.MainPage
@@ -103,36 +104,12 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             )
         }
 
-        composable<Route.Analyze> {
-            PlaceholderPage("数据分析") { navController.popBackStack() }
-        }
-
-        composable<Route.Feedback> {
-            PlaceholderPage("玩家反馈") { navController.popBackStack() }
-        }
-
-        composable<Route.Comment> {
-            PlaceholderPage("组件评论") { navController.popBackStack() }
-        }
-
-        composable<Route.Settings> {
-            PlaceholderPage("设置") { navController.popBackStack() }
-        }
-
         composable<Route.IncomeDetail> {
             IncomeDetailPage(isLastMonth = it.toRoute<Route.IncomeDetail>().isLastMonth, onBack = { navController.popBackStack() })
         }
-    }
-}
 
-@Composable
-private fun PlaceholderPage(name: String, onBack: () -> Unit) {
-    val colors = LocalAppColors.current
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(
-            text = name,
-            style = MaterialTheme.typography.headlineMedium,
-            color = colors.onSurface.copy(alpha = 0.5f)
-        )
+        composable<Route.Income> {
+            IncomePage(onBack = { navController.popBackStack() })
+        }
     }
 }

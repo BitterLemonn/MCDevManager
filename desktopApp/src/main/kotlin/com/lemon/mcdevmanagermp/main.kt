@@ -1,5 +1,9 @@
 package com.lemon.mcdevmanagermp
 
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
@@ -8,6 +12,7 @@ import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import com.lemon.mcdevmanagermp.utils.CrashHandler
+import org.jetbrains.skia.Image
 import java.util.prefs.Preferences
 
 private const val KEY_X = "window_x"
@@ -44,6 +49,17 @@ private fun saveWindowState(state: androidx.compose.ui.window.WindowState) {
     }
 }
 
+private fun loadAppIcon(): ImageBitmap? {
+    return try {
+        val stream = Thread.currentThread().contextClassLoader
+            ?.getResourceAsStream("icon.png")
+        val bytes = stream?.readAllBytes() ?: return null
+        Image.makeFromEncoded(bytes).toComposeImageBitmap()
+    } catch (_: Exception) {
+        null
+    }
+}
+
 fun main() {
     CrashHandler.init()
 
@@ -55,6 +71,8 @@ fun main() {
             size = size
         )
 
+        val appIcon = remember { loadAppIcon() }
+
         Window(
             onCloseRequest = {
                 saveWindowState(windowState)
@@ -62,6 +80,7 @@ fun main() {
             },
             state = windowState,
             title = "MCDevManagerMPR",
+            icon = appIcon?.let { BitmapPainter(it) },
         ) {
             App()
         }
