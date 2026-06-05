@@ -1,0 +1,189 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g. 0.13.1)'
+        required: true
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  # ============================================================
+  # Windows — MSI 安装版 + Portable ZIP 便携版
+  # ============================================================
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build Windows artifacts
+        run: ./gradlew :desktopApp:packageMsi :desktopApp:packagePortable --no-daemon
+
+      - name: Find MSI
+        id: msi
+        shell: pwsh
+        run: |
+          $msi = Get-ChildItem -Path desktopApp/build/compose/binaries/main/msi -Recurse -Filter *.msi | Select-Object -First 1
+          echo "path=$msi" >> $env:GITHUB_OUTPUT
+
+      - name: Find Portable ZIP
+        id: portable
+        shell: pwsh
+        run: |
+          $zip = Get-ChildItem -Path desktopApp/build/distributions -Filter *-portable.zip | Select-Object -First 1
+          echo "path=$zip" >> $env:GITHUB_OUTPUT
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: win-installer
+          path: ${{ steps.msi.outputs.path }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: win-portable
+          path: ${{ steps.portable.outputs.path }}
+
+  # ============================================================
+  # macOS — DMG
+  # ============================================================
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build macOS DMG
+        run: ./gradlew :desktopApp:packageDmg --no-daemon
+
+      - name: Find DMG
+        id: dmg
+        run: |
+          echo "path=$(find desktopApp/build/compose/binaries/main/dmg -name '*.dmg' | head -1)" >> $GITHUB_OUTPUT
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-dmg
+          path: ${{ steps.dmg.outputs.path }}
+
+  # ============================================================
+  # Android — APK
+  # ============================================================
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build Android APK
+        run: ./gradlew :androidApp:assembleRelease --no-daemon
+
+      - name: Find APK
+        id: apk
+        run: |
+          echo "path=$(find androidApp/build/outputs/apk/release -name '*.apk' | head -1)" >> $GITHUB_OUTPUT
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: ${{ steps.apk.outputs.path }}
+
+  # ============================================================
+  # iOS — 未签名 IPA（用户自行通过 Sideloadly/AltStore 签名）
+  # ============================================================
+  ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Build iOS framework
+        run: ./gradlew :shared:linkReleaseFrameworkIosArm64 --no-daemon
+
+      - name: Build unsigned app
+        run: |
+          xcodebuild -project iosApp/iosApp.xcodeproj \
+            -scheme iosApp \
+            -sdk iphoneos \
+            -configuration Release \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Package unsigned IPA
+        run: |
+          APP_PATH=$(find build/Build/Products/Release-iphoneos -name '*.app' | head -1)
+          mkdir -p Payload
+          cp -r "$APP_PATH" Payload/
+          zip -qr MCDevManager-unsigned.ipa Payload
+          rm -rf Payload
+
+      - name: Find IPA
+        id: ipa
+        run: |
+          echo "path=$(pwd)/MCDevManager-unsigned.ipa" >> $GITHUB_OUTPUT
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-unsigned-ipa
+          path: ${{ steps.ipa.outputs.path }}
+
+  # ============================================================
+  # Release — 汇总所有产物并创建 GitHub Release
+  # ============================================================
+  release:
+    needs: [windows, macos, android, ios]
+    runs-on: ubuntu-latest
+    if: always() && !cancelled()
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: '*'
+          merge-multiple: true
+          path: artifacts
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "TAG=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.TAG }}
+          name: MCDevManager ${{ steps.version.outputs.TAG }}
+          files: artifacts/**/*
+          draft: true
+          generate_release_notes: true

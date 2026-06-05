@@ -73,11 +73,3 @@ tasks.register("packageInstaller") {
         }
     }
 }
-
-//// 强制指定打包使用的 JDK 路径，解决 Android Studio JBR 缺少 jpackage 的问题
-//tasks.withType<AbstractJPackageTask>().configureEach {
-//    val targetJdk = File("C:/Users/sqn_android/.jdks/ms-17.0.15")
-//    if (targetJdk.exists()) {
-//        javaHome.set(targetJdk.absolutePath)
-//    }
-//}
