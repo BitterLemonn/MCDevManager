@@ -22,6 +22,7 @@ ktorfit = "2.7.4"
 ktor = "3.5.0"
 logging = "8.0.4"
 logback = "1.5.34"
+slf4j = "2.0.16"
 okio = "3.17.0"
 kotlinx-datetime = "0.8.0"
 bignum = "0.3.10"
@@ -63,6 +64,7 @@ ktor-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
 logging = { module = "io.github.oshai:kotlin-logging", version.ref = "logging" }
 # logback
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 # okio
 okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 # datetime
