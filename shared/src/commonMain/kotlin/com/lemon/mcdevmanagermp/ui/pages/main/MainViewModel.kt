@@ -12,6 +12,8 @@ import com.lemon.mcdevmanagermp.data.vo.netease.user.OverviewVO
 import com.lemon.mcdevmanagermp.data.vo.netease.user.UserInfoVO
 import com.lemon.mcdevmanagermp.domain.main.MainUseCase
 import com.lemon.mcdevmanagermp.domain.rankList.RankListUseCase
+import com.lemon.mcdevmanagermp.domain.update.CheckUpdateResult
+import com.lemon.mcdevmanagermp.domain.update.CheckUpdateUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
 import com.lemon.mcdevmanagermp.utils.ProfitData
 import kotlinx.coroutines.async
@@ -88,6 +90,8 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
         rankListRepository = RankListRepositoryImpl.INSTANCE
     )
 
+    private val checkUpdateUseCase = CheckUpdateUseCase()
+
     init {
         val today = todayString()
 
@@ -125,6 +129,8 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
         } else {
             loadProfit()
         }
+
+        checkForUpdateSilently()
     }
 
     override fun dispatch(action: MainAction) {
@@ -249,6 +255,18 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
                 }
             } catch (_: Exception) {
                 sendEffect(MainEffect.ShowToast("排行榜加载失败"))
+            }
+        }
+    }
+
+    private fun checkForUpdateSilently() {
+        viewModelScope.launch {
+            when (val result = checkUpdateUseCase()) {
+                is CheckUpdateResult.UpdateAvailable -> {
+                    sendEffect(MainEffect.UpdateAvailable(result.latestVersion))
+                }
+
+                else -> {}
             }
         }
     }

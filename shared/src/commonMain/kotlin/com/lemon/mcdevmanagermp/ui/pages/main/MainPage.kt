@@ -47,6 +47,9 @@ fun MainPage(
 
                 is MainEffect.NavigateTo -> onNavigateToSubPage(effect.route)
                 MainEffect.SessionExpired -> onNavigateToLogin()
+                is MainEffect.UpdateAvailable -> {
+                    scope.launch { snackbarHostState.showSnackbar("发现新版本 v${effect.latestVersion}，前往设置页面更新") }
+                }
             }
         },
         snackbarHost = {

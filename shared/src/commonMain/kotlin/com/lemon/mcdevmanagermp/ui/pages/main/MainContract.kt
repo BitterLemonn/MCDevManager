@@ -46,4 +46,5 @@ sealed interface MainEffect : IUiEffect {
     data class ShowToast(val message: String) : MainEffect
     data class NavigateTo(val route: Route) : MainEffect
     data object SessionExpired : MainEffect
+    data class UpdateAvailable(val latestVersion: String) : MainEffect
 }

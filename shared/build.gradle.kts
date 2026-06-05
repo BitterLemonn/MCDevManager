@@ -1,4 +1,3 @@
-import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -14,6 +13,30 @@ plugins {
 
 room {
     schemaDirectory("$projectDir/schemas")
+}
+
+val generateVersionFile by tasks.registering {
+    val version = libs.versions.versions.name.get()
+    val outputDir = layout.buildDirectory.dir("generated/version/kotlin")
+    inputs.property("version", version)
+    outputs.dir(outputDir)
+    doLast {
+        val file = outputDir.get().asFile.resolve("com/lemon/mcdevmanagermp/BuiltInVersion.kt")
+        file.parentFile.mkdirs()
+        file.writeText(
+            """
+            |package com.lemon.mcdevmanagermp
+            |
+            |object BuiltInVersion {
+            |    const val VERSION = "$version"
+            |}
+            """.trimMargin()
+        )
+    }
+}
+
+kotlin.sourceSets.commonMain {
+    kotlin.srcDir(generateVersionFile.map { it.outputs.files.singleFile })
 }
 
 composeCompiler {

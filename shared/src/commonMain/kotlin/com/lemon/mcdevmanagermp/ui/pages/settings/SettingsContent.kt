@@ -7,8 +7,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,8 +26,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -43,6 +43,7 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -56,21 +57,27 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lemon.mcdevmanagermp.platform.AppUpdateManager
+import com.lemon.mcdevmanagermp.supportsDynamicColor
 import com.lemon.mcdevmanagermp.ui.components.BackHandler
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.pages.settings.account.AccountManagementPage
+import com.lemon.mcdevmanagermp.ui.pages.settings.layout.CompactThemeLayout
+import com.lemon.mcdevmanagermp.ui.pages.settings.layout.ExpandedThemeLayout
+import com.lemon.mcdevmanagermp.ui.pages.settings.layout.MediumThemeLayout
+import com.lemon.mcdevmanagermp.ui.pages.update.UpdateAction
+import com.lemon.mcdevmanagermp.ui.pages.update.UpdateDialog
+import com.lemon.mcdevmanagermp.ui.pages.update.UpdateEffect
+import com.lemon.mcdevmanagermp.ui.pages.update.UpdateViewModel
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import com.lemon.mcdevmanagermp.ui.theme.LocalThemeViewModel
 import com.lemon.mcdevmanagermp.ui.theme.PredefinedSeedColors
 import com.lemon.mcdevmanagermp.ui.theme.ThemeMode
 import com.lemon.mcdevmanagermp.ui.theme.seedDarkColorScheme
 import com.lemon.mcdevmanagermp.ui.theme.seedLightColorScheme
-import com.lemon.mcdevmanagermp.supportsDynamicColor
-import com.lemon.mcdevmanagermp.ui.pages.settings.layout.CompactThemeLayout
-import com.lemon.mcdevmanagermp.ui.pages.settings.layout.ExpandedThemeLayout
-import com.lemon.mcdevmanagermp.ui.pages.settings.layout.MediumThemeLayout
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_correct
+import mcdevmanagermpr.shared.generated.resources.ic_download
 import mcdevmanagermpr.shared.generated.resources.ic_setting
 import mcdevmanagermpr.shared.generated.resources.ic_user
 import org.jetbrains.compose.resources.painterResource
@@ -84,6 +91,23 @@ fun SettingsContent(
     onAccountSwitched: () -> Unit = {}
 ) {
     var currentSubPage by remember { mutableStateOf(SettingsSubPage.List) }
+    val updateViewModel = remember { UpdateViewModel() }
+    val updateState by updateViewModel.state.collectAsState()
+    val currentVersion = remember { AppUpdateManager().getCurrentVersion() }
+
+    LaunchedEffect(Unit) {
+        updateViewModel.effect.collect { effect ->
+            when (effect) {
+                is UpdateEffect.ShowToast -> {
+                    // Toast will be handled by parent via callback
+                }
+
+                is UpdateEffect.OpenUrl -> {
+                    // Open URL via platform mechanism
+                }
+            }
+        }
+    }
 
     BackHandler(enabled = currentSubPage != SettingsSubPage.List) {
         currentSubPage = SettingsSubPage.List
@@ -104,6 +128,8 @@ fun SettingsContent(
     ) { page ->
         when (page) {
             SettingsSubPage.List -> SettingsListPage(
+                currentVersion = currentVersion,
+                onCheckUpdate = { updateViewModel.dispatch(UpdateAction.CheckUpdate) },
                 onNavigateToTheme = { currentSubPage = SettingsSubPage.Theme },
                 onNavigateToAccount = { currentSubPage = SettingsSubPage.Account }
             )
@@ -120,6 +146,13 @@ fun SettingsContent(
             )
         }
     }
+
+    if (updateState.showDialog) {
+        UpdateDialog(
+            state = updateState,
+            onAction = updateViewModel::dispatch
+        )
+    }
 }
 
 // ============================================================
@@ -128,6 +161,8 @@ fun SettingsContent(
 
 @Composable
 private fun SettingsListPage(
+    currentVersion: String = "",
+    onCheckUpdate: () -> Unit = {},
     onNavigateToTheme: () -> Unit,
     onNavigateToAccount: () -> Unit = {}
 ) {
@@ -178,6 +213,19 @@ private fun SettingsListPage(
                     ThemeMode.SYSTEM -> "跟随系统"
                 },
                 onClick = onNavigateToTheme
+            )
+
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                color = colors.outlineVariant,
+                thickness = 0.5.dp
+            )
+
+            SettingsItem(
+                icon = Res.drawable.ic_download,
+                title = "检查更新",
+                subtitle = if (currentVersion.isNotEmpty()) "当前版本: $currentVersion" else "",
+                onClick = onCheckUpdate
             )
         }
     }
