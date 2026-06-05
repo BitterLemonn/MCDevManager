@@ -4,23 +4,18 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
-import androidx.navigation.toRoute
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.lemon.mcdevmanagermp.ui.pages.income.IncomePage
 import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.IncomeDetailPage
 import com.lemon.mcdevmanagermp.ui.pages.login.LoginPage
 import com.lemon.mcdevmanagermp.ui.pages.main.MainPage
+import com.lemon.mcdevmanagermp.ui.pages.settings.SettingsContent
 import com.lemon.mcdevmanagermp.ui.pages.splash.SplashPage
-import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 
 @Composable
 fun AppNavigation(modifier: Modifier = Modifier) {
@@ -80,11 +75,13 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             LoginPage(
                 onNavigateToMain = {
                     navController.navigate(Route.Main) {
-                        popUpTo<Route.Login> { inclusive = true }
-                        launchSingleTop = true
+                        popUpTo<Route.Main> { inclusive = true }
                     }
                 },
-                onBack = if (hasPrevious) {{ navController.popBackStack() }} else null
+                onBack = if (hasPrevious) {{ navController.popBackStack() }} else null,
+                onNavigateToSettings = {
+                    navController.navigate(Route.Settings)
+                }
             )
         }
 
@@ -110,6 +107,13 @@ fun AppNavigation(modifier: Modifier = Modifier) {
 
         composable<Route.Income> {
             IncomePage(onBack = { navController.popBackStack() })
+        }
+
+        composable<Route.Settings> {
+            SettingsContent(
+                showAccountManagement = false,
+                onBack = { navController.popBackStack() }
+            )
         }
     }
 }

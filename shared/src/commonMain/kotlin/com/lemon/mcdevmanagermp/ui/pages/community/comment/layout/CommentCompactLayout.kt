@@ -10,7 +10,6 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
@@ -62,7 +61,6 @@ internal fun CompactCommentLayout(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(LocalAppColors.current.background)
-                    .padding(top = statusBarTop)
             ) {
                 CommentTopBar(onBack = onBack, onRefresh = { onAction(CommentAction.Refresh) })
 

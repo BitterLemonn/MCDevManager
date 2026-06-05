@@ -33,6 +33,9 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -41,6 +44,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -60,6 +64,7 @@ import com.lemon.mcdevmanagermp.ui.pages.settings.account.layout.ExpandedAccount
 import com.lemon.mcdevmanagermp.ui.pages.settings.account.layout.MediumAccountLayout
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import com.lemon.mcdevmanagermp.utils.extension.collectEffect
+import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
@@ -79,6 +84,8 @@ fun AccountManagementPage(
     val viewModel = remember { AccountViewModel() }
     val state by viewModel.state.collectAsState()
     val colors = LocalAppColors.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
@@ -94,7 +101,7 @@ fun AccountManagementPage(
     viewModel.effect.collectEffect {
         when (it) {
             is AccountEffect.ShowToast -> {
-                // Toast will be handled by parent
+                scope.launch { snackbarHostState.showSnackbar(it.message) }
             }
 
             AccountEffect.NavigateToLogin -> onNavigateToLogin()
@@ -176,6 +183,20 @@ fun AccountManagementPage(
             alpha = topBarAlpha,
             onBack = onBack
         )
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = navBarBottom + 8.dp)
+        ) { data ->
+            Snackbar(
+                snackbarData = data,
+                shape = RoundedCornerShape(8.dp),
+                containerColor = colors.surface,
+                contentColor = colors.textColor
+            )
+        }
     }
 }
 

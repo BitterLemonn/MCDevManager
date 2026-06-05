@@ -43,7 +43,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
@@ -57,13 +56,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.pages.income.layout.CompactIncomeLayout
 import com.lemon.mcdevmanagermp.ui.pages.income.layout.ExpandedIncomeLayout
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import com.lemon.mcdevmanagermp.utils.extension.formatDecimal
 import kotlinx.coroutines.launch
 import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_back
 import mcdevmanagermpr.shared.generated.resources.ic_refresh
 import org.jetbrains.compose.resources.painterResource
 
@@ -190,26 +189,11 @@ internal fun ApplyDetailOverlay(
 @Composable
 internal fun IncomeTopBar(onBack: () -> Unit, onRefresh: () -> Unit) {
     val colors = LocalAppColors.current
-    Surface(color = colors.surface, shadowElevation = 1.dp) {
-        Row(
-            modifier = Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    painter = painterResource(Res.drawable.ic_back),
-                    contentDescription = "返回",
-                    tint = colors.textColor,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-            Text(
-                text = "收益详情",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = colors.textColor,
-                modifier = Modifier.weight(1f)
-            )
+    CollapsingTopBar(
+        title = "收益详情",
+        alpha = 0f,
+        onBack = onBack,
+        actions = {
             IconButton(onClick = onRefresh) {
                 Icon(
                     painter = painterResource(Res.drawable.ic_refresh),
@@ -219,7 +203,7 @@ internal fun IncomeTopBar(onBack: () -> Unit, onRefresh: () -> Unit) {
                 )
             }
         }
-    }
+    )
 }
 
 // ============================================================

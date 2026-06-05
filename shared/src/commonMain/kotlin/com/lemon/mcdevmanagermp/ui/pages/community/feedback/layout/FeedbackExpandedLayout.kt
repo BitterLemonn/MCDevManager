@@ -49,7 +49,6 @@ internal fun ExpandedFeedbackLayout(
         modifier = Modifier
             .fillMaxSize()
             .background(colors.background)
-            .padding(top = statusBarTop)
     ) {
         FeedbackTopBar(onBack = onBack, onRefresh = { onAction(FeedbackAction.Refresh) })
 

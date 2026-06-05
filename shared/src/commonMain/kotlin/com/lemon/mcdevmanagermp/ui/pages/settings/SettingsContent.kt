@@ -88,7 +88,9 @@ private enum class SettingsSubPage { List, Theme, Account }
 fun SettingsContent(
     onNavigateToLogin: () -> Unit = {},
     onNavigateToAddAccount: () -> Unit = {},
-    onAccountSwitched: () -> Unit = {}
+    onAccountSwitched: () -> Unit = {},
+    showAccountManagement: Boolean = true,
+    onBack: (() -> Unit)? = null
 ) {
     var currentSubPage by remember { mutableStateOf(SettingsSubPage.List) }
     val updateViewModel = remember { UpdateViewModel() }
@@ -131,7 +133,9 @@ fun SettingsContent(
                 currentVersion = currentVersion,
                 onCheckUpdate = { updateViewModel.dispatch(UpdateAction.CheckUpdate) },
                 onNavigateToTheme = { currentSubPage = SettingsSubPage.Theme },
-                onNavigateToAccount = { currentSubPage = SettingsSubPage.Account }
+                onNavigateToAccount = { currentSubPage = SettingsSubPage.Account },
+                showAccountManagement = showAccountManagement,
+                onBack = onBack
             )
 
             SettingsSubPage.Theme -> ThemeSettingsPage(
@@ -164,7 +168,9 @@ private fun SettingsListPage(
     currentVersion: String = "",
     onCheckUpdate: () -> Unit = {},
     onNavigateToTheme: () -> Unit,
-    onNavigateToAccount: () -> Unit = {}
+    onNavigateToAccount: () -> Unit = {},
+    showAccountManagement: Boolean = true,
+    onBack: (() -> Unit)? = null
 ) {
     val colors = LocalAppColors.current
     val viewModel = LocalThemeViewModel.current
@@ -176,33 +182,45 @@ private fun SettingsListPage(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(top = statusBarTop)
             .padding(bottom = navBarBottom)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text(
-            text = "设置",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            color = colors.textColor
-        )
+        if (onBack != null) {
+            CollapsingTopBar(
+                title = "设置",
+                alpha = 0f,
+                onBack = onBack
+            )
+            Spacer(Modifier.height(4.dp))
+        } else {
+            Spacer(Modifier.height(statusBarTop))
+            Text(
+                text = "设置",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = colors.textColor
+            )
+            Spacer(Modifier.height(4.dp))
+        }
 
         Spacer(Modifier.height(4.dp))
 
         SettingsGroupCard {
-            SettingsItem(
-                icon = Res.drawable.ic_user,
-                title = "账号管理",
-                subtitle = "切换、添加或退出账号",
-                onClick = onNavigateToAccount
-            )
+            if (showAccountManagement) {
+                SettingsItem(
+                    icon = Res.drawable.ic_user,
+                    title = "账号管理",
+                    subtitle = "切换、添加或退出账号",
+                    onClick = onNavigateToAccount
+                )
 
-            HorizontalDivider(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                color = colors.outlineVariant,
-                thickness = 0.5.dp
-            )
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    color = colors.outlineVariant,
+                    thickness = 0.5.dp
+                )
+            }
 
             SettingsItem(
                 icon = Res.drawable.ic_setting,

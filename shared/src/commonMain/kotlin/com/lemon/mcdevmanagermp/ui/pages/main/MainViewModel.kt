@@ -266,7 +266,11 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
                     sendEffect(MainEffect.UpdateAvailable(result.latestVersion))
                 }
 
-                else -> {}
+                is CheckUpdateResult.Error -> {
+                    sendEffect(MainEffect.ShowToast(result.message))
+                }
+
+                is CheckUpdateResult.UpToDate -> {}
             }
         }
     }

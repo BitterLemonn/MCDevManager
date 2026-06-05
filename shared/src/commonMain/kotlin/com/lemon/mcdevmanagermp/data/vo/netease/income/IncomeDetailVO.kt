@@ -1,5 +1,6 @@
 package com.lemon.mcdevmanagermp.data.vo.netease.income
 
+import com.lemon.mcdevmanagermp.utils.extension.formatDecimal
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -42,6 +43,15 @@ data class IncomeVO(
 ) {
     val status: String
         get() = if (_status == "init") "未结算" else if (_status == "fail") "结算失败" else if (_status == "applying") "结算中" else if (_status == "pay_success") "已打款" else if (_status == "pay_fail") "打款失败" else if (_status == "need_modify") "结算信息待更正" else "---"
+
+    /** 当前月收益减去税费后的实际到手金额 */
+    val monthlyNetIncome: String
+        get() {
+            val incomeVal = income.toDoubleOrNull() ?: 0.0
+            val taxVal = tax.toDoubleOrNull() ?: 0.0
+            val net = incomeVal - taxVal - techServiceFee - totalUsagePrice
+            return net.formatDecimal(2)
+        }
 }
 
 @Serializable

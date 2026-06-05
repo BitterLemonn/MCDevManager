@@ -69,6 +69,7 @@ import com.github.panpf.sketch.rememberAsyncImageState
 import com.github.panpf.sketch.request.ComposableImageOptions
 import com.lemon.mcdevmanagermp.data.vo.netease.feedback.ConflictModsVO
 import com.lemon.mcdevmanagermp.data.vo.netease.feedback.FeedbackData
+import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.pages.community.components.FilterChipItem
 import com.lemon.mcdevmanagermp.ui.pages.community.components.FilterGroupDef
 import com.lemon.mcdevmanagermp.ui.pages.community.components.ModernFilterBar
@@ -256,26 +257,11 @@ internal fun FeedbackFilterBar(
 @Composable
 internal fun FeedbackTopBar(onBack: () -> Unit, onRefresh: () -> Unit) {
     val colors = LocalAppColors.current
-    Surface(color = colors.surface, shadowElevation = 1.dp) {
-        Row(
-            modifier = Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    painter = painterResource(Res.drawable.ic_back),
-                    contentDescription = "返回",
-                    tint = colors.textColor,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-            Text(
-                text = "玩家反馈",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = colors.textColor,
-                modifier = Modifier.weight(1f)
-            )
+    CollapsingTopBar(
+        title = "玩家反馈",
+        alpha = 0f,
+        onBack = onBack,
+        actions = {
             IconButton(onClick = onRefresh) {
                 Icon(
                     painter = painterResource(Res.drawable.ic_refresh),
@@ -285,7 +271,7 @@ internal fun FeedbackTopBar(onBack: () -> Unit, onRefresh: () -> Unit) {
                 )
             }
         }
-    }
+    )
 }
 
 @Composable

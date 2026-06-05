@@ -53,6 +53,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.data.vo.netease.comment.CommentData
+import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.pages.community.comment.layout.CompactCommentLayout
 import com.lemon.mcdevmanagermp.ui.pages.community.comment.layout.ExpandedCommentLayout
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
@@ -196,26 +197,11 @@ internal fun CommentTopBar(
     onRefresh: () -> Unit
 ) {
     val colors = LocalAppColors.current
-    Surface(color = colors.surface, shadowElevation = 1.dp) {
-        Row(
-            modifier = Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    painter = painterResource(Res.drawable.ic_back),
-                    contentDescription = "返回",
-                    tint = colors.textColor,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-            Text(
-                text = "组件评论",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = colors.textColor,
-                modifier = Modifier.weight(1f)
-            )
+    CollapsingTopBar(
+        title = "组件评论",
+        alpha = 0f,
+        onBack = onBack,
+        actions = {
             IconButton(onClick = onRefresh) {
                 Icon(
                     painter = painterResource(Res.drawable.ic_refresh),
@@ -225,7 +211,7 @@ internal fun CommentTopBar(
                 )
             }
         }
-    }
+    )
 }
 
 // ============================================================

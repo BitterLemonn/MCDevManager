@@ -44,7 +44,7 @@ internal fun ExpandedIncomeLayout(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = statusBarTop, bottom = navBarBottom)
+            .padding(bottom = navBarBottom)
     ) {
         IncomeTopBar(onBack = onBack, onRefresh = { onAction(IncomeAction.LoadData) })
 
@@ -145,7 +145,7 @@ private fun SummaryBlock(
                 items.forEach { item ->
                     DetailRow(
                         "${item.dataMonth}",
-                        item.availableIncome,
+                        item.monthlyNetIncome,
                         colors.textColor,
                         bold = true
                     )

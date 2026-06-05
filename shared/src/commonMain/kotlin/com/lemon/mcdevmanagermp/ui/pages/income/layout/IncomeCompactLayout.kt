@@ -30,7 +30,7 @@ internal fun CompactIncomeLayout(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = statusBarTop, bottom = navBarBottom)
+            .padding(bottom = navBarBottom)
     ) {
         IncomeTopBar(onBack = onBack, onRefresh = { onAction(IncomeAction.LoadData) })
 

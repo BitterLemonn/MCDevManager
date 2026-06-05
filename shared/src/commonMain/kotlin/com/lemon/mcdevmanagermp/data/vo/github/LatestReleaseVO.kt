@@ -6,12 +6,12 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class LatestReleaseVO(
     @SerialName("tag_name")
-    val tagName: String,
-    val draft: Boolean,
+    val tagName: String = "",
+    val draft: Boolean = false,
     @SerialName("prerelease")
-    val preRelease: Boolean,
-    val assets: List<AssetBean>,
-    val body: String
+    val preRelease: Boolean = false,
+    val assets: List<AssetBean> = emptyList(),
+    val body: String = ""
 )
 
 @Serializable

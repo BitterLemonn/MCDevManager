@@ -58,6 +58,7 @@ import kotlinx.coroutines.launch
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_back
 import mcdevmanagermpr.shared.generated.resources.ic_mc
+import mcdevmanagermpr.shared.generated.resources.ic_setting
 import mcdevmanagermpr.shared.generated.resources.ic_no_show
 import mcdevmanagermpr.shared.generated.resources.ic_show
 import org.jetbrains.compose.resources.painterResource
@@ -65,7 +66,8 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 fun LoginPage(
     onNavigateToMain: () -> Unit,
-    onBack: (() -> Unit)? = null
+    onBack: (() -> Unit)? = null,
+    onNavigateToSettings: (() -> Unit)? = null
 ) {
     val viewModel = remember { LoginViewModel() }
     val state by viewModel.state.collectAsState()
@@ -102,6 +104,7 @@ fun LoginPage(
                 state = state,
                 onAction = viewModel::dispatch,
                 onBack = onBack,
+                onNavigateToSettings = onNavigateToSettings,
                 modifier = Modifier.padding(innerPadding).padding(scaffoldPadding)
             )
         }
@@ -113,7 +116,8 @@ private fun LoginContent(
     state: LoginState,
     onAction: (LoginAction) -> Unit,
     modifier: Modifier = Modifier,
-    onBack: (() -> Unit)? = null
+    onBack: (() -> Unit)? = null,
+    onNavigateToSettings: (() -> Unit)? = null
 ) {
     val colors = LocalAppColors.current
 
@@ -141,6 +145,30 @@ private fun LoginContent(
                 Icon(
                     painter = painterResource(Res.drawable.ic_back),
                     contentDescription = "返回",
+                    tint = colors.onSurface,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+
+        // Settings button
+        if (onNavigateToSettings != null) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp)
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = onNavigateToSettings
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_setting),
+                    contentDescription = "设置",
                     tint = colors.onSurface,
                     modifier = Modifier.size(24.dp)
                 )

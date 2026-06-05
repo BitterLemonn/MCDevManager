@@ -8,6 +8,7 @@ import com.lemon.mcdevmanagermp.domain.account.SaveAccountUseCase
 import com.lemon.mcdevmanagermp.domain.login.LoginUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
 import com.lemon.mcdevmanagermp.ui.navigation.Route
+import com.lemon.mcdevmanagermp.ui.pages.main.MainViewModel
 import kotlinx.coroutines.launch
 
 class LoginViewModel : BaseViewModel<LoginState, LoginAction, LoginEffect>(LoginState()) {
@@ -60,6 +61,7 @@ class LoginViewModel : BaseViewModel<LoginState, LoginAction, LoginEffect>(Login
                     loginUseCase(email = s.email, password = s.password)
                 }
                 saveAccountUseCase(s.email)
+                MainViewModel.invalidateAllCache()
                 sendEffect(LoginEffect.ShowToast("登录成功"))
                 sendEffect(LoginEffect.NavigateTo(Route.Main, Route.Splash))
             } catch (e: Exception) {

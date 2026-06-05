@@ -46,7 +46,6 @@ internal fun ExpandedCommentLayout(
         modifier = Modifier
             .fillMaxSize()
             .background(colors.background)
-            .padding(top = statusBarTop)
     ) {
         CommentTopBar(onBack = onBack, onRefresh = { onAction(CommentAction.Refresh) })
 

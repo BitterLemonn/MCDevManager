@@ -46,7 +46,10 @@ fun MainPage(
                 }
 
                 is MainEffect.NavigateTo -> onNavigateToSubPage(effect.route)
-                MainEffect.SessionExpired -> onNavigateToLogin()
+                MainEffect.SessionExpired -> {
+                    scope.launch { snackbarHostState.showSnackbar("登录已过期，请重新登录") }
+                    onNavigateToLogin()
+                }
                 is MainEffect.UpdateAvailable -> {
                     scope.launch { snackbarHostState.showSnackbar("发现新版本 v${effect.latestVersion}，前往设置页面更新") }
                 }
