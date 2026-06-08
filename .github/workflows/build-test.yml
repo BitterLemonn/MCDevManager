@@ -30,7 +30,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
 
       - name: Switch Gradle mirror to official source
-        run: sed -i 's|distributionUrl=.*|distributionUrl=https\\://services.gradle.org/distributions/gradle-9.5.0-bin.zip|' gradle/wrapper/gradle-wrapper.properties
+        run: sed -i 's|distributionUrl=.*|distributionUrl=https://services.gradle.org/distributions/gradle-9.5.0-bin.zip|' gradle/wrapper/gradle-wrapper.properties
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -60,7 +60,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
 
       - name: Switch Gradle mirror to official source
-        run: sed -i 's|distributionUrl=.*|distributionUrl=https\\://services.gradle.org/distributions/gradle-9.5.0-bin.zip|' gradle/wrapper/gradle-wrapper.properties
+        run: sed -i 's|distributionUrl=.*|distributionUrl=https://services.gradle.org/distributions/gradle-9.5.0-bin.zip|' gradle/wrapper/gradle-wrapper.properties
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -84,7 +84,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
 
       - name: Switch Gradle mirror to official source
-        run: sed -i '' 's|distributionUrl=.*|distributionUrl=https\\://services.gradle.org/distributions/gradle-9.5.0-bin.zip|' gradle/wrapper/gradle-wrapper.properties
+        run: sed -i '' 's|distributionUrl=.*|distributionUrl=https://services.gradle.org/distributions/gradle-9.5.0-bin.zip|' gradle/wrapper/gradle-wrapper.properties
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -114,7 +114,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
 
       - name: Switch Gradle mirror to official source
-        run: (Get-Content gradle/wrapper/gradle-wrapper.properties) -replace 'distributionUrl=.*', 'distributionUrl=https\\://services.gradle.org/distributions/gradle-9.5.0-bin.zip' | Set-Content gradle/wrapper/gradle-wrapper.properties
+        run: (Get-Content gradle/wrapper/gradle-wrapper.properties) -replace 'distributionUrl=.*', 'distributionUrl=https://services.gradle.org/distributions/gradle-9.5.0-bin.zip' | Set-Content gradle/wrapper/gradle-wrapper.properties
 
       - name: Build Windows Portable
         run: ./gradlew :desktopApp:packagePortable --no-daemon
@@ -139,7 +139,7 @@ jobs:
           java-version: '21'
 
       - name: Switch Gradle mirror to official source
-        run: sed -i '' 's|distributionUrl=.*|distributionUrl=https\\://services.gradle.org/distributions/gradle-9.5.0-bin.zip|' gradle/wrapper/gradle-wrapper.properties
+        run: sed -i '' 's|distributionUrl=.*|distributionUrl=https://services.gradle.org/distributions/gradle-9.5.0-bin.zip|' gradle/wrapper/gradle-wrapper.properties
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
