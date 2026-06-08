@@ -15,6 +15,10 @@ room {
     schemaDirectory("$projectDir/schemas")
 }
 
+ktorfit {
+    compilerPluginVersion.set("2.3.3")
+}
+
 val generateVersionFile by tasks.registering {
     val version = libs.versions.versions.name.get()
     val outputDir = layout.buildDirectory.dir("generated/version/kotlin")
