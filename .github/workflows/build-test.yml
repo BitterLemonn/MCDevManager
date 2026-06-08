@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -75,7 +75,7 @@ jobs:
           path: desktopApp/build/compose/binaries/main/dmg/*.dmg
 
   # ============================================================
-  # Windows — MSI 安装版 + Portable ZIP 便携版 (x64)
+  # Windows — MSI 安装包 (x64)
   # ============================================================
   windows:
     runs-on: windows-latest
@@ -183,3 +183,26 @@ jobs:
         with:
           name: ios-unsigned-ipa
           path: MCDevManager-unsigned.ipa
+
+  # ============================================================
+  # Publish — 汇总所有产物，创建 Draft Pre-release（原始格式下载）
+  # ============================================================
+  publish:
+    needs: [android, macos, windows, linux, ios]
+    runs-on: ubuntu-latest
+    if: always() && !cancelled()
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: '*'
+          merge-multiple: true
+          path: artifacts
+
+      - name: Publish draft pre-release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ci-build-${{ github.run_number }}
+          name: CI Build #${{ github.run_number }}
+          files: artifacts/**/*
+          draft: true
+          prerelease: true
