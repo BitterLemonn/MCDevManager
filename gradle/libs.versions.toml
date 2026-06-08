@@ -18,7 +18,7 @@ material3 = "1.11.0-alpha07"
 
 material-icon-extend = "1.7.3"
 kotlin-ksp = "2.3.9"
-ktorfit = "2.7.5"
+ktorfit = "2.7.3"
 ktor = "3.5.0"
 logging = "8.0.4"
 logback = "1.5.34"

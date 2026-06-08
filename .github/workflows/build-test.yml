@@ -90,10 +90,31 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build macOS App
-        run: ./gradlew :desktopApp:createDistributable --no-daemon
+        run: ./gradlew :desktopApp:createDistributable --no-daemon 2>&1 || true
+
+      - name: Print jpackage error logs
+        if: always()
+        run: |
+          echo "=== jpackage error log ==="
+          find desktopApp/build/compose/logs -name "*-err.txt" -exec echo "--- {} ---" \; -exec cat {} \; 2>/dev/null || echo "No error log found"
+          echo ""
+          echo "=== jpackage output log ==="
+          find desktopApp/build/compose/logs -name "*-out.txt" -exec echo "--- {} ---" \; -exec cat {} \; 2>/dev/null || echo "No output log found"
+          echo ""
+          echo "=== jpackage args ==="
+          find desktopApp/build/compose/tmp -name "*.args.txt" -exec echo "--- {} ---" \; -exec cat {} \; 2>/dev/null || echo "No args file found"
+
+      - name: Verify build succeeded
+        run: |
+          if [ ! -d "desktopApp/build/compose/binaries/main/app" ]; then
+            echo "::error::createDistributable did not produce app bundle"
+            exit 1
+          fi
+          echo "App bundle created successfully"
 
       - name: Upload macOS App
         uses: actions/upload-artifact@v4
+        if: success()
         with:
           name: macos-app
           path: desktopApp/build/compose/binaries/main/app/**
