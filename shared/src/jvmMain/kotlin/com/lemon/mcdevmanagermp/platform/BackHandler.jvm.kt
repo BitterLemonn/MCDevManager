@@ -1,4 +1,4 @@
-package com.lemon.mcdevmanagermp.ui.components
+package com.lemon.mcdevmanagermp.platform
 
 import androidx.compose.runtime.Composable
 

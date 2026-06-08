@@ -1,4 +1,4 @@
-package com.lemon.mcdevmanagermp.ui.theme
+package com.lemon.mcdevmanagermp.platform
 
 import android.os.Build
 import androidx.compose.material3.ColorScheme
@@ -7,6 +7,8 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import com.lemon.mcdevmanagermp.ui.theme.seedDarkColorScheme
+import com.lemon.mcdevmanagermp.ui.theme.seedLightColorScheme
 
 @Composable
 actual fun appColorScheme(

@@ -1,4 +1,4 @@
-package com.lemon.mcdevmanagermp
+package com.lemon.mcdevmanagermp.platform
 
 import android.os.Build
 

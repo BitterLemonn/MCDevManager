@@ -9,6 +9,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
+import com.lemon.mcdevmanagermp.platform.appColorScheme
 import com.lemon.mcdevmanagermp.utils.extension.applyDefaultFont
 import mcdevmanagermpr.shared.generated.resources.MiSans_Regular
 import mcdevmanagermpr.shared.generated.resources.Res

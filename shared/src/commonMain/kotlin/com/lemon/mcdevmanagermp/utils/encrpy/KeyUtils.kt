@@ -3,12 +3,7 @@ package com.lemon.mcdevmanagermp.utils.encrpy
 import com.lemon.mcdevmanagermp.data.common.JSONConverter
 import com.lemon.mcdevmanagermp.data.dto.netease.login.PVResultStrDTO
 import com.lemon.mcdevmanagermp.data.vo.netease.login.PVInfoVO
-import com.lemon.mcdevmanagermp.platform.rsaEncrypt
 import kotlin.random.Random
-
-fun rsaEncrypt(input: String, publicKeyStr: String): String {
-    return rsaEncrypt(input, publicKeyStr)
-}
 
 fun sm4Encrypt(input: String, key: String): String {
     return SM4.encrypt(input, key)

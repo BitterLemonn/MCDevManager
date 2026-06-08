@@ -1,8 +1,10 @@
-package com.lemon.mcdevmanagermp.ui.theme
+package com.lemon.mcdevmanagermp.platform
 
 import android.content.Context
-import java.lang.ref.WeakReference
 import androidx.core.content.edit
+import com.lemon.mcdevmanagermp.ui.theme.DefaultSeedColorLong
+import com.lemon.mcdevmanagermp.ui.theme.ThemeMode
+import java.lang.ref.WeakReference
 
 actual class ThemeRepository actual constructor() {
 

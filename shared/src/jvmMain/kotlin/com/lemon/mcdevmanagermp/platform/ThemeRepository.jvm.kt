@@ -1,5 +1,7 @@
-package com.lemon.mcdevmanagermp.ui.theme
+package com.lemon.mcdevmanagermp.platform
 
+import com.lemon.mcdevmanagermp.ui.theme.DefaultSeedColorLong
+import com.lemon.mcdevmanagermp.ui.theme.ThemeMode
 import java.util.prefs.Preferences
 
 actual class ThemeRepository actual constructor() {

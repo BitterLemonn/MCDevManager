@@ -58,8 +58,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lemon.mcdevmanagermp.platform.AppUpdateManager
-import com.lemon.mcdevmanagermp.supportsDynamicColor
-import com.lemon.mcdevmanagermp.ui.components.BackHandler
+import com.lemon.mcdevmanagermp.platform.BackHandler
+import com.lemon.mcdevmanagermp.platform.supportsDynamicColor
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.pages.settings.account.AccountManagementPage
 import com.lemon.mcdevmanagermp.ui.pages.settings.layout.CompactThemeLayout

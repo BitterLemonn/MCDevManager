@@ -7,7 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.lemon.mcdevmanagermp.platform.AndroidLogContext
-import com.lemon.mcdevmanagermp.ui.theme.ThemeRepository
+import com.lemon.mcdevmanagermp.platform.ThemeRepository
 import com.lemon.mcdevmanagermp.utils.CrashHandler
 
 class MainActivity : ComponentActivity() {

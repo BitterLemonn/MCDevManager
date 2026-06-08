@@ -1,4 +1,6 @@
-package com.lemon.mcdevmanagermp.ui.theme
+package com.lemon.mcdevmanagermp.platform
+
+import com.lemon.mcdevmanagermp.ui.theme.ThemeMode
 
 /**
  * 平台相关的 ThemeMode 持久化接口。
