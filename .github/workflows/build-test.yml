@@ -1,7 +1,10 @@
 name: Build Test
 
-# 仅手动触发，用于测试打包是否正常
+# 推送到 master 时自动触发，同时支持手动触发
 on:
+  push:
+    branches:
+      - MPR
   workflow_dispatch:
 
 permissions:
