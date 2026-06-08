@@ -3,6 +3,9 @@ package com.lemon.mcdevmanagermp.platform
 import com.lemon.mcdevmanagermp.BuiltInVersion
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.Foundation.NSBundle
+import platform.Foundation.NSDocumentDirectory
+import platform.Foundation.NSSearchPathForDirectoriesInDomains
+import platform.Foundation.NSUserDomainMask
 
 actual class AppUpdateManager actual constructor() {
 
@@ -23,8 +26,8 @@ actual class AppUpdateManager actual constructor() {
 
     actual fun getDownloadDirectory(): String {
         return NSSearchPathForDirectoriesInDomains(
-            platform.Foundation.NSDocumentDirectory,
-            platform.Foundation.NSUserDomainMask,
+            NSDocumentDirectory,
+            NSUserDomainMask,
             true
         ).first() as String
     }

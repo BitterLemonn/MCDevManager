@@ -1,6 +1,6 @@
 [versions]
 agp = "9.2.1"
-versions-name = "0.13.1"
+versions-name = "1.0.0"
 android-compileSdk = "37"
 android-minSdk = "24"
 android-targetSdk = "38"
@@ -18,7 +18,7 @@ material3 = "1.11.0-alpha07"
 
 material-icon-extend = "1.7.3"
 kotlin-ksp = "2.3.9"
-ktorfit = "2.7.4"
+ktorfit = "2.7.3"
 ktor = "3.5.0"
 logging = "8.0.4"
 logback = "1.5.34"

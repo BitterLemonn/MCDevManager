@@ -5,6 +5,7 @@ import com.lemon.mcdevmanagermp.domain.update.CheckUpdateResult
 import com.lemon.mcdevmanagermp.domain.update.CheckUpdateUseCase
 import com.lemon.mcdevmanagermp.platform.AppUpdateManager
 import com.lemon.mcdevmanagermp.platform.UpdateStrategy
+import com.lemon.mcdevmanagermp.platform.restartApp
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -112,17 +113,6 @@ class UpdateViewModel : BaseViewModel<UpdateState, UpdateAction, UpdateEffect>(U
                 sendEffect(UpdateEffect.ShowToast("请前往 GitHub 下载更新"))
             }
         }
-    }
-
-    private fun restartApp() {
-        try {
-            val jarPath =
-                this::class.java.protectionDomain?.codeSource?.location?.toURI()?.path ?: return
-            Runtime.getRuntime().exec(arrayOf("java", "-jar", jarPath))
-        } catch (_: Exception) {
-            // 如果无法启动新进程，直接退出让用户手动重启
-        }
-        kotlin.system.exitProcess(0)
     }
 
     private fun openInBrowser() {

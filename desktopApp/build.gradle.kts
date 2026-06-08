@@ -37,6 +37,10 @@ compose.desktop {
             }
 
             macOS {
+                // macOS jpackage 要求版本号为 1-3 个整数用点号分隔（如 1.0.0）
+                // 不支持前导零、预发布后缀、超过 3 段
+                val cleanVersion = appVersion.substringBefore("-").removePrefix("0.")
+                packageVersion = cleanVersion.split(".").take(3).joinToString(".")
                 iconFile.set(project.file("icons/icon-mac.icns"))
             }
 
