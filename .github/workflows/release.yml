@@ -177,7 +177,10 @@ jobs:
             -sdk iphoneos \
             -configuration Release \
             -derivedDataPath build \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            DEBUG_INFORMATION_FORMAT=dwarf \
+            -quiet
 
       - name: Package unsigned IPA
         run: |
