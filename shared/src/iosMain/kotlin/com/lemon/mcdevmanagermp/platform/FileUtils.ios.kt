@@ -1,10 +1,13 @@
 package com.lemon.mcdevmanagermp.platform
 
+import com.lemon.mcdevmanagermp.utils.CrashHandler
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.staticCFunction
 import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSSearchPathForDirectoriesInDomains
 import platform.Foundation.NSUserDomainMask
+import platform.Foundation.NSException
 
 @OptIn(ExperimentalForeignApi::class)
 actual fun getLogDirectory(): String {
@@ -20,10 +23,12 @@ actual fun getLogDirectory(): String {
 
 @OptIn(ExperimentalForeignApi::class)
 actual fun setupUncaughtExceptionHandler() {
-    platform.Foundation.NSSetUncaughtExceptionHandler { exception ->
-        val stackSymbols = exception.callStackSymbols.joinToString("\n") { it.toString() }
-        com.lemon.mcdevmanagermp.utils.CrashHandler.handleException(
-            Throwable("${exception.name}: ${exception.reason}\n$stackSymbols")
-        )
-    }
+    platform.Foundation.NSSetUncaughtExceptionHandler(staticCFunction { exception ->
+        if (exception != null) {
+            val stackSymbols = exception.callStackSymbols.joinToString("\n") { it.toString() }
+            CrashHandler.handleException(
+                Throwable("${exception.name}: ${exception.reason}\n$stackSymbols")
+            )
+        }
+    })
 }

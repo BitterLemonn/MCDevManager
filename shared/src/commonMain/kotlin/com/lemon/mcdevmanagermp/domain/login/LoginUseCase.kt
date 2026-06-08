@@ -18,7 +18,7 @@ class LoginUseCase(
     private val userRepository: UserRepository
 ) {
 
-    @Throws
+    @Throws(Exception::class)
     suspend operator fun invoke(
         email: String? = null,
         password: String? = null,
