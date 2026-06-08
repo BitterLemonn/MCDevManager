@@ -17,6 +17,9 @@ sealed interface Route {
     data object Analyze : Route
 
     @Serializable
+    data object RealtimeProfit : Route
+
+    @Serializable
     data object Settings : Route
 
     @Serializable

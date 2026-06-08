@@ -46,6 +46,7 @@ import com.lemon.mcdevmanagermp.ui.pages.community.CommunityContent
 import com.lemon.mcdevmanagermp.ui.pages.main.MainAction
 import com.lemon.mcdevmanagermp.ui.pages.main.MainState
 import com.lemon.mcdevmanagermp.ui.pages.main.MainTab
+import com.lemon.mcdevmanagermp.ui.pages.analyze.AnalyzeContent
 import com.lemon.mcdevmanagermp.ui.pages.main.PlaceholderTabContent
 import com.lemon.mcdevmanagermp.ui.pages.settings.SettingsContent
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
@@ -154,7 +155,7 @@ internal fun MediumLayout(
                         }
                     )
 
-                    MainTab.Analyze -> PlaceholderTabContent("数据分析")
+                    MainTab.Analyze -> AnalyzeContent(onNavigateToSubPage = onNavigateToSubPage)
                     MainTab.Community -> CommunityContent()
                     MainTab.Settings -> SettingsContent(
                         onNavigateToLogin = onNavigateToLogin,
