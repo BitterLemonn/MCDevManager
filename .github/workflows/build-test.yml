@@ -1,6 +1,6 @@
 name: Build Test
 
-# 推送到 master 时自动触发，同时支持手动触发
+# 推送到 MPR 分支时自动触发，同时支持手动触发
 on:
   push:
     branches:
@@ -9,6 +9,9 @@ on:
 
 permissions:
   contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   # ============================================================
@@ -25,6 +28,9 @@ jobs:
           java-version: '21'
 
       - uses: gradle/actions/setup-gradle@v4
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
 
       - name: Build Android Debug APK
         run: ./gradlew :androidApp:assembleDebug --no-daemon
@@ -74,6 +80,9 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
       - name: Build macOS DMG
         run: ./gradlew :desktopApp:packageDmg --no-daemon
 
@@ -95,6 +104,9 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
 
       - name: Build iOS framework
         run: ./gradlew :shared:linkReleaseFrameworkIosArm64 --no-daemon
