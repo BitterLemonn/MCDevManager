@@ -1,12 +1,8 @@
 name: Build Test
 
-# 在 MPR 分支的 push 和 PR 时触发，用于测试打包是否正常
+# 仅手动触发，用于测试打包是否正常
 on:
-  push:
-    branches: [ MPR ]
-  pull_request:
-    branches: [ MPR ]
-  workflow_dispatch: # 也支持手动触发
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -23,7 +19,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
 
       - uses: gradle/actions/setup-gradle@v4
 
@@ -47,7 +43,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
 
       - uses: gradle/actions/setup-gradle@v4
 
@@ -71,7 +67,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
 
       - uses: gradle/actions/setup-gradle@v4
 
@@ -95,7 +91,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
 
       - name: Build iOS framework
         run: ./gradlew :shared:linkReleaseFrameworkIosArm64 --no-daemon
