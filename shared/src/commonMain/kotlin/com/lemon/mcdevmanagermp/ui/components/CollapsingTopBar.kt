@@ -21,10 +21,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_back
@@ -33,19 +33,20 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 fun CollapsingTopBar(
     title: String,
-    alpha: Float,
+    collapseFraction: Float,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     actions: @Composable () -> Unit = {}
 ) {
     val colors = LocalAppColors.current
-    val contentColor = lerp(colors.textColor, colors.scheme.onPrimary, alpha)
+    val contentColor = lerp(colors.textColor, colors.scheme.onPrimary, collapseFraction)
+    val backgroundColor = colors.primary.copy(alpha = collapseFraction)
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(colors.primary.copy(alpha = alpha))
+            .background(backgroundColor)
             .padding(top = statusBarTop)
             .height(56.dp),
         contentAlignment = Alignment.CenterStart
@@ -74,6 +75,7 @@ fun CollapsingTopBar(
                     modifier = Modifier.size(24.dp)
                 )
             }
+
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
@@ -81,6 +83,7 @@ fun CollapsingTopBar(
                 color = contentColor,
                 modifier = Modifier.weight(1f)
             )
+
             actions()
         }
     }

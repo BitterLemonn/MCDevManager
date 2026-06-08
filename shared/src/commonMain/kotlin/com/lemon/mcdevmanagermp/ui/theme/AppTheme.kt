@@ -9,6 +9,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
+import com.lemon.mcdevmanagermp.platform.ConfigureSystemBars
 import com.lemon.mcdevmanagermp.platform.appColorScheme
 import com.lemon.mcdevmanagermp.utils.extension.applyDefaultFont
 import mcdevmanagermpr.shared.generated.resources.MiSans_Regular
@@ -44,6 +45,9 @@ fun AppTheme(
         ThemeMode.DARK -> true
         ThemeMode.LIGHT -> false
     }
+
+    // 根据主题模式设置系统状态栏图标颜色
+    ConfigureSystemBars(isDark = isDark)
 
     val colorScheme = appColorScheme(seedColor = seedColor, isDark = isDark, useDynamicColor = useDynamicColor)
     val extendedColors = if (isDark) darkExtendedColors() else lightExtendedColors()

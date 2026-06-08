@@ -1,12 +1,7 @@
 package com.lemon.mcdevmanagermp.ui.pages.analyze.realtimeProfit.layout
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -15,31 +10,24 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,9 +38,8 @@ import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.pages.analyze.realtimeProfit.RealtimeProfitAction
 import com.lemon.mcdevmanagermp.ui.pages.analyze.realtimeProfit.RealtimeProfitItemCard
 import com.lemon.mcdevmanagermp.ui.pages.analyze.realtimeProfit.RealtimeProfitState
+import com.lemon.mcdevmanagermp.ui.pages.analyze.realtimeProfit.components.RealtimeProfitDatePicker
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import kotlin.time.Clock
-import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import mcdevmanagermpr.shared.generated.resources.Res
@@ -61,6 +48,8 @@ import mcdevmanagermpr.shared.generated.resources.ic_diamond
 import mcdevmanagermpr.shared.generated.resources.ic_emerald
 import mcdevmanagermpr.shared.generated.resources.ic_refresh
 import org.jetbrains.compose.resources.painterResource
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,12 +63,13 @@ internal fun RealtimeProfitCompactLayout(
     onDateSelected: (String) -> Unit,
 ) {
     val colors = LocalAppColors.current
-    val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val todayStr = remember {
         Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toString()
     }
-    val scrollState = remember { androidx.compose.foundation.ScrollState(0) }
-    val alpha = ((scrollState.value / 100f).coerceIn(0f, 1f))
+    val scrollState = remember { ScrollState(0) }
+    val collapseFraction by remember {
+        derivedStateOf { (scrollState.value / 100f).coerceIn(0f, 1f) }
+    }
 
     Column(
         modifier = Modifier
@@ -89,21 +79,23 @@ internal fun RealtimeProfitCompactLayout(
         // TopBar
         CollapsingTopBar(
             title = "实时收益",
-            alpha = alpha,
+            collapseFraction = collapseFraction,
             onBack = onBack,
             actions = {
                 IconButton(onClick = { onAction(RealtimeProfitAction.ToggleDateSelector) }) {
-                    Image(
+                    Icon(
                         painter = painterResource(Res.drawable.ic_calendar),
                         contentDescription = "选择日期",
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(20.dp),
+                        tint = colors.textColor
                     )
                 }
                 IconButton(onClick = { onAction(RealtimeProfitAction.RefreshData) }) {
-                    Image(
+                    Icon(
                         painter = painterResource(Res.drawable.ic_refresh),
                         contentDescription = "刷新",
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(20.dp),
+                        tint = colors.textColor
                     )
                 }
             }
@@ -150,7 +142,9 @@ internal fun RealtimeProfitCompactLayout(
                 ) {
                     state.profitMap.forEach { (iid, data) ->
                         item(key = iid) {
-                            val name = state.resList.find { it.itemId == iid }?.itemName ?: "未知资源"
+                            val name =
+                                state.resList.find { it.itemId == iid }?.itemName ?: "未知资源"
+                            if (data.totalDiamonds == 0 && data.totalPoints == 0) return@item
                             RealtimeProfitItemCard(
                                 name = name,
                                 iid = iid,
@@ -167,45 +161,11 @@ internal fun RealtimeProfitCompactLayout(
 
     // 日期选择器弹窗
     if (showDatePicker) {
-        DatePickerDialog(
-            onDismissRequest = onDatePickerDismiss,
-            confirmButton = {
-                Button(
-                    onClick = {
-                        // DatePicker 确认逻辑在 onDateSelected 中处理
-                        onDatePickerDismiss()
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = colors.primary)
-                ) {
-                    Text("取消", color = colors.onPrimary)
-                }
-            }
-        ) {
-            val datePickerState = rememberDatePickerState(
-                initialSelectedDateMillis = try {
-                    Instant.parse(state.checkDay + "T00:00:00Z").toEpochMilliseconds()
-                } catch (_: Exception) { null }
-            )
-            DatePicker(state = datePickerState)
-            // 手动确认按钮
-            Button(
-                onClick = {
-                    datePickerState.selectedDateMillis?.let { millis ->
-                        val selectedDate = Instant.fromEpochMilliseconds(millis)
-                            .toLocalDateTime(TimeZone.currentSystemDefault()).date.toString()
-                        onDateSelected(selectedDate)
-                    }
-                    onDatePickerDismiss()
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 8.dp),
-                shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = colors.primary)
-            ) {
-                Text("确定", color = colors.onPrimary)
-            }
-        }
+        RealtimeProfitDatePicker(
+            currentDay = state.checkDay,
+            onDateSelected = onDateSelected,
+            onDismiss = onDatePickerDismiss
+        )
     }
 }
 
@@ -294,7 +254,9 @@ internal fun TimeInfoRow(
             text = if (isToday) {
                 val time = Instant.fromEpochMilliseconds(lastRequestTime)
                     .toLocalDateTime(TimeZone.currentSystemDefault())
-                "实时收益 ${time.hour.toString().padStart(2, '0')}:${time.minute.toString().padStart(2, '0')}:${time.second.toString().padStart(2, '0')}"
+                "实时收益 ${time.hour.toString().padStart(2, '0')}:${
+                    time.minute.toString().padStart(2, '0')
+                }:${time.second.toString().padStart(2, '0')}"
             } else {
                 checkDay
             },
@@ -313,10 +275,11 @@ internal fun TimeInfoRow(
                     )
                     .padding(4.dp)
             ) {
-                Image(
+                Icon(
                     painter = painterResource(Res.drawable.ic_refresh),
                     contentDescription = "刷新",
                     modifier = Modifier.size(18.dp),
+                    tint = colors.onSurfaceVariant
                 )
             }
         }

@@ -191,7 +191,7 @@ internal fun IncomeTopBar(onBack: () -> Unit, onRefresh: () -> Unit) {
     val colors = LocalAppColors.current
     CollapsingTopBar(
         title = "收益详情",
-        alpha = 0f,
+        collapseFraction = 0f,
         onBack = onBack,
         actions = {
             IconButton(onClick = onRefresh) {

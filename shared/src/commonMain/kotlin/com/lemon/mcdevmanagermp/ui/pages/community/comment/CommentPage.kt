@@ -36,7 +36,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
@@ -56,22 +55,22 @@ import com.lemon.mcdevmanagermp.data.vo.netease.comment.CommentData
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.pages.community.comment.layout.CompactCommentLayout
 import com.lemon.mcdevmanagermp.ui.pages.community.comment.layout.ExpandedCommentLayout
+import com.lemon.mcdevmanagermp.ui.pages.community.components.DateRangeChipGroup
+import com.lemon.mcdevmanagermp.ui.pages.community.components.FilterGroupDef
+import com.lemon.mcdevmanagermp.ui.pages.community.components.ModernFilterBar
+import com.lemon.mcdevmanagermp.ui.pages.community.components.ReplyInputBar
+import com.lemon.mcdevmanagermp.ui.pages.community.components.StarChipGroup
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import kotlinx.coroutines.launch
-import com.lemon.mcdevmanagermp.ui.pages.community.components.ReplyInputBar
-import com.lemon.mcdevmanagermp.ui.pages.community.components.ModernFilterBar
-import com.lemon.mcdevmanagermp.ui.pages.community.components.FilterGroupDef
-import com.lemon.mcdevmanagermp.ui.pages.community.components.StarChipGroup
-import com.lemon.mcdevmanagermp.ui.pages.community.components.DateRangeChipGroup
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
-import kotlin.time.Instant
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_back
 import mcdevmanagermpr.shared.generated.resources.ic_refresh
 import mcdevmanagermpr.shared.generated.resources.ic_star
 import org.jetbrains.compose.resources.painterResource
+import kotlin.time.Instant
 
 @Composable
 fun CommentPage(onBack: () -> Unit) {
@@ -199,7 +198,7 @@ internal fun CommentTopBar(
     val colors = LocalAppColors.current
     CollapsingTopBar(
         title = "组件评论",
-        alpha = 0f,
+        collapseFraction = 0f,
         onBack = onBack,
         actions = {
             IconButton(onClick = onRefresh) {

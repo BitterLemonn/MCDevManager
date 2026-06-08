@@ -39,9 +39,9 @@ import com.lemon.mcdevmanagermp.ui.components.AppScaffold
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.pages.main.MainViewModel
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import com.lemon.mcdevmanagermp.utils.extension.IUiEffect
 import com.lemon.mcdevmanagermp.utils.ModuleIncomeDetail
 import com.lemon.mcdevmanagermp.utils.ProfitData
+import com.lemon.mcdevmanagermp.utils.extension.IUiEffect
 import com.lemon.mcdevmanagermp.utils.extension.formatDecimal
 import com.lemon.mcdevmanagermp.utils.getTaxMoney
 import com.lemon.mcdevmanagermp.utils.toModuleIncomeDetails
@@ -110,7 +110,7 @@ fun IncomeDetailPage(isLastMonth: Boolean = false, onBack: () -> Unit) {
 
             CollapsingTopBar(
                 title = "收益详情 - $monthLabel",
-                alpha = topBarAlpha,
+                collapseFraction = topBarAlpha,
                 onBack = onBack
             )
         }

@@ -259,7 +259,7 @@ internal fun FeedbackTopBar(onBack: () -> Unit, onRefresh: () -> Unit) {
     val colors = LocalAppColors.current
     CollapsingTopBar(
         title = "玩家反馈",
-        alpha = 0f,
+        collapseFraction = 0f,
         onBack = onBack,
         actions = {
             IconButton(onClick = onRefresh) {

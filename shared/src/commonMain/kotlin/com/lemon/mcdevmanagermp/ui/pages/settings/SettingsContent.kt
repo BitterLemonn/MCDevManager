@@ -12,7 +12,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -189,7 +191,7 @@ private fun SettingsListPage(
         if (onBack != null) {
             CollapsingTopBar(
                 title = "设置",
-                alpha = 0f,
+                collapseFraction = 0f,
                 onBack = onBack
             )
             Spacer(Modifier.height(4.dp))
@@ -273,12 +275,17 @@ private fun SettingsItem(
     onClick: () -> Unit
 ) {
     val colors = LocalAppColors.current
+    val interactionSource = remember { MutableInteractionSource() }
+    val isHovered by interactionSource.collectIsHoveredAsState()
+    val bgColor = if (isHovered) colors.primary.copy(alpha = 0.06f) else Color.Transparent
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .background(bgColor)
+            .hoverable(interactionSource)
             .clickable(
-                interactionSource = remember { MutableInteractionSource() },
+                interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick
             )
@@ -402,7 +409,7 @@ private fun ThemeSettingsPage(
 
         CollapsingTopBar(
             title = "主题与色彩",
-            alpha = topBarAlpha,
+            collapseFraction = topBarAlpha,
             onBack = onBack
         )
     }

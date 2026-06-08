@@ -180,7 +180,7 @@ fun AccountManagementPage(
 
         CollapsingTopBar(
             title = "账号管理",
-            alpha = topBarAlpha,
+            collapseFraction = topBarAlpha,
             onBack = onBack
         )
 

@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -32,18 +32,26 @@ import org.jetbrains.compose.resources.painterResource
 internal fun RealtimeProfitItemCard(
     name: String,
     iid: String,
-    data: OneResRealtimeIncomeVO
+    data: OneResRealtimeIncomeVO,
+    isHovered: Boolean = false,
+    isSelected: Boolean = false
 ) {
     val colors = LocalAppColors.current
 
     val showDiamond = data.totalDiamonds > 0 || (data.totalDiamonds == 0 && data.totalPoints == 0)
     val showPoint = data.totalPoints > 0 || (data.totalDiamonds == 0 && data.totalPoints == 0)
 
-    ElevatedCard(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.elevatedCardColors(containerColor = colors.surfaceContainerHigh),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    val cardBgColor = when {
+        isSelected -> colors.primary.copy(alpha = 0.08f)
+        isHovered -> colors.primary.copy(alpha = 0.06f)
+        else -> colors.surfaceContainerHigh
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = cardBgColor),
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(
             modifier = Modifier
