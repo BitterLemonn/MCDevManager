@@ -29,6 +29,9 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      - name: Switch Gradle mirror to official source
+        run: sed -i 's|mirrors.aliyun.com/macports/distfiles/gradle|services.gradle.org/distributions|' gradle/wrapper/gradle-wrapper.properties
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
@@ -40,6 +43,30 @@ jobs:
         with:
           name: android-debug-apk
           path: androidApp/build/outputs/apk/debug/*.apk
+
+  # ============================================================
+  # Desktop — JVM 编译验证（跨平台通用）
+  # ============================================================
+  desktop:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Switch Gradle mirror to official source
+        run: sed -i 's|mirrors.aliyun.com/macports/distfiles/gradle|services.gradle.org/distributions|' gradle/wrapper/gradle-wrapper.properties
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Compile Desktop App
+        run: ./gradlew :desktopApp:compileKotlin --no-daemon
 
   # ============================================================
   # Windows — Portable ZIP（免安装版，无需签名）
@@ -56,6 +83,9 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      - name: Switch Gradle mirror to official source
+        run: (Get-Content gradle/wrapper/gradle-wrapper.properties) -replace 'mirrors\.aliyun\.com/macports/distfiles/gradle', 'services.gradle.org/distributions' | Set-Content gradle/wrapper/gradle-wrapper.properties
+
       - name: Build Windows Portable
         run: ./gradlew :desktopApp:packagePortable --no-daemon
 
@@ -66,34 +96,7 @@ jobs:
           path: desktopApp/build/distributions/*.zip
 
   # ============================================================
-  # macOS — DMG
-  # ============================================================
-  macos:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '21'
-
-      - uses: gradle/actions/setup-gradle@v4
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Build macOS DMG
-        run: ./gradlew :desktopApp:packageDmg --no-daemon
-
-      - name: Upload DMG
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-dmg
-          path: desktopApp/build/compose/binaries/main/dmg/**/*.dmg
-
-  # ============================================================
-  # iOS — 未签名 IPA
+  # iOS — Kotlin/Native 编译验证
   # ============================================================
   ios:
     runs-on: macos-latest
@@ -105,31 +108,11 @@ jobs:
           distribution: temurin
           java-version: '21'
 
+      - name: Switch Gradle mirror to official source
+        run: sed -i '' 's|mirrors.aliyun.com/macports/distfiles/gradle|services.gradle.org/distributions|' gradle/wrapper/gradle-wrapper.properties
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Build iOS framework
         run: ./gradlew :shared:linkReleaseFrameworkIosArm64 --no-daemon
-
-      - name: Build unsigned app
-        run: |
-          xcodebuild -project iosApp/iosApp.xcodeproj \
-            -scheme iosApp \
-            -sdk iphoneos \
-            -configuration Release \
-            -derivedDataPath build \
-            CODE_SIGNING_ALLOWED=NO
-
-      - name: Package unsigned IPA
-        run: |
-          APP_PATH=$(find build/Build/Products/Release-iphoneos -name '*.app' | head -1)
-          mkdir -p Payload
-          cp -r "$APP_PATH" Payload/
-          zip -qr MCDevManager-unsigned.ipa Payload
-          rm -rf Payload
-
-      - name: Upload IPA
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios-unsigned-ipa
-          path: MCDevManager-unsigned.ipa
