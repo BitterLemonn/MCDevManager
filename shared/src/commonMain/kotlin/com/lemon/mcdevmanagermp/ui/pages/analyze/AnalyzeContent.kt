@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -37,9 +38,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.lemon.mcdevmanagermp.ui.navigation.Route
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import mcdevmanagermpr.shared.generated.resources.Res
+import mcdevmanagermpr.shared.generated.resources.ic_analyze
 import mcdevmanagermpr.shared.generated.resources.ic_profit
 import org.jetbrains.compose.resources.painterResource
 
@@ -49,7 +50,7 @@ import org.jetbrains.compose.resources.painterResource
  */
 @Composable
 fun AnalyzeContent(
-    onNavigateToSubPage: (Route) -> Unit
+    onNavigateToSubPage: (AnalyzeSubPage) -> Unit
 ) {
     val colors = LocalAppColors.current
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
@@ -77,7 +78,20 @@ fun AnalyzeContent(
                 icon = Res.drawable.ic_profit,
                 title = "实时收益",
                 subtitle = "查看今日各资源的实时收益数据",
-                onClick = { onNavigateToSubPage(Route.RealtimeProfit) }
+                onClick = { onNavigateToSubPage(AnalyzeSubPage.RealtimeProfit) }
+            )
+
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                color = colors.outlineVariant,
+                thickness = 0.5.dp
+            )
+
+            AnalyzeItem(
+                icon = Res.drawable.ic_analyze,
+                title = "模组分析",
+                subtitle = "查看模组的购买、日活、粉丝等趋势分析",
+                onClick = { onNavigateToSubPage(AnalyzeSubPage.ModAnalysis()) }
             )
         }
     }

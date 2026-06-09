@@ -144,7 +144,6 @@ internal fun RealtimeProfitCompactLayout(
                         item(key = iid) {
                             val name =
                                 state.resList.find { it.itemId == iid }?.itemName ?: "未知资源"
-                            if (data.totalDiamonds == 0 && data.totalPoints == 0) return@item
                             RealtimeProfitItemCard(
                                 name = name,
                                 iid = iid,

@@ -124,6 +124,8 @@ kotlin {
             implementation(libs.sketch.compose)
             implementation(libs.sketch.compose.resources)
             implementation(libs.sketch.webp)
+            // vico
+            implementation(libs.vico.compose.m3)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

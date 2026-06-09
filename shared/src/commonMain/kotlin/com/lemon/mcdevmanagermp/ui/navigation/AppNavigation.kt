@@ -13,7 +13,6 @@ import androidx.navigation.toRoute
 import com.lemon.mcdevmanagermp.ui.pages.income.IncomePage
 import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.IncomeDetailPage
 import com.lemon.mcdevmanagermp.ui.pages.login.LoginPage
-import com.lemon.mcdevmanagermp.ui.pages.analyze.realtimeProfit.RealtimeProfitPage
 import com.lemon.mcdevmanagermp.ui.pages.main.MainPage
 import com.lemon.mcdevmanagermp.ui.pages.settings.SettingsContent
 import com.lemon.mcdevmanagermp.ui.pages.splash.SplashPage
@@ -108,10 +107,6 @@ fun AppNavigation(modifier: Modifier = Modifier) {
 
         composable<Route.Income> {
             IncomePage(onBack = { navController.popBackStack() })
-        }
-
-        composable<Route.RealtimeProfit> {
-            RealtimeProfitPage(onBack = { navController.popBackStack() })
         }
 
         composable<Route.Settings> {

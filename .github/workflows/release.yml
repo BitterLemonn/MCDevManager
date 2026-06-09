@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release version (e.g. 0.13.1)'
+        description: 'Release version (e.g. 1.0.0)'
         required: true
         default: ''
 
@@ -33,6 +33,16 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      - name: Determine version
+        id: vars
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            V="${{ inputs.version }}"
+          else
+            V="${GITHUB_REF#refs/tags/v}"
+          fi
+          echo "version=${V#v}" >> "$GITHUB_OUTPUT"
+
       - name: Switch Gradle mirror to official source
         run: sed -i 's|distributionUrl=.*|distributionUrl=https://services.gradle.org/distributions/gradle-9.5.0-bin.zip|' gradle/wrapper/gradle-wrapper.properties
 
@@ -47,11 +57,17 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - name: Rename & upload APK
+        run: |
+          SRC=$(find androidApp/build/outputs/apk/release -name '*.apk' | head -1)
+          DST="MCDevManagerMP-V${{ steps.vars.outputs.version }}-android.apk"
+          mv "$SRC" "$DST"
+          echo "artifact=$DST" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
         with:
-          name: android-release-apk
-          path: androidApp/build/outputs/apk/release/*.apk
+          name: android-apk
+          path: MCDevManagerMP-V${{ steps.vars.outputs.version }}-android.apk
 
   # ============================================================
   # macOS — DMG
@@ -68,6 +84,16 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      - name: Determine version
+        id: vars
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            V="${{ inputs.version }}"
+          else
+            V="${GITHUB_REF#refs/tags/v}"
+          fi
+          echo "version=${V#v}" >> "$GITHUB_OUTPUT"
+
       - name: Switch Gradle mirror to official source
         run: sed -i '' 's|distributionUrl=.*|distributionUrl=https://services.gradle.org/distributions/gradle-9.5.0-bin.zip|' gradle/wrapper/gradle-wrapper.properties
 
@@ -77,11 +103,16 @@ jobs:
       - name: Build macOS DMG
         run: ./gradlew :desktopApp:packageDmg --no-daemon
 
-      - name: Upload DMG
-        uses: actions/upload-artifact@v4
+      - name: Rename & upload DMG
+        run: |
+          SRC=$(find desktopApp/build/compose/binaries/main/dmg -name '*.dmg' | head -1)
+          DST="MCDevManagerMP-V${{ steps.vars.outputs.version }}-macos.dmg"
+          mv "$SRC" "$DST"
+
+      - uses: actions/upload-artifact@v4
         with:
           name: macos-dmg
-          path: desktopApp/build/compose/binaries/main/dmg/*.dmg
+          path: MCDevManagerMP-V${{ steps.vars.outputs.version }}-macos.dmg
 
   # ============================================================
   # Windows — MSI 安装版 + Portable ZIP 便携版
@@ -98,23 +129,44 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      - name: Determine version
+        id: vars
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
+            $v = "${{ inputs.version }}"
+          } else {
+            $v = "${{ github.ref_name }}" -replace '^v',''
+          }
+          $v = $v -replace '^v',''
+          echo "version=$v" >> $env:GITHUB_OUTPUT
+
       - name: Switch Gradle mirror to official source
         run: (Get-Content gradle/wrapper/gradle-wrapper.properties) -replace 'distributionUrl=.*', 'distributionUrl=https://services.gradle.org/distributions/gradle-9.5.0-bin.zip' | Set-Content gradle/wrapper/gradle-wrapper.properties
 
       - name: Build Windows artifacts
         run: ./gradlew :desktopApp:packageMsi :desktopApp:packagePortable --no-daemon
 
+      - name: Rename artifacts
+        shell: pwsh
+        run: |
+          $v = "${{ steps.vars.outputs.version }}"
+          $msi = Get-ChildItem desktopApp/build/compose/binaries/main/msi/*.msi | Select-Object -First 1
+          $zip = Get-ChildItem desktopApp/build/distributions/*.zip | Select-Object -First 1
+          Rename-Item $msi.FullName "MCDevManagerMP-V$v-windows-x64.msi"
+          Rename-Item $zip.FullName "MCDevManagerMP-V$v-windows-x64-portable.zip"
+
       - name: Upload MSI
         uses: actions/upload-artifact@v4
         with:
           name: windows-msi
-          path: desktopApp/build/compose/binaries/main/msi/*.msi
+          path: MCDevManagerMP-V${{ steps.vars.outputs.version }}-windows-x64.msi
 
       - name: Upload Portable ZIP
         uses: actions/upload-artifact@v4
         with:
           name: windows-portable
-          path: desktopApp/build/distributions/*.zip
+          path: MCDevManagerMP-V${{ steps.vars.outputs.version }}-windows-x64-portable.zip
 
   # ============================================================
   # Linux — DEB 包
@@ -131,6 +183,16 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      - name: Determine version
+        id: vars
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            V="${{ inputs.version }}"
+          else
+            V="${GITHUB_REF#refs/tags/v}"
+          fi
+          echo "version=${V#v}" >> "$GITHUB_OUTPUT"
+
       - name: Switch Gradle mirror to official source
         run: sed -i 's|distributionUrl=.*|distributionUrl=https://services.gradle.org/distributions/gradle-9.5.0-bin.zip|' gradle/wrapper/gradle-wrapper.properties
 
@@ -140,11 +202,16 @@ jobs:
       - name: Build Linux DEB
         run: ./gradlew :desktopApp:packageDeb --no-daemon
 
-      - name: Upload DEB
-        uses: actions/upload-artifact@v4
+      - name: Rename & upload DEB
+        run: |
+          SRC=$(find desktopApp/build/compose/binaries/main/deb -name '*.deb' | head -1)
+          DST="MCDevManagerMP-V${{ steps.vars.outputs.version }}-linux-x64.deb"
+          mv "$SRC" "$DST"
+
+      - uses: actions/upload-artifact@v4
         with:
           name: linux-deb
-          path: desktopApp/build/compose/binaries/main/deb/*.deb
+          path: MCDevManagerMP-V${{ steps.vars.outputs.version }}-linux-x64.deb
 
   # ============================================================
   # iOS — 未签名 IPA（用户自行通过 Sideloadly/AltStore 签名）
@@ -168,6 +235,16 @@ jobs:
         with:
           xcode-version: latest
 
+      - name: Determine version
+        id: vars
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            V="${{ inputs.version }}"
+          else
+            V="${GITHUB_REF#refs/tags/v}"
+          fi
+          echo "version=${V#v}" >> "$GITHUB_OUTPUT"
+
       - name: Switch Gradle mirror to official source
         run: sed -i '' 's|distributionUrl=.*|distributionUrl=https://services.gradle.org/distributions/gradle-9.5.0-bin.zip|' gradle/wrapper/gradle-wrapper.properties
 
@@ -189,19 +266,19 @@ jobs:
             DEBUG_INFORMATION_FORMAT=dwarf \
             -quiet
 
-      - name: Package unsigned IPA
+      - name: Package & rename IPA
         run: |
           APP_PATH=$(find build/Build/Products/Release-iphoneos -name '*.app' | head -1)
           mkdir -p Payload
           cp -r "$APP_PATH" Payload/
-          zip -qr MCDevManager-unsigned.ipa Payload
+          zip -qr "MCDevManagerMP-V${{ steps.vars.outputs.version }}-ios-arm64.ipa" Payload
           rm -rf Payload
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
-          name: ios-unsigned-ipa
-          path: MCDevManager-unsigned.ipa
+          name: ios-ipa
+          path: MCDevManagerMP-V${{ steps.vars.outputs.version }}-ios-arm64.ipa
 
   # ============================================================
   # Release — 汇总所有产物并创建 GitHub Release
@@ -221,16 +298,20 @@ jobs:
         id: version
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "TAG=${{ inputs.version }}" >> $GITHUB_OUTPUT
+            V="${{ inputs.version }}"
           else
-            echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+            V="${GITHUB_REF#refs/tags/v}"
           fi
+          echo "tag=v${V#v}" >> "$GITHUB_OUTPUT"
+
+      - name: List artifacts
+        run: ls -lh artifacts/
 
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.version.outputs.TAG }}
-          name: MCDevManager ${{ steps.version.outputs.TAG }}
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: MCDevManagerMP ${{ steps.version.outputs.tag }}
           files: artifacts/**/*
           draft: true
           generate_release_notes: true

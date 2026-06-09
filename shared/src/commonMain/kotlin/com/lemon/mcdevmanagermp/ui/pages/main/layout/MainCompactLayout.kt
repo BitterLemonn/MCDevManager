@@ -15,13 +15,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -58,12 +58,11 @@ import com.lemon.mcdevmanagermp.ui.components.MultiLevelRankingCard
 import com.lemon.mcdevmanagermp.ui.components.ProfitCard
 import com.lemon.mcdevmanagermp.ui.components.ProfitSplitWidget
 import com.lemon.mcdevmanagermp.ui.navigation.Route
+import com.lemon.mcdevmanagermp.ui.pages.analyze.AnalyzeTabContent
 import com.lemon.mcdevmanagermp.ui.pages.community.CommunityContent
 import com.lemon.mcdevmanagermp.ui.pages.main.MainAction
 import com.lemon.mcdevmanagermp.ui.pages.main.MainState
 import com.lemon.mcdevmanagermp.ui.pages.main.MainTab
-import com.lemon.mcdevmanagermp.ui.pages.analyze.AnalyzeContent
-import com.lemon.mcdevmanagermp.ui.pages.main.PlaceholderTabContent
 import com.lemon.mcdevmanagermp.ui.pages.settings.SettingsContent
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import com.lemon.mcdevmanagermp.utils.ProfitData
@@ -140,7 +139,7 @@ internal fun CompactLayout(
                             }
                         )
 
-                        MainTab.Analyze -> AnalyzeContent(onNavigateToSubPage = onNavigateToSubPage)
+                        MainTab.Analyze -> AnalyzeTabContent(onNavigateToSubPage = onNavigateToSubPage)
                         MainTab.Community -> CommunityContent()
                         MainTab.Settings -> SettingsContent(
                             onNavigateToLogin = onNavigateToLogin,

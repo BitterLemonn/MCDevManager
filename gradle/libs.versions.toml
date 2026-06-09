@@ -31,6 +31,7 @@ kotlinxSerializationJson = "1.11.0"
 room = "2.8.4"
 sqlite = "2.6.2"
 sketch = "4.4.0"
+vico = "3.2.2"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -85,6 +86,8 @@ sketch-compose = { module = "io.github.panpf.sketch4:sketch-compose", version.re
 sketch-http = { module = "io.github.panpf.sketch4:sketch-http", version.ref = "sketch" }
 sketch-webp = { module = "io.github.panpf.sketch4:sketch-animated-webp", version.ref = "sketch" }
 sketch-compose-resources = { module = "io.github.panpf.sketch4:sketch-compose-resources", version.ref = "sketch" }
+# vico
+vico-compose-m3 = { group = "com.patrykandpatrick.vico", name = "compose-m3", version.ref = "vico" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

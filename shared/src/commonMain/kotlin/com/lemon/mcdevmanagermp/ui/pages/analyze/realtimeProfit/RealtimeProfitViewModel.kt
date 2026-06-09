@@ -9,12 +9,12 @@ import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
 import com.lemon.mcdevmanagermp.utils.Logger
 import com.lemon.mcdevmanagermp.utils.UnifiedExceptionHandler
 import kotlinx.coroutines.launch
-import kotlin.time.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Clock
 
 class RealtimeProfitViewModel : BaseViewModel<RealtimeProfitState, RealtimeProfitAction, RealtimeProfitEffect>(
     RealtimeProfitState()
@@ -119,6 +119,8 @@ class RealtimeProfitViewModel : BaseViewModel<RealtimeProfitState, RealtimeProfi
                 ) {
                     is NetworkState.Success -> {
                         result.data?.let { data ->
+                            // 排除无任何收益的模组
+                            if (data.totalDiamonds == 0 && data.totalPoints == 0) return@let
                             val map = state.value.profitMap.toMutableMap()
                             map[res.itemId] = data
                             setState {
