@@ -13,7 +13,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.lemon.mcdevmanagermp.ui.navigation.Route
+import com.lemon.mcdevmanagermp.ui.pages.analyze.dayDetail.DayDetailPage
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.ModAnalysisPage
+import com.lemon.mcdevmanagermp.ui.pages.analyze.monthDetail.MonthDetailPage
 import com.lemon.mcdevmanagermp.ui.pages.analyze.realtimeProfit.RealtimeProfitPage
 
 /**
@@ -44,6 +46,14 @@ fun AnalyzeTabContent(
         when (subPage) {
             null -> AnalyzeContent(
                 onNavigateToSubPage = { currentSubPage = it }
+            )
+
+            is AnalyzeSubPage.DayDetail -> DayDetailPage(
+                onBack = { currentSubPage = null }
+            )
+
+            is AnalyzeSubPage.MonthDetail -> MonthDetailPage(
+                onBack = { currentSubPage = null }
             )
 
             is AnalyzeSubPage.RealtimeProfit -> RealtimeProfitPage(

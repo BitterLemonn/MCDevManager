@@ -5,6 +5,8 @@ package com.lemon.mcdevmanagermp.ui.pages.analyze
  * 用于在 Analyze Tab 内部切换子页面，而非 NavHost 导航
  */
 sealed interface AnalyzeSubPage {
+    data object DayDetail : AnalyzeSubPage
+    data object MonthDetail : AnalyzeSubPage
     data object RealtimeProfit : AnalyzeSubPage
     data class ModAnalysis(val iid: String = "", val platform: String = "pe") : AnalyzeSubPage
 }

@@ -62,6 +62,7 @@ import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_arrow_down
 import mcdevmanagermpr.shared.generated.resources.ic_arrow_up
 import mcdevmanagermpr.shared.generated.resources.ic_refresh
+import mcdevmanagermpr.shared.generated.resources.ic_arrow_normal
 import org.jetbrains.compose.resources.painterResource
 import kotlin.math.abs
 
@@ -309,6 +310,7 @@ private fun RankingListItem(item: com.lemon.mcdevmanagermp.data.page.RankListIte
             Icon(
                 painter = painterResource(
                     if (item.rankChange > 0) Res.drawable.ic_arrow_up
+                    else if (item.rankChange == 0) Res.drawable.ic_arrow_normal
                     else Res.drawable.ic_arrow_down
                 ),
                 contentDescription = null,

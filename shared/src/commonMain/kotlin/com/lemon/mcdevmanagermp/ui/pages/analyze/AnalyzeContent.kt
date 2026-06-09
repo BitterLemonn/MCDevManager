@@ -41,7 +41,9 @@ import androidx.compose.ui.unit.sp
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_analyze
+import mcdevmanagermpr.shared.generated.resources.ic_calendar
 import mcdevmanagermpr.shared.generated.resources.ic_profit
+import mcdevmanagermpr.shared.generated.resources.ic_total
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -75,10 +77,10 @@ fun AnalyzeContent(
 
         AnalyzeGroupCard {
             AnalyzeItem(
-                icon = Res.drawable.ic_profit,
-                title = "实时收益",
-                subtitle = "查看今日各资源的实时收益数据",
-                onClick = { onNavigateToSubPage(AnalyzeSubPage.RealtimeProfit) }
+                icon = Res.drawable.ic_analyze,
+                title = "数据追踪",
+                subtitle = "多资源每日数据对比分析",
+                onClick = { onNavigateToSubPage(AnalyzeSubPage.DayDetail) }
             )
 
             HorizontalDivider(
@@ -88,10 +90,36 @@ fun AnalyzeContent(
             )
 
             AnalyzeItem(
-                icon = Res.drawable.ic_analyze,
+                icon = Res.drawable.ic_total,
+                title = "数据汇总",
+                subtitle = "按月查看资源汇总统计",
+                onClick = { onNavigateToSubPage(AnalyzeSubPage.MonthDetail) }
+            )
+
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                color = colors.outlineVariant,
+                thickness = 0.5.dp
+            )
+
+            AnalyzeItem(
+                icon = Res.drawable.ic_calendar,
                 title = "模组分析",
                 subtitle = "查看模组的购买、日活、粉丝等趋势分析",
                 onClick = { onNavigateToSubPage(AnalyzeSubPage.ModAnalysis()) }
+            )
+
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                color = colors.outlineVariant,
+                thickness = 0.5.dp
+            )
+
+            AnalyzeItem(
+                icon = Res.drawable.ic_profit,
+                title = "实时收益",
+                subtitle = "查看今日各资源的实时收益数据",
+                onClick = { onNavigateToSubPage(AnalyzeSubPage.RealtimeProfit) }
             )
         }
     }

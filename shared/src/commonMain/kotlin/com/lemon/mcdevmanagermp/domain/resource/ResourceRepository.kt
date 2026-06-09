@@ -2,10 +2,19 @@ package com.lemon.mcdevmanagermp.domain.resource
 
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.NewResDetailVO
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResDetailVO
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResMonthDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceVO
 
 interface ResourceRepository {
     suspend fun getAllResources(platform: String = "pe"): NetworkState<ResourceVO>
+    suspend fun getDayDetail(
+        platform: String,
+        category: String,
+        startDate: String,
+        endDate: String,
+        itemListStr: String
+    ): NetworkState<ResDetailVO>
     suspend fun getNewDayDetail(
         platform: String,
         category: String,
@@ -13,4 +22,11 @@ interface ResourceRepository {
         endDate: String,
         itemListStr: String
     ): NetworkState<NewResDetailVO>
+    suspend fun getMonthDetail(
+        platform: String,
+        category: String,
+        startDate: String,
+        endDate: String,
+        dayDateId: String
+    ): NetworkState<ResMonthDetailVO>
 }

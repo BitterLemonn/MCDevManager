@@ -3,6 +3,8 @@ package com.lemon.mcdevmanagermp.data.repository
 import com.lemon.mcdevmanagermp.data.api.AnalyzeApi
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.NewResDetailVO
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResDetailVO
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResMonthDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceVO
 import com.lemon.mcdevmanagermp.domain.resource.ResourceRepository
 import com.lemon.mcdevmanagermp.utils.UnifiedExceptionHandler
@@ -16,6 +18,24 @@ class ResourceRepositoryImpl : ResourceRepository {
     override suspend fun getAllResources(platform: String): NetworkState<ResourceVO> {
         return UnifiedExceptionHandler.handleRequest {
             analyzeApi.getAllResource(platform = platform)
+        }
+    }
+
+    override suspend fun getDayDetail(
+        platform: String,
+        category: String,
+        startDate: String,
+        endDate: String,
+        itemListStr: String
+    ): NetworkState<ResDetailVO> {
+        return UnifiedExceptionHandler.handleRequest {
+            analyzeApi.getDayDetail(
+                platform = platform,
+                category = category,
+                startDate = startDate,
+                endDate = endDate,
+                itemListStr = itemListStr
+            )
         }
     }
 
@@ -33,6 +53,24 @@ class ResourceRepositoryImpl : ResourceRepository {
                 startDate = startDate,
                 endDate = endDate,
                 itemListStr = itemListStr
+            )
+        }
+    }
+
+    override suspend fun getMonthDetail(
+        platform: String,
+        category: String,
+        startDate: String,
+        endDate: String,
+        dayDateId: String
+    ): NetworkState<ResMonthDetailVO> {
+        return UnifiedExceptionHandler.handleRequest {
+            analyzeApi.getMonthDetail(
+                platform = platform,
+                category = category,
+                startDate = startDate,
+                endDate = endDate,
+                dayDateId = dayDateId
             )
         }
     }
