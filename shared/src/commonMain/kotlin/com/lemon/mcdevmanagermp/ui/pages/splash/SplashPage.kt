@@ -61,8 +61,8 @@ fun SplashPage(
                     modifier = Modifier.size(64.dp).clip(RoundedCornerShape(16.dp))
                 )
                 Text(
-                    text = "MC开发者内容管理器",
-                    style = MaterialTheme.typography.headlineLarge,
+                    text = "开发者内容管理器",
+                    style = MaterialTheme.typography.headlineMedium,
                     color = colors.onPrimaryContainer
                 )
                 AnimatedVisibility(visible = state.isLoading, enter = fadeIn()) {

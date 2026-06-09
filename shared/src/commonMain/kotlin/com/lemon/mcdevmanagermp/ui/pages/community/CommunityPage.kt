@@ -113,7 +113,6 @@ private fun CommunityListPage(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .background(colors.background)
             .padding(top = statusBarTop)
             .padding(bottom = navBarBottom)
             .padding(16.dp),

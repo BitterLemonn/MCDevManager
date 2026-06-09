@@ -1,5 +1,4 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
-import org.jetbrains.compose.desktop.application.tasks.AbstractJPackageTask
 
 plugins {
     alias(libs.plugins.kotlinJvm)
@@ -18,7 +17,7 @@ dependencies {
     implementation(libs.logback.classic)
 }
 
-val appName = "MCDevManager"
+val appName = "开发者内容管理器"
 val appVersion = libs.versions.versions.name.get()
 
 compose.desktop {

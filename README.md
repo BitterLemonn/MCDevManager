@@ -40,26 +40,6 @@
 - **Android** — 下载 `.apk` 文件安装
 - **Desktop** — 下载对应平台的安装包（Windows `.msi` / macOS `.dmg` / Linux `.deb`）
 
-## 开发
-
-如需自行构建，请确保环境已安装：
-
-- JDK 17+
-- Android SDK
-- Xcode（仅 iOS 构建）
-
-构建命令：
-
-```bash
-# Android
-./gradlew :androidApp:assembleDebug
-
-# Desktop
-./gradlew :desktopApp:run
-
-# iOS（需在 Xcode 中打开 iosApp 目录运行）
-```
-
 ## 开源协议
 
-MIT License
+[GNU GPLv3](LICENSE)

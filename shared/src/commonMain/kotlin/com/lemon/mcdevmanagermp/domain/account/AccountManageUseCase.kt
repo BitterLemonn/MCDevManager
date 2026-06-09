@@ -18,13 +18,8 @@ class AccountManageUseCase(
      * 获取所有账号及最后使用的账号信息
      */
     suspend fun getAccountsWithLastUsed(): AccountListResult {
-        var accounts: List<AccountEntity> = emptyList()
-        var lastUsed: AccountEntity? = null
-
-        accountRepository.getAllAccounts().collect { list ->
-            accounts = list
-        }
-        lastUsed = accountRepository.getLastUsedAccount()
+        val accounts = accountRepository.getAllAccounts()
+        val lastUsed = accountRepository.getLastUsedAccount()
 
         return AccountListResult(accounts, lastUsed?.id)
     }

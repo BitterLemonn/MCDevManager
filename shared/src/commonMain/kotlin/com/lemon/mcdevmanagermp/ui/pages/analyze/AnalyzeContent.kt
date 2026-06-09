@@ -62,11 +62,11 @@ fun AnalyzeContent(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
+            .padding(top = statusBarTop)
             .padding(bottom = navBarBottom)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Spacer(Modifier.height(statusBarTop))
         Text(
             text = "数据分析",
             style = MaterialTheme.typography.headlineSmall,

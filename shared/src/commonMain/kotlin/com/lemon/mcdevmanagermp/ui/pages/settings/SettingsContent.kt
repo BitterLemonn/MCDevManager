@@ -184,6 +184,7 @@ private fun SettingsListPage(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
+            .padding(top = if (onBack != null) 0.dp else statusBarTop)
             .padding(bottom = navBarBottom)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -196,7 +197,6 @@ private fun SettingsListPage(
             )
             Spacer(Modifier.height(4.dp))
         } else {
-            Spacer(Modifier.height(statusBarTop))
             Text(
                 text = "设置",
                 style = MaterialTheme.typography.headlineSmall,
@@ -205,8 +205,6 @@ private fun SettingsListPage(
             )
             Spacer(Modifier.height(4.dp))
         }
-
-        Spacer(Modifier.height(4.dp))
 
         SettingsGroupCard {
             if (showAccountManagement) {

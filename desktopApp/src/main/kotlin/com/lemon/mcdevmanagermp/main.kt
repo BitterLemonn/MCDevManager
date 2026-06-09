@@ -79,7 +79,7 @@ fun main() {
                 exitApplication()
             },
             state = windowState,
-            title = "MCDevManagerMPR",
+            title = "开发者内容管理器",
             icon = appIcon?.let { BitmapPainter(it) },
         ) {
             App()

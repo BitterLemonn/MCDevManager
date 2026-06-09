@@ -280,6 +280,7 @@ internal fun MetricChip(
 
 /**
  * 图表头部：图例 + 图表类型切换
+ * 图例使用 FlowRow 自动换行，图表类型切换按钮固定在右侧
  */
 @Composable
 internal fun ChartHeaderRow(
@@ -290,47 +291,58 @@ internal fun ChartHeaderRow(
 ) {
     val colors = LocalAppColors.current
 
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // 图例（显示各资源颜色+名称）
-        detailData.entries.forEachIndexed { index, (iid, _) ->
-            val color = CHART_COLORS[index.coerceAtMost(CHART_COLORS.size - 1)]
-            Box(
-                modifier = Modifier
-                    .size(8.dp)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(color)
-            )
-            Spacer(Modifier.width(3.dp))
-            Text(
-                text = resNameMap[iid]?.take(6) ?: iid.take(6),
-                style = MaterialTheme.typography.labelSmall,
-                color = colors.onSurfaceVariant
-            )
-            Spacer(Modifier.width(8.dp))
+    Column(modifier = Modifier.fillMaxWidth()) {
+        // 图例（FlowRow 自动换行）
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            detailData.entries.forEachIndexed { index, (iid, _) ->
+                val color = CHART_COLORS[index.coerceAtMost(CHART_COLORS.size - 1)]
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(3.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(color)
+                    )
+                    Text(
+                        text = resNameMap[iid]?.take(6) ?: iid.take(6),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = colors.onSurfaceVariant
+                    )
+                }
+            }
         }
 
-        Spacer(Modifier.weight(1f))
+        Spacer(Modifier.height(4.dp))
 
-        // 图表类型切换
+        // 图表类型切换（靠右）
         Row(
-            modifier = Modifier
-                .clip(RoundedCornerShape(8.dp))
-                .background(colors.surfaceContainerLow)
-                .padding(2.dp)
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End
         ) {
-            ChartTypeButton(
-                icon = Res.drawable.ic_line_chart,
-                isSelected = chartType == ChartType.LINE,
-                onClick = { if (chartType != ChartType.LINE) onToggle() }
-            )
-            ChartTypeButton(
-                icon = Res.drawable.ic_bar_chart,
-                isSelected = chartType == ChartType.COLUMN,
-                onClick = { if (chartType != ChartType.COLUMN) onToggle() }
-            )
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(colors.surfaceContainerLow)
+                    .padding(2.dp)
+            ) {
+                ChartTypeButton(
+                    icon = Res.drawable.ic_line_chart,
+                    isSelected = chartType == ChartType.LINE,
+                    onClick = { if (chartType != ChartType.LINE) onToggle() }
+                )
+                ChartTypeButton(
+                    icon = Res.drawable.ic_bar_chart,
+                    isSelected = chartType == ChartType.COLUMN,
+                    onClick = { if (chartType != ChartType.COLUMN) onToggle() }
+                )
+            }
         }
     }
 }

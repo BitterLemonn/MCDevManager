@@ -1,11 +1,10 @@
 package com.lemon.mcdevmanagermp.domain.account
 
 import com.lemon.mcdevmanagermp.data.db.entity.AccountEntity
-import kotlinx.coroutines.flow.Flow
 
 interface AccountRepository {
 
-    fun getAllAccounts(): Flow<List<AccountEntity>>
+    suspend fun getAllAccounts(): List<AccountEntity>
 
     suspend fun getLastUsedAccount(): AccountEntity?
 

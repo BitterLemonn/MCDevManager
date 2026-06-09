@@ -4,5 +4,9 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>CFBundleDisplayName</key>
+	<string>开发者内容管理器</string>
+	<key>CFBundleName</key>
+	<string>开发者内容管理器</string>
 </dict>
 </plist>
