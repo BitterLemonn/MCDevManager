@@ -161,6 +161,13 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      # CMP 1.11.x 的 Skiko 引用了 iOS 26 的 UIUtilities 框架，需要 Xcode 26+ SDK
+      # 详见: https://youtrack.jetbrains.com/issue/CMP-10179
+      - name: Select Xcode (iOS 26 SDK)
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest
+
       - name: Switch Gradle mirror to official source
         run: sed -i '' 's|distributionUrl=.*|distributionUrl=https://services.gradle.org/distributions/gradle-9.5.0-bin.zip|' gradle/wrapper/gradle-wrapper.properties
 

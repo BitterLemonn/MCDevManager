@@ -131,6 +131,17 @@ kotlin {
     }
 }
 
+configurations.all {
+    resolutionStrategy {
+        eachDependency {
+            if (requested.group == "org.jetbrains.skiko") {
+                // 强制所有库（包括 Sketch）都使用 Compose 带来的新版本
+                useVersion("0.144.6")
+            }
+        }
+    }
+}
+
 dependencies {
     androidRuntimeClasspath(libs.compose.uiTooling)
     add("kspAndroid", libs.room.compiler)

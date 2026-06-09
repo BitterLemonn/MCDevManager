@@ -30,7 +30,7 @@ androidx-navigation = "2.9.2"
 kotlinxSerializationJson = "1.11.0"
 room = "2.8.4"
 sqlite = "2.6.2"
-sketch = "4.5.0-alpha03"
+sketch = "4.4.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
