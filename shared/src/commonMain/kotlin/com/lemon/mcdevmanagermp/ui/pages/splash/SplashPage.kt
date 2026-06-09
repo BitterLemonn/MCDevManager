@@ -7,7 +7,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -61,7 +60,6 @@ fun SplashPage(
                     contentDescription = "icon",
                     modifier = Modifier.size(64.dp).clip(RoundedCornerShape(16.dp))
                 )
-                Spacer(modifier = Modifier.size(16.dp))
                 Text(
                     text = "MC开发者内容管理器",
                     style = MaterialTheme.typography.headlineLarge,

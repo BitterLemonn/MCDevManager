@@ -62,7 +62,7 @@ internal fun DayDetailChart(
         (0 until colorCount).map { CHART_COLORS[it] }
     }
 
-    key(chartType, metricType) {
+    key(chartType, metricType, detailData.keys) {
         val modelProducer = remember { CartesianChartModelProducer() }
         val dateLabelsKey = remember { ExtraStore.Key<List<String>>() }
 

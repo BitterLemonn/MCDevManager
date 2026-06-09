@@ -11,11 +11,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -39,7 +41,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -58,8 +59,8 @@ import kotlinx.coroutines.launch
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_back
 import mcdevmanagermpr.shared.generated.resources.ic_mc
-import mcdevmanagermpr.shared.generated.resources.ic_setting
 import mcdevmanagermpr.shared.generated.resources.ic_no_show
+import mcdevmanagermpr.shared.generated.resources.ic_setting
 import mcdevmanagermpr.shared.generated.resources.ic_show
 import org.jetbrains.compose.resources.painterResource
 
@@ -120,6 +121,7 @@ private fun LoginContent(
     onNavigateToSettings: (() -> Unit)? = null
 ) {
     val colors = LocalAppColors.current
+    val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
     Box(
         modifier = modifier
@@ -132,7 +134,7 @@ private fun LoginContent(
             Box(
                 modifier = Modifier
                     .align(Alignment.TopStart)
-                    .padding(16.dp)
+                    .padding(start = 16.dp, top = 16.dp + statusBarTop, end = 16.dp, bottom = 16.dp)
                     .size(40.dp)
                     .clip(RoundedCornerShape(20.dp))
                     .clickable(
@@ -156,7 +158,7 @@ private fun LoginContent(
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(16.dp)
+                    .padding(start = 16.dp, top = 16.dp + statusBarTop, end = 16.dp, bottom = 16.dp)
                     .size(40.dp)
                     .clip(RoundedCornerShape(20.dp))
                     .clickable(

@@ -1,12 +1,12 @@
 package com.lemon.mcdevmanagermp.ui.pages.analyze.dayDetail
 
+import androidx.compose.ui.graphics.Color
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResDetailData
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.ChartType
 import com.lemon.mcdevmanagermp.utils.extension.IUiAction
 import com.lemon.mcdevmanagermp.utils.extension.IUiEffect
 import com.lemon.mcdevmanagermp.utils.extension.IUiState
-import androidx.compose.ui.graphics.Color
 
 /**
  * 指标类型：0=新增购买, 1=下载量, 2=钻石收益, 3=绿宝石收益, 4=日活, 5=退款率
@@ -21,7 +21,7 @@ object DayDetailMetricType {
 }
 
 /**
- * 多资源图表颜色（使用 Color 对象避免 ULong 构造兼容问题）
+ * 多资源图表颜色
  */
 val CHART_COLORS = listOf(
     Color(0x42 / 255f, 0x85 / 255f, 0xF4 / 255f),  // 蓝 #4285F4
