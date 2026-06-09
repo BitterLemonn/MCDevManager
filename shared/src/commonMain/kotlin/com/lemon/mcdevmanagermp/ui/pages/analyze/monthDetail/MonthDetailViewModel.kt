@@ -4,21 +4,20 @@ import androidx.lifecycle.viewModelScope
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.consts.CookiesExpiredException
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
+import com.lemon.mcdevmanagermp.domain.resource.MonthDetailUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
 import com.lemon.mcdevmanagermp.utils.Logger
 import kotlinx.coroutines.launch
-import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.minus
-import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 
 class MonthDetailViewModel : BaseViewModel<MonthDetailState, MonthDetailAction, MonthDetailEffect>(
     MonthDetailState()
 ) {
-    private val resourceRepository = ResourceRepositoryImpl.INSTANCE
+    private val monthDetailUseCase = MonthDetailUseCase(
+        resourceRepository = ResourceRepositoryImpl.INSTANCE
+    )
 
     companion object {
         private const val TAG = "MonthDetailVM"
@@ -56,42 +55,7 @@ class MonthDetailViewModel : BaseViewModel<MonthDetailState, MonthDetailAction, 
      */
     private fun applyQuickTimeRange(range: Int) {
         val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-        val (start, end) = when (range) {
-            QuickTimeRange.THIS_MONTH -> {
-                val start = LocalDate(today.year, today.month.number, 1)
-                start to today.minus(1, DateTimeUnit.DAY)
-            }
-
-            QuickTimeRange.LAST_3_MONTHS -> {
-                val end = today.minus(1, DateTimeUnit.DAY)
-                val start = LocalDate(today.year, today.month.number, 1)
-                    .minus(2, DateTimeUnit.MONTH)
-                start to end
-            }
-
-            QuickTimeRange.LAST_6_MONTHS -> {
-                val end = today.minus(1, DateTimeUnit.DAY)
-                val start = LocalDate(today.year, today.month.number, 1)
-                    .minus(5, DateTimeUnit.MONTH)
-                start to end
-            }
-
-            QuickTimeRange.LAST_12_MONTHS -> {
-                val end = today.minus(1, DateTimeUnit.DAY)
-                val start = LocalDate(today.year, today.month.number, 1)
-                    .minus(11, DateTimeUnit.MONTH)
-                start to end
-            }
-
-            else -> {
-                val end = today.minus(1, DateTimeUnit.DAY)
-                val start = end.minus(90, DateTimeUnit.DAY)
-                start to end
-            }
-        }
-
-        val startStr = formatDateParam(start)
-        val endStr = formatDateParam(end)
+        val (startStr, endStr) = monthDetailUseCase.getQuickTimeRange(range, today)
         setState { copy(startDate = startStr, endDate = endStr) }
         loadMonthData(state.value.platform, startStr, endStr)
     }
@@ -109,23 +73,19 @@ class MonthDetailViewModel : BaseViewModel<MonthDetailState, MonthDetailAction, 
     private fun loadMonthData(platform: String, startDate: String, endDate: String) {
         viewModelScope.launch {
             setState { copy(isLoading = true) }
-            val apiPlatform = if (platform == "pe") "pe" else "comp"
 
-            when (val result = resourceRepository.getMonthDetail(
-                platform = apiPlatform,
-                category = apiPlatform,
+            when (val result = monthDetailUseCase.getMonthDetail(
+                platform = platform,
                 startDate = startDate,
-                endDate = endDate,
-                dayDateId = endDate
+                endDate = endDate
             )) {
                 is NetworkState.Success -> {
-                    result.data?.let { data ->
-                        // 按 monthId 降序排列
-                        val sorted = data.data.sortedByDescending { it.monthId }
-                        setState { copy(isLoading = false, monthData = sorted) }
-                    } ?: run {
+                    val data = result.data ?: emptyList()
+                    if (data.isEmpty()) {
                         setState { copy(isLoading = false, monthData = emptyList()) }
                         sendEffect(MonthDetailEffect.ShowToast("数据为空"))
+                    } else {
+                        setState { copy(isLoading = false, monthData = data) }
                     }
                 }
 
@@ -144,9 +104,5 @@ class MonthDetailViewModel : BaseViewModel<MonthDetailState, MonthDetailAction, 
         } else {
             sendEffect(MonthDetailEffect.ShowToast("请求失败: ${result.msg}"))
         }
-    }
-
-    private fun formatDateParam(date: LocalDate): String {
-        return date.toString().replace("-", "")
     }
 }

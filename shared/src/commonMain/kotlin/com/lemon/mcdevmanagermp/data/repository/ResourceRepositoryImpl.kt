@@ -2,6 +2,7 @@ package com.lemon.mcdevmanagermp.data.repository
 
 import com.lemon.mcdevmanagermp.data.api.AnalyzeApi
 import com.lemon.mcdevmanagermp.data.common.NetworkState
+import com.lemon.mcdevmanagermp.data.dto.netease.income.OneResRealtimeIncomeVO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.NewResDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResMonthDetailVO
@@ -71,6 +72,22 @@ class ResourceRepositoryImpl : ResourceRepository {
                 startDate = startDate,
                 endDate = endDate,
                 dayDateId = dayDateId
+            )
+        }
+    }
+
+    override suspend fun getOneResRealtimeIncome(
+        platform: String,
+        iid: String,
+        beginTime: String,
+        endTime: String
+    ): NetworkState<OneResRealtimeIncomeVO> {
+        return UnifiedExceptionHandler.handleRequest {
+            analyzeApi.getOneResRealtimeIncome(
+                platform = platform,
+                iid = iid,
+                beginTime = beginTime,
+                endTime = endTime
             )
         }
     }

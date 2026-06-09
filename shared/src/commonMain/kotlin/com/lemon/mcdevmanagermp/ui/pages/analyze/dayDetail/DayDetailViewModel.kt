@@ -4,25 +4,24 @@ import androidx.lifecycle.viewModelScope
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.consts.CookiesExpiredException
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
+import com.lemon.mcdevmanagermp.domain.resource.DayDetailUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.ChartType
 import com.lemon.mcdevmanagermp.utils.Logger
 import kotlinx.coroutines.launch
-import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 
 class DayDetailViewModel : BaseViewModel<DayDetailState, DayDetailAction, DayDetailEffect>(
     DayDetailState()
 ) {
-    private val resourceRepository = ResourceRepositoryImpl.INSTANCE
+    private val dayDetailUseCase = DayDetailUseCase(
+        resourceRepository = ResourceRepositoryImpl.INSTANCE
+    )
 
     companion object {
         private const val TAG = "DayDetailVM"
-        private const val DEFAULT_DAYS = 14
     }
 
     override fun dispatch(action: DayDetailAction) {
@@ -64,22 +63,19 @@ class DayDetailViewModel : BaseViewModel<DayDetailState, DayDetailAction, DayDet
         setState { copy(isResListLoading = true) }
         // 计算默认日期范围
         val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-        val endDate = today.minus(1, DateTimeUnit.DAY)
-        val startDate = endDate.minus(DEFAULT_DAYS - 1, DateTimeUnit.DAY)
+        val (startDate, endDate) = dayDetailUseCase.getDefaultDateRange(today)
 
         setState {
             copy(
-                startDate = formatDateParam(startDate),
-                endDate = formatDateParam(endDate)
+                startDate = startDate,
+                endDate = endDate
             )
         }
 
         viewModelScope.launch {
-            when (val result = resourceRepository.getAllResources(state.value.platform)) {
+            when (val result = dayDetailUseCase.getResourceList(state.value.platform)) {
                 is NetworkState.Success -> {
-                    result.data?.let { data ->
-                        setState { copy(resList = data.item, isResListLoading = false) }
-                    } ?: setState { copy(isResListLoading = false) }
+                    setState { copy(resList = result.data ?: emptyList(), isResListLoading = false) }
                 }
 
                 is NetworkState.Error -> {
@@ -122,24 +118,20 @@ class DayDetailViewModel : BaseViewModel<DayDetailState, DayDetailAction, DayDet
         viewModelScope.launch {
             setState { copy(isLoading = true) }
             val s = state.value
-            val itemListStr = iids.joinToString(",")
-            val apiPlatform = if (s.platform == "pe") "pe" else "comp"
 
-            when (val result = resourceRepository.getDayDetail(
-                platform = apiPlatform,
-                category = apiPlatform,
+            when (val result = dayDetailUseCase.getGroupedDayDetail(
+                platform = s.platform,
                 startDate = s.startDate,
                 endDate = s.endDate,
-                itemListStr = itemListStr
+                iids = iids
             )) {
                 is NetworkState.Success -> {
-                    result.data?.let { data ->
-                        // 按 iid 分组
-                        val grouped = data.data.groupBy { it.iid }
-                        setState { copy(isLoading = false, detailData = grouped) }
-                    } ?: run {
+                    val grouped = result.data ?: emptyMap()
+                    if (grouped.isEmpty()) {
                         setState { copy(isLoading = false, detailData = emptyMap()) }
                         sendEffect(DayDetailEffect.ShowToast("数据为空"))
+                    } else {
+                        setState { copy(isLoading = false, detailData = grouped) }
                     }
                 }
 
@@ -158,9 +150,5 @@ class DayDetailViewModel : BaseViewModel<DayDetailState, DayDetailAction, DayDet
         } else {
             sendEffect(DayDetailEffect.ShowToast("请求失败: ${result.msg}"))
         }
-    }
-
-    private fun formatDateParam(date: LocalDate): String {
-        return date.toString().replace("-", "")
     }
 }

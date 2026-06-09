@@ -1,18 +1,17 @@
 package com.lemon.mcdevmanagermp.ui.pages.income
 
 import androidx.lifecycle.viewModelScope
-import com.lemon.mcdevmanagermp.data.api.IncomeApi
-import com.lemon.mcdevmanagermp.data.api.InfoApi
 import com.lemon.mcdevmanagermp.data.common.NetworkState
-import com.lemon.mcdevmanagermp.data.dto.netease.income.ApplyIncomeDTO
+import com.lemon.mcdevmanagermp.data.repository.IncomeRepositoryImpl
+import com.lemon.mcdevmanagermp.domain.income.IncomeUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
-import com.lemon.mcdevmanagermp.utils.UnifiedExceptionHandler
 import kotlinx.coroutines.launch
 
 class IncomeViewModel : BaseViewModel<IncomeState, IncomeAction, IncomeEffect>(IncomeState()) {
 
-    private val api = IncomeApi.INSTANCE
-    private val infoApi = InfoApi.INSTANCE
+    private val incomeUseCase = IncomeUseCase(
+        incomeRepository = IncomeRepositoryImpl.INSTANCE
+    )
 
     override fun dispatch(action: IncomeAction) {
         when (action) {
@@ -27,34 +26,24 @@ class IncomeViewModel : BaseViewModel<IncomeState, IncomeAction, IncomeEffect>(I
     private fun loadData() {
         viewModelScope.launch {
             setState { copy(isLoading = true) }
-            val peResult = UnifiedExceptionHandler.handleRequest { api.getIncome("pe") }
-            val pcResult = UnifiedExceptionHandler.handleRequest { api.getIncome("pc") }
-            val userInfoResult = UnifiedExceptionHandler.handleRequest { infoApi.getUserInfo() }
+            val result = incomeUseCase.loadAllData()
             setState { copy(isLoading = false) }
 
-            when (peResult) {
-                is NetworkState.Success -> {
-                    peResult.data?.let {
-                        setState { copy(peList = it.incomes.sortedByDescending { v -> v.dataMonth }) }
-                    }
-                }
-                is NetworkState.Error -> sendEffect(IncomeEffect.ShowToast("获取PE收益失败: ${peResult.msg}"))
+            // 更新 PE 列表
+            setState { copy(peList = result.peList) }
+            if (result.peError != null) {
+                sendEffect(IncomeEffect.ShowToast("获取PE收益失败: ${result.peError}"))
             }
-            when (pcResult) {
-                is NetworkState.Success -> {
-                    pcResult.data?.let {
-                        setState { copy(pcList = it.incomes.sortedByDescending { v -> v.dataMonth }) }
-                    }
-                }
-                is NetworkState.Error -> sendEffect(IncomeEffect.ShowToast("获取PC收益失败: ${pcResult.msg}"))
+
+            // 更新 PC 列表
+            setState { copy(pcList = result.pcList) }
+            if (result.pcError != null) {
+                sendEffect(IncomeEffect.ShowToast("获取PC收益失败: ${result.pcError}"))
             }
-            when (userInfoResult) {
-                is NetworkState.Success -> {
-                    userInfoResult.data?.let {
-                        setState { copy(unExtractedIncome = it.unExtractIncome) }
-                    }
-                }
-                is NetworkState.Error -> { }
+
+            // 更新未提取收益
+            result.unExtractedIncome?.let {
+                setState { copy(unExtractedIncome = it) }
             }
         }
     }
@@ -72,7 +61,7 @@ class IncomeViewModel : BaseViewModel<IncomeState, IncomeAction, IncomeEffect>(I
         viewModelScope.launch {
             setState { copy(isLoading = true, applyDetailList = emptyList()) }
             for (id in ids) {
-                when (val result = UnifiedExceptionHandler.handleRequest { api.getApplyDetail(id) }) {
+                when (val result = incomeUseCase.getApplyDetail(id)) {
                     is NetworkState.Success -> {
                         result.data?.let { setState { copy(applyDetailList = applyDetailList + it) } }
                     }
@@ -88,7 +77,7 @@ class IncomeViewModel : BaseViewModel<IncomeState, IncomeAction, IncomeEffect>(I
     private fun applyIncome(incomeIds: List<String>) {
         viewModelScope.launch {
             setState { copy(isLoading = true) }
-            when (val result = UnifiedExceptionHandler.handleRequest { api.applyIncome(ApplyIncomeDTO(incomeIds)) }) {
+            when (val result = incomeUseCase.applyIncome(incomeIds)) {
                 is NetworkState.Success -> {
                     setState { copy(applyDetailList = emptyList()) }
                     sendEffect(IncomeEffect.ShowToast("申请结算成功"))

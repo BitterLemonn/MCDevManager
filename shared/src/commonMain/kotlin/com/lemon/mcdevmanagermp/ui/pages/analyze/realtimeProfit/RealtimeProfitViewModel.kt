@@ -1,26 +1,23 @@
 package com.lemon.mcdevmanagermp.ui.pages.analyze.realtimeProfit
 
 import androidx.lifecycle.viewModelScope
-import com.lemon.mcdevmanagermp.data.api.AnalyzeApi
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.consts.CookiesExpiredException
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
+import com.lemon.mcdevmanagermp.domain.resource.RealtimeProfitUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
 import com.lemon.mcdevmanagermp.utils.Logger
-import com.lemon.mcdevmanagermp.utils.UnifiedExceptionHandler
 import kotlinx.coroutines.launch
-import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 
 class RealtimeProfitViewModel : BaseViewModel<RealtimeProfitState, RealtimeProfitAction, RealtimeProfitEffect>(
     RealtimeProfitState()
 ) {
-    private val analyzeApi = AnalyzeApi.INSTANCE
-    private val resourceRepository = ResourceRepositoryImpl.INSTANCE
+    private val realtimeProfitUseCase = RealtimeProfitUseCase(
+        resourceRepository = ResourceRepositoryImpl.INSTANCE
+    )
     private val failedResources = mutableListOf<String>()
 
     companion object {
@@ -69,23 +66,20 @@ class RealtimeProfitViewModel : BaseViewModel<RealtimeProfitState, RealtimeProfi
             failedResources.clear()
 
             // 1. 获取资源列表
-            when (val resourceResult = resourceRepository.getAllResources(state.value.platform)) {
+            when (val resourceResult = realtimeProfitUseCase.getResourceList(state.value.platform)) {
                 is NetworkState.Success -> {
-                    resourceResult.data?.let {
-                        setState { copy(resList = it.item) }
-                    }
+                    setState { copy(resList = resourceResult.data ?: emptyList()) }
                 }
+
                 is NetworkState.Error -> {
                     Logger.e("$TAG: 获取资源列表失败: ${resourceResult.msg}")
+                    setState { copy(isLoading = false) }
                     if (resourceResult.e is CookiesExpiredException) {
                         sendEffect(RealtimeProfitEffect.NeedReLogin)
-                        setState { copy(isLoading = false) }
-                        return@launch
                     } else {
                         sendEffect(RealtimeProfitEffect.ShowToast("获取资源列表失败: ${resourceResult.msg}"))
-                        setState { copy(isLoading = false) }
-                        return@launch
                     }
+                    return@launch
                 }
             }
 
@@ -98,25 +92,15 @@ class RealtimeProfitViewModel : BaseViewModel<RealtimeProfitState, RealtimeProfi
             }
 
             val platform = state.value.platform
-            val checkDay = state.value.checkDay
-            val apiPlatform = if (platform == "pe") "pe" else "comp"
-
-            // 计算时间范围：前一天 16:00:00 ~ 当天 15:59:59
-            val dateDate = computePrevDay(checkDay)
-            val beginTime = "${dateDate}T16:00:00.000Z"
-            val endTime = "${checkDay}T15:59:59.999Z"
+            val (beginTime, endTime) = realtimeProfitUseCase.computeTimeRange(state.value.checkDay)
 
             for (res in resList) {
-                when (
-                    val result = UnifiedExceptionHandler.handleRequest {
-                        analyzeApi.getOneResRealtimeIncome(
-                            platform = apiPlatform,
-                            iid = res.itemId,
-                            beginTime = beginTime,
-                            endTime = endTime
-                        )
-                    }
-                ) {
+                when (val result = realtimeProfitUseCase.getRealtimeIncome(
+                    platform = platform,
+                    iid = res.itemId,
+                    beginTime = beginTime,
+                    endTime = endTime
+                )) {
                     is NetworkState.Success -> {
                         result.data?.let { data ->
                             // 排除无任何收益的模组
@@ -132,6 +116,7 @@ class RealtimeProfitViewModel : BaseViewModel<RealtimeProfitState, RealtimeProfi
                             }
                         }
                     }
+
                     is NetworkState.Error -> {
                         Logger.e("$TAG: 获取资源${res.itemId}收益失败: ${result.msg}")
                         if (result.e is CookiesExpiredException) {
@@ -160,13 +145,5 @@ class RealtimeProfitViewModel : BaseViewModel<RealtimeProfitState, RealtimeProfi
 
     private fun refreshData() {
         loadData(state.value.checkDay)
-    }
-
-    /**
-     * 计算前一天日期（yyyy-MM-dd）
-     */
-    private fun computePrevDay(dateStr: String): String {
-        val date = LocalDate.parse(dateStr)
-        return date.minus(1, DateTimeUnit.DAY).toString()
     }
 }

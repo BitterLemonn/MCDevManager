@@ -4,25 +4,24 @@ import androidx.lifecycle.viewModelScope
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.consts.CookiesExpiredException
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
-import com.lemon.mcdevmanagermp.data.vo.netease.resource.NewResDetailData
+import com.lemon.mcdevmanagermp.domain.resource.ModAnalysisResult
+import com.lemon.mcdevmanagermp.domain.resource.ModAnalysisUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
 import com.lemon.mcdevmanagermp.utils.Logger
 import kotlinx.coroutines.launch
-import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 
 class ModAnalysisViewModel : BaseViewModel<ModAnalysisState, ModAnalysisAction, ModAnalysisEffect>(
     ModAnalysisState()
 ) {
-    private val resourceRepository = ResourceRepositoryImpl.INSTANCE
+    private val modAnalysisUseCase = ModAnalysisUseCase(
+        resourceRepository = ResourceRepositoryImpl.INSTANCE
+    )
 
     companion object {
         private const val TAG = "ModAnalysisVM"
-        private const val ANALYSIS_DAYS = 7
     }
 
     override fun dispatch(action: ModAnalysisAction) {
@@ -58,11 +57,9 @@ class ModAnalysisViewModel : BaseViewModel<ModAnalysisState, ModAnalysisAction, 
     private fun initLoad(iid: String, platform: String) {
         setState { copy(selectedPlatform = platform, isResListLoading = true) }
         viewModelScope.launch {
-            when (val result = resourceRepository.getAllResources(platform)) {
+            when (val result = modAnalysisUseCase.getResourceList(platform)) {
                 is NetworkState.Success -> {
-                    result.data?.let { data ->
-                        setState { copy(resList = data.item, isResListLoading = false) }
-                    }
+                    setState { copy(resList = result.data ?: emptyList(), isResListLoading = false) }
                     // 若预设了 iid，直接加载分析数据
                     if (iid.isNotEmpty()) {
                         setState { copy(selectedIid = iid) }
@@ -73,11 +70,7 @@ class ModAnalysisViewModel : BaseViewModel<ModAnalysisState, ModAnalysisAction, 
                 is NetworkState.Error -> {
                     Logger.e("$TAG: 获取资源列表失败: ${result.msg}")
                     setState { copy(isResListLoading = false) }
-                    if (result.e is CookiesExpiredException) {
-                        sendEffect(ModAnalysisEffect.NeedReLogin)
-                    } else {
-                        sendEffect(ModAnalysisEffect.ShowToast("获取资源列表失败: ${result.msg}"))
-                    }
+                    handleError(result)
                 }
             }
         }
@@ -90,82 +83,44 @@ class ModAnalysisViewModel : BaseViewModel<ModAnalysisState, ModAnalysisAction, 
         viewModelScope.launch {
             setState { copy(isLoading = true) }
 
-            // 计算日期范围：最近 7 天
             val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-            val endDate = today.minus(1, DateTimeUnit.DAY) // 昨天（数据延迟一天）
-            val startDate = endDate.minus(ANALYSIS_DAYS - 1, DateTimeUnit.DAY)
+            val (startDate, endDate) = modAnalysisUseCase.getAnalysisDateRange(today)
 
-            val startDateStr = formatDateParam(startDate)
-            val endDateStr = formatDateParam(endDate)
-
-            val apiPlatform = if (platform == "pe") "pe" else "comp"
-
-            when (val result = resourceRepository.getNewDayDetail(
-                platform = apiPlatform,
-                category = apiPlatform,
-                startDate = startDateStr,
-                endDate = endDateStr,
-                itemListStr = iid
-            )) {
+            when (val result = modAnalysisUseCase.getAnalysisData(platform, iid, startDate, endDate)) {
                 is NetworkState.Success -> {
-                    result.data?.let { data ->
-                        if (data.data.isNotEmpty()) {
-                            val first = data.data.first()
-                            val metrics = computeSummaryMetrics(data.data)
-                            setState {
-                                copy(
-                                    isLoading = false,
-                                    analysisData = data.data,
-                                    modName = first.resName,
-                                    modScore = first.starAdjusted,
-                                    selectedIid = iid,
-                                    summaryMetrics = metrics,
-                                )
-                            }
-                        } else {
-                            setState { copy(isLoading = false, analysisData = emptyList()) }
-                            sendEffect(ModAnalysisEffect.ShowToast("暂无分析数据"))
+                    val data = result.data ?: ModAnalysisResult(emptyList(), SummaryMetrics())
+                    if (data.analysisData.isNotEmpty()) {
+                        val first = data.analysisData.first()
+                        setState {
+                            copy(
+                                isLoading = false,
+                                analysisData = data.analysisData,
+                                modName = first.resName,
+                                modScore = first.starAdjusted,
+                                selectedIid = iid,
+                                summaryMetrics = data.summaryMetrics,
+                            )
                         }
-                    } ?: run {
-                        setState { copy(isLoading = false) }
-                        sendEffect(ModAnalysisEffect.ShowToast("数据为空"))
+                    } else {
+                        setState { copy(isLoading = false, analysisData = emptyList()) }
+                        sendEffect(ModAnalysisEffect.ShowToast("暂无分析数据"))
                     }
                 }
 
                 is NetworkState.Error -> {
                     Logger.e("$TAG: 获取分析数据失败: $result")
                     setState { copy(isLoading = false) }
-                    if (result.e is CookiesExpiredException) {
-                        sendEffect(ModAnalysisEffect.NeedReLogin)
-                    } else {
-                        sendEffect(ModAnalysisEffect.ShowToast("获取分析数据失败: ${result.msg}"))
-                    }
+                    handleError(result)
                 }
             }
         }
     }
 
-    /**
-     * 从原始数据计算四指标汇总（参考旧项目逻辑：取日均值 + 百分位均值）
-     */
-    private fun computeSummaryMetrics(data: List<NewResDetailData>): SummaryMetrics {
-        if (data.isEmpty()) return SummaryMetrics()
-        return SummaryMetrics(
-            newPurchaseCount = data.sumOf { it.cntBuy } / data.size,
-            newPurchasePercent = data.sumOf { it.passBuyCntRatio } / data.size.toDouble(),
-            dau = data.sumOf { it.dau } / data.size,
-            dauPercent = data.sumOf { it.passCntRolePlayRatio } / data.size.toDouble(),
-            newFollowCount = data.sumOf { it.focusCnt } / data.size,
-            newFollowPercent = data.sumOf { it.passFocusCntRatio } / data.size.toDouble(),
-            avgPlayTime = data.sumOf { it.avgPlaytime } / data.size.toDouble(),
-            avgPlayTimePercent = data.sumOf { it.passAvgRoleTimeRatio } / data.size.toDouble(),
-        )
-    }
-
-    /**
-     * 格式化日期参数：yyyy-MM-dd → yyyyMMdd
-     */
-    private fun formatDateParam(date: LocalDate): String {
-        return date.toString().replace("-", "")
+    private fun handleError(result: NetworkState.Error<*>) {
+        if (result.e is CookiesExpiredException) {
+            sendEffect(ModAnalysisEffect.NeedReLogin)
+        } else {
+            sendEffect(ModAnalysisEffect.ShowToast("请求失败: ${result.msg}"))
+        }
     }
 }

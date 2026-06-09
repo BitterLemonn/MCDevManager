@@ -1,19 +1,19 @@
 package com.lemon.mcdevmanagermp.ui.pages.community.feedback
 
 import androidx.lifecycle.viewModelScope
-import com.lemon.mcdevmanagermp.data.api.FeedbackApi
 import com.lemon.mcdevmanagermp.data.common.NetworkState
-import com.lemon.mcdevmanagermp.data.dto.netease.feedback.ReplyDTO
+import com.lemon.mcdevmanagermp.data.repository.FeedbackRepositoryImpl
+import com.lemon.mcdevmanagermp.domain.feedback.FeedbackUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
-import com.lemon.mcdevmanagermp.utils.Logger
-import com.lemon.mcdevmanagermp.utils.UnifiedExceptionHandler
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class FeedbackViewModel : BaseViewModel<FeedbackState, FeedbackAction, FeedbackEffect>(FeedbackState()) {
 
-    private val feedbackApi = FeedbackApi.INSTANCE
+    private val feedbackUseCase = FeedbackUseCase(
+        feedbackRepository = FeedbackRepositoryImpl.INSTANCE
+    )
     private var searchJob: Job? = null
 
     init {
@@ -76,14 +76,12 @@ class FeedbackViewModel : BaseViewModel<FeedbackState, FeedbackAction, FeedbackE
 
         viewModelScope.launch {
             val page = if (isRefresh) 0 else state.value.currentPage
-            val result = UnifiedExceptionHandler.handleRequest {
-                feedbackApi.loadFeedback(
-                    from = page * 20,
-                    size = 20,
-                    status = state.value.filterType,
-                    key = state.value.searchKey.takeIf { it.isNotBlank() }
-                )
-            }
+            val result = feedbackUseCase.loadFeedback(
+                from = page * 20,
+                size = 20,
+                status = state.value.filterType,
+                key = state.value.searchKey.takeIf { it.isNotBlank() }
+            )
 
             when (result) {
                 is NetworkState.Success -> {
@@ -115,10 +113,7 @@ class FeedbackViewModel : BaseViewModel<FeedbackState, FeedbackAction, FeedbackE
         if (content.isBlank()) return
         setState { copy(isReplying = true) }
         viewModelScope.launch {
-            val result = UnifiedExceptionHandler.handleRequest {
-                feedbackApi.sendReply(feedbackId, ReplyDTO(content))
-            }
-            when (result) {
+            when (feedbackUseCase.sendReply(feedbackId, content)) {
                 is NetworkState.Success -> {
                     val updatedList = state.value.feedbackList.map {
                         if (it.id == feedbackId) it.copy(reply = content) else it
@@ -139,7 +134,7 @@ class FeedbackViewModel : BaseViewModel<FeedbackState, FeedbackAction, FeedbackE
                 }
                 is NetworkState.Error -> {
                     setState { copy(isReplying = false) }
-                    sendEffect(FeedbackEffect.ShowToast("回复失败: ${result.msg}"))
+                    sendEffect(FeedbackEffect.ShowToast("回复失败"))
                 }
             }
         }

@@ -1,19 +1,20 @@
 package com.lemon.mcdevmanagermp.ui.pages.community.comment
 
 import androidx.lifecycle.viewModelScope
-import com.lemon.mcdevmanagermp.data.api.CommentApi
 import com.lemon.mcdevmanagermp.data.common.NetworkState
-import com.lemon.mcdevmanagermp.data.dto.netease.feedback.ReplyDTO
+import com.lemon.mcdevmanagermp.data.repository.CommentRepositoryImpl
+import com.lemon.mcdevmanagermp.domain.comment.CommentUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
 import com.lemon.mcdevmanagermp.ui.pages.community.components.computeDateRange
-import com.lemon.mcdevmanagermp.utils.UnifiedExceptionHandler
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class CommentViewModel : BaseViewModel<CommentState, CommentAction, CommentEffect>(CommentState()) {
 
-    private val commentApi = CommentApi.INSTANCE
+    private val commentUseCase = CommentUseCase(
+        commentRepository = CommentRepositoryImpl.INSTANCE
+    )
     private var searchJob: Job? = null
 
     init {
@@ -83,16 +84,14 @@ class CommentViewModel : BaseViewModel<CommentState, CommentAction, CommentEffec
 
         viewModelScope.launch {
             val page = if (isRefresh) 0 else state.value.currentPage
-            val result = UnifiedExceptionHandler.handleRequest {
-                commentApi.getCommentList(
-                    start = page * 20,
-                    span = 20,
-                    key = state.value.searchKey.takeIf { it.isNotBlank() },
-                    tag = state.value.filterTag,
-                    startDate = state.value.startDate,
-                    endDate = state.value.endDate
-                )
-            }
+            val result = commentUseCase.getCommentList(
+                start = page * 20,
+                span = 20,
+                key = state.value.searchKey.takeIf { it.isNotBlank() },
+                tag = state.value.filterTag,
+                startDate = state.value.startDate,
+                endDate = state.value.endDate
+            )
 
             when (result) {
                 is NetworkState.Success -> {
@@ -124,10 +123,7 @@ class CommentViewModel : BaseViewModel<CommentState, CommentAction, CommentEffec
         if (content.isBlank()) return
         setState { copy(isReplying = true) }
         viewModelScope.launch {
-            val result = UnifiedExceptionHandler.handleRequest {
-                commentApi.replyComment(commentId, ReplyDTO(content))
-            }
-            when (result) {
+            when (commentUseCase.replyComment(commentId, content)) {
                 is NetworkState.Success -> {
                     setState { copy(replyText = "", isReplying = false) }
                     sendEffect(CommentEffect.ReplySuccess)
@@ -135,7 +131,7 @@ class CommentViewModel : BaseViewModel<CommentState, CommentAction, CommentEffec
                 }
                 is NetworkState.Error -> {
                     setState { copy(isReplying = false) }
-                    sendEffect(CommentEffect.ShowToast("回复失败: ${result.msg}"))
+                    sendEffect(CommentEffect.ShowToast("回复失败"))
                 }
             }
         }

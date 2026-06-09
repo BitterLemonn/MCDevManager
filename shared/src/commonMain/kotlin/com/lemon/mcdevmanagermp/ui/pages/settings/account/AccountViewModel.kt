@@ -2,22 +2,23 @@ package com.lemon.mcdevmanagermp.ui.pages.settings.account
 
 import androidx.lifecycle.viewModelScope
 import com.lemon.mcdevmanagermp.data.common.AppContext
-import com.lemon.mcdevmanagermp.data.common.JSONConverter
+import com.lemon.mcdevmanagermp.data.db.entity.AccountEntity
 import com.lemon.mcdevmanagermp.data.repository.AccountRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.UserRepositoryImpl
+import com.lemon.mcdevmanagermp.domain.account.AccountManageUseCase
 import com.lemon.mcdevmanagermp.domain.account.SaveAccountUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
-import kotlin.time.Clock
 
 class AccountViewModel : BaseViewModel<AccountState, AccountAction, AccountEffect>(AccountState()) {
 
-    private val accountRepository = AccountRepositoryImpl.INSTANCE
-    private val userRepository = UserRepositoryImpl.INSTANCE
+    private val accountManageUseCase = AccountManageUseCase(
+        accountRepository = AccountRepositoryImpl.INSTANCE,
+        userRepository = UserRepositoryImpl.INSTANCE
+    )
     private val saveAccountUseCase = SaveAccountUseCase(
-        accountRepository = accountRepository,
-        userRepository = userRepository
+        accountRepository = AccountRepositoryImpl.INSTANCE,
+        userRepository = UserRepositoryImpl.INSTANCE
     )
 
     init {
@@ -41,42 +42,34 @@ class AccountViewModel : BaseViewModel<AccountState, AccountAction, AccountEffec
 
     private fun loadAccounts() {
         viewModelScope.launch {
-            accountRepository.getAllAccounts().catch {
-                sendEffect(AccountEffect.ShowToast("加载账号列表失败"))
-            }.collect { accounts ->
-                val lastUsed = accountRepository.getLastUsedAccount()
+            try {
+                val result = accountManageUseCase.getAccountsWithLastUsed()
                 setState {
                     copy(
-                        accounts = accounts,
-                        currentAccountId = lastUsed?.id
+                        accounts = result.accounts,
+                        currentAccountId = result.currentAccountId
                     )
                 }
+            } catch (_: Exception) {
+                sendEffect(AccountEffect.ShowToast("加载账号列表失败"))
             }
         }
     }
 
-    private fun switchAccount(account: com.lemon.mcdevmanagermp.data.db.entity.AccountEntity) {
+    private fun switchAccount(account: AccountEntity) {
         setState { copy(isSwitching = account.id) }
         viewModelScope.launch {
             try {
-                val cookies: Map<String, String> = JSONConverter.decodeFromString(account.cookiesJson)
-                AppContext.cookiesStore.clearCookies()
-                cookies.forEach { (k, v) -> AppContext.cookiesStore.addCookie(k, v) }
-                val result = userRepository.getUserInfo()
-                if (result is com.lemon.mcdevmanagermp.data.common.NetworkState.Success) {
-                    val headImg = result.data?.headImg
-                    accountRepository.upsertAccount(
-                        account.copy(
-                            lastLoginTime = Clock.System.now().toEpochMilliseconds(),
-                            headImg = headImg
-                        )
-                    )
-                    sendEffect(AccountEffect.ShowToast("已切换到 ${account.email}"))
-                    sendEffect(AccountEffect.AccountSwitched)
-                } else {
-                    AppContext.cookiesStore.clearCookies()
-                    sendEffect(AccountEffect.ShowToast("账号已过期，请重新登录"))
-                    sendEffect(AccountEffect.NavigateToLogin)
+                when (val result = accountManageUseCase.switchAccount(account)) {
+                    is AccountManageUseCase.SwitchResult.Success -> {
+                        sendEffect(AccountEffect.ShowToast("已切换到 ${result.email}"))
+                        sendEffect(AccountEffect.AccountSwitched)
+                    }
+
+                    is AccountManageUseCase.SwitchResult.Expired -> {
+                        sendEffect(AccountEffect.ShowToast("账号已过期，请重新登录"))
+                        sendEffect(AccountEffect.NavigateToLogin)
+                    }
                 }
             } catch (e: Exception) {
                 AppContext.cookiesStore.clearCookies()
@@ -90,7 +83,7 @@ class AccountViewModel : BaseViewModel<AccountState, AccountAction, AccountEffec
     private fun confirmDelete() {
         val target = state.value.accountToDelete ?: return
         viewModelScope.launch {
-            accountRepository.deleteAccount(target.id)
+            accountManageUseCase.deleteAccount(target.id)
             setState { copy(showDeleteDialog = false, accountToDelete = null) }
             sendEffect(AccountEffect.ShowToast("已删除账号 ${target.email}"))
         }
@@ -100,7 +93,7 @@ class AccountViewModel : BaseViewModel<AccountState, AccountAction, AccountEffec
         viewModelScope.launch {
             val currentId = state.value.currentAccountId
             if (currentId != null) {
-                accountRepository.deleteAccount(currentId)
+                accountManageUseCase.deleteAccount(currentId)
             }
             AppContext.cookiesStore.clearCookies()
             sendEffect(AccountEffect.NavigateToLogin)
