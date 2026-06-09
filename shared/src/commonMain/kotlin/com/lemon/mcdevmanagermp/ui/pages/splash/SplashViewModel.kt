@@ -18,6 +18,7 @@ class SplashViewModel : BaseViewModel<SplashState, SplashAction, SplashEffect>(S
 
     private val autoLoginSuccess = MutableStateFlow(false)
     private val autoLoginChecked = MutableStateFlow(false)
+    private var navigationEffect: SplashEffect? = null
 
     init {
         startCountdown()
@@ -28,6 +29,7 @@ class SplashViewModel : BaseViewModel<SplashState, SplashAction, SplashEffect>(S
         when (action) {
             SplashAction.Tick -> tick()
             SplashAction.Finish -> tryNavigate()
+            SplashAction.RetryCheck -> retryNavigate()
         }
     }
 
@@ -52,11 +54,16 @@ class SplashViewModel : BaseViewModel<SplashState, SplashAction, SplashEffect>(S
 
     private fun tryNavigate() {
         if (state.value.countdown > 0 || !autoLoginChecked.value) return
-        if (autoLoginSuccess.value) {
-            sendEffect(SplashEffect.NavigateToMain)
+        navigationEffect = if (autoLoginSuccess.value) {
+            SplashEffect.NavigateToMain
         } else {
-            sendEffect(SplashEffect.NavigateToLogin)
+            SplashEffect.NavigateToLogin
         }
+        sendEffect(navigationEffect!!)
+    }
+
+    private fun retryNavigate() {
+        navigationEffect?.let { sendEffect(it) }
     }
 
     private fun tick() {

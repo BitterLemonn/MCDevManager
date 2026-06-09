@@ -3,6 +3,7 @@ package com.lemon.mcdevmanagermp.ui.pages.main
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Snackbar
@@ -18,6 +19,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.lemon.mcdevmanagermp.platform.BackHandler
 import com.lemon.mcdevmanagermp.ui.components.AppScaffold
 import com.lemon.mcdevmanagermp.ui.navigation.Route
 import com.lemon.mcdevmanagermp.ui.pages.main.layout.CompactLayout
@@ -36,6 +38,11 @@ fun MainPage(
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+
+    // 非HOME_TAB 在返回时会转到 HOME_TAB
+    BackHandler(enabled = state.selectedTab != MainTab.Home) {
+        viewModel.dispatch(MainAction.SelectTab(MainTab.Home))
+    }
 
     AppScaffold(
         viewEffect = viewModel.effect,
@@ -56,7 +63,10 @@ fun MainPage(
             }
         },
         snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState) { data ->
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier.padding(bottom = 80.dp) // 避免 Snackbar 遮挡底部 NavigationBar
+            ) { data ->
                 val colors = LocalAppColors.current
                 Snackbar(
                     snackbarData = data,

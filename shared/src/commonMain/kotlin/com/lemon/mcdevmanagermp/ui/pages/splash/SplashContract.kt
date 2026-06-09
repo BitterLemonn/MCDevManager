@@ -12,6 +12,7 @@ data class SplashState(
 sealed interface SplashAction : IUiAction {
     data object Tick : SplashAction
     data object Finish : SplashAction
+    data object RetryCheck : SplashAction
 }
 
 sealed interface SplashEffect : IUiEffect {

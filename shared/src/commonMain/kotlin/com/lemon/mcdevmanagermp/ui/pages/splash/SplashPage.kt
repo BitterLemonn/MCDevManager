@@ -14,13 +14,19 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import com.lemon.mcdevmanagermp.ui.components.AppScaffold
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import mcdevmanagermpr.shared.generated.resources.Res
@@ -34,13 +40,25 @@ fun SplashPage(
 ) {
     val viewModel = remember { SplashViewModel() }
     val state by viewModel.state.collectAsState()
+    var hasNavigated by remember { mutableStateOf(false) }
+
+    // 从后台恢复时重新发送导航 Effect（防止 SharedFlow replay=0 丢失）
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            viewModel.dispatch(SplashAction.RetryCheck)
+        }
+    }
 
     AppScaffold(
         viewEffect = viewModel.effect,
         onEffect = { effect ->
-            when (effect) {
-                SplashEffect.NavigateToLogin -> onNavigateToLogin()
-                SplashEffect.NavigateToMain -> onNavigateToMain()
+            if (!hasNavigated) {
+                hasNavigated = true
+                when (effect) {
+                    SplashEffect.NavigateToLogin -> onNavigateToLogin()
+                    SplashEffect.NavigateToMain -> onNavigateToMain()
+                }
             }
         }
     ) { _ ->

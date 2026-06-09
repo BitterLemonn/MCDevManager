@@ -17,7 +17,7 @@ dependencies {
     implementation(libs.logback.classic)
 }
 
-val appName = "开发者内容管理器"
+val appName = "MCDevManager"
 val appVersion = libs.versions.versions.name.get()
 
 compose.desktop {
@@ -58,21 +58,30 @@ tasks.register<Zip>("packagePortable") {
     from(layout.buildDirectory.dir("compose/binaries/main/app/${appName}"))
     into(appName)
     archiveFileName.set("$appName-$appVersion-portable.zip")
-    destinationDirectory.set(layout.buildDirectory.dir("distributions"))
+    destinationDirectory.set(layout.buildDirectory.dir("release/portable"))
 }
 
-tasks.register("packageInstaller") {
+abstract class FindMsiTask : DefaultTask() {
+    @get:Input
+    abstract val msiSearchDir: Property<String>
+
+    @TaskAction
+    fun execute() {
+        val msiDir = File(msiSearchDir.get())
+        val msiFile = msiDir.walkTopDown().find { it.extension == "msi" }
+        if (msiFile != null) {
+            logger.lifecycle("Installer created: ${msiFile.absolutePath}")
+        } else {
+            logger.lifecycle("Installer directory: ${msiDir.absolutePath}")
+        }
+    }
+}
+
+tasks.register<FindMsiTask>("packageInstaller") {
     group = "released"
     description = "Create an MSI installer (安装版)"
     dependsOn("packageMsi")
-
-    doLast {
-        val msiDir = layout.buildDirectory.dir("compose/binaries/main/msi").get().asFile
-        val msiFile = msiDir.walkTopDown().find { it.extension == "msi" }
-        if (msiFile != null) {
-            println("Installer created: ${msiFile.absolutePath}")
-        } else {
-            println("Installer directory: ${msiDir.absolutePath}")
-        }
-    }
+    msiSearchDir.set(
+        layout.buildDirectory.dir("release/msi").map { it.asFile.absolutePath }
+    )
 }

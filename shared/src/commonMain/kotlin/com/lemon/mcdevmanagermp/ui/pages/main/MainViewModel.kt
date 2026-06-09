@@ -29,12 +29,10 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
     companion object {
         private val cacheTimeZone = TimeZone.of("Asia/Shanghai")
 
-        // Cache dates (day-of-year based, e.g. "2026-06-04")
         private var cachedDashboardDate: String? = null
         private var cachedRankListDate: String? = null
         private var cachedProfitDate: String? = null
 
-        // Dashboard cache
         var cachedUserInfo: NetworkState<UserInfoVO>? = null
             private set
         var cachedOverview: NetworkState<OverviewVO>? = null
@@ -42,7 +40,6 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
         var cachedLevelInfo: NetworkState<LevelInfoVO>? = null
             private set
 
-        // Profit cache
         var cachedProfitData: ProfitData? = null
             private set
         var cachedMonthLabel: String? = null
@@ -52,11 +49,9 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
         var cachedLastMonthLabel: String? = null
             private set
 
-        // Rank list cache
         var cachedRankListData: List<RankCategoryData> = emptyList()
             private set
 
-        // Other cached state
         var cachedShowLastMonthProfit: Boolean = false
             private set
 
@@ -95,7 +90,7 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
     init {
         val today = todayString()
 
-        // Restore dashboard from cache if cached today
+        // 从缓存中恢复仪表盘数据
         if (today == cachedDashboardDate && cachedUserInfo != null) {
             setState {
                 copy(
@@ -109,14 +104,14 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
             loadDashboard()
         }
 
-        // Restore rank list from cache if cached today
+        // 从缓存中恢复排行榜数据
         if (today == cachedRankListDate && cachedRankListData.isNotEmpty()) {
             setState { copy(rankListData = cachedRankListData) }
         } else {
             loadRankList()
         }
 
-        // Restore profit data from cache if cached today
+        // 从缓存中恢复利润数据
         if (today == cachedProfitDate && cachedProfitData != null) {
             setState {
                 copy(

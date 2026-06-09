@@ -12,6 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.lemon.mcdevmanagermp.platform.BackHandler
 import com.lemon.mcdevmanagermp.ui.navigation.Route
 import com.lemon.mcdevmanagermp.ui.pages.analyze.dayDetail.DayDetailPage
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.ModAnalysisPage
@@ -27,6 +28,10 @@ fun AnalyzeTabContent(
     onNavigateToSubPage: (Route) -> Unit
 ) {
     var currentSubPage: AnalyzeSubPage? by remember { mutableStateOf(null) }
+
+    BackHandler(enabled = currentSubPage != null) {
+        currentSubPage = null
+    }
 
     AnimatedContent(
         targetState = currentSubPage,

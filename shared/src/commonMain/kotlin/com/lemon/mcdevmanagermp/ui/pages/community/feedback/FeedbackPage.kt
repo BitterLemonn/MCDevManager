@@ -69,6 +69,7 @@ import com.github.panpf.sketch.rememberAsyncImageState
 import com.github.panpf.sketch.request.ComposableImageOptions
 import com.lemon.mcdevmanagermp.data.vo.netease.feedback.ConflictModsVO
 import com.lemon.mcdevmanagermp.data.vo.netease.feedback.FeedbackData
+import com.lemon.mcdevmanagermp.platform.BackHandler
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.pages.community.components.FilterChipItem
 import com.lemon.mcdevmanagermp.ui.pages.community.components.FilterGroupDef
@@ -83,7 +84,6 @@ import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.json.Json
 import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_back
 import mcdevmanagermpr.shared.generated.resources.ic_refresh
 import mcdevmanagermpr.shared.generated.resources.ic_replied
 import org.jetbrains.compose.resources.painterResource
@@ -133,6 +133,10 @@ fun FeedbackPage(onBack: () -> Unit) {
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+
+    BackHandler(enabled = state.selectedFeedback != null) {
+        viewModel.dispatch(FeedbackAction.SelectFeedback(null))
+    }
 
     LaunchedEffect(viewModel.effect) {
         viewModel.effect.collect { effect ->
@@ -476,30 +480,11 @@ internal fun FeedbackDetailPanel(
 
     Box(modifier = modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize().background(colors.background)) {
-            Row(
-                modifier = Modifier.fillMaxWidth().height(48.dp).padding(horizontal = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onBack, modifier = Modifier.size(36.dp)) {
-                    Icon(
-                        painter = painterResource(Res.drawable.ic_back),
-                        contentDescription = "返回列表",
-                        tint = colors.textColor,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-                Text(
-                    text = feedback.resName,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = colors.textColor,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            HorizontalDivider(color = colors.outlineVariant, thickness = 1.dp)
+            CollapsingTopBar(
+                title = feedback.resName,
+                collapseFraction = 0f,
+                onBack = onBack
+            )
 
             Column(
                 modifier = Modifier

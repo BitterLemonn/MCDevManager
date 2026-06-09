@@ -52,6 +52,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.data.vo.netease.comment.CommentData
+import com.lemon.mcdevmanagermp.platform.BackHandler
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.pages.community.comment.layout.CompactCommentLayout
 import com.lemon.mcdevmanagermp.ui.pages.community.comment.layout.ExpandedCommentLayout
@@ -66,7 +67,6 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
 import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_back
 import mcdevmanagermpr.shared.generated.resources.ic_refresh
 import mcdevmanagermpr.shared.generated.resources.ic_star
 import org.jetbrains.compose.resources.painterResource
@@ -98,6 +98,10 @@ fun CommentPage(onBack: () -> Unit) {
 
     val allTags = remember(state.commentList) {
         state.commentList.map { it.commentTag }.distinct().filter { it.isNotBlank() }
+    }
+
+    BackHandler(enabled = state.selectedComment != null) {
+        viewModel.dispatch(CommentAction.SelectComment(null))
     }
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize().background(colors.background)) {
@@ -394,30 +398,11 @@ internal fun CommentDetailPanel(
     val colors = LocalAppColors.current
 
     Column(modifier = modifier.fillMaxSize().background(colors.background)) {
-        Row(
-            modifier = Modifier.fillMaxWidth().height(48.dp).padding(horizontal = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBack, modifier = Modifier.size(36.dp)) {
-                Icon(
-                    painter = painterResource(Res.drawable.ic_back),
-                    contentDescription = "返回列表",
-                    tint = colors.textColor,
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-            Text(
-                text = comment.resName,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                color = colors.textColor,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f)
-            )
-        }
-
-        HorizontalDivider(color = colors.outlineVariant, thickness = 1.dp)
+        CollapsingTopBar(
+            title = comment.resName,
+            collapseFraction = 0f,
+            onBack = onBack
+        )
 
         Column(
             modifier = Modifier

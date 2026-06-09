@@ -117,6 +117,10 @@ fun SettingsContent(
         currentSubPage = SettingsSubPage.List
     }
 
+    BackHandler(enabled = currentSubPage == SettingsSubPage.List && onBack != null) {
+        onBack?.invoke()
+    }
+
     AnimatedContent(
         targetState = currentSubPage,
         transitionSpec = {

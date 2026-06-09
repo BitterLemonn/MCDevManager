@@ -102,11 +102,16 @@ fun AppNavigation(modifier: Modifier = Modifier) {
         }
 
         composable<Route.IncomeDetail> {
-            IncomeDetailPage(isLastMonth = it.toRoute<Route.IncomeDetail>().isLastMonth, onBack = { navController.popBackStack() })
+            IncomeDetailPage(
+                isLastMonth = it.toRoute<Route.IncomeDetail>().isLastMonth,
+                onBack = { navController.popBackStack() }
+            )
         }
 
         composable<Route.Income> {
-            IncomePage(onBack = { navController.popBackStack() })
+            IncomePage(
+                onBack = { navController.popBackStack() }
+            )
         }
 
         composable<Route.Settings> {
