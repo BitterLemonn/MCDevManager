@@ -1,35 +1,65 @@
-This is a Kotlin Multiplatform project targeting Android, iOS, Desktop (JVM).
+# MCDevManagerMP
 
-* [/iosApp](./iosApp/iosApp) contains an iOS application. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+一款面向网易 MC 开发者平台的多平台管理工具，帮助开发者随时查看收益数据、分析模组表现、管理社区互动。
 
-* [/shared](./shared/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./shared/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./shared/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./shared/src/jvmMain/kotlin)
-    folder is the appropriate location.
+## 功能
 
-### Running the apps
+### 📊 首页概览
 
-Use the run configurations provided by the run widget in your IDE's toolbar. You can also use these commands and options:
+- 当月/上月收益速算，一键查看收益明细
+- 多级排行榜浏览
+- 收益总览卡片
 
-- Android app: `./gradlew :androidApp:assembleDebug`
-- Desktop app:
-  - Hot reload: `./gradlew :desktopApp:hotRun --auto`
-  - Standard run: `./gradlew :desktopApp:run`
-- iOS app: open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+### 📈 数据分析
 
-### Running tests
+- **实时收益** — 查看今日各资源的实时收益数据
+- **模组分析** — 查看模组的购买、日活、粉丝等趋势分析图表
 
-Use the run button in your IDE's editor gutter, or run tests using Gradle tasks:
+### 💬 互动管理
 
-- Android tests: `./gradlew :shared:testAndroidHostTest`
-- Desktop tests: `./gradlew :shared:jvmTest`
-- iOS tests: `./gradlew :shared:iosSimulatorArm64Test`
+- 社区评论管理与互动
 
----
+### ⚙️ 设置
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+- 账号管理与切换
+- 主题个性化（种子色 / 动态取色）
+- 版本更新检查
+
+## 支持平台
+
+| 平台                                | 状态     |
+|-----------------------------------|--------|
+| Android                           | ✅ 已支持  |
+| Desktop (Windows / macOS / Linux) | ✅ 已支持  |
+| iOS                               | 🔧 开发中 |
+
+## 下载安装
+
+前往 [Releases](https://github.com/BitterLemonn/McDevManagerMP/releases) 页面下载最新版本。
+
+- **Android** — 下载 `.apk` 文件安装
+- **Desktop** — 下载对应平台的安装包（Windows `.msi` / macOS `.dmg` / Linux `.deb`）
+
+## 开发
+
+如需自行构建，请确保环境已安装：
+
+- JDK 17+
+- Android SDK
+- Xcode（仅 iOS 构建）
+
+构建命令：
+
+```bash
+# Android
+./gradlew :androidApp:assembleDebug
+
+# Desktop
+./gradlew :desktopApp:run
+
+# iOS（需在 Xcode 中打开 iosApp 目录运行）
+```
+
+## 开源协议
+
+MIT License

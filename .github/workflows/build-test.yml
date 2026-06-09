@@ -2,9 +2,6 @@ name: Build Test
 
 # 推送到 MPR 分支时自动触发，同时支持手动触发
 on:
-  push:
-    branches:
-      - MPR
   workflow_dispatch:
 
 permissions:
