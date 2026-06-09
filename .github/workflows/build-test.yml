@@ -198,7 +198,7 @@ jobs:
   # Publish — 汇总所有产物，创建 Draft Pre-release（原始格式下载）
   # ============================================================
   publish:
-    needs: [ ios ]
+    needs: [ ios, macos, windows, linux, android ]
     runs-on: ubuntu-latest
     if: always() && !cancelled()
     steps:
