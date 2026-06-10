@@ -145,14 +145,14 @@ jobs:
         run: (Get-Content gradle/wrapper/gradle-wrapper.properties) -replace 'distributionUrl=.*', 'distributionUrl=https://services.gradle.org/distributions/gradle-9.5.0-bin.zip' | Set-Content gradle/wrapper/gradle-wrapper.properties
 
       - name: Build Windows artifacts
-        run: ./gradlew :desktopApp:packageMsi :desktopApp:packagePortable --no-daemon
+        run: ./gradlew :desktopApp:packageInstaller :desktopApp:packagePortable --no-daemon
 
       - name: Rename artifacts
         shell: pwsh
         run: |
           $v = "${{ steps.vars.outputs.version }}"
-          $msi = Get-ChildItem desktopApp/build/compose/binaries/main/msi/*.msi | Select-Object -First 1
-          $zip = Get-ChildItem desktopApp/build/distributions/*.zip | Select-Object -First 1
+          $msi = Get-ChildItem desktopApp/build/release/msi/*.msi | Select-Object -First 1
+          $zip = Get-ChildItem desktopApp/build/release/portable/*.zip | Select-Object -First 1
           Rename-Item $msi.FullName "MCDevManagerMP-V$v-windows-x64.msi"
           Rename-Item $zip.FullName "MCDevManagerMP-V$v-windows-x64-portable.zip"
 

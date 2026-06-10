@@ -61,27 +61,13 @@ tasks.register<Zip>("packagePortable") {
     destinationDirectory.set(layout.buildDirectory.dir("release/portable"))
 }
 
-abstract class FindMsiTask : DefaultTask() {
-    @get:Input
-    abstract val msiSearchDir: Property<String>
-
-    @TaskAction
-    fun execute() {
-        val msiDir = File(msiSearchDir.get())
-        val msiFile = msiDir.walkTopDown().find { it.extension == "msi" }
-        if (msiFile != null) {
-            logger.lifecycle("Installer created: ${msiFile.absolutePath}")
-        } else {
-            logger.lifecycle("Installer directory: ${msiDir.absolutePath}")
-        }
-    }
-}
-
-tasks.register<FindMsiTask>("packageInstaller") {
+tasks.register<Copy>("packageInstaller") {
     group = "released"
     description = "Create an MSI installer (安装版)"
     dependsOn("packageMsi")
-    msiSearchDir.set(
-        layout.buildDirectory.dir("release/msi").map { it.asFile.absolutePath }
-    )
+
+    from(layout.buildDirectory.dir("compose/binaries/main/msi")) {
+        include("*.msi")
+    }
+    into(layout.buildDirectory.dir("release/msi"))
 }
