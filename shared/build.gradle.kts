@@ -128,6 +128,7 @@ kotlin {
             implementation(libs.vico.compose.m3)
             // calf permissions
             implementation(libs.calf.permissions)
+            implementation(libs.calf.permissions.notification)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

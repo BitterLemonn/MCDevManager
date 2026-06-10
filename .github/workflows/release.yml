@@ -151,10 +151,14 @@ jobs:
         shell: pwsh
         run: |
           $v = "${{ steps.vars.outputs.version }}"
-          $msi = Get-ChildItem desktopApp/build/release/msi/*.msi | Select-Object -First 1
-          $zip = Get-ChildItem desktopApp/build/release/portable/*.zip | Select-Object -First 1
-          Rename-Item $msi.FullName "MCDevManagerMP-V$v-windows-x64.msi"
-          Rename-Item $zip.FullName "MCDevManagerMP-V$v-windows-x64-portable.zip"
+          $msi = Get-ChildItem desktopApp/build/release/msi/*.msi -ErrorAction Stop | Select-Object -First 1
+          $zip = Get-ChildItem desktopApp/build/release/portable/*.zip -ErrorAction Stop | Select-Object -First 1
+          Write-Host "MSI source: $($msi.FullName)"
+          Write-Host "ZIP source: $($zip.FullName)"
+          Move-Item $msi.FullName "MCDevManagerMP-V$v-windows-x64.msi"
+          Move-Item $zip.FullName "MCDevManagerMP-V$v-windows-x64-portable.zip"
+          Write-Host "MSI dest: $(Resolve-Path "MCDevManagerMP-V$v-windows-x64.msi")"
+          Write-Host "ZIP dest: $(Resolve-Path "MCDevManagerMP-V$v-windows-x64-portable.zip")"
 
       - name: Upload MSI
         uses: actions/upload-artifact@v4

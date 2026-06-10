@@ -2,6 +2,7 @@ package com.lemon.mcdevmanagermp.domain.income
 
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.common.NoNeedData
+import com.lemon.mcdevmanagermp.data.dto.netease.income.ApplyIncomeDTO
 import com.lemon.mcdevmanagermp.data.vo.netease.income.ApplyIncomeDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.income.IncomeVO
 
@@ -51,9 +52,7 @@ class IncomeUseCase(
      * 申请结算
      */
     suspend fun applyIncome(incomeIds: List<String>): NetworkState<NoNeedData> {
-        return incomeRepository.applyIncome(
-            com.lemon.mcdevmanagermp.data.dto.netease.income.ApplyIncomeDTO(incomeIds)
-        )
+        return incomeRepository.applyIncome(ApplyIncomeDTO(incomeIds))
     }
 }
 

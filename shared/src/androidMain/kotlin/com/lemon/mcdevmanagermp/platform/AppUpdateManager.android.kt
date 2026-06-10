@@ -4,7 +4,10 @@ import android.content.Intent
 import androidx.core.content.FileProvider
 import com.lemon.mcdevmanagermp.BuiltInVersion
 import com.lemon.mcdevmanagermp.data.api.DownloadApi
+import com.lemon.mcdevmanagermp.utils.Logger
 import io.ktor.client.call.body
+import io.ktor.utils.io.ByteReadChannel
+import io.ktor.utils.io.readAvailable
 import java.io.File
 
 actual class AppUpdateManager actual constructor() {
@@ -42,13 +45,37 @@ actual class AppUpdateManager actual constructor() {
 
             val statement = DownloadApi.INSTANCE.downloadFile(downloadUrl)
             statement.execute { response ->
-                val bytes = response.body<ByteArray>()
-                outputFile.writeBytes(bytes)
+                val contentLength = response.headers["Content-Length"]?.toLongOrNull() ?: -1L
+                val channel: ByteReadChannel = response.body()
+
+                outputFile.outputStream().buffered(64 * 1024).use { output ->
+                    val buffer = ByteArray(64 * 1024)
+                    var totalBytesRead = 0L
+                    var lastReportedProgress = 0f
+
+                    while (!channel.isClosedForRead) {
+                        val bytesRead = channel.readAvailable(buffer, 0, buffer.size)
+                        if (bytesRead <= 0) break
+                        output.write(buffer, 0, bytesRead)
+                        totalBytesRead += bytesRead
+
+                        if (contentLength > 0) {
+                            val progress =
+                                (totalBytesRead.toFloat() / contentLength).coerceIn(0f, 1f)
+                            if (progress - lastReportedProgress >= 0.01f) {
+                                onProgress(progress)
+                                lastReportedProgress = progress
+                            }
+                        }
+                    }
+                }
                 onProgress(1f)
             }
 
+            Logger.d("下载完成: ${outputFile.absolutePath}")
             Result.success(outputFile.absolutePath)
         } catch (e: Exception) {
+            Logger.e("下载失败: ${e.message}", e)
             Result.failure(e)
         }
     }

@@ -5,11 +5,10 @@ import com.lemon.mcdevmanagermp.data.consts.GITHUB_RESTFUL_LINK
 import com.lemon.mcdevmanagermp.data.vo.github.LatestReleaseVO
 import de.jensklingenberg.ktorfit.http.GET
 import de.jensklingenberg.ktorfit.http.Path
-import kotlin.getValue
 
 interface GithubUpdateApi {
 
-    @GET("/repos/{author}/{repo}/releases/latest")
+    @GET("repos/{author}/{repo}/releases/latest")
     suspend fun getLatestRelease(
         @Path("author") author: String = "BitterLemonn",
         @Path("repo") repo: String = "MCDevManager"

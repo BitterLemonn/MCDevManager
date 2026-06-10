@@ -60,7 +60,8 @@ internal fun MediumLayout(
     onNavigateToSubPage: (Route) -> Unit,
     onNavigateToLogin: () -> Unit = {},
     onNavigateToAddAccount: () -> Unit = {},
-    onAccountSwitched: () -> Unit = {}
+    onAccountSwitched: () -> Unit = {},
+    onCheckUpdate: () -> Unit = {}
 ) {
     val colors = LocalAppColors.current
     val userNickname = (state.userInfo as? NetworkState.Success)?.data?.nickname
@@ -159,7 +160,8 @@ internal fun MediumLayout(
                     MainTab.Settings -> SettingsContent(
                         onNavigateToLogin = onNavigateToLogin,
                         onNavigateToAddAccount = onNavigateToAddAccount,
-                        onAccountSwitched = onAccountSwitched
+                        onAccountSwitched = onAccountSwitched,
+                        onCheckUpdate = onCheckUpdate
                     )
                 }
             }

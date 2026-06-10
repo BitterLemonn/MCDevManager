@@ -4,23 +4,32 @@ import androidx.lifecycle.viewModelScope
 import com.lemon.mcdevmanagermp.domain.update.CheckUpdateResult
 import com.lemon.mcdevmanagermp.domain.update.CheckUpdateUseCase
 import com.lemon.mcdevmanagermp.platform.AppUpdateManager
+import com.lemon.mcdevmanagermp.platform.DownloadNotifier
+import com.lemon.mcdevmanagermp.platform.UpdatePreferences
 import com.lemon.mcdevmanagermp.platform.UpdateStrategy
 import com.lemon.mcdevmanagermp.platform.restartApp
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 
 class UpdateViewModel : BaseViewModel<UpdateState, UpdateAction, UpdateEffect>(UpdateState()) {
 
     private val checkUpdateUseCase = CheckUpdateUseCase()
     private val updateManager = AppUpdateManager()
+    private val notifier = DownloadNotifier()
+    private val updatePreferences = UpdatePreferences()
     private var downloadJob: Job? = null
     private var downloadedFilePath: String? = null
+    private var lastProgressMark: TimeMark? = null
+    private var lastProgressBytes = 0L
 
     override fun dispatch(action: UpdateAction) {
         when (action) {
             UpdateAction.CheckUpdate -> checkUpdate()
             UpdateAction.DismissDialog -> dismissDialog()
+            UpdateAction.IgnoreVersion -> ignoreVersion()
             UpdateAction.StartDownload -> startDownload()
             UpdateAction.InstallUpdate -> installUpdate()
             UpdateAction.RestartApp -> restartApp()
@@ -33,12 +42,18 @@ class UpdateViewModel : BaseViewModel<UpdateState, UpdateAction, UpdateEffect>(U
         viewModelScope.launch {
             when (val result = checkUpdateUseCase()) {
                 is CheckUpdateResult.UpdateAvailable -> {
-                    setState {
-                        copy(
-                            isChecking = false,
-                            checkResult = result,
-                            showDialog = true
-                        )
+                    // 检查是否已被忽略
+                    val ignored = updatePreferences.getIgnoredVersion()
+                    if (ignored != null && ignored == result.latestVersion) {
+                        setState { copy(isChecking = false, showDialog = false) }
+                    } else {
+                        setState {
+                            copy(
+                                isChecking = false,
+                                checkResult = result,
+                                showDialog = true
+                            )
+                        }
                     }
                 }
 
@@ -64,21 +79,46 @@ class UpdateViewModel : BaseViewModel<UpdateState, UpdateAction, UpdateEffect>(U
             return
         }
 
-        setState { copy(isDownloading = true, downloadProgress = 0f) }
+        setState { copy(isDownloading = true, downloadProgress = 0f, downloadSpeedBps = 0L) }
+        lastProgressMark = null
+        lastProgressBytes = 0L
+        notifier.startNotification("MCDevManagerMPR")
 
         downloadJob = viewModelScope.launch {
             updateManager.downloadFile(
                 downloadUrl = result.downloadUrl,
                 fileName = result.fileName,
                 onProgress = { progress ->
-                    setState { copy(downloadProgress = progress) }
+                    val fileSize = result.fileSize
+                    val currentBytes = (fileSize * progress).toLong()
+                    val mark = TimeSource.Monotonic.markNow()
+                    val speed = lastProgressMark?.let { prevMark ->
+                        val elapsedMs = prevMark.elapsedNow().inWholeMilliseconds
+                        if (elapsedMs > 0) (currentBytes - lastProgressBytes) * 1000L / elapsedMs else 0L
+                    } ?: 0L
+                    lastProgressMark = mark
+                    lastProgressBytes = currentBytes
+                    setState { copy(downloadProgress = progress, downloadSpeedBps = speed) }
+                    notifier.updateProgress(
+                        (progress * 100).toInt(),
+                        currentBytes,
+                        fileSize
+                    )
                 }
             ).onSuccess { filePath ->
                 downloadedFilePath = filePath
-                setState { copy(isDownloading = false, downloadProgress = 1f) }
+                setState {
+                    copy(
+                        isDownloading = false,
+                        downloadProgress = 1f,
+                        downloadSpeedBps = 0L
+                    )
+                }
+                notifier.finishNotification(true, filePath)
                 dispatch(UpdateAction.InstallUpdate)
             }.onFailure { e ->
-                setState { copy(isDownloading = false) }
+                setState { copy(isDownloading = false, downloadSpeedBps = 0L) }
+                notifier.finishNotification(false, null)
                 sendEffect(UpdateEffect.ShowToast("下载失败: ${e.message}"))
             }
         }
@@ -126,6 +166,13 @@ class UpdateViewModel : BaseViewModel<UpdateState, UpdateAction, UpdateEffect>(U
 
     private fun dismissDialog() {
         downloadJob?.cancel()
+        notifier.cancelNotification()
         setState { copy(showDialog = false) }
+    }
+
+    private fun ignoreVersion() {
+        val result = state.value.checkResult as? CheckUpdateResult.UpdateAvailable ?: return
+        updatePreferences.setIgnoredVersion(result.latestVersion)
+        dismissDialog()
     }
 }

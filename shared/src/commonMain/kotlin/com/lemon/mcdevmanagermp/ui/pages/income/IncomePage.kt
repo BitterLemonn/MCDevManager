@@ -57,6 +57,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.lemon.mcdevmanagermp.data.vo.netease.income.ApplyIncomeDetailVO
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.pages.income.layout.CompactIncomeLayout
 import com.lemon.mcdevmanagermp.ui.pages.income.layout.ExpandedIncomeLayout
@@ -489,7 +490,7 @@ internal fun DetailRow(
 
 @Composable
 internal fun ApplyIncomeDetailDialog(
-    detailList: List<com.lemon.mcdevmanagermp.data.vo.netease.income.ApplyIncomeDetailVO>,
+    detailList: List<ApplyIncomeDetailVO>,
     onApply: (List<String>) -> Unit
 ) {
     val colors = LocalAppColors.current

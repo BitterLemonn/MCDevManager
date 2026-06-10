@@ -79,6 +79,9 @@ import com.lemon.mcdevmanagermp.ui.theme.PredefinedSeedColors
 import com.lemon.mcdevmanagermp.ui.theme.ThemeMode
 import com.lemon.mcdevmanagermp.ui.theme.seedDarkColorScheme
 import com.lemon.mcdevmanagermp.ui.theme.seedLightColorScheme
+import com.mohamedrejeb.calf.permissions.ExperimentalPermissionsApi
+import com.mohamedrejeb.calf.permissions.Permission
+import com.mohamedrejeb.calf.permissions.rememberPermissionState
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_correct
 import mcdevmanagermpr.shared.generated.resources.ic_download
@@ -91,28 +94,35 @@ import org.jetbrains.compose.resources.painterResource
 
 private enum class SettingsSubPage { List, Theme, Account, About }
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun SettingsContent(
     onNavigateToLogin: () -> Unit = {},
     onNavigateToAddAccount: () -> Unit = {},
     onAccountSwitched: () -> Unit = {},
     showAccountManagement: Boolean = true,
-    onBack: (() -> Unit)? = null
+    onBack: (() -> Unit)? = null,
+    onCheckUpdate: (() -> Unit)? = null
 ) {
     var currentSubPage by remember { mutableStateOf(SettingsSubPage.List) }
-    val updateViewModel = remember { UpdateViewModel() }
-    val updateState by updateViewModel.state.collectAsState()
     val currentVersion = remember { AppUpdateManager().getCurrentVersion() }
 
-    LaunchedEffect(Unit) {
-        updateViewModel.effect.collect { effect ->
-            when (effect) {
-                is UpdateEffect.ShowToast -> {
-                    // Toast will be handled by parent via callback
-                }
+    // 独立使用时（如 Route.Settings），自建 UpdateViewModel 处理手动检查
+    val localUpdateViewModel = if (onCheckUpdate == null) remember { UpdateViewModel() } else null
+    val localUpdateState by localUpdateViewModel?.state?.collectAsState()
+        ?: remember { mutableStateOf(null) }
+    val localNotificationPermissionState =
+        if (onCheckUpdate == null) rememberPermissionState(Permission.Notification) else null
+    val effectiveOnCheckUpdate =
+        onCheckUpdate ?: { localUpdateViewModel?.dispatch(UpdateAction.CheckUpdate) }
 
-                is UpdateEffect.OpenUrl -> {
-                    openUrl(effect.url)
+    localUpdateViewModel?.let { vm ->
+        LaunchedEffect(Unit) {
+            vm.effect.collect { effect ->
+                when (effect) {
+                    is UpdateEffect.OpenUrl -> openUrl(effect.url)
+                    is UpdateEffect.ShowToast -> { /* 由 MainPage 统一处理 */
+                    }
                 }
             }
         }
@@ -142,7 +152,7 @@ fun SettingsContent(
         when (page) {
             SettingsSubPage.List -> SettingsListPage(
                 currentVersion = currentVersion,
-                onCheckUpdate = { updateViewModel.dispatch(UpdateAction.CheckUpdate) },
+                onCheckUpdate = effectiveOnCheckUpdate,
                 onNavigateToTheme = { currentSubPage = SettingsSubPage.Theme },
                 onNavigateToAccount = { currentSubPage = SettingsSubPage.Account },
                 onNavigateToAbout = { currentSubPage = SettingsSubPage.About },
@@ -167,10 +177,12 @@ fun SettingsContent(
         }
     }
 
-    if (updateState.showDialog) {
+    // 独立使用时显示本地 UpdateDialog
+    if (localUpdateState?.showDialog == true && localUpdateViewModel != null && localNotificationPermissionState != null) {
         UpdateDialog(
-            state = updateState,
-            onAction = updateViewModel::dispatch
+            state = localUpdateState!!,
+            onAction = localUpdateViewModel::dispatch,
+            notificationPermissionState = localNotificationPermissionState
         )
     }
 }
@@ -284,7 +296,7 @@ private fun SettingsListPage(
                 icon = Res.drawable.ic_star,
                 title = "给个星星",
                 subtitle = "在 GitHub 上为项目点个 Star",
-                onClick = { openUrl("https://github.com/BitterLemonn/McDevManagerMP") }
+                onClick = { openUrl("https://github.com/BitterLemonn/McDevManager") }
             )
 
             HorizontalDivider(

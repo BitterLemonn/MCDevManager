@@ -1,6 +1,6 @@
 [versions]
 agp = "9.2.1"
-versions-name = "1.0.0"
+versions-name = "0.13.4"
 android-compileSdk = "37"
 android-minSdk = "24"
 android-targetSdk = "38"
@@ -91,6 +91,7 @@ sketch-compose-resources = { module = "io.github.panpf.sketch4:sketch-compose-re
 vico-compose-m3 = { group = "com.patrykandpatrick.vico", name = "compose-m3", version.ref = "vico" }
 # calf permission
 calf-permissions = { group = "com.mohamedrejeb.calf", name = "calf-permissions-core", version.ref = "calf-permission" }
+calf-permissions-notification = { group = "com.mohamedrejeb.calf", name = "calf-permissions-notifications", version.ref = "calf-permission" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

@@ -77,7 +77,8 @@ internal fun CompactLayout(
     onNavigateToSubPage: (Route) -> Unit,
     onNavigateToLogin: () -> Unit = {},
     onNavigateToAddAccount: () -> Unit = {},
-    onAccountSwitched: () -> Unit = {}
+    onAccountSwitched: () -> Unit = {},
+    onCheckUpdate: () -> Unit = {}
 ) {
     val colors = LocalAppColors.current
     val drawerState = rememberDrawerState(DrawerValue.Closed)
@@ -144,7 +145,8 @@ internal fun CompactLayout(
                         MainTab.Settings -> SettingsContent(
                             onNavigateToLogin = onNavigateToLogin,
                             onNavigateToAddAccount = onNavigateToAddAccount,
-                            onAccountSwitched = onAccountSwitched
+                            onAccountSwitched = onAccountSwitched,
+                            onCheckUpdate = onCheckUpdate
                         )
                     }
                 }

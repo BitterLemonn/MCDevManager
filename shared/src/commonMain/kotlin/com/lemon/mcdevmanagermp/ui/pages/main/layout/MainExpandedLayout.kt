@@ -69,7 +69,8 @@ internal fun ExpandedLayout(
     onNavigateToSubPage: (Route) -> Unit,
     onNavigateToLogin: () -> Unit = {},
     onNavigateToAddAccount: () -> Unit = {},
-    onAccountSwitched: () -> Unit = {}
+    onAccountSwitched: () -> Unit = {},
+    onCheckUpdate: () -> Unit = {}
 ) {
     val colors = LocalAppColors.current
     var isExpanded by remember { mutableStateOf(false) }
@@ -185,7 +186,8 @@ internal fun ExpandedLayout(
                     MainTab.Settings -> SettingsContent(
                         onNavigateToLogin = onNavigateToLogin,
                         onNavigateToAddAccount = onNavigateToAddAccount,
-                        onAccountSwitched = onAccountSwitched
+                        onAccountSwitched = onAccountSwitched,
+                        onCheckUpdate = onCheckUpdate
                     )
                 }
             }

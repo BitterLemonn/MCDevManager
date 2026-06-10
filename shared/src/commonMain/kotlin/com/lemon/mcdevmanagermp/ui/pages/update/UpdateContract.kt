@@ -9,6 +9,7 @@ data class UpdateState(
     val isChecking: Boolean = false,
     val isDownloading: Boolean = false,
     val downloadProgress: Float = 0f,
+    val downloadSpeedBps: Long = 0L,
     val isPatching: Boolean = false,
     val patchComplete: Boolean = false,
     val checkResult: CheckUpdateResult? = null,
@@ -19,6 +20,7 @@ data class UpdateState(
 sealed interface UpdateAction : IUiAction {
     data object CheckUpdate : UpdateAction
     data object DismissDialog : UpdateAction
+    data object IgnoreVersion : UpdateAction
     data object StartDownload : UpdateAction
     data object InstallUpdate : UpdateAction
     data object RestartApp : UpdateAction
