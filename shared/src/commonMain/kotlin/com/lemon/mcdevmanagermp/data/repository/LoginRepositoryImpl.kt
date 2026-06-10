@@ -16,10 +16,10 @@ import com.lemon.mcdevmanagermp.data.dto.netease.login.PowerResult
 import com.lemon.mcdevmanagermp.data.dto.netease.login.TicketDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.login.TicketResult
 import com.lemon.mcdevmanagermp.domain.login.LoginRepository
-import com.lemon.mcdevmanagermp.platform.rsaEncrypt
 import com.lemon.mcdevmanagermp.utils.UnifiedExceptionHandler
 import com.lemon.mcdevmanagermp.utils.encrpy.dataJsonToString
 import com.lemon.mcdevmanagermp.utils.encrpy.sm4Encrypt
+import com.lemon.mcdevmanagermp.utils.rsaEncrypt
 
 class LoginRepositoryImpl : LoginRepository {
 

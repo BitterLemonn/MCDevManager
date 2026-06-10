@@ -62,6 +62,8 @@ class AccountViewModel : BaseViewModel<AccountState, AccountAction, AccountEffec
             try {
                 when (val result = accountManageUseCase.switchAccount(account)) {
                     is AccountManageUseCase.SwitchResult.Success -> {
+                        // 重新加载账号列表以更新 currentAccountId 和账号信息
+                        loadAccounts()
                         sendEffect(AccountEffect.ShowToast("已切换到 ${result.email}"))
                         sendEffect(AccountEffect.AccountSwitched)
                     }
@@ -85,6 +87,8 @@ class AccountViewModel : BaseViewModel<AccountState, AccountAction, AccountEffec
         viewModelScope.launch {
             accountManageUseCase.deleteAccount(target.id)
             setState { copy(showDeleteDialog = false, accountToDelete = null) }
+            // 重新加载账号列表以刷新 UI
+            loadAccounts()
             sendEffect(AccountEffect.ShowToast("已删除账号 ${target.email}"))
         }
     }

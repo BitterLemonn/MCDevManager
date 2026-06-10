@@ -16,6 +16,12 @@ import kotlin.time.TimeSource
 
 class UpdateViewModel : BaseViewModel<UpdateState, UpdateAction, UpdateEffect>(UpdateState()) {
 
+    companion object {
+        /** 本次会话中用户是否已跳过更新，防止导航返回后重复弹出 */
+        var sessionDismissed = false
+            private set
+    }
+
     private val checkUpdateUseCase = CheckUpdateUseCase()
     private val updateManager = AppUpdateManager()
     private val notifier = DownloadNotifier()
@@ -38,6 +44,9 @@ class UpdateViewModel : BaseViewModel<UpdateState, UpdateAction, UpdateEffect>(U
     }
 
     private fun checkUpdate() {
+        // 本次会话已跳过更新，不再自动弹出
+        if (sessionDismissed) return
+
         setState { copy(isChecking = true, showDialog = true, errorMessage = null) }
         viewModelScope.launch {
             when (val result = checkUpdateUseCase()) {
@@ -167,6 +176,7 @@ class UpdateViewModel : BaseViewModel<UpdateState, UpdateAction, UpdateEffect>(U
     private fun dismissDialog() {
         downloadJob?.cancel()
         notifier.cancelNotification()
+        sessionDismissed = true
         setState { copy(showDialog = false) }
     }
 

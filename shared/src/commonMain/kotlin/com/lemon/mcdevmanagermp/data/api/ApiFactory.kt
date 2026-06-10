@@ -10,10 +10,13 @@ import io.ktor.client.plugins.api.createClientPlugin
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.cookies.CookiesStorage
 import io.ktor.client.plugins.cookies.HttpCookies
+import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
+import io.ktor.http.ContentType
 import io.ktor.http.Cookie
 import io.ktor.http.Url
+import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.util.AttributeKey
 import kotlin.time.TimeMark
@@ -53,6 +56,10 @@ object ApiFactory {
 
     private val jsonHttpClient: HttpClient by lazy {
         HttpClient {
+            defaultRequest {
+                contentType(ContentType.Application.Json)
+            }
+
             install(ContentNegotiation) { json(JSONConverter) }
             install(TimeMonitorPlugin)
             install(HttpTimeout) {
@@ -68,6 +75,10 @@ object ApiFactory {
 
     private val loggerHttpClient: HttpClient by lazy {
         HttpClient {
+            defaultRequest {
+                contentType(ContentType.Application.Json)
+            }
+
             install(ContentNegotiation) { json(JSONConverter) }
             install(TimeMonitorPlugin)
             install(HttpTimeout) {

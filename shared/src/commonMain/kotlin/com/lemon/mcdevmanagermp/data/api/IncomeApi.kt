@@ -45,7 +45,7 @@ interface IncomeApi {
 
     companion object {
         val INSTANCE by lazy {
-            ApiFactory.provideLoggerKtorfit(NETEASE_MC_DEV_LINK).createIncomeApi()
+            ApiFactory.provideKtorfit(NETEASE_MC_DEV_LINK).createIncomeApi()
         }
     }
 }

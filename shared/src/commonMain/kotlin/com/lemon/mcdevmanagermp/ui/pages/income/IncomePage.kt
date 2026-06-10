@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
@@ -499,7 +500,7 @@ internal fun ApplyIncomeDetailDialog(
     val availableIncome = first.availableIncome
 
     ElevatedCard(
-        modifier = Modifier.fillMaxWidth(0.9f),
+        modifier = Modifier.widthIn(min = 260.dp, max = 360.dp),
         colors = CardDefaults.elevatedCardColors(containerColor = colors.surfaceContainerHigh),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)

@@ -80,6 +80,7 @@ import com.lemon.mcdevmanagermp.ui.theme.ThemeMode
 import com.lemon.mcdevmanagermp.ui.theme.seedDarkColorScheme
 import com.lemon.mcdevmanagermp.ui.theme.seedLightColorScheme
 import com.mohamedrejeb.calf.permissions.ExperimentalPermissionsApi
+import com.mohamedrejeb.calf.permissions.Notification
 import com.mohamedrejeb.calf.permissions.Permission
 import com.mohamedrejeb.calf.permissions.rememberPermissionState
 import mcdevmanagermpr.shared.generated.resources.Res
@@ -113,8 +114,8 @@ fun SettingsContent(
         ?: remember { mutableStateOf(null) }
     val localNotificationPermissionState =
         if (onCheckUpdate == null) rememberPermissionState(Permission.Notification) else null
-    val effectiveOnCheckUpdate =
-        onCheckUpdate ?: { localUpdateViewModel?.dispatch(UpdateAction.CheckUpdate) }
+    val effectiveOnCheckUpdate: () -> Unit =
+        onCheckUpdate ?: { localUpdateViewModel?.dispatch(UpdateAction.CheckUpdate); Unit }
 
     localUpdateViewModel?.let { vm ->
         LaunchedEffect(Unit) {

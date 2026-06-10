@@ -129,6 +129,9 @@ kotlin {
             // calf permissions
             implementation(libs.calf.permissions)
             implementation(libs.calf.permissions.notification)
+            // crypto
+            implementation(libs.crypto.core)
+            implementation(libs.crypto.provider)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
