@@ -126,6 +126,8 @@ kotlin {
             implementation(libs.sketch.webp)
             // vico
             implementation(libs.vico.compose.m3)
+            // calf permissions
+            implementation(libs.calf.permissions)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -137,7 +139,6 @@ configurations.all {
     resolutionStrategy {
         eachDependency {
             if (requested.group == "org.jetbrains.skiko") {
-                // 强制所有库（包括 Sketch）都使用 Compose 带来的新版本
                 useVersion("0.144.6")
             }
         }

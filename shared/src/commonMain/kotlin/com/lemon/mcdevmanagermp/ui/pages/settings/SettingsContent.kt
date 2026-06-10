@@ -61,8 +61,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lemon.mcdevmanagermp.platform.AppUpdateManager
 import com.lemon.mcdevmanagermp.platform.BackHandler
+import com.lemon.mcdevmanagermp.platform.openUrl
 import com.lemon.mcdevmanagermp.platform.supportsDynamicColor
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
+import com.lemon.mcdevmanagermp.ui.pages.settings.about.AboutPage
 import com.lemon.mcdevmanagermp.ui.pages.settings.account.AccountManagementPage
 import com.lemon.mcdevmanagermp.ui.pages.settings.layout.CompactThemeLayout
 import com.lemon.mcdevmanagermp.ui.pages.settings.layout.ExpandedThemeLayout
@@ -80,11 +82,14 @@ import com.lemon.mcdevmanagermp.ui.theme.seedLightColorScheme
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_correct
 import mcdevmanagermpr.shared.generated.resources.ic_download
+import mcdevmanagermpr.shared.generated.resources.ic_feedback
+import mcdevmanagermpr.shared.generated.resources.ic_lisence
 import mcdevmanagermpr.shared.generated.resources.ic_setting
+import mcdevmanagermpr.shared.generated.resources.ic_star
 import mcdevmanagermpr.shared.generated.resources.ic_user
 import org.jetbrains.compose.resources.painterResource
 
-private enum class SettingsSubPage { List, Theme, Account }
+private enum class SettingsSubPage { List, Theme, Account, About }
 
 @Composable
 fun SettingsContent(
@@ -107,7 +112,7 @@ fun SettingsContent(
                 }
 
                 is UpdateEffect.OpenUrl -> {
-                    // Open URL via platform mechanism
+                    openUrl(effect.url)
                 }
             }
         }
@@ -140,6 +145,7 @@ fun SettingsContent(
                 onCheckUpdate = { updateViewModel.dispatch(UpdateAction.CheckUpdate) },
                 onNavigateToTheme = { currentSubPage = SettingsSubPage.Theme },
                 onNavigateToAccount = { currentSubPage = SettingsSubPage.Account },
+                onNavigateToAbout = { currentSubPage = SettingsSubPage.About },
                 showAccountManagement = showAccountManagement,
                 onBack = onBack
             )
@@ -153,6 +159,10 @@ fun SettingsContent(
                 onNavigateToLogin = onNavigateToLogin,
                 onNavigateToAddAccount = onNavigateToAddAccount,
                 onAccountSwitched = onAccountSwitched
+            )
+
+            SettingsSubPage.About -> AboutPage(
+                onBack = { currentSubPage = SettingsSubPage.List }
             )
         }
     }
@@ -175,6 +185,7 @@ private fun SettingsListPage(
     onCheckUpdate: () -> Unit = {},
     onNavigateToTheme: () -> Unit,
     onNavigateToAccount: () -> Unit = {},
+    onNavigateToAbout: () -> Unit = {},
     showAccountManagement: Boolean = true,
     onBack: (() -> Unit)? = null
 ) {
@@ -248,6 +259,45 @@ private fun SettingsListPage(
                 title = "检查更新",
                 subtitle = if (currentVersion.isNotEmpty()) "当前版本: $currentVersion" else "",
                 onClick = onCheckUpdate
+            )
+
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                color = colors.outlineVariant,
+                thickness = 0.5.dp
+            )
+
+            SettingsItem(
+                icon = Res.drawable.ic_feedback,
+                title = "反馈",
+                subtitle = "提交 Bug 或功能建议",
+                onClick = { openUrl("https://github.com/BitterLemonn/McDevManagerMP/issues") }
+            )
+
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                color = colors.outlineVariant,
+                thickness = 0.5.dp
+            )
+
+            SettingsItem(
+                icon = Res.drawable.ic_star,
+                title = "给个星星",
+                subtitle = "在 GitHub 上为项目点个 Star",
+                onClick = { openUrl("https://github.com/BitterLemonn/McDevManagerMP") }
+            )
+
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                color = colors.outlineVariant,
+                thickness = 0.5.dp
+            )
+
+            SettingsItem(
+                icon = Res.drawable.ic_lisence,
+                title = "关于",
+                subtitle = "版本信息与开源协议",
+                onClick = onNavigateToAbout
             )
         }
     }

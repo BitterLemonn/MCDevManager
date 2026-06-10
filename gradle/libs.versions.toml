@@ -32,6 +32,7 @@ room = "2.8.4"
 sqlite = "2.6.2"
 sketch = "4.4.0"
 vico = "3.2.2"
+calf-permission = "0.12.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -88,6 +89,8 @@ sketch-webp = { module = "io.github.panpf.sketch4:sketch-animated-webp", version
 sketch-compose-resources = { module = "io.github.panpf.sketch4:sketch-compose-resources", version.ref = "sketch" }
 # vico
 vico-compose-m3 = { group = "com.patrykandpatrick.vico", name = "compose-m3", version.ref = "vico" }
+# calf permission
+calf-permissions = { group = "com.mohamedrejeb.calf", name = "calf-permissions-core", version.ref = "calf-permission" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
