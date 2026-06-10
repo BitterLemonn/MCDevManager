@@ -96,6 +96,7 @@ internal fun ChartSection(
             vicoTheme.copy(
                 columnCartesianLayerColors = chartColors,
                 lineCartesianLayerColors = chartColors,
+                textColor = appColors.onSurface,
             )
         ) {
             CartesianChartHost(

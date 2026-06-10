@@ -13,6 +13,7 @@ import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResDetailData
 import com.lemon.mcdevmanagermp.ui.pages.analyze.dayDetail.CHART_COLORS
 import com.lemon.mcdevmanagermp.ui.pages.analyze.dayDetail.DayDetailMetricType
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.ChartType
+import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.compose.cartesian.axis.VerticalAxis
@@ -93,11 +94,13 @@ internal fun DayDetailChart(
 
         val chartHeight = if (chartType == ChartType.LINE) 240.dp else 260.dp
 
+        val appColors = LocalAppColors.current
         val vicoTheme = vicoTheme
         ProvideVicoTheme(
             vicoTheme.copy(
                 columnCartesianLayerColors = chartColors,
                 lineCartesianLayerColors = chartColors,
+                textColor = appColors.onSurface,
             )
         ) {
             CartesianChartHost(

@@ -78,6 +78,7 @@ internal fun MonthTrendChart(
         ProvideVicoTheme(
             vicoTheme.copy(
                 lineCartesianLayerColors = listOf(appColors.primary),
+                textColor = appColors.onSurface,
             )
         ) {
             CartesianChartHost(
