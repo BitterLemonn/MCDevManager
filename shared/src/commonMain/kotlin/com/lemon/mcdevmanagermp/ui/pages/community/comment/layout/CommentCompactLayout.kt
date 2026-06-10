@@ -30,12 +30,13 @@ internal fun CompactCommentLayout(
     statusBarTop: Dp,
     navBarBottom: Dp
 ) {
-    val showDetail = state.selectedComment != null
-
+    // 使用 selectedComment 对象而非 Boolean 作为 targetState，
+    // 确保 AnimatedContent 在过渡期间正确捕获旧数据，
+    // 避免退出动画时 recompose 读取到已变为 null 的 state.selectedComment
     AnimatedContent(
-        targetState = showDetail,
+        targetState = state.selectedComment,
         transitionSpec = {
-            if (targetState) {
+            if (targetState != null) {
                 (slideInHorizontally(tween(300)) { it } + fadeIn(tween(300)))
                     .togetherWith(slideOutHorizontally(tween(300)) { -it } + fadeOut(tween(300)))
             } else {
@@ -44,14 +45,14 @@ internal fun CompactCommentLayout(
             }
         },
         label = "comment_compact"
-    ) { showingDetail ->
-        if (showingDetail && state.selectedComment != null) {
+    ) { comment ->
+        if (comment != null) {
             CommentDetailPanel(
-                comment = state.selectedComment,
+                comment = comment,
                 replyText = state.replyText,
                 isReplying = state.isReplying,
                 onReplyTextChange = { onAction(CommentAction.UpdateReplyText(it)) },
-                onSubmitReply = { onAction(CommentAction.SubmitReply(state.selectedComment.id)) },
+                onSubmitReply = { onAction(CommentAction.SubmitReply(comment.id)) },
                 onBack = { onAction(CommentAction.SelectComment(null)) },
                 statusBarTop = statusBarTop,
                 navBarBottom = navBarBottom

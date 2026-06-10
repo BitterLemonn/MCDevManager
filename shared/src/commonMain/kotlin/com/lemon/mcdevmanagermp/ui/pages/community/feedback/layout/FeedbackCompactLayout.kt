@@ -33,12 +33,13 @@ internal fun CompactFeedbackLayout(
     statusBarTop: Dp,
     navBarBottom: Dp
 ) {
-    val showDetail = state.selectedFeedback != null
-
+    // 使用 selectedFeedback 对象而非 Boolean 作为 targetState，
+    // 确保 AnimatedContent 在过渡期间正确捕获旧数据，
+    // 避免退出动画时 recompose 读取到已变为 null 的 state.selectedFeedback
     AnimatedContent(
-        targetState = showDetail,
+        targetState = state.selectedFeedback,
         transitionSpec = {
-            if (targetState) {
+            if (targetState != null) {
                 (slideInHorizontally(tween(300)) { it } + fadeIn(tween(300)))
                     .togetherWith(slideOutHorizontally(tween(300)) { -it } + fadeOut(tween(300)))
             } else {
@@ -47,14 +48,14 @@ internal fun CompactFeedbackLayout(
             }
         },
         label = "feedback_compact"
-    ) { showingDetail ->
-        if (showingDetail && state.selectedFeedback != null) {
+    ) { feedback ->
+        if (feedback != null) {
             FeedbackDetailPanel(
-                feedback = state.selectedFeedback,
+                feedback = feedback,
                 replyText = state.replyText,
                 isReplying = state.isReplying,
                 onReplyTextChange = { onAction(FeedbackAction.UpdateReplyText(it)) },
-                onSubmitReply = { onAction(FeedbackAction.SubmitReply(state.selectedFeedback.id)) },
+                onSubmitReply = { onAction(FeedbackAction.SubmitReply(feedback.id)) },
                 onBack = { onAction(FeedbackAction.SelectFeedback(null)) },
                 navBarBottom = navBarBottom
             )
