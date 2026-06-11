@@ -59,7 +59,6 @@ object ApiFactory {
             defaultRequest {
                 contentType(ContentType.Application.Json)
             }
-
             install(ContentNegotiation) { json(JSONConverter) }
             install(TimeMonitorPlugin)
             install(HttpTimeout) {
@@ -78,7 +77,6 @@ object ApiFactory {
             defaultRequest {
                 contentType(ContentType.Application.Json)
             }
-
             install(ContentNegotiation) { json(JSONConverter) }
             install(TimeMonitorPlugin)
             install(HttpTimeout) {
@@ -98,6 +96,20 @@ object ApiFactory {
                 }
                 // 打印级别：ALL (包含 Headers 和 Body)，对应你原来的 peekBody
                 level = LogLevel.ALL
+            }
+        }
+    }
+
+    private val uploadHttpClient: HttpClient by lazy {
+        HttpClient {
+            install(TimeMonitorPlugin)
+            install(HttpTimeout) {
+                connectTimeoutMillis = 15_000
+                requestTimeoutMillis = 60_000  // 上传文件需要更长超时
+                socketTimeoutMillis = 60_000
+            }
+            install(HttpCookies) {
+                storage = cookiesStorage
             }
         }
     }
@@ -131,6 +143,13 @@ object ApiFactory {
             .build()
     }
 
+
+    fun provideUploadKtorfit(baseUrl: String): Ktorfit {
+        return Ktorfit.Builder()
+            .baseUrl(baseUrl)
+            .httpClient(uploadHttpClient)
+            .build()
+    }
 
     fun provideDownloadKtorfit(): Ktorfit {
         return Ktorfit.Builder()
