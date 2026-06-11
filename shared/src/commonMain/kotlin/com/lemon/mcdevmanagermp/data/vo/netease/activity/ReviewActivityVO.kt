@@ -2,6 +2,7 @@ package com.lemon.mcdevmanagermp.data.vo.netease.activity
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.time.Clock
 
 @Serializable
 data class ReviewActivityVO(
@@ -33,11 +34,17 @@ data class ReviewActivityItemVO(
     @SerialName("is_show")
     val isShow: Boolean,
     @SerialName("outer_link_enable")
-    val outerLinkEnable: Boolean,
+    val outerLinkEnable: Boolean = false,
     val status: String,
     @SerialName("update_time")
     val updateTime: String
-)
+) {
+    val statusTag: String = when (Clock.System.now().epochSeconds) {
+        in beginAt..applyEndAt -> "进行中"
+        in applyEndAt..endAt -> "审核中"
+        else -> "已结束"
+    }
+}
 
 @Serializable
 data class ReviewActivityModuleVO(
@@ -52,5 +59,5 @@ data class ReviewActivityModuleVO(
     @SerialName("module_name")
     val moduleName: String,
     @SerialName("multi_item_type_list")
-    val multiItemTypeList: List<Int> = emptyList()
+    val multiItemTypeList: List<String> = emptyList()
 )

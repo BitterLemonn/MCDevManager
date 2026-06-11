@@ -132,6 +132,9 @@ kotlin {
             // crypto
             implementation(libs.crypto.core)
             implementation(libs.crypto.provider)
+            // filekit
+            implementation(libs.filekit)
+            implementation(libs.filekit.dialog.compose)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

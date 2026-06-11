@@ -34,6 +34,7 @@ sketch = "4.4.0"
 vico = "3.2.2"
 calf-permission = "0.12.0"
 crypto = "0.6.0"
+filekit = "0.14.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -96,7 +97,9 @@ calf-permissions-notification = { group = "com.mohamedrejeb.calf", name = "calf-
 # crypto
 crypto-core = { group = "dev.whyoleg.cryptography", name = "cryptography-core", version.ref = "crypto" }
 crypto-provider = { group = "dev.whyoleg.cryptography", name = "cryptography-provider-optimal", version.ref = "crypto" }
-
+# filekit
+filekit = { group = "io.github.vinceglb", name = "filekit-core", version.ref = "filekit" }
+filekit-dialog-compose = { group = "io.github.vinceglb", name = "filekit-dialogs-compose", version.ref = "filekit" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

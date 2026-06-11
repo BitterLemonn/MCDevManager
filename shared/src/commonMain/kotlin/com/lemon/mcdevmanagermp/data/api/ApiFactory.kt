@@ -102,6 +102,7 @@ object ApiFactory {
 
     private val uploadHttpClient: HttpClient by lazy {
         HttpClient {
+            install(ContentNegotiation) { json(JSONConverter) }
             install(TimeMonitorPlugin)
             install(HttpTimeout) {
                 connectTimeoutMillis = 15_000

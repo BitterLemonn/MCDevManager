@@ -23,4 +23,10 @@ data class CandidatesItemVO(
     val priceType: String,
     @SerialName("sub_type")
     val subType: Int
-)
+) {
+    val priceTypeName: String = when (priceType) {
+        "diamond" -> "钻石"
+        "point" -> "绿宝石"
+        else -> priceType
+    }
+}

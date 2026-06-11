@@ -47,7 +47,8 @@ class UpdateViewModel : BaseViewModel<UpdateState, UpdateAction, UpdateEffect>(U
         // 自动检查时，若本次会话已跳过更新，不再弹出
         if (!isManual && sessionDismissed) return
 
-        setState { copy(isChecking = true, showDialog = true, errorMessage = null) }
+        // 手动检查时立即显示 dialog，自动检查时静默进行
+        setState { copy(isChecking = true, showDialog = isManual, errorMessage = null) }
         viewModelScope.launch {
             when (val result = checkUpdateUseCase()) {
                 is CheckUpdateResult.UpdateAvailable -> {
@@ -68,14 +69,20 @@ class UpdateViewModel : BaseViewModel<UpdateState, UpdateAction, UpdateEffect>(U
 
                 is CheckUpdateResult.UpToDate -> {
                     setState { copy(isChecking = false, showDialog = false) }
-                    sendEffect(UpdateEffect.ShowToast("已是最新版本 (v${result.version})"))
+                    // 仅手动检查时提示已是最新版本，自动检查保持静默
+                    if (isManual) {
+                        sendEffect(UpdateEffect.ShowToast("已是最新版本 (v${result.version})"))
+                    }
                 }
 
                 is CheckUpdateResult.Error -> {
                     setState {
                         copy(isChecking = false, showDialog = false, errorMessage = result.message)
                     }
-                    sendEffect(UpdateEffect.ShowToast(result.message))
+                    // 仅手动检查时提示错误，自动检查保持静默
+                    if (isManual) {
+                        sendEffect(UpdateEffect.ShowToast(result.message))
+                    }
                 }
             }
         }

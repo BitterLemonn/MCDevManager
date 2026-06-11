@@ -64,6 +64,7 @@ import com.lemon.mcdevmanagermp.ui.pages.main.MainAction
 import com.lemon.mcdevmanagermp.ui.pages.main.MainState
 import com.lemon.mcdevmanagermp.ui.pages.main.MainTab
 import com.lemon.mcdevmanagermp.ui.pages.settings.SettingsContent
+import com.lemon.mcdevmanagermp.ui.pages.work.WorkContent
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import com.lemon.mcdevmanagermp.utils.ProfitData
 import mcdevmanagermpr.shared.generated.resources.Res
@@ -142,6 +143,7 @@ internal fun CompactLayout(
 
                         MainTab.Analyze -> AnalyzeTabContent(onNavigateToSubPage = onNavigateToSubPage)
                         MainTab.Community -> CommunityContent()
+                        MainTab.Work -> WorkContent()
                         MainTab.Settings -> SettingsContent(
                             onNavigateToLogin = onNavigateToLogin,
                             onNavigateToAddAccount = onNavigateToAddAccount,
