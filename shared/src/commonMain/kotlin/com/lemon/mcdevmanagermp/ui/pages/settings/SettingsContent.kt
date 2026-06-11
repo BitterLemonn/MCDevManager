@@ -115,7 +115,7 @@ fun SettingsContent(
     val localNotificationPermissionState =
         if (onCheckUpdate == null) rememberPermissionState(Permission.Notification) else null
     val effectiveOnCheckUpdate: () -> Unit =
-        onCheckUpdate ?: { localUpdateViewModel?.dispatch(UpdateAction.CheckUpdate); Unit }
+        onCheckUpdate ?: { localUpdateViewModel?.dispatch(UpdateAction.CheckUpdate(true)) }
 
     localUpdateViewModel?.let { vm ->
         LaunchedEffect(Unit) {
@@ -131,10 +131,6 @@ fun SettingsContent(
 
     BackHandler(enabled = currentSubPage != SettingsSubPage.List) {
         currentSubPage = SettingsSubPage.List
-    }
-
-    BackHandler(enabled = currentSubPage == SettingsSubPage.List && onBack != null) {
-        onBack?.invoke()
     }
 
     AnimatedContent(

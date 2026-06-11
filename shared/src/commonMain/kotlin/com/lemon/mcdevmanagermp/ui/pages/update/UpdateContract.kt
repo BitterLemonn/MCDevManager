@@ -18,7 +18,7 @@ data class UpdateState(
 ) : IUiState
 
 sealed interface UpdateAction : IUiAction {
-    data object CheckUpdate : UpdateAction
+    data class CheckUpdate(val isManual: Boolean = false) : UpdateAction
     data object DismissDialog : UpdateAction
     data object IgnoreVersion : UpdateAction
     data object StartDownload : UpdateAction

@@ -252,7 +252,7 @@ fun UpdateDialog(
                         Text("忽略此版本")
                     }
                     TextButton(onClick = { onAction(UpdateAction.DismissDialog) }) {
-                        Text("跳过本次")
+                        Text("取消")
                     }
                 }
             }

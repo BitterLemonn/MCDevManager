@@ -33,7 +33,7 @@ class UpdateViewModel : BaseViewModel<UpdateState, UpdateAction, UpdateEffect>(U
 
     override fun dispatch(action: UpdateAction) {
         when (action) {
-            UpdateAction.CheckUpdate -> checkUpdate()
+            is UpdateAction.CheckUpdate -> checkUpdate(action.isManual)
             UpdateAction.DismissDialog -> dismissDialog()
             UpdateAction.IgnoreVersion -> ignoreVersion()
             UpdateAction.StartDownload -> startDownload()
@@ -43,9 +43,9 @@ class UpdateViewModel : BaseViewModel<UpdateState, UpdateAction, UpdateEffect>(U
         }
     }
 
-    private fun checkUpdate() {
-        // 本次会话已跳过更新，不再自动弹出
-        if (sessionDismissed) return
+    private fun checkUpdate(isManual: Boolean = false) {
+        // 自动检查时，若本次会话已跳过更新，不再弹出
+        if (!isManual && sessionDismissed) return
 
         setState { copy(isChecking = true, showDialog = true, errorMessage = null) }
         viewModelScope.launch {

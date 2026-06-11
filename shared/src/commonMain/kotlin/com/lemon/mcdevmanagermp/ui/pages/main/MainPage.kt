@@ -56,7 +56,7 @@ fun MainPage(
     val notificationPermissionState = rememberPermissionState(Permission.Notification)
 
     LaunchedEffect(Unit) {
-        updateViewModel.dispatch(UpdateAction.CheckUpdate)
+        updateViewModel.dispatch(UpdateAction.CheckUpdate(false))
     }
 
     LaunchedEffect(Unit) {
@@ -106,7 +106,8 @@ fun MainPage(
             }
         }
     ) {
-        val onCheckUpdate: () -> Unit = { updateViewModel.dispatch(UpdateAction.CheckUpdate) }
+        val onCheckUpdate: () -> Unit =
+            { updateViewModel.dispatch(UpdateAction.CheckUpdate(isManual = true)) }
 
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val widthSizeClass = when {
