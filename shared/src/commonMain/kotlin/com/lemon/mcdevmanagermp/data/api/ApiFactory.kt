@@ -152,6 +152,8 @@ object ApiFactory {
             .build()
     }
 
+    fun provideUploadHttpClient(): HttpClient = uploadHttpClient
+
     fun provideDownloadKtorfit(): Ktorfit {
         return Ktorfit.Builder()
             .baseUrl("https://localhost/") // 占位符，实际会被 @Url 覆盖

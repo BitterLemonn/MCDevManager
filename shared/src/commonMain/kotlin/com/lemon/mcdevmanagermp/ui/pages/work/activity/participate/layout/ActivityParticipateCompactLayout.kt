@@ -42,6 +42,8 @@ import com.lemon.mcdevmanagermp.data.vo.netease.activity.CandidatesItemVO
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.participate.ActivityParticipateAction
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.participate.ActivityParticipateState
+import com.lemon.mcdevmanagermp.ui.pages.work.activity.participate.layout.component.ImageSelectorRow
+import com.lemon.mcdevmanagermp.ui.pages.work.activity.participate.layout.component.VideoSelectorBox
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_add
@@ -189,20 +191,54 @@ internal fun ActivityParticipateCompactLayout(
                 )
             )
 
-            // 图片上传占位
-            UploadPlaceholder(label = "图片（即将支持）", colors = colors)
+            // 图片上传
+            ImageSelectorRow(
+                selectedImages = state.selectedImages,
+                onAddImages = { onAction(ActivityParticipateAction.AddImages(it)) },
+                onRemoveImage = { onAction(ActivityParticipateAction.RemoveImage(it)) },
+                enabled = !state.isUploading && !state.isSubmitting,
+                colors = colors
+            )
 
-            // 视频上传占位
-            UploadPlaceholder(label = "视频（即将支持）", colors = colors)
+            // 视频上传
+            VideoSelectorBox(
+                selectedVideo = state.selectedVideo,
+                onAddVideo = { onAction(ActivityParticipateAction.AddVideo(it)) },
+                onRemoveVideo = { onAction(ActivityParticipateAction.RemoveVideo) },
+                onValidationError = { onAction(ActivityParticipateAction.ValidationError(it)) },
+                enabled = !state.isUploading && !state.isSubmitting,
+                colors = colors
+            )
+
+            // 上传进度
+            if (state.isUploading) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        color = colors.primary,
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = state.uploadProgress,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.primary
+                    )
+                }
+            }
 
             // 提交按钮
             FilledTonalButton(
                 onClick = { onAction(ActivityParticipateAction.Submit) },
                 modifier = Modifier.fillMaxWidth().height(48.dp),
                 shape = RoundedCornerShape(12.dp),
-                enabled = !state.isSubmitting && state.selectedCandidateId != null
+                enabled = !state.isSubmitting && !state.isUploading && state.selectedCandidateId != null
             ) {
-                if (state.isSubmitting) {
+                if (state.isSubmitting || state.isUploading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(18.dp),
                         color = colors.primary,
@@ -218,7 +254,11 @@ internal fun ActivityParticipateCompactLayout(
                     Spacer(Modifier.width(8.dp))
                 }
                 Text(
-                    text = if (state.isSubmitting) "提交中..." else "提交参与",
+                    text = when {
+                        state.isUploading -> "上传中..."
+                        state.isSubmitting -> "提交中..."
+                        else -> "提交参与"
+                    },
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -321,31 +361,5 @@ private fun CandidateItem(
                 color = colors.onSurfaceVariant
             )
         }
-    }
-}
-
-@Composable
-private fun UploadPlaceholder(
-    label: String,
-    colors: com.lemon.mcdevmanagermp.ui.theme.AppColors
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(80.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .border(
-                width = 1.dp,
-                color = colors.outlineVariant.copy(alpha = 0.5f),
-                shape = RoundedCornerShape(12.dp)
-            )
-            .background(colors.surfaceContainerLow),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = colors.onSurfaceVariant.copy(alpha = 0.5f)
-        )
     }
 }
