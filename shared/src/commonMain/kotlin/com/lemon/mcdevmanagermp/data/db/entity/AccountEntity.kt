@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 data class AccountEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-    val email: String,
+    val nickname: String,
     val cookiesJson: String,
     val lastLoginTime: Long,
     val headImg: String? = null,

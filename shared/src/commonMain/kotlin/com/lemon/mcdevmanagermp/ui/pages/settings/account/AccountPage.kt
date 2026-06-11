@@ -115,7 +115,7 @@ fun AccountManagementPage(
         AlertDialog(
             onDismissRequest = { viewModel.dispatch(AccountAction.DismissDelete) },
             title = { Text("删除账号") },
-            text = { Text("确定要删除账号 ${accountToDelete.email} 吗？删除后需要重新登录。") },
+            text = { Text("确定要删除账号 ${accountToDelete.nickname} 吗？删除后需要重新登录。") },
             confirmButton = {
                 TextButton(
                     onClick = { viewModel.dispatch(AccountAction.ConfirmDelete) },
@@ -243,7 +243,7 @@ internal fun CurrentAccountSection(
 
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = currentAccount.email,
+                            text = currentAccount.nickname,
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Medium,
                             color = colors.textColor
@@ -401,7 +401,7 @@ private fun AccountCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = account.email,
+                            text = account.nickname,
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Medium,
                             color = colors.textColor

@@ -58,9 +58,12 @@ class LoginUseCase(
     }
 
     private suspend fun loginByCookies(cookies: String) {
-        if (!cookies.isValidCookiesStr()) throw CookiesNotValidException()
-        val cookieValue = cookies.dumpAndGetCookiesValue(NETEASE_USER_COOKIE)
-            ?: failCookiesLogin()
+        // 优先从完整 cookie 字符串中提取指定 key 的值，提取失败则将整个输入作为 value
+        val cookieValue = when {
+            cookies.isValidCookiesStr() -> cookies.dumpAndGetCookiesValue(NETEASE_USER_COOKIE)
+            cookies.isNotBlank() -> cookies.trim()
+            else -> null
+        } ?: failCookiesLogin()
         AppContext.cookiesStore.addCookie(NETEASE_USER_COOKIE, cookieValue)
         try {
             unwrapNetworkState(userRepository.getUserInfo())

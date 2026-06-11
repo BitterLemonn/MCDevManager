@@ -12,6 +12,10 @@ import java.io.File
 
 actual class AppUpdateManager actual constructor() {
 
+    companion object {
+        const val TAG = "AppUpdateManager"
+    }
+    
     actual fun getCurrentVersion(): String {
         return try {
             val context = AndroidLogContext.getContext() ?: return BuiltInVersion.VERSION
@@ -72,10 +76,10 @@ actual class AppUpdateManager actual constructor() {
                 onProgress(1f)
             }
 
-            Logger.d("下载完成: ${outputFile.absolutePath}")
+            Logger.d("$TAG: 下载完成: ${outputFile.absolutePath}")
             Result.success(outputFile.absolutePath)
         } catch (e: Exception) {
-            Logger.e("下载失败: ${e.message}", e)
+            Logger.e("$TAG: 下载失败: ${e.message}", e)
             Result.failure(e)
         }
     }

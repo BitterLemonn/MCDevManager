@@ -12,9 +12,10 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 
-class RealtimeProfitViewModel : BaseViewModel<RealtimeProfitState, RealtimeProfitAction, RealtimeProfitEffect>(
-    RealtimeProfitState()
-) {
+class RealtimeProfitViewModel :
+    BaseViewModel<RealtimeProfitState, RealtimeProfitAction, RealtimeProfitEffect>(
+        RealtimeProfitState()
+    ) {
     private val realtimeProfitUseCase = RealtimeProfitUseCase(
         resourceRepository = ResourceRepositoryImpl.INSTANCE
     )
@@ -30,11 +31,13 @@ class RealtimeProfitViewModel : BaseViewModel<RealtimeProfitState, RealtimeProfi
                 setState { copy(checkDay = action.day) }
                 loadData(action.day)
             }
+
             RealtimeProfitAction.RefreshData -> refreshData()
             is RealtimeProfitAction.UpdateCheckDay -> setState { copy(checkDay = action.day) }
             RealtimeProfitAction.ToggleDateSelector -> setState {
                 copy(isDateSelectorVisible = !isDateSelectorVisible)
             }
+
             is RealtimeProfitAction.SelectPlatform -> {
                 setState { copy(platform = action.platform) }
                 loadData(state.value.checkDay)
@@ -66,7 +69,8 @@ class RealtimeProfitViewModel : BaseViewModel<RealtimeProfitState, RealtimeProfi
             failedResources.clear()
 
             // 1. 获取资源列表
-            when (val resourceResult = realtimeProfitUseCase.getResourceList(state.value.platform)) {
+            when (val resourceResult =
+                realtimeProfitUseCase.getResourceList(state.value.platform)) {
                 is NetworkState.Success -> {
                     setState { copy(resList = resourceResult.data ?: emptyList()) }
                 }
@@ -74,11 +78,11 @@ class RealtimeProfitViewModel : BaseViewModel<RealtimeProfitState, RealtimeProfi
                 is NetworkState.Error -> {
                     Logger.e("$TAG: 获取资源列表失败: ${resourceResult.msg}")
                     setState { copy(isLoading = false) }
-                    if (resourceResult.e is CookiesExpiredException) {
-                        sendEffect(RealtimeProfitEffect.NeedReLogin)
-                    } else {
-                        sendEffect(RealtimeProfitEffect.ShowToast("获取资源列表失败: ${resourceResult.msg}"))
-                    }
+                    handleError(
+                        resourceResult,
+                        onNeedReLogin = { RealtimeProfitEffect.NeedReLogin },
+                        onShowToast = { RealtimeProfitEffect.ShowToast("获取资源列表失败: ${resourceResult.msg}") }
+                    )
                     return@launch
                 }
             }
@@ -96,10 +100,7 @@ class RealtimeProfitViewModel : BaseViewModel<RealtimeProfitState, RealtimeProfi
 
             for (res in resList) {
                 when (val result = realtimeProfitUseCase.getRealtimeIncome(
-                    platform = platform,
-                    iid = res.itemId,
-                    beginTime = beginTime,
-                    endTime = endTime
+                    platform = platform, iid = res.itemId, beginTime = beginTime, endTime = endTime
                 )) {
                     is NetworkState.Success -> {
                         result.data?.let { data ->

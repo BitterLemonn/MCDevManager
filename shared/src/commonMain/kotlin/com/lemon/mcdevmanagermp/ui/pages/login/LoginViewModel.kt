@@ -57,10 +57,11 @@ class LoginViewModel : BaseViewModel<LoginState, LoginAction, LoginEffect>(Login
             try {
                 if (s.isUsingCookies) {
                     loginUseCase(cookies = s.cookies)
+                    saveAccountUseCase()
                 } else {
                     loginUseCase(email = s.email, password = s.password)
+                    saveAccountUseCase(s.email)
                 }
-                saveAccountUseCase(s.email)
                 MainViewModel.invalidateAllCache()
                 sendEffect(LoginEffect.ShowToast("登录成功"))
                 sendEffect(LoginEffect.NavigateTo(Route.Main, Route.Splash))

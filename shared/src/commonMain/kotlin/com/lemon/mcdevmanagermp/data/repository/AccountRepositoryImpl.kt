@@ -16,10 +16,13 @@ class AccountRepositoryImpl : AccountRepository {
 
     override suspend fun getLastUsedAccount(): AccountEntity? = dao.getLastUsedAccount()
 
-    override suspend fun getAccountByEmail(email: String): AccountEntity? =
-        dao.getAccountByEmail(email)
+    override suspend fun getAccountByNickname(nickname: String): AccountEntity? =
+        dao.getAccountByNickname(nickname)
 
     override suspend fun upsertAccount(account: AccountEntity) = dao.upsertAccount(account)
 
     override suspend fun deleteAccount(id: Long) = dao.deleteAccount(id)
+
+    override suspend fun updateNicknameById(id: Long, nickname: String) =
+        dao.updateNicknameById(id, nickname)
 }

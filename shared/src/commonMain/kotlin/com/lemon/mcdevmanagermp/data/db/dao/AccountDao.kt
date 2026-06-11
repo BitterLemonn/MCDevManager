@@ -14,12 +14,15 @@ interface AccountDao {
     @Query("SELECT * FROM account ORDER BY lastLoginTime DESC LIMIT 1")
     suspend fun getLastUsedAccount(): AccountEntity?
 
-    @Query("SELECT * FROM account WHERE email = :email LIMIT 1")
-    suspend fun getAccountByEmail(email: String): AccountEntity?
+    @Query("SELECT * FROM account WHERE nickname = :nickname LIMIT 1")
+    suspend fun getAccountByNickname(nickname: String): AccountEntity?
 
     @Upsert
     suspend fun upsertAccount(account: AccountEntity)
 
     @Query("DELETE FROM account WHERE id = :id")
     suspend fun deleteAccount(id: Long)
+
+    @Query("UPDATE account SET nickname = :nickname WHERE id = :id")
+    suspend fun updateNicknameById(id: Long, nickname: String)
 }

@@ -8,6 +8,7 @@ import com.lemon.mcdevmanagermp.data.repository.UserRepositoryImpl
 import com.lemon.mcdevmanagermp.domain.account.AccountManageUseCase
 import com.lemon.mcdevmanagermp.domain.account.SaveAccountUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
+import com.lemon.mcdevmanagermp.utils.Logger
 import kotlinx.coroutines.launch
 
 class AccountViewModel : BaseViewModel<AccountState, AccountAction, AccountEffect>(AccountState()) {
@@ -32,10 +33,12 @@ class AccountViewModel : BaseViewModel<AccountState, AccountAction, AccountEffec
             is AccountAction.RequestDelete -> setState {
                 copy(showDeleteDialog = true, accountToDelete = action.account)
             }
+
             AccountAction.ConfirmDelete -> confirmDelete()
             AccountAction.DismissDelete -> setState {
                 copy(showDeleteDialog = false, accountToDelete = null)
             }
+
             AccountAction.Logout -> logout()
         }
     }
@@ -50,7 +53,8 @@ class AccountViewModel : BaseViewModel<AccountState, AccountAction, AccountEffec
                         currentAccountId = result.currentAccountId
                     )
                 }
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                Logger.e("加载账号列表失败: $e")
                 sendEffect(AccountEffect.ShowToast("加载账号列表失败"))
             }
         }
@@ -64,11 +68,12 @@ class AccountViewModel : BaseViewModel<AccountState, AccountAction, AccountEffec
                     is AccountManageUseCase.SwitchResult.Success -> {
                         // 重新加载账号列表以更新 currentAccountId 和账号信息
                         loadAccounts()
-                        sendEffect(AccountEffect.ShowToast("已切换到 ${result.email}"))
+                        sendEffect(AccountEffect.ShowToast("已切换到 ${result.nickname}"))
                         sendEffect(AccountEffect.AccountSwitched)
                     }
 
                     is AccountManageUseCase.SwitchResult.Expired -> {
+                        Logger.e("账号已过期, 请重新登录")
                         sendEffect(AccountEffect.ShowToast("账号已过期，请重新登录"))
                         sendEffect(AccountEffect.NavigateToLogin)
                     }
@@ -76,6 +81,7 @@ class AccountViewModel : BaseViewModel<AccountState, AccountAction, AccountEffec
             } catch (e: Exception) {
                 AppContext.cookiesStore.clearCookies()
                 sendEffect(AccountEffect.ShowToast("切换失败: ${e.message}"))
+                Logger.e("切换账号失败: $e")
             } finally {
                 setState { copy(isSwitching = null) }
             }
@@ -89,7 +95,7 @@ class AccountViewModel : BaseViewModel<AccountState, AccountAction, AccountEffec
             setState { copy(showDeleteDialog = false, accountToDelete = null) }
             // 重新加载账号列表以刷新 UI
             loadAccounts()
-            sendEffect(AccountEffect.ShowToast("已删除账号 ${target.email}"))
+            sendEffect(AccountEffect.ShowToast("已删除账号 ${target.nickname}"))
         }
     }
 

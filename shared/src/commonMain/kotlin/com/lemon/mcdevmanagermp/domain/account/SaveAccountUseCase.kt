@@ -13,7 +13,7 @@ class SaveAccountUseCase(
     private val userRepository: UserRepository
 ) {
 
-    suspend operator fun invoke(email: String) {
+    suspend operator fun invoke(email: String = "") {
         val cookies = AppContext.cookiesStore.getAllCookiesMap()
         val cookiesJson = JSONConverter.encodeToString(serializer<Map<String, String>>(), cookies)
         val now = Clock.System.now().toEpochMilliseconds()
@@ -21,9 +21,10 @@ class SaveAccountUseCase(
             val result = userRepository.getUserInfo()
             (result as? NetworkState.Success)?.data
         }.getOrNull()
-        val accountEmail = email.ifBlank { userInfo?.nickname ?: "" }
+        // 统一使用 nickname 作为账号标识，避免邮箱登录和 cookies 登录产生重复账号
+        val accountName = userInfo?.nickname ?: email.ifBlank { "" }
         val headImg = userInfo?.headImg
-        val existing = accountRepository.getAccountByEmail(accountEmail)
+        val existing = accountRepository.getAccountByNickname(accountName)
         if (existing != null) {
             accountRepository.upsertAccount(
                 existing.copy(cookiesJson = cookiesJson, lastLoginTime = now, headImg = headImg)
@@ -31,7 +32,7 @@ class SaveAccountUseCase(
         } else {
             accountRepository.upsertAccount(
                 AccountEntity(
-                    email = accountEmail,
+                    nickname = accountName,
                     cookiesJson = cookiesJson,
                     lastLoginTime = now,
                     headImg = headImg

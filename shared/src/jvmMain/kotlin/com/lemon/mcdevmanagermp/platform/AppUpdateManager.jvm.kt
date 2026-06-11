@@ -12,6 +12,9 @@ import java.util.zip.ZipInputStream
 private object UpdateClassRef
 
 actual class AppUpdateManager actual constructor() {
+    companion object {
+        const val TAG = "AppUpdateManager"
+    }
 
     actual fun getCurrentVersion(): String = BuiltInVersion.VERSION
 
@@ -65,10 +68,10 @@ actual class AppUpdateManager actual constructor() {
                 onProgress(1f)
             }
 
-            Logger.d("下载完成: ${outputFile.absolutePath}")
+            Logger.d("$TAG: 下载完成: ${outputFile.absolutePath}")
             Result.success(outputFile.absolutePath)
         } catch (e: Exception) {
-            Logger.e("下载失败: ${e.message}", e)
+            Logger.e("$TAG: 下载失败: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -112,18 +115,18 @@ actual class AppUpdateManager actual constructor() {
             if (isWindows) {
                 // Windows: JAR 文件被运行中的 JVM 锁定，无法直接覆盖
                 // 将文件保留在 .patch_temp/ 中，由 restartApp() 创建辅助脚本在进程退出后完成覆盖
-                Logger.d("更新已解压，等待重启时应用补丁")
+                Logger.d("$TAG: 更新已解压，等待重启时应用补丁")
             } else {
                 // Unix: 可以直接覆盖运行中的文件
                 val extractedRoot = detectExtractedRoot(tempDir)
                 copyDirectory(extractedRoot, distRoot)
                 tempDir.deleteRecursively()
-                Logger.d("更新已安装")
+                Logger.d("$TAG: 更新已安装")
             }
 
             Result.success(Unit)
         } catch (e: Exception) {
-            Logger.e("安装更新失败: ${e.message}", e)
+            Logger.e("$TAG: 安装更新失败: ${e.message}", e)
             Result.failure(e)
         }
     }

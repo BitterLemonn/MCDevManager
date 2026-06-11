@@ -6,6 +6,7 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.lemon.mcdevmanagermp.data.consts.DATABASE_NAME
 import com.lemon.mcdevmanagermp.data.db.AppDatabase
 import com.lemon.mcdevmanagermp.data.db.MIGRATION_1_2
+import com.lemon.mcdevmanagermp.data.db.MIGRATION_2_3
 
 actual fun createAppDatabaseBuilder(): RoomDatabase.Builder<AppDatabase> {
     val context = AndroidLogContext.getContext()
@@ -16,5 +17,5 @@ actual fun createAppDatabaseBuilder(): RoomDatabase.Builder<AppDatabase> {
         context = context,
         name = dbFile.absolutePath
     ).setDriver(BundledSQLiteDriver())
-        .addMigrations(MIGRATION_1_2)
+        .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
 }

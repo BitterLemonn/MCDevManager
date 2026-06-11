@@ -5,6 +5,7 @@ import com.lemon.mcdevmanagermp.data.common.JSONConverter
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.domain.user.UserRepository
 import com.lemon.mcdevmanagermp.utils.Logger
+import kotlin.time.Clock
 
 class AutoLoginUseCase(
     private val accountRepository: AccountRepository,
@@ -20,7 +21,24 @@ class AutoLoginUseCase(
                 cookies.forEach { (k, v) -> AppContext.cookiesStore.addCookie(k, v) }
                 val result = userRepository.getUserInfo()
                 if (result is NetworkState.Success) {
-                    Logger.d("获取账号信息成功 登录账号: ${lastAccount.email}")
+                    val userInfo = result.data
+                    val now = Clock.System.now().toEpochMilliseconds()
+                    // 更新最后登录时间，同时兼容旧版本将 email 字段更新为 nickname
+                    val nickname = userInfo?.nickname
+                    if (nickname != null && nickname != lastAccount.nickname) {
+                        accountRepository.upsertAccount(
+                            lastAccount.copy(
+                                nickname = nickname,
+                                lastLoginTime = now,
+                                headImg = userInfo.headImg
+                            )
+                        )
+                    } else {
+                        accountRepository.upsertAccount(
+                            lastAccount.copy(lastLoginTime = now)
+                        )
+                    }
+                    Logger.d("获取账号信息成功 登录账号: ${lastAccount.nickname}")
                     return true
                 }
                 AppContext.cookiesStore.clearCookies()

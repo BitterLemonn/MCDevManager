@@ -8,7 +8,9 @@ import platform.Foundation.NSSearchPathForDirectoriesInDomains
 import platform.Foundation.NSUserDomainMask
 
 actual class AppUpdateManager actual constructor() {
-
+    companion object {
+        const val TAG = "AppUpdateManager"
+    }
     @OptIn(ExperimentalForeignApi::class)
     actual fun getCurrentVersion(): String {
         return try {
