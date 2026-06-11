@@ -2,6 +2,7 @@ package com.lemon.mcdevmanagermp.domain.upload
 
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.utils.Logger
+import io.github.vinceglb.filekit.PlatformFile
 
 class FileUploadUseCase(
     private val fileUploadRepository: FileUploadRepository
@@ -14,30 +15,30 @@ class FileUploadUseCase(
     /**
      * 上传单张图片
      * @param fileName 文件名
-     * @param bytes 文件字节数据
+     * @param file 文件引用（上传时才读取，避免 OOM）
+     * @param mimeType MIME 类型，如 "image/jpeg"
      * @return Pair<url?, error?>
      */
-    suspend fun uploadImage(fileName: String, bytes: ByteArray): Pair<String?, String?> {
-        val mimeType = guessImageMimeType(fileName)
+    suspend fun uploadImage(fileName: String, file: PlatformFile, mimeType: String): Pair<String?, String?> {
         return when (val result =
-            fileUploadRepository.uploadFile("image", fileName, bytes, mimeType)) {
+            fileUploadRepository.uploadFile("image", fileName, file, mimeType)) {
             is NetworkState.Success -> (result.data ?: result.msg) to null
             is NetworkState.Error -> null to result.msg
         }
     }
 
     /**
-     * 批量上传图片
-     * @param files 文件名和字节数据列表
+     * 批量上传图片（逐个上传，同一时间只有一个文件在内存中）
+     * @param files Triple<文件名, 文件引用, MIME类型> 列表
      * @return Pair<成功的 URL 列表, 错误信息列表>
      */
-    suspend fun uploadImages(files: List<Pair<String, ByteArray>>): Pair<List<String>, List<String>> {
+    suspend fun uploadImages(files: List<Triple<String, PlatformFile, String>>): Pair<List<String>, List<String>> {
         val urls = mutableListOf<String>()
         val errors = mutableListOf<String>()
 
         for ((index, file) in files.withIndex()) {
             Logger.d("$TAG: 上传图片 ${index + 1}/${files.size}: ${file.first}")
-            val (url, error) = uploadImage(file.first, file.second)
+            val (url, error) = uploadImage(file.first, file.second, file.third)
             if (url != null) {
                 urls.add(url)
             }
@@ -52,49 +53,26 @@ class FileUploadUseCase(
     /**
      * 上传视频
      * @param fileName 文件名
-     * @param bytes 文件字节数据
+     * @param file 文件引用（上传时才读取，避免 OOM）
+     * @param mimeType MIME 类型，如 "video/mp4"
+     * @param fileSize 文件大小（用于校验，不读取文件内容）
      * @return Pair<url?, error?>
      */
-    suspend fun uploadVideo(fileName: String, bytes: ByteArray): Pair<String?, String?> {
-        // 校验文件大小
-        if (bytes.size > MAX_VIDEO_SIZE) {
+    suspend fun uploadVideo(
+        fileName: String,
+        file: PlatformFile,
+        mimeType: String,
+        fileSize: Long
+    ): Pair<String?, String?> {
+        // 校验文件大小（使用元数据，不读取文件内容）
+        if (fileSize > MAX_VIDEO_SIZE) {
             return null to "视频文件大小不能超过 50MB"
         }
 
-        val mimeType = guessVideoMimeType(fileName)
         return when (val result =
-            fileUploadRepository.uploadFile("video", fileName, bytes, mimeType)) {
+            fileUploadRepository.uploadFile("video", fileName, file, mimeType)) {
             is NetworkState.Success -> (result.data ?: result.msg) to null
             is NetworkState.Error -> null to result.msg
-        }
-    }
-
-    /**
-     * 根据文件名猜测图片 MIME 类型
-     */
-    private fun guessImageMimeType(fileName: String): String {
-        val ext = fileName.substringAfterLast('.', "").lowercase()
-        return when (ext) {
-            "png" -> "image/png"
-            "gif" -> "image/gif"
-            "webp" -> "image/webp"
-            "bmp" -> "image/bmp"
-            else -> "image/jpeg"
-        }
-    }
-
-    /**
-     * 根据文件名猜测视频 MIME 类型
-     */
-    private fun guessVideoMimeType(fileName: String): String {
-        val ext = fileName.substringAfterLast('.', "").lowercase()
-        return when (ext) {
-            "avi" -> "video/avi"
-            "mov" -> "video/quicktime"
-            "wmv" -> "video/x-ms-wmv"
-            "flv" -> "video/x-flv"
-            "webm" -> "video/webm"
-            else -> "video/mp4"
         }
     }
 }

@@ -5,6 +5,8 @@ import com.lemon.mcdevmanagermp.data.vo.netease.activity.ReviewActivityItemVO
 import com.lemon.mcdevmanagermp.utils.extension.IUiAction
 import com.lemon.mcdevmanagermp.utils.extension.IUiEffect
 import com.lemon.mcdevmanagermp.utils.extension.IUiState
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.path
 
 data class ActivityParticipateState(
     val isLoading: Boolean = false,
@@ -22,35 +24,42 @@ data class ActivityParticipateState(
 
 /**
  * 选中的图片数据
+ * 延迟加载：选中时只保存 PlatformFile 引用，上传时才读取文件内容
  */
 data class SelectedImage(
     val name: String,
-    val bytes: ByteArray,
+    val file: PlatformFile,
+    val mimeType: String = "image/jpeg",
 ) {
+    /** 图片预览 URI */
+    val uri: String get() = file.path
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is SelectedImage) return false
-        return name == other.name && bytes.contentEquals(other.bytes)
+        return name == other.name && file == other.file
     }
 
-    override fun hashCode(): Int = 31 * name.hashCode() + bytes.contentHashCode()
+    override fun hashCode(): Int = 31 * name.hashCode() + file.hashCode()
 }
 
 /**
  * 选中的视频数据
+ * 延迟加载：选中时只保存 PlatformFile 引用，上传时才读取文件内容
  */
 data class SelectedVideo(
     val name: String,
-    val bytes: ByteArray,
+    val file: PlatformFile,
     val size: Long,
+    val mimeType: String = "video/mp4",
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is SelectedVideo) return false
-        return name == other.name && bytes.contentEquals(other.bytes)
+        return name == other.name && file == other.file
     }
 
-    override fun hashCode(): Int = 31 * name.hashCode() + bytes.contentHashCode()
+    override fun hashCode(): Int = 31 * name.hashCode() + file.hashCode()
 }
 
 sealed interface ActivityParticipateAction : IUiAction {

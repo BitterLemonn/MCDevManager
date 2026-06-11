@@ -8,7 +8,7 @@ data class UploadFileVO(
     val url: String,
     val mime: String,
     @SerialName("fsize")
-    val fileSize: Int,
+    val fileSize: Long,
     val md5: String,
     val picSize: List<Int>? = null
 )

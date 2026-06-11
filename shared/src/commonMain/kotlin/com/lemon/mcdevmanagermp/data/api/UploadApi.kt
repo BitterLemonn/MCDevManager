@@ -1,24 +1,63 @@
 package com.lemon.mcdevmanagermp.data.api
 
 import com.lemon.mcdevmanagermp.data.consts.NETEASE_UPLOAD_LINK
-import com.lemon.mcdevmanagermp.data.vo.netease.upload.UploadFileVO
-import de.jensklingenberg.ktorfit.http.Multipart
-import de.jensklingenberg.ktorfit.http.POST
-import de.jensklingenberg.ktorfit.http.Part
-import io.ktor.http.content.PartData
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.size
+import io.github.vinceglb.filekit.source
+import io.ktor.client.request.forms.InputProvider
+import io.ktor.client.request.forms.formData
+import io.ktor.client.request.forms.submitFormWithBinaryData
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.Headers
+import io.ktor.http.HttpHeaders
+import kotlinx.io.buffered
 
-interface UploadApi {
+/**
+ * 文件上传 API
+ */
+object UploadApi {
 
-    @Multipart
-    @POST("file/new")
+    private val client = ApiFactory.provideUploadHttpClient()
+
+    /**
+     * 上传文件到网易 FP 服务
+     * @param auth 上传 token
+     * @param fileName 文件名
+     * @param file 文件引用（延迟读取）
+     * @param mimeType MIME 类型
+     * @return 服务端原始响应文本
+     */
     suspend fun uploadFile(
-        @Part("Authorization") auth: String,
-        @Part("") fpfile: List<PartData>
-    ): UploadFileVO
-
-    companion object {
-        val INSTANCE by lazy {
-            ApiFactory.provideUploadKtorfit(NETEASE_UPLOAD_LINK).createUploadApi()
+        auth: String,
+        fileName: String,
+        file: PlatformFile,
+        mimeType: String
+    ): String {
+        val fileSize = try {
+            file.size().takeIf { it > 0 }
+        } catch (_: Exception) {
+            null
         }
+
+        val response = client.submitFormWithBinaryData(
+            url = "${NETEASE_UPLOAD_LINK}x19/file/new/",
+            formData = formData {
+                append("Authorization", auth)
+                append(
+                    key = "fpfile",
+                    value = InputProvider(fileSize) {
+                        file.source().buffered()
+                    },
+                    headers = Headers.build {
+                        append(
+                            HttpHeaders.ContentDisposition,
+                            "filename=\"$fileName\""
+                        )
+                        append(HttpHeaders.ContentType, mimeType)
+                    }
+                )
+            }
+        )
+        return response.bodyAsText()
     }
 }

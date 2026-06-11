@@ -27,6 +27,10 @@ object ApiFactory {
 
     private val cookiesStorage = object : CookiesStorage {
         override suspend fun addCookie(requestUrl: Url, cookie: Cookie) {
+            if (cookie.value.isEmpty()) {
+                CookiesStore.removeCookie(cookie.name)
+                return
+            }
             CookiesStore.addCookie(cookie.name, cookie.value)
         }
 
@@ -144,13 +148,6 @@ object ApiFactory {
             .build()
     }
 
-
-    fun provideUploadKtorfit(baseUrl: String): Ktorfit {
-        return Ktorfit.Builder()
-            .baseUrl(baseUrl)
-            .httpClient(uploadHttpClient)
-            .build()
-    }
 
     fun provideUploadHttpClient(): HttpClient = uploadHttpClient
 

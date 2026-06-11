@@ -8,6 +8,7 @@ import com.lemon.mcdevmanagermp.data.vo.netease.activity.ReviewActivityItemVO
 import com.lemon.mcdevmanagermp.domain.activity.ActivityUseCase
 import com.lemon.mcdevmanagermp.domain.upload.FileUploadUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
+import com.lemon.mcdevmanagermp.utils.Logger
 import kotlinx.coroutines.launch
 
 class ActivityParticipateViewModel :
@@ -15,6 +16,7 @@ class ActivityParticipateViewModel :
         ActivityParticipateState()
     ) {
     companion object {
+        private const val TAG = "ActivityParticipateVM"
         private const val MAX_IMAGE_COUNT = 3
         private const val MAX_VIDEO_SIZE = 50 * 1024 * 1024L // 50MB
     }
@@ -101,11 +103,8 @@ class ActivityParticipateViewModel :
     }
 
     private fun addVideo(video: SelectedVideo) {
+        // 使用文件元数据校验大小，不读取文件内容
         if (video.size > MAX_VIDEO_SIZE) {
-            sendEffect(ActivityParticipateEffect.ShowToast("视频文件大小不能超过 50MB"))
-            return
-        }
-        if (video.bytes.size > MAX_VIDEO_SIZE) {
             sendEffect(ActivityParticipateEffect.ShowToast("视频文件大小不能超过 50MB"))
             return
         }
@@ -136,30 +135,36 @@ class ActivityParticipateViewModel :
         viewModelScope.launch {
             setState { copy(isUploading = true, uploadProgress = "准备上传文件...") }
 
-            // 1. 上传图片
+            // 1. 逐张上传图片（每张图片上传时才读取文件内容，避免多张图片同时在内存中）
             val imageUrls = mutableListOf<String>()
             if (currentState.selectedImages.isNotEmpty()) {
                 setState {
                     copy(uploadProgress = "正在上传图片 (0/${currentState.selectedImages.size})...")
                 }
                 val (urls, imageErrors) = fileUploadUseCase.uploadImages(
-                    files = currentState.selectedImages.map { it.name to it.bytes }
+                    files = currentState.selectedImages.map {
+                        Triple(it.name, it.file, it.mimeType)
+                    }
                 )
                 imageUrls.addAll(urls)
                 if (imageErrors.isNotEmpty()) {
+                    Logger.e("$TAG: 图片上传失败: ${imageErrors.joinToString(", ")}")
                     setState { copy(isUploading = false, uploadProgress = "") }
                     sendEffect(ActivityParticipateEffect.ShowToast(imageErrors.first()))
                     return@launch
                 }
             }
 
-            // 2. 上传视频
+            // 2. 上传视频（上传时才读取文件内容）
             val videoUrls = mutableListOf<String>()
             val video = currentState.selectedVideo
             if (video != null) {
                 setState { copy(uploadProgress = "正在上传视频...") }
-                val (url, error) = fileUploadUseCase.uploadVideo(video.name, video.bytes)
+                val (url, error) = fileUploadUseCase.uploadVideo(
+                    video.name, video.file, video.mimeType, video.size
+                )
                 if (error != null) {
+                    Logger.e("$TAG: 视频上传失败: $error")
                     setState { copy(isUploading = false, uploadProgress = "") }
                     sendEffect(ActivityParticipateEffect.ShowToast("视频上传失败: $error"))
                     return@launch
@@ -190,6 +195,7 @@ class ActivityParticipateViewModel :
             setState { copy(isSubmitting = false, uploadProgress = "") }
 
             if (error != null) {
+                Logger.e("$TAG: 参与失败: $error")
                 sendEffect(ActivityParticipateEffect.ShowToast("参与失败: $error"))
             } else {
                 sendEffect(ActivityParticipateEffect.ShowToast("参与成功！"))

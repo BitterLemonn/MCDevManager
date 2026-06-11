@@ -1,16 +1,14 @@
 package com.lemon.mcdevmanagermp.data.repository
 
 import com.lemon.mcdevmanagermp.data.api.FilesApi
+import com.lemon.mcdevmanagermp.data.api.UploadApi
+import com.lemon.mcdevmanagermp.data.common.JSONConverter
 import com.lemon.mcdevmanagermp.data.common.NetworkState
-import com.lemon.mcdevmanagermp.data.consts.NETEASE_UPLOAD_LINK
 import com.lemon.mcdevmanagermp.data.vo.netease.upload.UploadFileVO
 import com.lemon.mcdevmanagermp.domain.upload.FileUploadRepository
 import com.lemon.mcdevmanagermp.utils.Logger
-import io.ktor.client.call.body
-import io.ktor.client.request.forms.formData
-import io.ktor.client.request.forms.submitFormWithBinaryData
-import io.ktor.http.Headers
-import io.ktor.http.HttpHeaders
+import com.lemon.mcdevmanagermp.utils.UnifiedExceptionHandler
+import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.CancellationException
 
 class FileUploadRepositoryImpl : FileUploadRepository {
@@ -24,37 +22,35 @@ class FileUploadRepositoryImpl : FileUploadRepository {
     override suspend fun uploadFile(
         fileType: String,
         fileName: String,
-        fileBytes: ByteArray,
+        file: PlatformFile,
         mimeType: String
     ): NetworkState<String> {
         return try {
-            // 1. 获取上传 token
-            val tokenResult = filesApi.getFileToken(fileType = fileType)
-            if (tokenResult.status != "200" && tokenResult.status != "ok") {
-                Logger.e("$TAG: 获取上传 token 失败: ${tokenResult.msg}")
-                return NetworkState.Error("获取上传 token 失败: ${tokenResult.msg}")
+            val tokenResult = UnifiedExceptionHandler.handleRequest {
+                filesApi.getFileToken(fileType = fileType)
             }
-            val token = tokenResult.data?.token ?: return NetworkState.Error("获取上传 token 失败")
-            Logger.d("$TAG: 获取 token 成功, 准备上传文件: $fileName (${fileBytes.size} bytes)")
+            val token = when (tokenResult) {
+                is NetworkState.Success -> tokenResult.data?.token
+                    ?: return NetworkState.Error("获取上传 token 失败")
 
-            // 2. 使用 Ktor client 直接上传文件（避免手动构造 PartData）
-            val uploadClient =
-                com.lemon.mcdevmanagermp.data.api.ApiFactory.provideUploadHttpClient()
+                is NetworkState.Error -> return NetworkState.Error(tokenResult.msg, tokenResult.e)
+            }
+            Logger.d("$TAG: 获取 token 成功, 准备上传文件: $fileName")
 
-            val response = uploadClient.submitFormWithBinaryData(
-                url = "${NETEASE_UPLOAD_LINK}file/new",
-                formData = formData {
-                    append("Authorization", "UpToken $token")
-                    append("file", fileBytes, Headers.build {
-                        append(HttpHeaders.ContentDisposition, "filename=\"$fileName\"")
-                        append(HttpHeaders.ContentType, mimeType)
-                    })
-                }
+            // 直接通过 Ktor HttpClient 上传，不经过 Ktorfit
+            val responseText = UploadApi.uploadFile(
+                auth = token,
+                fileName = fileName,
+                file = file,
+                mimeType = mimeType
             )
+            Logger.d("$TAG: 上传响应: $responseText")
 
-            val uploadResult = response.body<UploadFileVO>()
+            val jsonText = Regex("<textarea>(.*?)</textarea>")
+                .find(responseText)?.groupValues?.get(1)?.trim()
+                ?: return NetworkState.Error("解析上传响应失败")
 
-            // 3. 返回文件 URL
+            val uploadResult = JSONConverter.decodeFromString<UploadFileVO>(jsonText)
             val url = uploadResult.url
             if (url.isBlank()) {
                 Logger.e("$TAG: 上传文件返回空 URL")

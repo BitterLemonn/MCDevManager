@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -23,10 +24,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.github.panpf.sketch.AsyncImage
+import com.github.panpf.sketch.rememberAsyncImageState
+import com.github.panpf.sketch.request.ComposableImageOptions
 import com.lemon.mcdevmanagermp.platform.validateVideoFile
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.participate.SelectedImage
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.participate.SelectedVideo
@@ -36,8 +41,8 @@ import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
+import io.github.vinceglb.filekit.mimeType
 import io.github.vinceglb.filekit.name
-import io.github.vinceglb.filekit.readBytes
 import io.github.vinceglb.filekit.size
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -67,18 +72,19 @@ fun ImageSelectorRow(
         mode = FileKitMode.Multiple(maxItems = maxImages)
     ) { files: List<PlatformFile>? ->
         if (files != null) {
-            scope.launch(Dispatchers.IO) {
-                val images = files.mapNotNull { file ->
-                    try {
-                        val bytes = file.readBytes()
-                        SelectedImage(name = file.name, bytes = bytes)
-                    } catch (_: Exception) {
-                        null
-                    }
+            val images = files.mapNotNull { file ->
+                try {
+                    SelectedImage(
+                        name = file.name,
+                        file = file,
+                        mimeType = file.mimeType()?.toString() ?: "image/jpeg"
+                    )
+                } catch (_: Exception) {
+                    null
                 }
-                if (images.isNotEmpty()) {
-                    onAddImages(images)
-                }
+            }
+            if (images.isNotEmpty()) {
+                onAddImages(images)
             }
         }
     }
@@ -102,6 +108,7 @@ fun ImageSelectorRow(
             selectedImages.forEachIndexed { index, image ->
                 ImageThumbnailCard(
                     imageName = image.name,
+                    imageUri = image.uri,
                     onRemove = { onRemoveImage(index) },
                     enabled = enabled,
                     colors = colors
@@ -149,17 +156,17 @@ fun VideoSelectorBox(
                         return@launch
                     }
 
-                    // 校验通过，读取文件内容
-                    val bytes = file.readBytes()
+                    // 校验通过，保存文件引用（不立即读取内容）
                     onAddVideo(
                         SelectedVideo(
                             name = file.name,
-                            bytes = bytes,
-                            size = size
+                            file = file,
+                            size = size,
+                            mimeType = file.mimeType()?.toString() ?: "video/mp4"
                         )
                     )
                 } catch (_: Exception) {
-                    // 读取文件失败
+                    // 文件访问失败
                 }
             }
         }
@@ -204,11 +211,12 @@ fun VideoSelectorBox(
 }
 
 /**
- * 图片缩略图卡片（显示文件名，避免 Skia common 依赖）
+ * 图片缩略图卡片（使用 Sketch 加载本地文件预览）
  */
 @Composable
 private fun ImageThumbnailCard(
     imageName: String,
+    imageUri: String?,
     onRemove: () -> Unit,
     enabled: Boolean,
     colors: AppColors
@@ -224,16 +232,31 @@ private fun ImageThumbnailCard(
                 shape = RoundedCornerShape(10.dp)
             )
     ) {
-        // 显示文件名作为占位
-        Text(
-            text = imageName.take(10),
-            style = MaterialTheme.typography.labelSmall,
-            color = colors.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .align(Alignment.Center)
-                .padding(horizontal = 4.dp)
-        )
+        if (!imageUri.isNullOrEmpty()) {
+            // 使用 Sketch 加载本地文件图片
+            AsyncImage(
+                uri = imageUri,
+                state = rememberAsyncImageState(ComposableImageOptions {
+                    crossfade()
+                }),
+                contentDescription = imageName,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(10.dp))
+            )
+        } else {
+            // URI 为空时显示文件名占位
+            Text(
+                text = imageName.take(10),
+                style = MaterialTheme.typography.labelSmall,
+                color = colors.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(horizontal = 4.dp)
+            )
+        }
 
         // 删除按钮
         if (enabled) {
