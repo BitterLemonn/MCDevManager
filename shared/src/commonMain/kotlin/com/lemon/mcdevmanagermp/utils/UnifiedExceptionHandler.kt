@@ -1,12 +1,11 @@
 package com.lemon.mcdevmanagermp.utils
 
 import com.lemon.mcdevmanagermp.data.common.AppContext
-import com.lemon.mcdevmanagermp.utils.CookiesStore
-import com.lemon.mcdevmanagermp.data.consts.NETEASE_USER_COOKIE
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.common.ResponseData
 import com.lemon.mcdevmanagermp.data.consts.CookiesExpiredException
 import com.lemon.mcdevmanagermp.data.consts.LoginException
+import com.lemon.mcdevmanagermp.data.consts.NETEASE_USER_COOKIE
 import com.lemon.mcdevmanagermp.data.consts.NetworkException
 import com.lemon.mcdevmanagermp.data.dto.netease.login.NeteaseLoginResult
 import com.lemon.mcdevmanagermp.data.vo.github.LatestReleaseVO
@@ -123,7 +122,7 @@ object UnifiedExceptionHandler {
         return when (state) {
             is NetworkState.Success -> state.data
             is NetworkState.Error -> {
-                Logger.e("请求发生错误: ${state.msg}", state.e)
+                Logger.e("$TAG: 请求发生错误: ${state.msg}", state.e)
                 throw NetworkException(state.msg, state.e)
             }
         }

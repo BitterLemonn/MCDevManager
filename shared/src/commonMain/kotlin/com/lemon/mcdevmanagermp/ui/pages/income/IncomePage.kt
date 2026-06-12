@@ -11,7 +11,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -26,6 +25,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
@@ -41,9 +41,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
@@ -57,7 +54,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.lemon.mcdevmanagermp.data.vo.netease.income.ApplyIncomeDetailVO
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
+import com.lemon.mcdevmanagermp.ui.components.LocalSnackbarHostState
+import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
 import com.lemon.mcdevmanagermp.ui.pages.income.layout.CompactIncomeLayout
 import com.lemon.mcdevmanagermp.ui.pages.income.layout.ExpandedIncomeLayout
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
@@ -75,7 +75,7 @@ fun IncomePage(onBack: () -> Unit) {
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarHostState = LocalSnackbarHostState.current
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(viewModel.effect) {
@@ -92,12 +92,8 @@ fun IncomePage(onBack: () -> Unit) {
         viewModel.dispatch(IncomeAction.LoadData)
     }
 
-    BoxWithConstraints(modifier = Modifier.fillMaxSize().background(colors.background)) {
-        val widthSizeClass = when {
-            maxWidth < 600.dp -> WindowWidthSizeClass.Compact
-            maxWidth < 840.dp -> WindowWidthSizeClass.Medium
-            else -> WindowWidthSizeClass.Expanded
-        }
+    Box(modifier = Modifier.fillMaxSize().background(colors.background)) {
+        val widthSizeClass = LocalWindowWidthSizeClass.current
 
         when (widthSizeClass) {
             WindowWidthSizeClass.Compact, WindowWidthSizeClass.Medium -> CompactIncomeLayout(
@@ -132,17 +128,6 @@ fun IncomePage(onBack: () -> Unit) {
             )
         }
 
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = navBarBottom + 8.dp)
-        ) { data ->
-            Snackbar(
-                snackbarData = data,
-                shape = RoundedCornerShape(8.dp),
-                containerColor = colors.surface,
-                contentColor = colors.textColor
-            )
-        }
     }
 }
 
@@ -489,7 +474,7 @@ internal fun DetailRow(
 
 @Composable
 internal fun ApplyIncomeDetailDialog(
-    detailList: List<com.lemon.mcdevmanagermp.data.vo.netease.income.ApplyIncomeDetailVO>,
+    detailList: List<ApplyIncomeDetailVO>,
     onApply: (List<String>) -> Unit
 ) {
     val colors = LocalAppColors.current
@@ -498,7 +483,7 @@ internal fun ApplyIncomeDetailDialog(
     val availableIncome = first.availableIncome
 
     ElevatedCard(
-        modifier = Modifier.fillMaxWidth(0.9f),
+        modifier = Modifier.widthIn(min = 260.dp, max = 360.dp),
         colors = CardDefaults.elevatedCardColors(containerColor = colors.surfaceContainerHigh),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)

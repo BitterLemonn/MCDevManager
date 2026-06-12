@@ -1,7 +1,7 @@
 package com.lemon.mcdevmanagermp.ui.pages.analyze.dayDetail
 
 import androidx.compose.ui.graphics.Color
-import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResDetailData
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResAnalyzeData
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.ChartType
 import com.lemon.mcdevmanagermp.utils.extension.IUiAction
@@ -40,7 +40,7 @@ data class DayDetailState(
     val endDate: String = "",
     val metricType: Int = DayDetailMetricType.NEW_PURCHASE,
     val chartType: ChartType = ChartType.LINE,
-    val detailData: Map<String, List<ResDetailData>> = emptyMap(),
+    val detailData: Map<String, List<ResAnalyzeData>> = emptyMap(),
     val isResSelectorVisible: Boolean = false,
     val isResListLoading: Boolean = false,
 ) : IUiState

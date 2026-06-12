@@ -42,7 +42,7 @@ class AccountManageUseCase(
                     headImg = headImg
                 )
             )
-            SwitchResult.Success(account.email)
+            SwitchResult.Success(account.nickname)
         } else {
             AppContext.cookiesStore.clearCookies()
             SwitchResult.Expired
@@ -57,7 +57,7 @@ class AccountManageUseCase(
     }
 
     sealed class SwitchResult {
-        data class Success(val email: String) : SwitchResult()
+        data class Success(val nickname: String) : SwitchResult()
         data object Expired : SwitchResult()
     }
 }

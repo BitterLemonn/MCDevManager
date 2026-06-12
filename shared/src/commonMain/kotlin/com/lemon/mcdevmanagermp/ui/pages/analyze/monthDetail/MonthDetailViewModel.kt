@@ -2,7 +2,6 @@ package com.lemon.mcdevmanagermp.ui.pages.analyze.monthDetail
 
 import androidx.lifecycle.viewModelScope
 import com.lemon.mcdevmanagermp.data.common.NetworkState
-import com.lemon.mcdevmanagermp.data.consts.CookiesExpiredException
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
 import com.lemon.mcdevmanagermp.domain.resource.MonthDetailUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
@@ -92,17 +91,13 @@ class MonthDetailViewModel : BaseViewModel<MonthDetailState, MonthDetailAction, 
                 is NetworkState.Error -> {
                     Logger.e("$TAG: 获取月度数据失败: $result")
                     setState { copy(isLoading = false) }
-                    handleError(result)
+                    handleError(
+                        result,
+                        onNeedReLogin = { MonthDetailEffect.NeedReLogin },
+                        onShowToast = { MonthDetailEffect.ShowToast(it) }
+                    )
                 }
             }
-        }
-    }
-
-    private fun handleError(result: NetworkState.Error<*>) {
-        if (result.e is CookiesExpiredException) {
-            sendEffect(MonthDetailEffect.NeedReLogin)
-        } else {
-            sendEffect(MonthDetailEffect.ShowToast("请求失败: ${result.msg}"))
         }
     }
 }

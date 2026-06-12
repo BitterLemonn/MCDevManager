@@ -12,6 +12,10 @@ object CookiesStore {
         }
     }
 
+    fun removeCookie(key: String){
+        cookies.remove(key)
+    }
+
     fun addCookie(key: String, value: String) {
         cookies[key] = value
     }

@@ -411,7 +411,7 @@ internal fun DetailDataSection(state: DayDetailState) {
 @Composable
 private fun DateGroupCard(
     dateId: String,
-    detailData: Map<String, List<com.lemon.mcdevmanagermp.data.vo.netease.resource.ResDetailData>>,
+    detailData: Map<String, List<com.lemon.mcdevmanagermp.data.vo.netease.resource.ResAnalyzeData>>,
     metricType: Int,
 ) {
     val colors = LocalAppColors.current
@@ -480,7 +480,10 @@ internal fun buildResNameMap(state: DayDetailState): Map<String, String> {
     return map
 }
 
-private fun formatMetricValue(data: com.lemon.mcdevmanagermp.data.vo.netease.resource.ResDetailData, metricType: Int): String {
+private fun formatMetricValue(
+    data: com.lemon.mcdevmanagermp.data.vo.netease.resource.ResAnalyzeData,
+    metricType: Int
+): String {
     return when (metricType) {
         DayDetailMetricType.NEW_PURCHASE -> data.cntBuy.toString()
         DayDetailMetricType.DOWNLOAD -> data.downloadNum.toString()

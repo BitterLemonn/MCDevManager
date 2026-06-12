@@ -1,7 +1,7 @@
 package com.lemon.mcdevmanagermp.data.api
 
-import com.lemon.mcdevmanagermp.utils.CookiesStore
 import com.lemon.mcdevmanagermp.data.common.JSONConverter
+import com.lemon.mcdevmanagermp.utils.CookiesStore
 import com.lemon.mcdevmanagermp.utils.Logger
 import de.jensklingenberg.ktorfit.Ktorfit
 import io.ktor.client.HttpClient
@@ -10,17 +10,27 @@ import io.ktor.client.plugins.api.createClientPlugin
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.cookies.CookiesStorage
 import io.ktor.client.plugins.cookies.HttpCookies
+import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logging
+import io.ktor.http.ContentType
 import io.ktor.http.Cookie
 import io.ktor.http.Url
+import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.util.AttributeKey
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
+import io.ktor.client.plugins.logging.Logger as KtorLogger
 
 object ApiFactory {
 
     private val cookiesStorage = object : CookiesStorage {
         override suspend fun addCookie(requestUrl: Url, cookie: Cookie) {
+            if (cookie.value.isEmpty()) {
+                CookiesStore.removeCookie(cookie.name)
+                return
+            }
             CookiesStore.addCookie(cookie.name, cookie.value)
         }
 
@@ -50,6 +60,9 @@ object ApiFactory {
 
     private val jsonHttpClient: HttpClient by lazy {
         HttpClient {
+            defaultRequest {
+                contentType(ContentType.Application.Json)
+            }
             install(ContentNegotiation) { json(JSONConverter) }
             install(TimeMonitorPlugin)
             install(HttpTimeout) {
@@ -60,17 +73,59 @@ object ApiFactory {
             install(HttpCookies) {
                 storage = cookiesStorage
             }
-            // 3. 日志打印 (替代 CommonInterceptor 中的 body/header 打印)
-//            install(Logging) {
-//                logger = object : KtorLogger {
-//                    override fun log(message: String) {
-//                        // 使用你自己的 Logger 输出，Ktor 会自动格式化好 请求头/体/响应
-//                        Logger.d("KtorLog:\n$message")
-//                    }
-//                }
-//                // 打印级别：ALL (包含 Headers 和 Body)，对应你原来的 peekBody
-//                level = LogLevel.ALL
-//            }
+        }
+    }
+
+    private val loggerHttpClient: HttpClient by lazy {
+        HttpClient {
+            defaultRequest {
+                contentType(ContentType.Application.Json)
+            }
+            install(ContentNegotiation) { json(JSONConverter) }
+            install(TimeMonitorPlugin)
+            install(HttpTimeout) {
+                connectTimeoutMillis = 15_000
+                requestTimeoutMillis = 15_000
+                socketTimeoutMillis = 15_000
+            }
+            install(HttpCookies) {
+                storage = cookiesStorage
+            }
+            install(Logging) {
+                logger = object : KtorLogger {
+                    override fun log(message: String) {
+                        // 使用你自己的 Logger 输出，Ktor 会自动格式化好 请求头/体/响应
+                        Logger.d("KtorLog:\n$message")
+                    }
+                }
+                // 打印级别：ALL (包含 Headers 和 Body)，对应你原来的 peekBody
+                level = LogLevel.ALL
+            }
+        }
+    }
+
+    private val uploadHttpClient: HttpClient by lazy {
+        HttpClient {
+            install(ContentNegotiation) { json(JSONConverter) }
+            install(TimeMonitorPlugin)
+            install(HttpTimeout) {
+                connectTimeoutMillis = 15_000
+                requestTimeoutMillis = 60_000  // 上传文件需要更长超时
+                socketTimeoutMillis = 60_000
+            }
+            install(HttpCookies) {
+                storage = cookiesStorage
+            }
+            install(Logging) {
+                logger = object : KtorLogger {
+                    override fun log(message: String) {
+                        // 使用你自己的 Logger 输出，Ktor 会自动格式化好 请求头/体/响应
+                        Logger.d("KtorLog:\n$message")
+                    }
+                }
+                // 打印级别：ALL (包含 Headers 和 Body)，对应你原来的 peekBody
+                level = LogLevel.HEADERS
+            }
         }
     }
 
@@ -88,6 +143,13 @@ object ApiFactory {
         }
     }
 
+    fun provideLoggerKtorfit(baseUrl: String): Ktorfit {
+        return Ktorfit.Builder()
+            .baseUrl(baseUrl)
+            .httpClient(loggerHttpClient)
+            .build()
+    }
+
 
     fun provideKtorfit(baseUrl: String): Ktorfit {
         return Ktorfit.Builder()
@@ -96,6 +158,8 @@ object ApiFactory {
             .build()
     }
 
+
+    fun provideUploadHttpClient(): HttpClient = uploadHttpClient
 
     fun provideDownloadKtorfit(): Ktorfit {
         return Ktorfit.Builder()

@@ -2,7 +2,6 @@ package com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis
 
 import androidx.lifecycle.viewModelScope
 import com.lemon.mcdevmanagermp.data.common.NetworkState
-import com.lemon.mcdevmanagermp.data.consts.CookiesExpiredException
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
 import com.lemon.mcdevmanagermp.domain.resource.ModAnalysisResult
 import com.lemon.mcdevmanagermp.domain.resource.ModAnalysisUseCase
@@ -70,7 +69,7 @@ class ModAnalysisViewModel : BaseViewModel<ModAnalysisState, ModAnalysisAction, 
                 is NetworkState.Error -> {
                     Logger.e("$TAG: 获取资源列表失败: ${result.msg}")
                     setState { copy(isResListLoading = false) }
-                    handleError(result)
+                    handleModAnalysisError(result)
                 }
             }
         }
@@ -110,17 +109,17 @@ class ModAnalysisViewModel : BaseViewModel<ModAnalysisState, ModAnalysisAction, 
                 is NetworkState.Error -> {
                     Logger.e("$TAG: 获取分析数据失败: $result")
                     setState { copy(isLoading = false) }
-                    handleError(result)
+                    handleModAnalysisError(result)
                 }
             }
         }
     }
 
-    private fun handleError(result: NetworkState.Error<*>) {
-        if (result.e is CookiesExpiredException) {
-            sendEffect(ModAnalysisEffect.NeedReLogin)
-        } else {
-            sendEffect(ModAnalysisEffect.ShowToast("请求失败: ${result.msg}"))
-        }
+    private fun handleModAnalysisError(result: NetworkState.Error<*>) {
+        handleError(
+            result,
+            onNeedReLogin = { ModAnalysisEffect.NeedReLogin },
+            onShowToast = { ModAnalysisEffect.ShowToast(it) }
+        )
     }
 }

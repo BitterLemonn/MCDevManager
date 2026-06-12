@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.page.RankCategoryData
 import com.lemon.mcdevmanagermp.data.page.RankCategoryTypeEnum
+import com.lemon.mcdevmanagermp.data.repository.AccountRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.RankListRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.UserRepositoryImpl
@@ -12,8 +13,6 @@ import com.lemon.mcdevmanagermp.data.vo.netease.user.OverviewVO
 import com.lemon.mcdevmanagermp.data.vo.netease.user.UserInfoVO
 import com.lemon.mcdevmanagermp.domain.main.MainUseCase
 import com.lemon.mcdevmanagermp.domain.rankList.RankListUseCase
-import com.lemon.mcdevmanagermp.domain.update.CheckUpdateResult
-import com.lemon.mcdevmanagermp.domain.update.CheckUpdateUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
 import com.lemon.mcdevmanagermp.utils.ProfitData
 import kotlinx.coroutines.async
@@ -84,8 +83,7 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
     private val rankListUseCase = RankListUseCase(
         rankListRepository = RankListRepositoryImpl.INSTANCE
     )
-
-    private val checkUpdateUseCase = CheckUpdateUseCase()
+    private val accountRepository = AccountRepositoryImpl.INSTANCE
 
     init {
         val today = todayString()
@@ -124,8 +122,6 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
         } else {
             loadProfit()
         }
-
-        checkForUpdateSilently()
     }
 
     override fun dispatch(action: MainAction) {
@@ -175,6 +171,17 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
                 ) {
                     sendEffect(MainEffect.SessionExpired)
                 } else {
+                    // 兼容旧版本：将当前账号的 email 字段更新为 nickname
+                    val userInfo = (result.userInfo as? NetworkState.Success)?.data
+                    if (userInfo != null) {
+                        val currentAccount = accountRepository.getLastUsedAccount()
+                        if (currentAccount != null && currentAccount.nickname != userInfo.nickname) {
+                            accountRepository.updateNicknameById(
+                                currentAccount.id,
+                                userInfo.nickname
+                            )
+                        }
+                    }
                     val overview = (result.overview as? NetworkState.Success)?.data
                     if (overview != null && overview.yesterdayDiamond == 0 && overview.yesterdayDownload == 0) {
                         sendEffect(MainEffect.ShowToast("昨日数据可能未更新"))
@@ -250,22 +257,6 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
                 }
             } catch (_: Exception) {
                 sendEffect(MainEffect.ShowToast("排行榜加载失败"))
-            }
-        }
-    }
-
-    private fun checkForUpdateSilently() {
-        viewModelScope.launch {
-            when (val result = checkUpdateUseCase()) {
-                is CheckUpdateResult.UpdateAvailable -> {
-                    sendEffect(MainEffect.UpdateAvailable(result.latestVersion))
-                }
-
-                is CheckUpdateResult.Error -> {
-                    sendEffect(MainEffect.ShowToast(result.message))
-                }
-
-                is CheckUpdateResult.UpToDate -> {}
             }
         }
     }

@@ -128,6 +128,13 @@ kotlin {
             implementation(libs.vico.compose.m3)
             // calf permissions
             implementation(libs.calf.permissions)
+            implementation(libs.calf.permissions.notification)
+            // crypto
+            implementation(libs.crypto.core)
+            implementation(libs.crypto.provider)
+            // filekit
+            implementation(libs.filekit)
+            implementation(libs.filekit.dialog.compose)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

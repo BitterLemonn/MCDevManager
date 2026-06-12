@@ -17,7 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResMonthDetailData
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResMonthAnalyzeData
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 
 /**
@@ -26,7 +26,7 @@ import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
  */
 @Composable
 internal fun MonthCard(
-    data: ResMonthDetailData,
+    data: ResMonthAnalyzeData,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalAppColors.current

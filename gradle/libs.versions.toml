@@ -1,6 +1,6 @@
 [versions]
 agp = "9.2.1"
-versions-name = "1.0.0"
+versions-name = "0.13.4"
 android-compileSdk = "37"
 android-minSdk = "24"
 android-targetSdk = "38"
@@ -33,6 +33,8 @@ sqlite = "2.6.2"
 sketch = "4.4.0"
 vico = "3.2.2"
 calf-permission = "0.12.0"
+crypto = "0.6.0"
+filekit = "0.14.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -91,6 +93,13 @@ sketch-compose-resources = { module = "io.github.panpf.sketch4:sketch-compose-re
 vico-compose-m3 = { group = "com.patrykandpatrick.vico", name = "compose-m3", version.ref = "vico" }
 # calf permission
 calf-permissions = { group = "com.mohamedrejeb.calf", name = "calf-permissions-core", version.ref = "calf-permission" }
+calf-permissions-notification = { group = "com.mohamedrejeb.calf", name = "calf-permissions-notifications", version.ref = "calf-permission" }
+# crypto
+crypto-core = { group = "dev.whyoleg.cryptography", name = "cryptography-core", version.ref = "crypto" }
+crypto-provider = { group = "dev.whyoleg.cryptography", name = "cryptography-provider-optimal", version.ref = "crypto" }
+# filekit
+filekit = { group = "io.github.vinceglb", name = "filekit-core", version.ref = "filekit" }
+filekit-dialog-compose = { group = "io.github.vinceglb", name = "filekit-dialogs-compose", version.ref = "filekit" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

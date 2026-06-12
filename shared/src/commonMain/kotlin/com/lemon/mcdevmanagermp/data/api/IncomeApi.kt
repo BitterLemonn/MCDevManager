@@ -1,8 +1,8 @@
 package com.lemon.mcdevmanagermp.data.api
 
-import com.lemon.mcdevmanagermp.data.consts.NETEASE_MC_DEV_LINK
 import com.lemon.mcdevmanagermp.data.common.NoNeedData
 import com.lemon.mcdevmanagermp.data.common.ResponseData
+import com.lemon.mcdevmanagermp.data.consts.NETEASE_MC_DEV_LINK
 import com.lemon.mcdevmanagermp.data.dto.netease.income.ApplyIncomeDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.income.IncentiveListDTO
 import com.lemon.mcdevmanagermp.data.vo.netease.income.ApplyIncomeDetailVO
@@ -12,7 +12,6 @@ import de.jensklingenberg.ktorfit.http.GET
 import de.jensklingenberg.ktorfit.http.PUT
 import de.jensklingenberg.ktorfit.http.Path
 import de.jensklingenberg.ktorfit.http.Query
-import kotlin.getValue
 
 interface IncomeApi {
 

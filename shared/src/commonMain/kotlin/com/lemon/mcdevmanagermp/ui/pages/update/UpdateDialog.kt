@@ -21,11 +21,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.domain.update.CheckUpdateResult
 import com.lemon.mcdevmanagermp.platform.UpdateStrategy
+import com.lemon.mcdevmanagermp.utils.extension.formatDecimal
+import com.mohamedrejeb.calf.permissions.ExperimentalPermissionsApi
+import com.mohamedrejeb.calf.permissions.PermissionState
+import com.mohamedrejeb.calf.permissions.isGranted
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun UpdateDialog(
     state: UpdateState,
-    onAction: (UpdateAction) -> Unit
+    onAction: (UpdateAction) -> Unit,
+    notificationPermissionState: PermissionState? = null
 ) {
     AlertDialog(
         onDismissRequest = {
@@ -89,21 +95,43 @@ fun UpdateDialog(
 
                     // 下载中
                     state.isDownloading -> {
+                        val fileSize =
+                            (state.checkResult as? CheckUpdateResult.UpdateAvailable)?.fileSize
+                                ?: 0L
+                        val downloadedBytes = (fileSize.toFloat() * state.downloadProgress).toLong()
+
                         LinearProgressIndicator(
                             progress = { state.downloadProgress },
                             modifier = Modifier.fillMaxWidth()
                         )
-                        Text(
-                            text = "${(state.downloadProgress * 100).toInt()}%",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Text(
-                            text = "正在下载更新包...",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "${(state.downloadProgress * 100).toInt()}%",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            if (fileSize > 0) {
+                                Text(
+                                    text = "${formatFileSize(downloadedBytes)} / ${
+                                        formatFileSize(
+                                            fileSize
+                                        )
+                                    }",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                        if (state.downloadSpeedBps > 0) {
+                            Text(
+                                text = formatDownloadSpeed(state.downloadSpeedBps),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
 
                     // 有更新可用
@@ -200,7 +228,14 @@ fun UpdateDialog(
                         }
 
                         else -> {
-                            Button(onClick = { onAction(UpdateAction.StartDownload) }) {
+                            Button(onClick = {
+                                if (notificationPermissionState != null &&
+                                    !notificationPermissionState.status.isGranted
+                                ) {
+                                    notificationPermissionState.launchPermissionRequest()
+                                }
+                                onAction(UpdateAction.StartDownload)
+                            }) {
                                 Text("立即更新")
                             }
                         }
@@ -213,11 +248,30 @@ fun UpdateDialog(
                 state.isDownloading || state.isPatching -> {}
                 state.patchComplete -> {}
                 state.checkResult is CheckUpdateResult.UpdateAvailable && !state.isDownloading -> {
+                    TextButton(onClick = { onAction(UpdateAction.IgnoreVersion) }) {
+                        Text("忽略此版本")
+                    }
                     TextButton(onClick = { onAction(UpdateAction.DismissDialog) }) {
-                        Text("稍后再说")
+                        Text("取消")
                     }
                 }
             }
         }
     )
+}
+
+private fun formatFileSize(bytes: Long): String {
+    return when {
+        bytes >= 1_000_000 -> "${(bytes / 1_000_000.0).formatDecimal(2)} MB"
+        bytes >= 1_000 -> "${(bytes / 1_000.0).formatDecimal(0)} KB"
+        else -> "$bytes B"
+    }
+}
+
+private fun formatDownloadSpeed(bytesPerSecond: Long): String {
+    return when {
+        bytesPerSecond >= 1_000_000 -> "${(bytesPerSecond / 1_000_000.0).formatDecimal(2)} MB/s"
+        bytesPerSecond >= 1_000 -> "${(bytesPerSecond / 1_000.0).formatDecimal(0)} KB/s"
+        else -> "$bytesPerSecond B/s"
+    }
 }

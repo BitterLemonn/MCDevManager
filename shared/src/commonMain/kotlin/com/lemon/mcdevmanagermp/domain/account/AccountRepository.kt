@@ -8,9 +8,11 @@ interface AccountRepository {
 
     suspend fun getLastUsedAccount(): AccountEntity?
 
-    suspend fun getAccountByEmail(email: String): AccountEntity?
+    suspend fun getAccountByNickname(nickname: String): AccountEntity?
 
     suspend fun upsertAccount(account: AccountEntity)
 
     suspend fun deleteAccount(id: Long)
+
+    suspend fun updateNicknameById(id: Long, nickname: String)
 }

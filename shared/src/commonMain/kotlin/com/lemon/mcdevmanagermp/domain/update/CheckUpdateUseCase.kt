@@ -12,9 +12,7 @@ class CheckUpdateUseCase(
 ) {
     suspend operator fun invoke(): CheckUpdateResult {
         val currentVersion = updateManager.getCurrentVersion()
-        val result = updateRepository.checkForUpdate()
-
-        return when (result) {
+        return when (val result = updateRepository.checkForUpdate()) {
             is NetworkState.Success -> {
                 val release =
                     result.data ?: return CheckUpdateResult.Error("Failed to parse version info")

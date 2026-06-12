@@ -2,7 +2,6 @@ package com.lemon.mcdevmanagermp.ui.pages.analyze.dayDetail
 
 import androidx.lifecycle.viewModelScope
 import com.lemon.mcdevmanagermp.data.common.NetworkState
-import com.lemon.mcdevmanagermp.data.consts.CookiesExpiredException
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
 import com.lemon.mcdevmanagermp.domain.resource.DayDetailUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
@@ -81,7 +80,7 @@ class DayDetailViewModel : BaseViewModel<DayDetailState, DayDetailAction, DayDet
                 is NetworkState.Error -> {
                     Logger.e("$TAG: 获取资源列表失败: ${result.msg}")
                     setState { copy(isResListLoading = false) }
-                    handleError(result)
+                    handleDayDetailError(result)
                 }
             }
         }
@@ -138,17 +137,17 @@ class DayDetailViewModel : BaseViewModel<DayDetailState, DayDetailAction, DayDet
                 is NetworkState.Error -> {
                     Logger.e("$TAG: 获取日详情数据失败: $result")
                     setState { copy(isLoading = false) }
-                    handleError(result)
+                    handleDayDetailError(result)
                 }
             }
         }
     }
 
-    private fun handleError(result: NetworkState.Error<*>) {
-        if (result.e is CookiesExpiredException) {
-            sendEffect(DayDetailEffect.NeedReLogin)
-        } else {
-            sendEffect(DayDetailEffect.ShowToast("请求失败: ${result.msg}"))
-        }
+    private fun handleDayDetailError(result: NetworkState.Error<*>) {
+        handleError(
+            result,
+            onNeedReLogin = { DayDetailEffect.NeedReLogin },
+            onShowToast = { DayDetailEffect.ShowToast(it) }
+        )
     }
 }

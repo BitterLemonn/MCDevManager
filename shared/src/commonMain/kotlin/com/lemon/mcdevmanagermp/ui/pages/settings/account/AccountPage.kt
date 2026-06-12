@@ -7,7 +7,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -33,9 +32,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -59,6 +55,8 @@ import com.github.panpf.sketch.request.fallback
 import com.github.panpf.sketch.request.placeholder
 import com.lemon.mcdevmanagermp.data.db.entity.AccountEntity
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
+import com.lemon.mcdevmanagermp.ui.components.LocalSnackbarHostState
+import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
 import com.lemon.mcdevmanagermp.ui.pages.settings.account.layout.CompactAccountLayout
 import com.lemon.mcdevmanagermp.ui.pages.settings.account.layout.ExpandedAccountLayout
 import com.lemon.mcdevmanagermp.ui.pages.settings.account.layout.MediumAccountLayout
@@ -84,7 +82,7 @@ fun AccountManagementPage(
     val viewModel = remember { AccountViewModel() }
     val state by viewModel.state.collectAsState()
     val colors = LocalAppColors.current
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarHostState = LocalSnackbarHostState.current
     val scope = rememberCoroutineScope()
 
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
@@ -115,7 +113,7 @@ fun AccountManagementPage(
         AlertDialog(
             onDismissRequest = { viewModel.dispatch(AccountAction.DismissDelete) },
             title = { Text("删除账号") },
-            text = { Text("确定要删除账号 ${accountToDelete.email} 吗？删除后需要重新登录。") },
+            text = { Text("确定要删除账号 ${accountToDelete.nickname} 吗？删除后需要重新登录。") },
             confirmButton = {
                 TextButton(
                     onClick = { viewModel.dispatch(AccountAction.ConfirmDelete) },
@@ -141,17 +139,13 @@ fun AccountManagementPage(
             Spacer(Modifier.height(statusBarTop))
             Spacer(Modifier.height(56.dp))
 
-            BoxWithConstraints(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(16.dp)
                     .padding(bottom = navBarBottom)
             ) {
-                val widthSizeClass = when {
-                    maxWidth < 600.dp -> WindowWidthSizeClass.Compact
-                    maxWidth < 840.dp -> WindowWidthSizeClass.Medium
-                    else -> WindowWidthSizeClass.Expanded
-                }
+                val widthSizeClass = LocalWindowWidthSizeClass.current
 
                 when (widthSizeClass) {
                     WindowWidthSizeClass.Compact -> CompactAccountLayout(
@@ -183,20 +177,6 @@ fun AccountManagementPage(
             collapseFraction = topBarAlpha,
             onBack = onBack
         )
-
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = navBarBottom + 8.dp)
-        ) { data ->
-            Snackbar(
-                snackbarData = data,
-                shape = RoundedCornerShape(8.dp),
-                containerColor = colors.surface,
-                contentColor = colors.textColor
-            )
-        }
     }
 }
 
@@ -243,7 +223,7 @@ internal fun CurrentAccountSection(
 
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = currentAccount.email,
+                            text = currentAccount.nickname,
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Medium,
                             color = colors.textColor
@@ -401,7 +381,7 @@ private fun AccountCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = account.email,
+                            text = account.nickname,
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Medium,
                             color = colors.textColor

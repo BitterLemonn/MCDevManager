@@ -48,6 +48,7 @@ import com.lemon.mcdevmanagermp.ui.pages.main.MainAction
 import com.lemon.mcdevmanagermp.ui.pages.main.MainState
 import com.lemon.mcdevmanagermp.ui.pages.main.MainTab
 import com.lemon.mcdevmanagermp.ui.pages.settings.SettingsContent
+import com.lemon.mcdevmanagermp.ui.pages.work.WorkContent
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import com.lemon.mcdevmanagermp.utils.ProfitData
 
@@ -60,7 +61,8 @@ internal fun MediumLayout(
     onNavigateToSubPage: (Route) -> Unit,
     onNavigateToLogin: () -> Unit = {},
     onNavigateToAddAccount: () -> Unit = {},
-    onAccountSwitched: () -> Unit = {}
+    onAccountSwitched: () -> Unit = {},
+    onCheckUpdate: () -> Unit = {}
 ) {
     val colors = LocalAppColors.current
     val userNickname = (state.userInfo as? NetworkState.Success)?.data?.nickname
@@ -156,10 +158,12 @@ internal fun MediumLayout(
 
                     MainTab.Analyze -> AnalyzeTabContent(onNavigateToSubPage = onNavigateToSubPage)
                     MainTab.Community -> CommunityContent()
+                    MainTab.Work -> WorkContent()
                     MainTab.Settings -> SettingsContent(
                         onNavigateToLogin = onNavigateToLogin,
                         onNavigateToAddAccount = onNavigateToAddAccount,
-                        onAccountSwitched = onAccountSwitched
+                        onAccountSwitched = onAccountSwitched,
+                        onCheckUpdate = onCheckUpdate
                     )
                 }
             }

@@ -1,6 +1,6 @@
 package com.lemon.mcdevmanagermp.ui.pages.analyze.monthDetail
 
-import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResMonthDetailData
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResMonthAnalyzeData
 import com.lemon.mcdevmanagermp.utils.extension.IUiAction
 import com.lemon.mcdevmanagermp.utils.extension.IUiEffect
 import com.lemon.mcdevmanagermp.utils.extension.IUiState
@@ -33,7 +33,7 @@ data class MonthDetailState(
     val quickTimeRange: Int = QuickTimeRange.LAST_3_MONTHS,
     val startDate: String = "",
     val endDate: String = "",
-    val monthData: List<ResMonthDetailData> = emptyList(),
+    val monthData: List<ResMonthAnalyzeData> = emptyList(),
     val selectedMetric: Int = MonthMetricType.TOTAL_DIAMOND,
 ) : IUiState
 
