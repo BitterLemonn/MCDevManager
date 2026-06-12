@@ -1,12 +1,14 @@
 package com.lemon.mcdevmanagermp.ui.pages.work.activity.participate
 
 import androidx.lifecycle.viewModelScope
+import com.lemon.mcdevmanagermp.data.dto.netease.activity.FileInfoDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.activity.JoinActivityDTO
 import com.lemon.mcdevmanagermp.data.repository.ActivityRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.FileUploadRepositoryImpl
 import com.lemon.mcdevmanagermp.data.vo.netease.activity.ReviewActivityItemVO
 import com.lemon.mcdevmanagermp.domain.activity.ActivityUseCase
 import com.lemon.mcdevmanagermp.domain.upload.FileUploadUseCase
+import com.lemon.mcdevmanagermp.domain.upload.UploadFileEntry
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
 import com.lemon.mcdevmanagermp.utils.Logger
 import kotlinx.coroutines.launch
@@ -136,41 +138,41 @@ class ActivityParticipateViewModel :
             setState { copy(isUploading = true, uploadProgress = "准备上传文件...") }
 
             // 1. 逐张上传图片（每张图片上传时才读取文件内容，避免多张图片同时在内存中）
-            val imageUrls = mutableListOf<String>()
+            val imageFiles = mutableListOf<FileInfoDTO>()
             if (currentState.selectedImages.isNotEmpty()) {
                 setState {
                     copy(uploadProgress = "正在上传图片 (0/${currentState.selectedImages.size})...")
                 }
-                val (urls, imageErrors) = fileUploadUseCase.uploadImages(
+                val imageResult = fileUploadUseCase.uploadImages(
                     files = currentState.selectedImages.map {
-                        Triple(it.name, it.file, it.mimeType)
+                        UploadFileEntry(fileName = it.name, file = it.file, mimeType = it.mimeType)
                     }
                 )
-                imageUrls.addAll(urls)
-                if (imageErrors.isNotEmpty()) {
-                    Logger.e("$TAG: 图片上传失败: ${imageErrors.joinToString(", ")}")
+                imageFiles.addAll(imageResult.files)
+                if (imageResult.errors.isNotEmpty()) {
+                    Logger.e("$TAG: 图片上传失败: ${imageResult.errors.joinToString(", ")}")
                     setState { copy(isUploading = false, uploadProgress = "") }
-                    sendEffect(ActivityParticipateEffect.ShowToast(imageErrors.first()))
+                    sendEffect(ActivityParticipateEffect.ShowToast(imageResult.errors.first()))
                     return@launch
                 }
             }
 
             // 2. 上传视频（上传时才读取文件内容）
-            val videoUrls = mutableListOf<String>()
+            val videoFiles = mutableListOf<FileInfoDTO>()
             val video = currentState.selectedVideo
             if (video != null) {
                 setState { copy(uploadProgress = "正在上传视频...") }
-                val (url, error) = fileUploadUseCase.uploadVideo(
+                val videoResult = fileUploadUseCase.uploadVideo(
                     video.name, video.file, video.mimeType, video.size
                 )
-                if (error != null) {
-                    Logger.e("$TAG: 视频上传失败: $error")
+                if (videoResult.error != null) {
+                    Logger.e("$TAG: 视频上传失败: ${videoResult.error}")
                     setState { copy(isUploading = false, uploadProgress = "") }
-                    sendEffect(ActivityParticipateEffect.ShowToast("视频上传失败: $error"))
+                    sendEffect(ActivityParticipateEffect.ShowToast("视频上传失败: ${videoResult.error}"))
                     return@launch
                 }
-                if (url != null) {
-                    videoUrls.add(url)
+                if (videoResult.fileInfo != null) {
+                    videoFiles.add(videoResult.fileInfo)
                 }
             }
 
@@ -188,8 +190,8 @@ class ActivityParticipateViewModel :
                 content = JoinActivityDTO(
                     itemId = candidateId,
                     applyIntro = currentState.applyIntro,
-                    imageList = imageUrls,
-                    videoInfoList = videoUrls
+                    imageList = imageFiles,
+                    videoInfoList = videoFiles
                 )
             )
             setState { copy(isSubmitting = false, uploadProgress = "") }

@@ -4,7 +4,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -37,6 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.ui.components.AppScaffold
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
+import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
 import com.lemon.mcdevmanagermp.ui.pages.main.MainViewModel
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import com.lemon.mcdevmanagermp.utils.ModuleIncomeDetail
@@ -83,17 +83,13 @@ fun IncomeDetailPage(isLastMonth: Boolean = false, onBack: () -> Unit) {
                 Spacer(Modifier.height(statusBarTop))
                 Spacer(Modifier.height(56.dp))
 
-                BoxWithConstraints(
+                Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 16.dp)
                         .padding(bottom = navBarBottom + 16.dp)
                 ) {
-                    val widthSizeClass = when {
-                        maxWidth < 600.dp -> WindowWidthSizeClass.Compact
-                        maxWidth < 840.dp -> WindowWidthSizeClass.Medium
-                        else -> WindowWidthSizeClass.Expanded
-                    }
+                    val widthSizeClass = LocalWindowWidthSizeClass.current
 
                     val columns = when (widthSizeClass) {
                         WindowWidthSizeClass.Compact -> 1

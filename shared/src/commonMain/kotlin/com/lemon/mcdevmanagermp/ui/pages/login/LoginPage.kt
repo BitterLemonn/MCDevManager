@@ -29,9 +29,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -53,6 +50,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lemon.mcdevmanagermp.ui.components.AppScaffold
+import com.lemon.mcdevmanagermp.ui.components.LocalSnackbarHostState
 import com.lemon.mcdevmanagermp.ui.components.LoginOutlineTextField
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import kotlinx.coroutines.launch
@@ -72,7 +70,7 @@ fun LoginPage(
 ) {
     val viewModel = remember { LoginViewModel() }
     val state by viewModel.state.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarHostState = LocalSnackbarHostState.current
     val scope = rememberCoroutineScope()
 
     AppScaffold(
@@ -88,17 +86,6 @@ fun LoginPage(
         }
     ) { innerPadding ->
         Scaffold(
-            snackbarHost = {
-                SnackbarHost(hostState = snackbarHostState) { data ->
-                    val colors = LocalAppColors.current
-                    Snackbar(
-                        snackbarData = data,
-                        shape = RoundedCornerShape(8.dp),
-                        containerColor = colors.surface,
-                        contentColor = colors.onSurface
-                    )
-                }
-            },
             contentWindowInsets = WindowInsets(0, 0, 0, 0)
         ) { scaffoldPadding ->
             LoginContent(

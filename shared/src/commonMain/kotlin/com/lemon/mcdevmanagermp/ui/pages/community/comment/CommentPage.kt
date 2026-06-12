@@ -7,7 +7,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -33,9 +32,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
@@ -54,6 +50,8 @@ import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.data.vo.netease.comment.CommentData
 import com.lemon.mcdevmanagermp.platform.BackHandler
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
+import com.lemon.mcdevmanagermp.ui.components.LocalSnackbarHostState
+import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
 import com.lemon.mcdevmanagermp.ui.pages.community.comment.layout.CompactCommentLayout
 import com.lemon.mcdevmanagermp.ui.pages.community.comment.layout.ExpandedCommentLayout
 import com.lemon.mcdevmanagermp.ui.pages.community.components.DateRangeChipGroup
@@ -80,7 +78,7 @@ fun CommentPage(onBack: () -> Unit) {
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarHostState = LocalSnackbarHostState.current
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(viewModel.effect) {
@@ -104,12 +102,8 @@ fun CommentPage(onBack: () -> Unit) {
         viewModel.dispatch(CommentAction.SelectComment(null))
     }
 
-    BoxWithConstraints(modifier = Modifier.fillMaxSize().background(colors.background)) {
-        val widthSizeClass = when {
-            maxWidth < 600.dp -> WindowWidthSizeClass.Compact
-            maxWidth < 840.dp -> WindowWidthSizeClass.Medium
-            else -> WindowWidthSizeClass.Expanded
-        }
+    Box(modifier = Modifier.fillMaxSize().background(colors.background)) {
+        val widthSizeClass = LocalWindowWidthSizeClass.current
 
         if (widthSizeClass == WindowWidthSizeClass.Expanded) {
             ExpandedCommentLayout(
@@ -131,17 +125,6 @@ fun CommentPage(onBack: () -> Unit) {
             )
         }
 
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = navBarBottom + 8.dp)
-        ) { data ->
-            Snackbar(
-                snackbarData = data,
-                shape = RoundedCornerShape(8.dp),
-                containerColor = colors.surface,
-                contentColor = colors.textColor
-            )
-        }
     }
 }
 

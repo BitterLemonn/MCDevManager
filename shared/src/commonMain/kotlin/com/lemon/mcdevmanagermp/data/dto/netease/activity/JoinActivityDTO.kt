@@ -10,7 +10,15 @@ data class JoinActivityDTO(
     @SerialName("apply_intro")
     val applyIntro: String,
     @SerialName("video_info_list")
-    val videoInfoList: List<String> = emptyList(),
+    val videoInfoList: List<FileInfoDTO> = emptyList(),
     @SerialName("image_list")
-    val imageList: List<String> = emptyList(),
+    val imageList: List<FileInfoDTO> = emptyList(),
+)
+
+@Serializable
+data class FileInfoDTO(
+    val body: String,
+    @SerialName("file_type")
+    val fileType: String,
+    val sign: String
 )

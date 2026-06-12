@@ -2,9 +2,8 @@ package com.lemon.mcdevmanagermp.data.repository
 
 import com.lemon.mcdevmanagermp.data.api.FilesApi
 import com.lemon.mcdevmanagermp.data.api.UploadApi
-import com.lemon.mcdevmanagermp.data.common.JSONConverter
 import com.lemon.mcdevmanagermp.data.common.NetworkState
-import com.lemon.mcdevmanagermp.data.vo.netease.upload.UploadFileVO
+import com.lemon.mcdevmanagermp.data.dto.netease.activity.FileInfoDTO
 import com.lemon.mcdevmanagermp.domain.upload.FileUploadRepository
 import com.lemon.mcdevmanagermp.utils.Logger
 import com.lemon.mcdevmanagermp.utils.UnifiedExceptionHandler
@@ -24,7 +23,7 @@ class FileUploadRepositoryImpl : FileUploadRepository {
         fileName: String,
         file: PlatformFile,
         mimeType: String
-    ): NetworkState<String> {
+    ): NetworkState<FileInfoDTO> {
         return try {
             val tokenResult = UnifiedExceptionHandler.handleRequest {
                 filesApi.getFileToken(fileType = fileType)
@@ -38,27 +37,26 @@ class FileUploadRepositoryImpl : FileUploadRepository {
             Logger.d("$TAG: 获取 token 成功, 准备上传文件: $fileName")
 
             // 直接通过 Ktor HttpClient 上传，不经过 Ktorfit
-            val responseText = UploadApi.uploadFile(
+            val uploadResponse = UploadApi.uploadFile(
                 auth = token,
                 fileName = fileName,
                 file = file,
                 mimeType = mimeType
             )
-            Logger.d("$TAG: 上传响应: $responseText")
-
+            val responseText = uploadResponse.body
             val jsonText = Regex("<textarea>(.*?)</textarea>")
                 .find(responseText)?.groupValues?.get(1)?.trim()
                 ?: return NetworkState.Error("解析上传响应失败")
+            val sign = uploadResponse.sign ?: return NetworkState.Error("上传失败，文件签名为空")
+            Logger.d("$TAG: 上传响应: $responseText, sign: $sign")
 
-            val uploadResult = JSONConverter.decodeFromString<UploadFileVO>(jsonText)
-            val url = uploadResult.url
-            if (url.isBlank()) {
-                Logger.e("$TAG: 上传文件返回空 URL")
-                return NetworkState.Error("上传文件返回空 URL")
-            }
-
-            Logger.d("$TAG: 文件上传成功: $url")
-            NetworkState.Success(url)
+            NetworkState.Success(
+                FileInfoDTO(
+                    body = jsonText,
+                    fileType = fileType,
+                    sign = sign
+                )
+            )
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

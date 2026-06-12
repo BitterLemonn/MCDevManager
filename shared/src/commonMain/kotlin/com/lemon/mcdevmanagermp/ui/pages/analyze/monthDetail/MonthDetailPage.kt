@@ -1,17 +1,13 @@
 package com.lemon.mcdevmanagermp.ui.pages.analyze.monthDetail
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,6 +18,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.lemon.mcdevmanagermp.ui.components.LocalSnackbarHostState
+import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
 import com.lemon.mcdevmanagermp.ui.pages.analyze.monthDetail.layout.MonthDetailCompactLayout
 import com.lemon.mcdevmanagermp.ui.pages.analyze.monthDetail.layout.MonthDetailExpandedLayout
 import com.lemon.mcdevmanagermp.ui.pages.analyze.monthDetail.layout.MonthDetailMediumLayout
@@ -41,7 +39,7 @@ fun MonthDetailPage(
     val colors = LocalAppColors.current
     val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarHostState = LocalSnackbarHostState.current
     val scope = rememberCoroutineScope()
 
     // Effect 收集
@@ -64,16 +62,12 @@ fun MonthDetailPage(
         viewModel.dispatch(MonthDetailAction.InitLoad)
     }
 
-    BoxWithConstraints(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(colors.background)
     ) {
-        val widthSizeClass = when {
-            maxWidth < 600.dp -> WindowWidthSizeClass.Compact
-            maxWidth < 840.dp -> WindowWidthSizeClass.Medium
-            else -> WindowWidthSizeClass.Expanded
-        }
+        val widthSizeClass = LocalWindowWidthSizeClass.current
 
         when (widthSizeClass) {
             WindowWidthSizeClass.Compact -> MonthDetailCompactLayout(
@@ -109,19 +103,5 @@ fun MonthDetailPage(
             )
         }
 
-        // Snackbar
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = navBarBottom + 8.dp)
-        ) { data ->
-            Snackbar(
-                snackbarData = data,
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
-                containerColor = colors.surface,
-                contentColor = colors.textColor
-            )
-        }
     }
 }

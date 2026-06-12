@@ -9,6 +9,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowPosition
+import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import com.lemon.mcdevmanagermp.utils.CrashHandler
@@ -36,7 +37,7 @@ private fun loadWindowState(): Triple<DpSize, WindowPosition, WindowPlacement> {
     return Triple(size, position, placement)
 }
 
-private fun saveWindowState(state: androidx.compose.ui.window.WindowState) {
+private fun saveWindowState(state: WindowState) {
     prefs.putBoolean(KEY_MAXIMIZED, state.placement == WindowPlacement.Maximized)
     if (state.placement == WindowPlacement.Floating) {
         prefs.putInt(KEY_WIDTH, state.size.width.value.toInt())

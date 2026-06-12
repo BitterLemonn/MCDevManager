@@ -1,13 +1,8 @@
 package com.lemon.mcdevmanagermp.ui.pages.work.activity
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,10 +12,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.data.vo.netease.activity.ReviewActivityItemVO
+import com.lemon.mcdevmanagermp.ui.components.LocalSnackbarHostState
+import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.detail.ActivityDetailPage
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.layout.ActivityCompactLayout
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.layout.ActivityExpandedLayout
@@ -37,7 +32,7 @@ fun ActivityPage(
     val state by viewModel.state.collectAsState()
     val colors = LocalAppColors.current
 
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarHostState = LocalSnackbarHostState.current
     val scope = rememberCoroutineScope()
 
     // 内部子页面导航状态
@@ -46,8 +41,7 @@ fun ActivityPage(
     var participateTarget by remember { mutableStateOf<ReviewActivityItemVO?>(null) }
 
     val onParticipateSuccess: () -> Unit = {
-        participateTarget = null
-        selectedActivity = null
+        // 仅刷新活动列表数据，不清除导航状态（参与页面自行刷新模组列表）
         viewModel.dispatch(ActivityAction.RefreshData)
     }
 
@@ -87,12 +81,8 @@ fun ActivityPage(
     }
 
     // 列表页面：根据宽度选择不同布局
-    BoxWithConstraints(modifier = Modifier.fillMaxSize().background(colors.background)) {
-        val widthSizeClass = when {
-            maxWidth < 600.dp -> WindowWidthSizeClass.Compact
-            maxWidth < 840.dp -> WindowWidthSizeClass.Medium
-            else -> WindowWidthSizeClass.Expanded
-        }
+    Box(modifier = Modifier.fillMaxSize().background(colors.background)) {
+        val widthSizeClass = LocalWindowWidthSizeClass.current
 
         when (widthSizeClass) {
             WindowWidthSizeClass.Expanded -> ActivityExpandedLayout(
@@ -109,17 +99,6 @@ fun ActivityPage(
                     onBack = onBack,
                     onItemClick = { selectedActivity = it }
                 )
-                SnackbarHost(
-                    hostState = snackbarHostState,
-                    modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp)
-                ) { data ->
-                    Snackbar(
-                        snackbarData = data,
-                        shape = RoundedCornerShape(8.dp),
-                        containerColor = colors.surface,
-                        contentColor = colors.textColor
-                    )
-                }
             }
 
             else -> {
@@ -129,17 +108,6 @@ fun ActivityPage(
                     onBack = onBack,
                     onItemClick = { selectedActivity = it }
                 )
-                SnackbarHost(
-                    hostState = snackbarHostState,
-                    modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp)
-                ) { data ->
-                    Snackbar(
-                        snackbarData = data,
-                        shape = RoundedCornerShape(8.dp),
-                        containerColor = colors.surface,
-                        contentColor = colors.textColor
-                    )
-                }
             }
         }
     }

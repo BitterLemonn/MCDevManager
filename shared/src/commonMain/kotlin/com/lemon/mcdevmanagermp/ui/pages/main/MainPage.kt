@@ -3,12 +3,7 @@ package com.lemon.mcdevmanagermp.ui.pages.main
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
@@ -19,10 +14,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.platform.BackHandler
 import com.lemon.mcdevmanagermp.platform.openUrl
 import com.lemon.mcdevmanagermp.ui.components.AppScaffold
+import com.lemon.mcdevmanagermp.ui.components.LocalSnackbarHostState
+import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
 import com.lemon.mcdevmanagermp.ui.navigation.Route
 import com.lemon.mcdevmanagermp.ui.pages.main.layout.CompactLayout
 import com.lemon.mcdevmanagermp.ui.pages.main.layout.ExpandedLayout
@@ -47,7 +43,7 @@ fun MainPage(
 ) {
     val viewModel = remember { MainViewModel() }
     val state by viewModel.state.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarHostState = LocalSnackbarHostState.current
     val scope = rememberCoroutineScope()
 
     // 更新检查
@@ -90,31 +86,13 @@ fun MainPage(
                     onNavigateToLogin()
                 }
             }
-        },
-        snackbarHost = {
-            SnackbarHost(
-                hostState = snackbarHostState,
-                modifier = Modifier.padding(bottom = 80.dp) // 避免 Snackbar 遮挡底部 NavigationBar
-            ) { data ->
-                val colors = LocalAppColors.current
-                Snackbar(
-                    snackbarData = data,
-                    shape = RoundedCornerShape(8.dp),
-                    containerColor = colors.surface,
-                    contentColor = colors.onSurface
-                )
-            }
         }
     ) {
         val onCheckUpdate: () -> Unit =
             { updateViewModel.dispatch(UpdateAction.CheckUpdate(isManual = true)) }
 
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-            val widthSizeClass = when {
-                maxWidth < 600.dp -> WindowWidthSizeClass.Compact
-                maxWidth < 840.dp -> WindowWidthSizeClass.Medium
-                else -> WindowWidthSizeClass.Expanded
-            }
+            val widthSizeClass = LocalWindowWidthSizeClass.current
             when (widthSizeClass) {
                 WindowWidthSizeClass.Compact -> CompactLayout(
                     state = state,

@@ -17,7 +17,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -64,6 +63,7 @@ import com.lemon.mcdevmanagermp.platform.BackHandler
 import com.lemon.mcdevmanagermp.platform.openUrl
 import com.lemon.mcdevmanagermp.platform.supportsDynamicColor
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
+import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
 import com.lemon.mcdevmanagermp.ui.pages.settings.about.AboutPage
 import com.lemon.mcdevmanagermp.ui.pages.settings.account.AccountManagementPage
 import com.lemon.mcdevmanagermp.ui.pages.settings.layout.CompactThemeLayout
@@ -425,17 +425,13 @@ private fun ThemeSettingsPage(
             Spacer(Modifier.height(statusBarTop))
             Spacer(Modifier.height(56.dp))
 
-            BoxWithConstraints(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(16.dp)
                     .padding(bottom = navBarBottom)
             ) {
-                val widthSizeClass = when {
-                    maxWidth < 600.dp -> WindowWidthSizeClass.Compact
-                    maxWidth < 840.dp -> WindowWidthSizeClass.Medium
-                    else -> WindowWidthSizeClass.Expanded
-                }
+                val widthSizeClass = LocalWindowWidthSizeClass.current
 
                 when (widthSizeClass) {
                     WindowWidthSizeClass.Compact -> CompactThemeLayout(

@@ -1,6 +1,7 @@
 package com.lemon.mcdevmanagermp.domain.upload
 
 import com.lemon.mcdevmanagermp.data.common.NetworkState
+import com.lemon.mcdevmanagermp.data.dto.netease.activity.FileInfoDTO
 import io.github.vinceglb.filekit.PlatformFile
 
 interface FileUploadRepository {
@@ -17,5 +18,5 @@ interface FileUploadRepository {
         fileName: String,
         file: PlatformFile,
         mimeType: String
-    ): NetworkState<String>
+    ): NetworkState<FileInfoDTO>
 }

@@ -1,19 +1,13 @@
 package com.lemon.mcdevmanagermp.ui.pages.analyze.realtimeProfit
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,6 +20,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.lemon.mcdevmanagermp.ui.components.LocalSnackbarHostState
+import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
 import com.lemon.mcdevmanagermp.ui.pages.analyze.realtimeProfit.layout.RealtimeProfitCompactLayout
 import com.lemon.mcdevmanagermp.ui.pages.analyze.realtimeProfit.layout.RealtimeProfitExpandedLayout
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
@@ -38,7 +34,7 @@ fun RealtimeProfitPage(onBack: () -> Unit) {
     val colors = LocalAppColors.current
     val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarHostState = LocalSnackbarHostState.current
     val scope = rememberCoroutineScope()
 
     var showDatePicker by remember { mutableStateOf(false) }
@@ -67,12 +63,8 @@ fun RealtimeProfitPage(onBack: () -> Unit) {
         showDatePicker = state.isDateSelectorVisible
     }
 
-    BoxWithConstraints(modifier = Modifier.fillMaxSize().background(colors.background)) {
-        val widthSizeClass = when {
-            maxWidth < 600.dp -> WindowWidthSizeClass.Compact
-            maxWidth < 840.dp -> WindowWidthSizeClass.Medium
-            else -> WindowWidthSizeClass.Expanded
-        }
+    Box(modifier = Modifier.fillMaxSize().background(colors.background)) {
+        val widthSizeClass = LocalWindowWidthSizeClass.current
 
         when (widthSizeClass) {
             WindowWidthSizeClass.Compact, WindowWidthSizeClass.Medium -> RealtimeProfitCompactLayout(
@@ -117,17 +109,5 @@ fun RealtimeProfitPage(onBack: () -> Unit) {
             )
         }
 
-        // Snackbar
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = navBarBottom + 8.dp)
-        ) { data ->
-            Snackbar(
-                snackbarData = data,
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
-                containerColor = colors.surface,
-                contentColor = colors.textColor
-            )
-        }
     }
 }
