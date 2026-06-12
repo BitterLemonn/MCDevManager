@@ -9,7 +9,7 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResDetailData
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResAnalyzeData
 import com.lemon.mcdevmanagermp.ui.pages.analyze.dayDetail.CHART_COLORS
 import com.lemon.mcdevmanagermp.ui.pages.analyze.dayDetail.DayDetailMetricType
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.ChartType
@@ -35,7 +35,7 @@ import com.patrykandpatrick.vico.compose.common.vicoTheme
  */
 @Composable
 internal fun DayDetailChart(
-    detailData: Map<String, List<ResDetailData>>,
+    detailData: Map<String, List<ResAnalyzeData>>,
     resNameMap: Map<String, String>,
     metricType: Int,
     chartType: ChartType,
@@ -130,7 +130,7 @@ internal fun DayDetailChart(
 /**
  * 从 ResDetailData 提取指定指标值
  */
-private fun getMetricValue(data: ResDetailData, metricType: Int): Double {
+private fun getMetricValue(data: ResAnalyzeData, metricType: Int): Double {
     return when (metricType) {
         DayDetailMetricType.NEW_PURCHASE -> data.cntBuy.toDouble()
         DayDetailMetricType.DOWNLOAD -> data.downloadNum.toDouble()

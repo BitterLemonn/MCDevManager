@@ -9,7 +9,7 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.lemon.mcdevmanagermp.data.vo.netease.resource.NewResDetailData
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.NewResAnalyzeData
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.ChartType
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.MetricType
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
@@ -38,7 +38,7 @@ import com.patrykandpatrick.vico.compose.common.vicoTheme
  */
 @Composable
 internal fun ChartSection(
-    analysisData: List<NewResDetailData>,
+    analysisData: List<NewResAnalyzeData>,
     metricType: Int,
     chartType: ChartType,
     modifier: Modifier = Modifier,
@@ -127,7 +127,7 @@ internal fun ChartSection(
  * 从分析数据中提取指定指标的模组值、同类均值和日期标签
  */
 private fun extractMetricData(
-    data: List<NewResDetailData>,
+    data: List<NewResAnalyzeData>,
     metricType: Int
 ): Triple<List<Double>, List<Double>, List<String>> {
     val modValues = mutableListOf<Double>()

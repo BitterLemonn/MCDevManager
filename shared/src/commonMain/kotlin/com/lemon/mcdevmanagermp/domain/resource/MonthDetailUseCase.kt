@@ -1,7 +1,7 @@
 package com.lemon.mcdevmanagermp.domain.resource
 
 import com.lemon.mcdevmanagermp.data.common.NetworkState
-import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResMonthDetailData
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResMonthAnalyzeData
 import com.lemon.mcdevmanagermp.ui.pages.analyze.monthDetail.QuickTimeRange
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
@@ -25,7 +25,7 @@ class MonthDetailUseCase(
         platform: String,
         startDate: String,
         endDate: String
-    ): NetworkState<List<ResMonthDetailData>> {
+    ): NetworkState<List<ResMonthAnalyzeData>> {
         val apiPlatform = if (platform == "pe") "pe" else "comp"
 
         return when (val result = resourceRepository.getMonthDetail(

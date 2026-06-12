@@ -1,7 +1,7 @@
 package com.lemon.mcdevmanagermp.domain.resource
 
 import com.lemon.mcdevmanagermp.data.common.NetworkState
-import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResDetailData
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResAnalyzeData
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
@@ -54,7 +54,7 @@ class DayDetailUseCase(
         startDate: String,
         endDate: String,
         iids: List<String>
-    ): NetworkState<Map<String, List<ResDetailData>>> {
+    ): NetworkState<Map<String, List<ResAnalyzeData>>> {
         val itemListStr = iids.joinToString(",")
         val apiPlatform = if (platform == "pe") "pe" else "comp"
 

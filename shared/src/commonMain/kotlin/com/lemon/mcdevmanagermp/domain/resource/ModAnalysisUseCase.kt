@@ -1,7 +1,7 @@
 package com.lemon.mcdevmanagermp.domain.resource
 
 import com.lemon.mcdevmanagermp.data.common.NetworkState
-import com.lemon.mcdevmanagermp.data.vo.netease.resource.NewResDetailData
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.NewResAnalyzeData
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.SummaryMetrics
 import kotlinx.datetime.DateTimeUnit
@@ -78,7 +78,7 @@ class ModAnalysisUseCase(
     /**
      * 从原始数据计算四指标汇总（取日均值 + 百分位均值）
      */
-    private fun computeSummaryMetrics(data: List<NewResDetailData>): SummaryMetrics {
+    private fun computeSummaryMetrics(data: List<NewResAnalyzeData>): SummaryMetrics {
         if (data.isEmpty()) return SummaryMetrics()
         return SummaryMetrics(
             newPurchaseCount = data.sumOf { it.cntBuy } / data.size,
@@ -101,6 +101,6 @@ class ModAnalysisUseCase(
  * 模组分析结果
  */
 data class ModAnalysisResult(
-    val analysisData: List<NewResDetailData>,
+    val analysisData: List<NewResAnalyzeData>,
     val summaryMetrics: SummaryMetrics
 )
