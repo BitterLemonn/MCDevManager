@@ -14,147 +14,42 @@ data class ResourceVO(
     val item: List<ResourceData>
 )
 
-/**
- * 新版资源详情
- */
-@Serializable
-data class NewResDetailVO(
-    val data: List<NewResAnalyzeData>
-)
-
-/**
- * 资源详情
- */
-@Serializable
-data class ResDetailVO(
-    val data: List<ResAnalyzeData>
-)
-
-/**
- * 资源月详情
- */
-@Serializable
-data class ResMonthDetailVO(
-    val data: List<ResMonthAnalyzeData>
-)
-
 @Serializable
 data class ResourceData(
     @SerialName("create_time")
-    val createTime: String,
+    val createTime: String = "",
     @SerialName("item_id")
-    val itemId: String,
+    val itemId: String = "",
     @SerialName("item_name")
-    val itemName: String,
+    val itemName: String = "",
     @SerialName("online_time")
     val onlineTime: String = "UNKNOWN",
     @SerialName("pri_type")
-    val priType: Int,
-    val price: Int
+    val priType: Int = 0,
+    val price: Int = 0,
+    // —— 上架管理相关字段（列表接口已返回，旧版本未声明）——
+    @SerialName("item_real_status")
+    val itemRealStatus: Int = 0,
+    @SerialName("price_type")
+    val priceType: String = "",
+    @SerialName("price_rank")
+    val priceRank: Int = 0,
+    @SerialName("is_premium")
+    val isPremium: Boolean = false,
+    @SerialName("is_original")
+    val isOriginal: Boolean = false,
+    @SerialName("is_ea")
+    val isEa: Int = 0,
+    @SerialName("premium_apply_status")
+    val premiumApplyStatus: String = "",
+    @SerialName("apply_review_time")
+    val applyReviewTime: String = "",
+    @SerialName("can_update_pc")
+    val canUpdatePc: Boolean = false,
+    @SerialName("rating_level")
+    val ratingLevel: Int = 0
 )
 
-
-@Serializable
-data class ResAnalyzeData(
-    @SerialName("DAU")
-    val dau: Int,
-    @SerialName("cnt_buy")
-    val cntBuy: Int,
-    @SerialName("dateid")
-    val dateId: String,
-    @SerialName("diamond")
-    val diamond: Int,
-    @SerialName("download_num")
-    val downloadNum: Int = 0,
-    @SerialName("iid")
-    val iid: String,
-    @SerialName("platform")
-    val platform: String,
-    @SerialName("points")
-    val points: Int,
-    @SerialName("refund_rate")
-    val refundRate: Double,
-    @SerialName("res_name")
-    val resName: String,
-    @SerialName("upload_time")
-    val uploadTime: String
-)
-
-@Serializable
-data class ResMonthAnalyzeData(
-    @SerialName("avg_dau")
-    val avgDau: Int,
-    @SerialName("avg_day_buy")
-    val avgDayBuy: Int,
-    @SerialName("download_num")
-    val downloadNum: Int,
-    @SerialName("iid")
-    val iid: String,
-    @SerialName("mau")
-    val mau: Int,
-    @SerialName("monthid")
-    val monthId: String,
-    @SerialName("platform")
-    val platform: String,
-    @SerialName("res_name")
-    val resName: String,
-    @SerialName("total_diamond")
-    val totalDiamond: Int,
-    @SerialName("total_points")
-    val totalPoints: Int,
-    @SerialName("upload_time")
-    val uploadTime: String = "UNKNOWN"
-)
-
-@Serializable
-data class NewResAnalyzeData(
-    @SerialName("DAU")
-    val dau: Int,
-    @SerialName("avg_first_type_buy")
-    val avgFirstTypeBuy: Double,
-    @SerialName("avg_first_type_diamond")
-    val avgFirstTypeDiamond: Double,
-    @SerialName("avg_first_type_focus")
-    val avgFirstTypeFocus: Double,
-    @SerialName("avg_first_type_role_play")
-    val avgFirstTypeRolePlay: Double,
-    @SerialName("avg_playtime")
-    val avgPlaytime: Double,
-    @SerialName("avg_total_first_type_buy")
-    val avgTotalFirstTypeBuy: Double,
-    @SerialName("cnt_buy")
-    val cntBuy: Int,
-    @SerialName("dateid")
-    val dateId: String,
-    val diamond: Int,
-    @SerialName("download_num")
-    val downloadNum: Int,
-    @SerialName("first_type_avg_role_time")
-    val firstTypeAvgRoleTime: Double,
-    @SerialName("focus_cnt")
-    val focusCnt: Int,
-    val iid: String,
-    @SerialName("pass_avg_role_time_ratio")
-    val passAvgRoleTimeRatio: Double,
-    @SerialName("pass_buy_cnt_ratio")
-    val passBuyCntRatio: Double,
-    @SerialName("pass_cnt_role_play_ratio")
-    val passCntRolePlayRatio: Double,
-    @SerialName("pass_focus_cnt_ratio")
-    val passFocusCntRatio: Double,
-    @SerialName("pass_pay_diamond_ratio")
-    val passPayDiamondRatio: Double,
-    val platform: String,
-    val points: Int,
-    @SerialName("refund_rate")
-    val refundRate: Double,
-    @SerialName("res_name")
-    val resName: String,
-    @SerialName("star_adjusted")
-    val starAdjusted: Double,
-    @SerialName("upload_time")
-    val uploadTime: String
-)
 
 /**
  * 资源详情

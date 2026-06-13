@@ -1,6 +1,6 @@
 package com.lemon.mcdevmanagermp.data.api
 
-import com.lemon.mcdevmanagermp.data.api.ApiFactory.provideLoggerKtorfit
+import com.lemon.mcdevmanagermp.data.api.ApiFactory.provideKtorfit
 import com.lemon.mcdevmanagermp.data.common.NoNeedData
 import com.lemon.mcdevmanagermp.data.common.ResponseData
 import com.lemon.mcdevmanagermp.data.consts.NETEASE_MC_DEV_LINK
@@ -56,7 +56,7 @@ interface ActivityApi {
     companion object {
         const val NETEASE_ACTIVITY_BASE_INTERFACE = "/activities/pe-review-activities"
         val INSTANCE by lazy {
-            provideLoggerKtorfit(NETEASE_MC_DEV_LINK).createActivityApi()
+            provideKtorfit(NETEASE_MC_DEV_LINK).createActivityApi()
         }
     }
 }

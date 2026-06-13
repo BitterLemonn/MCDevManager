@@ -116,16 +116,6 @@ object ApiFactory {
             install(HttpCookies) {
                 storage = cookiesStorage
             }
-            install(Logging) {
-                logger = object : KtorLogger {
-                    override fun log(message: String) {
-                        // 使用你自己的 Logger 输出，Ktor 会自动格式化好 请求头/体/响应
-                        Logger.d("KtorLog:\n$message")
-                    }
-                }
-                // 打印级别：ALL (包含 Headers 和 Body)，对应你原来的 peekBody
-                level = LogLevel.HEADERS
-            }
         }
     }
 

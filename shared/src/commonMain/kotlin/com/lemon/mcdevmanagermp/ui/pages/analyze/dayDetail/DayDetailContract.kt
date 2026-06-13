@@ -1,7 +1,7 @@
 package com.lemon.mcdevmanagermp.ui.pages.analyze.dayDetail
 
 import androidx.compose.ui.graphics.Color
-import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResAnalyzeData
+import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResAnalyzeData
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.ChartType
 import com.lemon.mcdevmanagermp.utils.extension.IUiAction

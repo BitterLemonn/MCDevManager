@@ -2,9 +2,9 @@ package com.lemon.mcdevmanagermp.domain.resource
 
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.dto.netease.income.OneResRealtimeIncomeVO
-import com.lemon.mcdevmanagermp.data.vo.netease.resource.NewResDetailVO
-import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResDetailVO
-import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResMonthDetailVO
+import com.lemon.mcdevmanagermp.data.vo.netease.analyze.NewResDetailVO
+import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResDetailVO
+import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResMonthDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceVO
 
 interface ResourceRepository {
