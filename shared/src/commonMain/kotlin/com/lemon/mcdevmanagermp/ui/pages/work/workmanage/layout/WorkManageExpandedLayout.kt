@@ -24,12 +24,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.WorkManageAction
 import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.WorkManageState
-import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.layout.component.ConfirmActionDialog
+import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.layout.component.WorkManageActionDialog
 import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.layout.component.WorkManageCard
+import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.layout.component.WorkManagePendingOp
 import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.model.WorkItemAction
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import mcdevmanagermpr.shared.generated.resources.Res
@@ -44,7 +44,7 @@ internal fun WorkManageExpandedLayout(
 ) {
     val colors = LocalAppColors.current
     val gridState = rememberLazyGridState()
-    var pendingAction by remember { mutableStateOf<Pair<ResourceData, WorkItemAction>?>(null) }
+    var pending by remember { mutableStateOf<WorkManagePendingOp?>(null) }
 
     val scrollAlpha = remember {
         derivedStateOf {
@@ -108,21 +108,28 @@ internal fun WorkManageExpandedLayout(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(state.items, key = { it.itemId }) { item ->
-                    WorkManageCard(item) { action -> pendingAction = item to action }
+                    WorkManageCard(item) { action ->
+                        pending = if (action == WorkItemAction.ADJUST_PRICE) {
+                            WorkManagePendingOp.AdjustPrice(item)
+                        } else {
+                            WorkManagePendingOp.Confirm(item, action)
+                        }
+                    }
                 }
             }
         }
     }
 
-    pendingAction?.let { (item, action) ->
-        ConfirmActionDialog(
-            item = item,
-            action = action,
-            onConfirm = {
-                onAction(WorkManageAction.PerformAction(item, action))
-                pendingAction = null
-            },
-            onDismiss = { pendingAction = null }
-        )
-    }
+    WorkManageActionDialog(
+        pending = pending,
+        onConfirmAction = { item, action ->
+            onAction(WorkManageAction.PerformAction(item, action))
+            pending = null
+        },
+        onAdjustPrice = { item, newPrice ->
+            onAction(WorkManageAction.AdjustPrice(item, newPrice))
+            pending = null
+        },
+        onDismiss = { pending = null }
+    )
 }

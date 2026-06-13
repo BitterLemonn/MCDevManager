@@ -21,6 +21,7 @@ class WorkManageViewModel :
             WorkManageAction.LoadData -> loadWorks()
             WorkManageAction.RefreshData -> refreshWorks()
             is WorkManageAction.PerformAction -> performAction(action.item, action.action)
+            is WorkManageAction.AdjustPrice -> adjustPrice(action.item, action.newPrice)
         }
     }
 
@@ -72,5 +73,13 @@ class WorkManageViewModel :
      */
     private fun performAction(item: ResourceData, action: WorkItemAction) {
         sendEffect(WorkManageEffect.ShowToast("已${action.label}《${item.itemName}》（接口占位）"))
+    }
+
+    /**
+     * 调整定价（占位：当前仅提示，不真实联网）。
+     * 后续接口补齐时改为调用 WorkManageUseCase，成功后 dispatch(RefreshData) 刷新列表。
+     */
+    private fun adjustPrice(item: ResourceData, newPrice: Int) {
+        sendEffect(WorkManageEffect.ShowToast("已调整《${item.itemName}》定价为 $newPrice（接口占位）"))
     }
 }

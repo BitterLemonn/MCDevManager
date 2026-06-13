@@ -10,7 +10,7 @@ enum class WorkItemAction(val label: String) {
     SUBMIT_REVIEW("提交审核"),
     PUBLISH("上架"),
     UPDATE("更新"),
-    TAKE_DOWN("下架")
+    ADJUST_PRICE("调整定价")
 }
 
 /**
@@ -20,16 +20,33 @@ enum class WorkItemAction(val label: String) {
  * 接入真实写操作接口或确认状态码后可在此调整。
  *
  * @param label 状态展示文案
- * @param actions 该状态下可执行的操作列表
  */
-enum class WorkItemStatus(val label: String, val actions: List<WorkItemAction>) {
-    ONLINE("已上架", listOf(WorkItemAction.UPDATE, WorkItemAction.TAKE_DOWN)),
-    REVIEWING("审核中", emptyList()),
-    REJECTED("审核未通过", listOf(WorkItemAction.SUBMIT_REVIEW)),
-    UNPUBLISHED("待上架", listOf(WorkItemAction.SUBMIT_REVIEW)),
-    OFFLINE("已下架", listOf(WorkItemAction.PUBLISH)),
-    SYSTEM_OFFLINE("系统下架", listOf(WorkItemAction.UPDATE)),
-    UNKNOWN("未知", emptyList());
+enum class WorkItemStatus(val label: String) {
+    ONLINE("已上架"),
+    REVIEWING("审核中"),
+    REJECTED("审核未通过"),
+    UNPUBLISHED("待上架"),
+    OFFLINE("已下架"),
+    SYSTEM_OFFLINE("系统下架"),
+    UNKNOWN("未知");
+
+    /**
+     * 该状态下可执行的操作列表。
+     * 已上架(ONLINE)的非免费资源额外支持「调整定价」。
+     *
+     * @param isFree 作品是否免费（price <= 0）
+     */
+    fun actions(isFree: Boolean): List<WorkItemAction> = when (this) {
+        ONLINE -> buildList {
+            add(WorkItemAction.UPDATE)
+            if (!isFree) add(WorkItemAction.ADJUST_PRICE)
+        }
+        REJECTED -> listOf(WorkItemAction.SUBMIT_REVIEW)
+        UNPUBLISHED -> listOf(WorkItemAction.SUBMIT_REVIEW)
+        OFFLINE -> listOf(WorkItemAction.PUBLISH)
+        SYSTEM_OFFLINE -> listOf(WorkItemAction.UPDATE)
+        REVIEWING, UNKNOWN -> emptyList()
+    }
 
     companion object {
         /**

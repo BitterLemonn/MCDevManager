@@ -18,6 +18,9 @@ sealed interface WorkManageAction : IUiAction {
 
     /** 执行上架操作（当前占位，后续接真实接口） */
     data class PerformAction(val item: ResourceData, val action: WorkItemAction) : WorkManageAction
+
+    /** 调整定价（当前占位，后续接真实接口） */
+    data class AdjustPrice(val item: ResourceData, val newPrice: Int) : WorkManageAction
 }
 
 sealed interface WorkManageEffect : IUiEffect {

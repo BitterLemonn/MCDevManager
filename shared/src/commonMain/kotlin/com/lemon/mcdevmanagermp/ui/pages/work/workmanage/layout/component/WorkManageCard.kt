@@ -37,7 +37,7 @@ import com.lemon.mcdevmanagermp.ui.theme.AppColors
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_correct
-import mcdevmanagermpr.shared.generated.resources.ic_del
+import mcdevmanagermpr.shared.generated.resources.ic_diamond
 import mcdevmanagermpr.shared.generated.resources.ic_refresh
 import mcdevmanagermpr.shared.generated.resources.ic_sale
 import org.jetbrains.compose.resources.DrawableResource
@@ -53,6 +53,7 @@ internal fun WorkManageCard(
 ) {
     val colors = LocalAppColors.current
     val status = WorkItemStatus.fromRealStatus(item.itemRealStatus)
+    val actions = status.actions(isFree = item.price <= 0)
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -108,14 +109,14 @@ internal fun WorkManageCard(
             )
 
             // 操作按钮
-            if (status.actions.isNotEmpty()) {
+            if (actions.isNotEmpty()) {
                 Spacer(Modifier.height(12.dp))
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    status.actions.forEach { action ->
+                    actions.forEach { action ->
                         ActionButton(action = action, onClick = { onActionClick(action) })
                     }
                 }
@@ -125,8 +126,7 @@ internal fun WorkManageCard(
 }
 
 /**
- * 现代化操作按钮：tonal 胶囊样式（图标 + 文字）。
- * 配色克制——主操作统一用主色，仅破坏性操作（下架）用 danger 强调。
+ * 现代化操作按钮：tonal 胶囊样式（图标 + 文字），统一主色，按操作类型配图标。
  */
 @Composable
 private fun ActionButton(
@@ -134,15 +134,12 @@ private fun ActionButton(
     onClick: () -> Unit
 ) {
     val colors = LocalAppColors.current
-    val accent = when (action) {
-        WorkItemAction.TAKE_DOWN -> colors.danger
-        else -> colors.primary
-    }
+    val accent = colors.primary
     val iconRes: DrawableResource = when (action) {
         WorkItemAction.SUBMIT_REVIEW -> Res.drawable.ic_correct
         WorkItemAction.PUBLISH -> Res.drawable.ic_sale
         WorkItemAction.UPDATE -> Res.drawable.ic_refresh
-        WorkItemAction.TAKE_DOWN -> Res.drawable.ic_del
+        WorkItemAction.ADJUST_PRICE -> Res.drawable.ic_diamond
     }
     val interaction = remember { MutableInteractionSource() }
     val isHovered by interaction.collectIsHoveredAsState()
