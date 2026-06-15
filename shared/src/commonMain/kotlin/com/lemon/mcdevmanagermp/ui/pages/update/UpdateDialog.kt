@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -21,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.domain.update.CheckUpdateResult
 import com.lemon.mcdevmanagermp.platform.UpdateStrategy
+import com.lemon.mcdevmanagermp.ui.components.RichMarkdownText
 import com.lemon.mcdevmanagermp.utils.extension.formatDecimal
 import com.mohamedrejeb.calf.permissions.ExperimentalPermissionsApi
 import com.mohamedrejeb.calf.permissions.PermissionState
@@ -184,9 +187,14 @@ fun UpdateDialog(
                                     fontWeight = FontWeight.SemiBold
                                 )
                                 Spacer(Modifier.height(4.dp))
-                                MarkdownBody(
+                                RichMarkdownText(
                                     markdown = result.releaseNotes,
-                                    modifier = Modifier.height(160.dp)
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(160.dp)
+                                        .verticalScroll(rememberScrollState()),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }

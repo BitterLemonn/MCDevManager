@@ -35,6 +35,7 @@ vico = "3.2.2"
 calf-permission = "0.12.0"
 crypto = "0.6.0"
 filekit = "0.14.0"
+rich-editor = "1.0.0-rc14"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -100,6 +101,8 @@ crypto-provider = { group = "dev.whyoleg.cryptography", name = "cryptography-pro
 # filekit
 filekit = { group = "io.github.vinceglb", name = "filekit-core", version.ref = "filekit" }
 filekit-dialog-compose = { group = "io.github.vinceglb", name = "filekit-dialogs-compose", version.ref = "filekit" }
+# rich editor
+rich-editor = { module = "com.mohamedrejeb.richeditor:richeditor-compose", version.ref = "rich-editor" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

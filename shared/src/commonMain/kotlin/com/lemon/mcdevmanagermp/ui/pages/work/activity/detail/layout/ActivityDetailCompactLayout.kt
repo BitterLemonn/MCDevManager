@@ -28,7 +28,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -37,11 +36,11 @@ import com.github.panpf.sketch.rememberAsyncImageState
 import com.github.panpf.sketch.request.ComposableImageOptions
 import com.lemon.mcdevmanagermp.data.vo.netease.activity.ReviewActivityItemVO
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
+import com.lemon.mcdevmanagermp.ui.components.RichHtmlText
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.detail.ActivityDetailState
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.layout.ActivityStatusTag
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.layout.formatTimeRange
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import com.lemon.mcdevmanagermp.utils.HtmlParser
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
@@ -192,7 +191,13 @@ internal fun ActivityDetailCompactLayout(
             if (activity.desc.isNotEmpty()) {
                 SectionCard(
                     title = "活动描述",
-                    content = HtmlParser.parse(activity.desc),
+                    content = {
+                        RichHtmlText(
+                            html = activity.desc,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = colors.onSurfaceVariant
+                        )
+                    },
                     colors = colors
                 )
             }
@@ -201,7 +206,13 @@ internal fun ActivityDetailCompactLayout(
             if (activity.instruction.isNotEmpty()) {
                 SectionCard(
                     title = "活动规则",
-                    content = HtmlParser.parse(activity.instruction),
+                    content = {
+                        RichHtmlText(
+                            html = activity.instruction,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = colors.onSurfaceVariant
+                        )
+                    },
                     colors = colors
                 )
             }
@@ -232,8 +243,8 @@ internal fun ActivityDetailCompactLayout(
                                 color = colors.textColor
                             )
                             if (module.moduleDescription.isNotEmpty()) {
-                                Text(
-                                    text = HtmlParser.parse(module.moduleDescription),
+                                RichHtmlText(
+                                    html = module.moduleDescription,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = colors.onSurfaceVariant
                                 )
@@ -309,7 +320,7 @@ private fun InfoChipRow(label: String, value: String) {
 @Composable
 private fun SectionCard(
     title: String,
-    content: AnnotatedString,
+    content: @Composable () -> Unit,
     colors: com.lemon.mcdevmanagermp.ui.theme.AppColors
 ) {
     Column(
@@ -326,11 +337,7 @@ private fun SectionCard(
             color = colors.textColor
         )
         Spacer(Modifier.height(8.dp))
-        Text(
-            text = content,
-            style = MaterialTheme.typography.bodyMedium,
-            color = colors.onSurfaceVariant
-        )
+        content()
     }
 }
 
