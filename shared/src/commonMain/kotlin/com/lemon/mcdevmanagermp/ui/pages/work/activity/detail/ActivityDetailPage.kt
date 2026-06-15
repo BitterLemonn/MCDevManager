@@ -9,16 +9,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import com.lemon.mcdevmanagermp.data.vo.netease.activity.ReviewActivityItemVO
-import com.lemon.mcdevmanagermp.ui.components.LocalSnackbarHostState
 import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
+import com.lemon.mcdevmanagermp.ui.components.collectUiEffect
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.detail.layout.ActivityDetailCompactLayout
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.detail.layout.ActivityDetailExpandedLayout
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.detail.layout.ActivityDetailMediumLayout
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import kotlinx.coroutines.launch
 
 @Composable
 fun ActivityDetailPage(
@@ -31,23 +29,16 @@ fun ActivityDetailPage(
     val state by viewModel.state.collectAsState()
     val colors = LocalAppColors.current
 
-    val snackbarHostState = LocalSnackbarHostState.current
-    val scope = rememberCoroutineScope()
-
     LaunchedEffect(activity) {
         viewModel.dispatch(ActivityDetailAction.LoadData(activity))
     }
 
-    LaunchedEffect(viewModel.effect) {
-        viewModel.effect.collect { effect ->
-            when (effect) {
-                is ActivityDetailEffect.ShowToast -> {
-                    scope.launch { snackbarHostState.showSnackbar(effect.message) }
-                }
+    viewModel.effect.collectUiEffect { effect ->
+        when (effect) {
+            is ActivityDetailEffect.ShowToast -> showToast(effect.message)
 
-                is ActivityDetailEffect.NavigateToParticipate -> {
-                    onNavigateToParticipate(effect.activity)
-                }
+            is ActivityDetailEffect.NavigateToParticipate -> {
+                onNavigateToParticipate(effect.activity)
             }
         }
     }

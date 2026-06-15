@@ -14,17 +14,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.lemon.mcdevmanagermp.ui.components.LocalSnackbarHostState
 import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
+import com.lemon.mcdevmanagermp.ui.components.collectUiEffect
 import com.lemon.mcdevmanagermp.ui.pages.analyze.dayDetail.layout.DayDetailCompactLayout
 import com.lemon.mcdevmanagermp.ui.pages.analyze.dayDetail.layout.DayDetailExpandedLayout
 import com.lemon.mcdevmanagermp.ui.pages.analyze.dayDetail.layout.DayDetailMediumLayout
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import kotlinx.coroutines.launch
 
 /**
  * 数据追踪页面入口
@@ -39,21 +37,11 @@ fun DayDetailPage(
     val colors = LocalAppColors.current
     val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
-    val snackbarHostState = LocalSnackbarHostState.current
-    val scope = rememberCoroutineScope()
+    viewModel.effect.collectUiEffect { effect ->
+        when (effect) {
+            is DayDetailEffect.ShowToast -> showToast(effect.message)
 
-    // Effect 收集
-    LaunchedEffect(viewModel.effect) {
-        viewModel.effect.collect { effect ->
-            when (effect) {
-                is DayDetailEffect.ShowToast -> {
-                    scope.launch { snackbarHostState.showSnackbar(effect.message) }
-                }
-
-                DayDetailEffect.NeedReLogin -> {
-                    scope.launch { snackbarHostState.showSnackbar("登录已过期，请重新登录") }
-                }
-            }
+            DayDetailEffect.NeedReLogin -> showToast("登录已过期，请重新登录")
         }
     }
 

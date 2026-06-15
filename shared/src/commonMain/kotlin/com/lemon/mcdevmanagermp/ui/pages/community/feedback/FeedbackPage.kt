@@ -44,7 +44,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -67,8 +66,8 @@ import com.lemon.mcdevmanagermp.data.vo.netease.feedback.ConflictModsVO
 import com.lemon.mcdevmanagermp.data.vo.netease.feedback.FeedbackData
 import com.lemon.mcdevmanagermp.platform.BackHandler
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
-import com.lemon.mcdevmanagermp.ui.components.LocalSnackbarHostState
 import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
+import com.lemon.mcdevmanagermp.ui.components.collectUiEffect
 import com.lemon.mcdevmanagermp.ui.pages.community.components.FilterChipItem
 import com.lemon.mcdevmanagermp.ui.pages.community.components.FilterGroupDef
 import com.lemon.mcdevmanagermp.ui.pages.community.components.ModernFilterBar
@@ -76,7 +75,6 @@ import com.lemon.mcdevmanagermp.ui.pages.community.components.ReplyInputBar
 import com.lemon.mcdevmanagermp.ui.pages.community.feedback.layout.CompactFeedbackLayout
 import com.lemon.mcdevmanagermp.ui.pages.community.feedback.layout.ExpandedFeedbackLayout
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
@@ -129,23 +127,14 @@ fun FeedbackPage(onBack: () -> Unit) {
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
-    val snackbarHostState = LocalSnackbarHostState.current
-    val scope = rememberCoroutineScope()
-
     BackHandler(enabled = state.selectedFeedback != null) {
         viewModel.dispatch(FeedbackAction.SelectFeedback(null))
     }
 
-    LaunchedEffect(viewModel.effect) {
-        viewModel.effect.collect { effect ->
-            when (effect) {
-                is FeedbackEffect.ShowToast -> {
-                    scope.launch { snackbarHostState.showSnackbar(effect.message) }
-                }
-                FeedbackEffect.ReplySuccess -> {
-                    scope.launch { snackbarHostState.showSnackbar("回复成功") }
-                }
-            }
+    viewModel.effect.collectUiEffect { effect ->
+        when (effect) {
+            is FeedbackEffect.ShowToast -> showToast(effect.message)
+            FeedbackEffect.ReplySuccess -> showToast("回复成功")
         }
     }
 

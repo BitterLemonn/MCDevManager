@@ -34,7 +34,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,10 +49,9 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lemon.mcdevmanagermp.ui.components.AppScaffold
-import com.lemon.mcdevmanagermp.ui.components.LocalSnackbarHostState
 import com.lemon.mcdevmanagermp.ui.components.LoginOutlineTextField
+import com.lemon.mcdevmanagermp.ui.components.collectUiEffect
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import kotlinx.coroutines.launch
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_back
 import mcdevmanagermpr.shared.generated.resources.ic_mc
@@ -70,21 +68,15 @@ fun LoginPage(
 ) {
     val viewModel = remember { LoginViewModel() }
     val state by viewModel.state.collectAsState()
-    val snackbarHostState = LocalSnackbarHostState.current
-    val scope = rememberCoroutineScope()
+    viewModel.effect.collectUiEffect { effect ->
+        when (effect) {
+            is LoginEffect.ShowToast -> showToast(effect.message)
 
-    AppScaffold(
-        viewEffect = viewModel.effect,
-        onEffect = { effect ->
-            when (effect) {
-                is LoginEffect.ShowToast -> {
-                    scope.launch { snackbarHostState.showSnackbar(effect.message) }
-                }
-
-                is LoginEffect.NavigateTo -> onNavigateToMain()
-            }
+            is LoginEffect.NavigateTo -> onNavigateToMain()
         }
-    ) { innerPadding ->
+    }
+
+    AppScaffold { innerPadding ->
         Scaffold(
             contentWindowInsets = WindowInsets(0, 0, 0, 0)
         ) { scaffoldPadding ->

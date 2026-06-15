@@ -11,14 +11,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.lemon.mcdevmanagermp.platform.BackHandler
 import com.lemon.mcdevmanagermp.platform.openUrl
 import com.lemon.mcdevmanagermp.ui.components.AppScaffold
-import com.lemon.mcdevmanagermp.ui.components.LocalSnackbarHostState
 import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
+import com.lemon.mcdevmanagermp.ui.components.collectUiEffect
 import com.lemon.mcdevmanagermp.ui.navigation.Route
 import com.lemon.mcdevmanagermp.ui.pages.main.layout.CompactLayout
 import com.lemon.mcdevmanagermp.ui.pages.main.layout.ExpandedLayout
@@ -32,7 +31,6 @@ import com.mohamedrejeb.calf.permissions.ExperimentalPermissionsApi
 import com.mohamedrejeb.calf.permissions.Notification
 import com.mohamedrejeb.calf.permissions.Permission
 import com.mohamedrejeb.calf.permissions.rememberPermissionState
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -43,9 +41,6 @@ fun MainPage(
 ) {
     val viewModel = remember { MainViewModel() }
     val state by viewModel.state.collectAsState()
-    val snackbarHostState = LocalSnackbarHostState.current
-    val scope = rememberCoroutineScope()
-
     // 更新检查
     val updateViewModel = remember { UpdateViewModel() }
     val updateState by updateViewModel.state.collectAsState()
@@ -55,15 +50,11 @@ fun MainPage(
         updateViewModel.dispatch(UpdateAction.CheckUpdate(false))
     }
 
-    LaunchedEffect(Unit) {
-        updateViewModel.effect.collect { effect ->
-            when (effect) {
-                is UpdateEffect.ShowToast -> {
-                    scope.launch { snackbarHostState.showSnackbar(effect.message) }
-                }
+    updateViewModel.effect.collectUiEffect { effect ->
+        when (effect) {
+            is UpdateEffect.ShowToast -> showToast(effect.message)
 
-                is UpdateEffect.OpenUrl -> openUrl(effect.url)
-            }
+            is UpdateEffect.OpenUrl -> openUrl(effect.url)
         }
     }
 
@@ -72,22 +63,19 @@ fun MainPage(
         viewModel.dispatch(MainAction.SelectTab(MainTab.Home))
     }
 
-    AppScaffold(
-        viewEffect = viewModel.effect,
-        onEffect = { effect ->
-            when (effect) {
-                is MainEffect.ShowToast -> {
-                    scope.launch { snackbarHostState.showSnackbar(effect.message) }
-                }
+    viewModel.effect.collectUiEffect { effect ->
+        when (effect) {
+            is MainEffect.ShowToast -> showToast(effect.message)
 
-                is MainEffect.NavigateTo -> onNavigateToSubPage(effect.route)
-                MainEffect.SessionExpired -> {
-                    scope.launch { snackbarHostState.showSnackbar("登录已过期，请重新登录") }
-                    onNavigateToLogin()
-                }
+            is MainEffect.NavigateTo -> onNavigateToSubPage(effect.route)
+            MainEffect.SessionExpired -> {
+                showToast("登录已过期，请重新登录")
+                onNavigateToLogin()
             }
         }
-    ) {
+    }
+
+    AppScaffold {
         val onCheckUpdate: () -> Unit =
             { updateViewModel.dispatch(UpdateAction.CheckUpdate(isManual = true)) }
 

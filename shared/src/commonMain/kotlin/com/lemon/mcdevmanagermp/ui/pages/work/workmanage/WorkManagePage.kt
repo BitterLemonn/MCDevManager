@@ -9,15 +9,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import com.lemon.mcdevmanagermp.ui.components.LocalSnackbarHostState
 import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
+import com.lemon.mcdevmanagermp.ui.components.collectUiEffect
 import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.layout.WorkManageCompactLayout
 import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.layout.WorkManageExpandedLayout
 import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.layout.WorkManageMediumLayout
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import kotlinx.coroutines.launch
 
 @Composable
 fun WorkManagePage(
@@ -28,18 +26,11 @@ fun WorkManagePage(
     val state by viewModel.state.collectAsState()
     val colors = LocalAppColors.current
 
-    val snackbarHostState = LocalSnackbarHostState.current
-    val scope = rememberCoroutineScope()
+    viewModel.effect.collectUiEffect { effect ->
+        when (effect) {
+            is WorkManageEffect.ShowToast -> showToast(effect.message)
 
-    LaunchedEffect(viewModel.effect) {
-        viewModel.effect.collect { effect ->
-            when (effect) {
-                is WorkManageEffect.ShowToast -> {
-                    scope.launch { snackbarHostState.showSnackbar(effect.message) }
-                }
-
-                WorkManageEffect.NeedReLogin -> onNeedReLogin()
-            }
+            WorkManageEffect.NeedReLogin -> onNeedReLogin()
         }
     }
 

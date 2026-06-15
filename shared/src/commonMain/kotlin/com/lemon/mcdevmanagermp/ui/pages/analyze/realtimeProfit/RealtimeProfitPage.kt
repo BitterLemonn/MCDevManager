@@ -15,17 +15,15 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.lemon.mcdevmanagermp.ui.components.LocalSnackbarHostState
 import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
+import com.lemon.mcdevmanagermp.ui.components.collectUiEffect
 import com.lemon.mcdevmanagermp.ui.pages.analyze.realtimeProfit.layout.RealtimeProfitCompactLayout
 import com.lemon.mcdevmanagermp.ui.pages.analyze.realtimeProfit.layout.RealtimeProfitExpandedLayout
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import kotlinx.coroutines.launch
 
 @Composable
 fun RealtimeProfitPage(onBack: () -> Unit) {
@@ -34,22 +32,12 @@ fun RealtimeProfitPage(onBack: () -> Unit) {
     val colors = LocalAppColors.current
     val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
-    val snackbarHostState = LocalSnackbarHostState.current
-    val scope = rememberCoroutineScope()
-
     var showDatePicker by remember { mutableStateOf(false) }
 
-    // Effect 收集
-    LaunchedEffect(viewModel.effect) {
-        viewModel.effect.collect { effect ->
-            when (effect) {
-                is RealtimeProfitEffect.ShowToast -> {
-                    scope.launch { snackbarHostState.showSnackbar(effect.message) }
-                }
-                RealtimeProfitEffect.NeedReLogin -> {
-                    scope.launch { snackbarHostState.showSnackbar("登录已过期，请重新登录") }
-                }
-            }
+    viewModel.effect.collectUiEffect { effect ->
+        when (effect) {
+            is RealtimeProfitEffect.ShowToast -> showToast(effect.message)
+            RealtimeProfitEffect.NeedReLogin -> showToast("登录已过期，请重新登录")
         }
     }
 

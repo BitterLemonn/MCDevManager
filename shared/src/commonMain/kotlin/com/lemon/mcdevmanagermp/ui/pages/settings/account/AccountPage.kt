@@ -41,7 +41,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -56,14 +55,12 @@ import com.github.panpf.sketch.request.fallback
 import com.github.panpf.sketch.request.placeholder
 import com.lemon.mcdevmanagermp.data.db.entity.AccountEntity
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
-import com.lemon.mcdevmanagermp.ui.components.LocalSnackbarHostState
 import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
+import com.lemon.mcdevmanagermp.ui.components.collectUiEffect
 import com.lemon.mcdevmanagermp.ui.pages.settings.account.layout.CompactAccountLayout
 import com.lemon.mcdevmanagermp.ui.pages.settings.account.layout.ExpandedAccountLayout
 import com.lemon.mcdevmanagermp.ui.pages.settings.account.layout.MediumAccountLayout
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import com.lemon.mcdevmanagermp.utils.extension.collectEffect
-import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
@@ -83,8 +80,6 @@ fun AccountManagementPage(
     val viewModel = remember { AccountViewModel() }
     val state by viewModel.state.collectAsState()
     val colors = LocalAppColors.current
-    val snackbarHostState = LocalSnackbarHostState.current
-    val scope = rememberCoroutineScope()
 
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
@@ -96,19 +91,15 @@ fun AccountManagementPage(
         }
     }
 
-    // Handle effects
-    viewModel.effect.collectEffect {
+    viewModel.effect.collectUiEffect {
         when (it) {
-            is AccountEffect.ShowToast -> {
-                scope.launch { snackbarHostState.showSnackbar(it.message) }
-            }
+            is AccountEffect.ShowToast -> showToast(it.message)
 
             AccountEffect.NavigateToLogin -> onNavigateToLogin()
             AccountEffect.AccountSwitched -> onAccountSwitched()
         }
     }
 
-    // Delete confirmation dialog
     val accountToDelete = state.accountToDelete
     if (state.showDeleteDialog && accountToDelete != null) {
         AlertDialog(
