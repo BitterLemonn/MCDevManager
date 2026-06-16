@@ -5,8 +5,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class MailContentVO(
-    val detail: String,
+    val detail: String = "",
     @SerialName("extra_list")
-    val extraList: List<String>,
-    val sender: String
+    val extraList: List<String> = emptyList(),
+    val sender: String = ""
 )

@@ -1,10 +1,13 @@
 package com.lemon.mcdevmanagermp.data.consts.enums
 
+import kotlinx.serialization.Serializable
+
 /**
  * 作品上架操作类型
  */
 enum class WorkItemActionEnum(val label: String) {
     SUBMIT_REVIEW("提交审核"),
+    CANCEL_REVIEW("取消审核"),
     PUBLISH("上架"),
     UPDATE("更新"),
     ADJUST_PRICE("调整定价"),
@@ -15,13 +18,16 @@ enum class WorkItemActionEnum(val label: String) {
  * 作品上架状态。
  * @param label 状态展示文案
  */
+@Serializable
 enum class WorkItemStatusEnum(val label: String) {
     ONLINE("已上架"),
+    PREPARE("系统准备中"),
     REVIEWING("审核中"),
-    REJECTED("审核未通过"),
-    UNPUBLISHED("待上架"),
-    OFFLINE("已下架"),
     SELF_TEST("自测中"),
+    SELF_TEST_PREPARE("自测准备中"),
+    REJECTED("审核未通过"),
+    ACCEPT("待上架"),
+    OFFLINE("已下架"),
     SYSTEM_OFFLINE("系统下架"),
     UNKNOWN("未知");
 
@@ -30,27 +36,35 @@ enum class WorkItemStatusEnum(val label: String) {
      * @param isFree 作品是否免费（price <= 0）
      */
     fun actions(isFree: Boolean): List<WorkItemActionEnum> = when (this) {
+        // 已上架 -> [更新, 调整定价]
         ONLINE -> buildList {
             add(WorkItemActionEnum.UPDATE)
             if (!isFree) add(WorkItemActionEnum.ADJUST_PRICE)
         }
 
-        REJECTED -> listOf(WorkItemActionEnum.SUBMIT_REVIEW)
-        UNPUBLISHED -> listOf(WorkItemActionEnum.SUBMIT_REVIEW)
-        OFFLINE -> listOf(WorkItemActionEnum.PUBLISH)
-        SYSTEM_OFFLINE -> listOf(WorkItemActionEnum.UPDATE)
-        SELF_TEST -> listOf(WorkItemActionEnum.CANCEL_TEST)
-        REVIEWING, UNKNOWN -> emptyList()
+        // 系统准备中, 审核中 -> [取消审核]
+        PREPARE, REVIEWING -> listOf(WorkItemActionEnum.CANCEL_REVIEW)
+        // 审核未通过, 系统下架, 弱下架 -> [更新]
+        REJECTED, SYSTEM_OFFLINE, OFFLINE -> listOf(WorkItemActionEnum.UPDATE)
+        // 已通过审核 -> [上架]
+        ACCEPT -> listOf(WorkItemActionEnum.PUBLISH)
+        // 自测中, 自测准备中 -> [取消自测]
+        SELF_TEST, SELF_TEST_PREPARE -> listOf(WorkItemActionEnum.CANCEL_TEST)
+        UNKNOWN -> emptyList()
     }
 
-    fun fromStatusString(status: String): WorkItemStatusEnum = when (status) {
-        "online" -> ONLINE
-        "reviewing" -> REVIEWING
-        "rejected" -> REJECTED
-        "unpublished" -> UNPUBLISHED
-        "offline" -> OFFLINE
-        "self_test" -> SELF_TEST
-        "system_offline" -> SYSTEM_OFFLINE
-        else -> UNKNOWN
+    companion object {
+        fun fromStatusString(status: String): WorkItemStatusEnum = when (status) {
+            "online" -> ONLINE
+            "reviewing" -> REVIEWING
+            "rejected" -> REJECTED
+            "accept" -> ACCEPT
+            "offline" -> OFFLINE
+            "self_test" -> SELF_TEST
+            "preparing" -> PREPARE
+            "self_test_prepare" -> SELF_TEST_PREPARE
+            "system_offline" -> SYSTEM_OFFLINE
+            else -> UNKNOWN
+        }
     }
 }

@@ -1,5 +1,8 @@
 package com.lemon.mcdevmanagermp.data.consts.enums
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 enum class PriceTypeEnum(val label: String) {
     DIAMOND("钻石"),
     EMERALD("绿宝石"),
@@ -27,6 +30,7 @@ enum class PriceTypeEnum(val label: String) {
     }
 }
 
+@Serializable
 enum class PriceRankEnum(val type: Int, val label: String) {
     DIAMOND_TIER_ONE(0, "300 钻石"),
     DIAMOND_TIER_TWO(1, "600 钻石"),

@@ -52,7 +52,7 @@ internal fun WorkManageCard(
     onActionClick: (WorkItemActionEnum) -> Unit
 ) {
     val colors = LocalAppColors.current
-    val status = WorkItemStatusEnum.fromRealStatus(item.itemRealStatus)
+    val status = item.getStatus()
     val actions = status.actions(isFree = item.price <= 0)
 
     Card(
@@ -96,7 +96,6 @@ internal fun WorkManageCard(
                     fontWeight = FontWeight.Bold,
                     color = colors.textColor
                 )
-                if (item.isPremium) FeatureTag(text = "高级")
                 if (item.isOriginal) FeatureTag(text = "原创")
             }
 
@@ -139,6 +138,8 @@ private fun ActionButton(
         WorkItemActionEnum.SUBMIT_REVIEW -> Res.drawable.ic_correct
         WorkItemActionEnum.PUBLISH -> Res.drawable.ic_sale
         WorkItemActionEnum.UPDATE -> Res.drawable.ic_refresh
+        WorkItemActionEnum.CANCEL_TEST -> Res.drawable.ic_refresh
+        WorkItemActionEnum.CANCEL_REVIEW -> Res.drawable.ic_refresh
         WorkItemActionEnum.ADJUST_PRICE -> Res.drawable.ic_diamond
     }
     val interaction = remember { MutableInteractionSource() }
@@ -181,11 +182,14 @@ private fun ActionButton(
 private fun WorkStatusTag(status: WorkItemStatusEnum, colors: AppColors) {
     val accent = when (status) {
         WorkItemStatusEnum.ONLINE -> colors.online
+        WorkItemStatusEnum.SELF_TEST -> colors.warning
         WorkItemStatusEnum.REVIEWING -> colors.warning
         WorkItemStatusEnum.REJECTED -> colors.danger
-        WorkItemStatusEnum.UNPUBLISHED -> colors.warning
+        WorkItemStatusEnum.ACCEPT -> colors.warning
         WorkItemStatusEnum.OFFLINE -> colors.offline
         WorkItemStatusEnum.SYSTEM_OFFLINE -> colors.offline
+        WorkItemStatusEnum.SELF_TEST_PREPARE -> colors.onSurfaceVariant
+        WorkItemStatusEnum.PREPARE -> colors.onSurfaceVariant
         WorkItemStatusEnum.UNKNOWN -> colors.onSurfaceVariant
     }
     Text(

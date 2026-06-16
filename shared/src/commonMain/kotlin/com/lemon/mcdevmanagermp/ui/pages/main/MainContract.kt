@@ -26,7 +26,8 @@ data class MainState(
     val isProfitLoading: Boolean = true,
     val profitExpanded: Boolean = false,
     val lastProfitExpanded: Boolean = false,
-    val showLastMonthProfit: Boolean = false
+    val showLastMonthProfit: Boolean = false,
+    val mailboxUnreadCount: Int = 0
 ) : IUiState
 
 sealed interface MainAction : IUiAction {

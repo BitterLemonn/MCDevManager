@@ -6,6 +6,7 @@ import com.lemon.mcdevmanagermp.data.consts.enums.RankCategoryTypeEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.RankSubCategoryTypeEnum
 import com.lemon.mcdevmanagermp.data.page.RankCategoryData
 import com.lemon.mcdevmanagermp.data.repository.AccountRepositoryImpl
+import com.lemon.mcdevmanagermp.data.repository.MailboxRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.RankListRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.UserRepositoryImpl
@@ -18,6 +19,7 @@ import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
 import com.lemon.mcdevmanagermp.utils.ProfitData
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.number
@@ -27,6 +29,9 @@ import kotlin.time.Clock
 class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState()) {
 
     companion object {
+        /** 未读消息轮询间隔（毫秒） */
+        private const val UNREAD_POLLING_INTERVAL_MS = 60_000L
+
         private val cacheTimeZone = TimeZone.of("Asia/Shanghai")
 
         private var cachedDashboardDate: String? = null
@@ -55,6 +60,12 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
         var cachedShowLastMonthProfit: Boolean = false
             private set
 
+        // 消息未读数缓存（按天）
+        var cachedMailboxUnreadCount: Int = 0
+            private set
+        var cachedMailboxUnreadDate: String? = null
+            private set
+
         private fun todayString(): String {
             val now = Clock.System.now().toLocalDateTime(cacheTimeZone)
             return "${now.year}-${now.month.number}-${now.day}"
@@ -74,6 +85,7 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
             cachedProfitData = null
             cachedLastMonthProfitData = null
             cachedRankListData = emptyList()
+            cachedMailboxUnreadDate = null
         }
     }
 
@@ -85,6 +97,7 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
         rankListRepository = RankListRepositoryImpl.INSTANCE
     )
     private val accountRepository = AccountRepositoryImpl.INSTANCE
+    private val mailboxRepository = MailboxRepositoryImpl.INSTANCE
 
     init {
         val today = todayString()
@@ -123,6 +136,25 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
         } else {
             loadProfit()
         }
+
+        // 消息未读数
+        if (today == cachedMailboxUnreadDate) {
+            setState { copy(mailboxUnreadCount = cachedMailboxUnreadCount) }
+        } else {
+            loadMailboxUnread()
+        }
+
+        // 启动未读消息定时轮询：每 60s 刷新一次，保证首页角标新鲜
+        startMailboxUnreadPolling()
+    }
+
+    private fun startMailboxUnreadPolling() {
+        viewModelScope.launch {
+            while (true) {
+                delay(UNREAD_POLLING_INTERVAL_MS)
+                loadMailboxUnread()
+            }
+        }
     }
 
     override fun dispatch(action: MainAction) {
@@ -132,12 +164,14 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
                 invalidateAllCache()
                 loadDashboard()
                 loadProfit()
+                loadMailboxUnread()
             }
 
             MainAction.RefreshData -> {
                 invalidateCache()
                 loadDashboard()
                 loadProfit()
+                loadMailboxUnread()
             }
 
             MainAction.ToggleDrawer -> setState { copy(showDrawer = !showDrawer) }
@@ -226,6 +260,22 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
                 }
             } catch (_: Exception) {
                 setState { copy(isProfitLoading = false) }
+            }
+        }
+    }
+
+    private fun loadMailboxUnread() {
+        viewModelScope.launch {
+            when (val r = mailboxRepository.getUnReadCount()) {
+                is NetworkState.Success -> {
+                    cachedMailboxUnreadCount = r.data?.count ?: 0
+                    cachedMailboxUnreadDate = todayString()
+                    setState { copy(mailboxUnreadCount = cachedMailboxUnreadCount) }
+                }
+
+                is NetworkState.Error -> {
+                    // 静默处理：session 过期由 loadDashboard 统一捕获并跳转登录
+                }
             }
         }
     }

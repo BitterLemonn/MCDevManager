@@ -4,5 +4,5 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class UnReadMailVO(
-    val count: Int
+    val count: Int = 0
 )

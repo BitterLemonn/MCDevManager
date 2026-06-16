@@ -2,6 +2,7 @@ package com.lemon.mcdevmanagermp.data.vo.netease.resource
 
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceRankEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceTypeEnum
+import com.lemon.mcdevmanagermp.data.consts.enums.WorkItemStatusEnum
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -29,12 +30,14 @@ data class ResourceData(
     @SerialName("online_time")
     val onlineTime: String = "UNKNOWN",  // 上架时间
     @SerialName("price_type")
-    val _priceType: String = "",  // 价格类型
+    val priceType: String = "",  // 价格类型
     val price: Int = 0,  // 价格
     @SerialName("price_rank")
-    val _priceRank: Int = 0,  // 价格档位
+    val priceRank: Int = 0,  // 价格档位
     @SerialName("item_real_status")
     val itemRealStatus: Int = 0, // 作品真实状态 未查明 [ItemRealStatusEnum] TODO
+    @SerialName("status")
+    val status: String = "", // 状态字段
     @SerialName("sync_pc_flag")
     val syncPcFlag: Boolean = false, // 是否双端同步
     @SerialName("weak_offline")
@@ -43,9 +46,20 @@ data class ResourceData(
     val weakOfflineReason: String = "", // 弱下架原因
     @SerialName("weak_offline_time")
     val weakOfflineTime: String = "", // 弱下架时间
+    @SerialName("is_original")
+    val isOriginal: Boolean = false,
 ) {
-    val priceType: PriceTypeEnum = PriceTypeEnum.fromStringType(_priceType)
-    val priceRank: PriceRankEnum = PriceRankEnum.fromIntType(_priceRank)
+    fun getPriceType(): PriceTypeEnum {
+        return PriceTypeEnum.fromStringType(priceType)
+    }
+
+    fun getPriceRank(): PriceRankEnum {
+        return PriceRankEnum.fromIntType(priceRank)
+    }
+
+    fun getStatus(): WorkItemStatusEnum {
+        return WorkItemStatusEnum.fromStatusString(status)
+    }
 }
 
 /**
