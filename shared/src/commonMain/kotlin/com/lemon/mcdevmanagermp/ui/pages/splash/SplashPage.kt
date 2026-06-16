@@ -28,6 +28,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import com.lemon.mcdevmanagermp.ui.components.AppScaffold
+import com.lemon.mcdevmanagermp.ui.components.collectUiEffect
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_icon
@@ -50,18 +51,17 @@ fun SplashPage(
         }
     }
 
-    AppScaffold(
-        viewEffect = viewModel.effect,
-        onEffect = { effect ->
-            if (!hasNavigated) {
-                hasNavigated = true
-                when (effect) {
-                    SplashEffect.NavigateToLogin -> onNavigateToLogin()
-                    SplashEffect.NavigateToMain -> onNavigateToMain()
-                }
+    viewModel.effect.collectUiEffect { effect ->
+        if (!hasNavigated) {
+            hasNavigated = true
+            when (effect) {
+                SplashEffect.NavigateToLogin -> onNavigateToLogin()
+                SplashEffect.NavigateToMain -> onNavigateToMain()
             }
         }
-    ) { _ ->
+    }
+
+    AppScaffold { _ ->
         val colors = LocalAppColors.current
         Box(
             modifier = Modifier

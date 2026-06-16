@@ -8,7 +8,7 @@ import com.lemon.mcdevmanagermp.utils.extension.IUiAction
 import com.lemon.mcdevmanagermp.utils.extension.IUiEffect
 import com.lemon.mcdevmanagermp.utils.extension.IUiState
 import com.lemon.mcdevmanagermp.utils.extension.MVIContainer
-import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 abstract class BaseViewModel<STATE : IUiState, ACTION : IUiAction, EFFECT : IUiEffect>(
@@ -18,7 +18,7 @@ abstract class BaseViewModel<STATE : IUiState, ACTION : IUiAction, EFFECT : IUiE
     private val mvi = MVIContainer<STATE, EFFECT>(initialState)
 
     val state: StateFlow<STATE> = mvi.state
-    val effect: SharedFlow<EFFECT> = mvi.effect
+    val effect: Flow<EFFECT> = mvi.effect
 
     abstract fun dispatch(action: ACTION)
 

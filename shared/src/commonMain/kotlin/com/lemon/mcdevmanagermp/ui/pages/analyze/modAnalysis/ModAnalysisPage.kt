@@ -14,17 +14,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.lemon.mcdevmanagermp.ui.components.LocalSnackbarHostState
 import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
+import com.lemon.mcdevmanagermp.ui.components.collectUiEffect
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.layout.ModAnalysisCompactLayout
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.layout.ModAnalysisExpandedLayout
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.layout.ModAnalysisMediumLayout
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import kotlinx.coroutines.launch
 
 /**
  * 模组分析页面入口
@@ -41,21 +39,11 @@ fun ModAnalysisPage(
     val colors = LocalAppColors.current
     val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
-    val snackbarHostState = LocalSnackbarHostState.current
-    val scope = rememberCoroutineScope()
+    viewModel.effect.collectUiEffect { effect ->
+        when (effect) {
+            is ModAnalysisEffect.ShowToast -> showToast(effect.message)
 
-    // Effect 收集
-    LaunchedEffect(viewModel.effect) {
-        viewModel.effect.collect { effect ->
-            when (effect) {
-                is ModAnalysisEffect.ShowToast -> {
-                    scope.launch { snackbarHostState.showSnackbar(effect.message) }
-                }
-
-                ModAnalysisEffect.NeedReLogin -> {
-                    scope.launch { snackbarHostState.showSnackbar("登录已过期，请重新登录") }
-                }
-            }
+            ModAnalysisEffect.NeedReLogin -> showToast("登录已过期，请重新登录")
         }
     }
 

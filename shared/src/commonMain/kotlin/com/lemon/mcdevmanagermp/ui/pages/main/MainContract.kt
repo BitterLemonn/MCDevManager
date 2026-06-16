@@ -1,9 +1,9 @@
 package com.lemon.mcdevmanagermp.ui.pages.main
 
 import com.lemon.mcdevmanagermp.data.common.NetworkState
+import com.lemon.mcdevmanagermp.data.consts.enums.RankCategoryTypeEnum
+import com.lemon.mcdevmanagermp.data.consts.enums.RankSubCategoryTypeEnum
 import com.lemon.mcdevmanagermp.data.page.RankCategoryData
-import com.lemon.mcdevmanagermp.data.page.RankCategoryTypeEnum
-import com.lemon.mcdevmanagermp.data.page.RankSubCategoryTypeEnum
 import com.lemon.mcdevmanagermp.data.vo.netease.user.LevelInfoVO
 import com.lemon.mcdevmanagermp.data.vo.netease.user.OverviewVO
 import com.lemon.mcdevmanagermp.data.vo.netease.user.UserInfoVO
@@ -26,7 +26,8 @@ data class MainState(
     val isProfitLoading: Boolean = true,
     val profitExpanded: Boolean = false,
     val lastProfitExpanded: Boolean = false,
-    val showLastMonthProfit: Boolean = false
+    val showLastMonthProfit: Boolean = false,
+    val mailboxUnreadCount: Int = 0
 ) : IUiState
 
 sealed interface MainAction : IUiAction {

@@ -7,9 +7,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
-import com.lemon.mcdevmanagermp.utils.extension.IUiEffect
-import com.lemon.mcdevmanagermp.utils.extension.collectEffect
-import kotlinx.coroutines.flow.SharedFlow
 
 /**
  * 全局 SnackbarHostState，由顶层 AppNavigation 提供。
@@ -25,21 +22,19 @@ val LocalSnackbarHostState = compositionLocalOf<SnackbarHostState> {
  */
 val LocalWindowWidthSizeClass = compositionLocalOf { WindowWidthSizeClass.Compact }
 
+/**
+ * 统一的 Scaffold 封装，固定 contentWindowInsets 为 0。
+ *
+ * Effect 收集统一使用 [collectUiEffect]（提供 [EffectScope.showToast] 等 UI 工具），
+ * 不再在此处通过参数转发，保持单一职责。
+ */
 @Composable
-fun <E : IUiEffect> AppScaffold(
-    viewEffect: SharedFlow<E>? = null,
-    onEffect: ((E) -> Unit)? = null,
+fun AppScaffold(
     topBar: @Composable () -> Unit = {},
     bottomBar: @Composable () -> Unit = {},
     snackbarHost: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit
 ) {
-    if (viewEffect != null && onEffect != null) {
-        viewEffect.collectEffect { event ->
-            onEffect(event)
-        }
-    }
-
     Scaffold(
         topBar = topBar,
         bottomBar = bottomBar,

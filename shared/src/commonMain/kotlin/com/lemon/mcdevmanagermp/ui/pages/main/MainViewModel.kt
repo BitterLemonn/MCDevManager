@@ -2,9 +2,11 @@ package com.lemon.mcdevmanagermp.ui.pages.main
 
 import androidx.lifecycle.viewModelScope
 import com.lemon.mcdevmanagermp.data.common.NetworkState
+import com.lemon.mcdevmanagermp.data.consts.enums.RankCategoryTypeEnum
+import com.lemon.mcdevmanagermp.data.consts.enums.RankSubCategoryTypeEnum
 import com.lemon.mcdevmanagermp.data.page.RankCategoryData
-import com.lemon.mcdevmanagermp.data.page.RankCategoryTypeEnum
 import com.lemon.mcdevmanagermp.data.repository.AccountRepositoryImpl
+import com.lemon.mcdevmanagermp.data.repository.MailboxRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.RankListRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.UserRepositoryImpl
@@ -17,6 +19,7 @@ import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
 import com.lemon.mcdevmanagermp.utils.ProfitData
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.number
@@ -26,6 +29,9 @@ import kotlin.time.Clock
 class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState()) {
 
     companion object {
+        /** 未读消息轮询间隔（毫秒） */
+        private const val UNREAD_POLLING_INTERVAL_MS = 60_000L
+
         private val cacheTimeZone = TimeZone.of("Asia/Shanghai")
 
         private var cachedDashboardDate: String? = null
@@ -52,6 +58,10 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
             private set
 
         var cachedShowLastMonthProfit: Boolean = false
+            private set
+
+        // 消息未读数缓存（按天）
+        var cachedMailboxUnreadCount: Int = 0
             private set
 
         private fun todayString(): String {
@@ -84,6 +94,7 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
         rankListRepository = RankListRepositoryImpl.INSTANCE
     )
     private val accountRepository = AccountRepositoryImpl.INSTANCE
+    private val mailboxRepository = MailboxRepositoryImpl.INSTANCE
 
     init {
         val today = todayString()
@@ -122,6 +133,24 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
         } else {
             loadProfit()
         }
+
+        // 消息未读数：先从静态缓存恢复（避免角标闪烁），随后无条件刷新以同步已读状态。
+        // MainViewModel 每次从子页面返回首页时都会重建（companion 缓存即为此设计），
+        // 因此用户在邮箱中读完邮件返回后，此处会重新拉取 count，及时清理已读提示。
+        setState { copy(mailboxUnreadCount = cachedMailboxUnreadCount) }
+        loadMailboxUnread()
+
+        // 启动未读消息定时轮询：每 60s 刷新一次，保证首页角标新鲜
+        startMailboxUnreadPolling()
+    }
+
+    private fun startMailboxUnreadPolling() {
+        viewModelScope.launch {
+            while (true) {
+                delay(UNREAD_POLLING_INTERVAL_MS)
+                loadMailboxUnread()
+            }
+        }
     }
 
     override fun dispatch(action: MainAction) {
@@ -131,12 +160,14 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
                 invalidateAllCache()
                 loadDashboard()
                 loadProfit()
+                loadMailboxUnread()
             }
 
             MainAction.RefreshData -> {
                 invalidateCache()
                 loadDashboard()
                 loadProfit()
+                loadMailboxUnread()
             }
 
             MainAction.ToggleDrawer -> setState { copy(showDrawer = !showDrawer) }
@@ -195,7 +226,13 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
     }
 
     private fun loadProfit() {
-        setState { copy(isProfitLoading = true, profitExpanded = false, lastProfitExpanded = false) }
+        setState {
+            copy(
+                isProfitLoading = true,
+                profitExpanded = false,
+                lastProfitExpanded = false
+            )
+        }
         viewModelScope.launch {
             try {
                 val timeZone = TimeZone.of("Asia/Shanghai")
@@ -223,6 +260,21 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
         }
     }
 
+    private fun loadMailboxUnread() {
+        viewModelScope.launch {
+            when (val r = mailboxRepository.getUnReadCount()) {
+                is NetworkState.Success -> {
+                    cachedMailboxUnreadCount = r.data?.count ?: 0
+                    setState { copy(mailboxUnreadCount = cachedMailboxUnreadCount) }
+                }
+
+                is NetworkState.Error -> {
+                    // 静默处理：session 过期由 loadDashboard 统一捕获并跳转登录
+                }
+            }
+        }
+    }
+
     private fun loadRankList() {
         viewModelScope.launch {
             val categories = RankCategoryTypeEnum.entries
@@ -245,7 +297,7 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
 
     private fun loadRankCategory(
         category: RankCategoryTypeEnum,
-        subCategory: com.lemon.mcdevmanagermp.data.page.RankSubCategoryTypeEnum?
+        subCategory: RankSubCategoryTypeEnum?
     ) {
         viewModelScope.launch {
             try {

@@ -9,7 +9,7 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.lemon.mcdevmanagermp.data.vo.netease.resource.NewResAnalyzeData
+import com.lemon.mcdevmanagermp.data.vo.netease.analyze.NewResAnalyzeData
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.ChartType
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.MetricType
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors

@@ -9,7 +9,7 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResMonthAnalyzeData
+import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResMonthAnalyzeData
 import com.lemon.mcdevmanagermp.ui.pages.analyze.monthDetail.MonthMetricType
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost

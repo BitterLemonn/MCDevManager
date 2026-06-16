@@ -1,6 +1,6 @@
 package com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis
 
-import com.lemon.mcdevmanagermp.data.vo.netease.resource.NewResAnalyzeData
+import com.lemon.mcdevmanagermp.data.vo.netease.analyze.NewResAnalyzeData
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
 import com.lemon.mcdevmanagermp.utils.extension.IUiAction
 import com.lemon.mcdevmanagermp.utils.extension.IUiEffect

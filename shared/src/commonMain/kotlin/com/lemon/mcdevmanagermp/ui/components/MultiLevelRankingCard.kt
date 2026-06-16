@@ -53,16 +53,16 @@ import androidx.compose.ui.unit.dp
 import com.github.panpf.sketch.AsyncImage
 import com.github.panpf.sketch.rememberAsyncImageState
 import com.github.panpf.sketch.request.ComposableImageOptions
+import com.lemon.mcdevmanagermp.data.consts.enums.RankCategoryTypeEnum
+import com.lemon.mcdevmanagermp.data.consts.enums.RankSubCategoryTypeEnum
 import com.lemon.mcdevmanagermp.data.page.RankCategoryContent
 import com.lemon.mcdevmanagermp.data.page.RankCategoryData
-import com.lemon.mcdevmanagermp.data.page.RankCategoryTypeEnum
-import com.lemon.mcdevmanagermp.data.page.RankSubCategoryTypeEnum
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_arrow_down
+import mcdevmanagermpr.shared.generated.resources.ic_arrow_normal
 import mcdevmanagermpr.shared.generated.resources.ic_arrow_up
 import mcdevmanagermpr.shared.generated.resources.ic_refresh
-import mcdevmanagermpr.shared.generated.resources.ic_arrow_normal
 import org.jetbrains.compose.resources.painterResource
 import kotlin.math.abs
 

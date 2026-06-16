@@ -1,7 +1,7 @@
 package com.lemon.mcdevmanagermp.domain.resource
 
 import com.lemon.mcdevmanagermp.data.common.NetworkState
-import com.lemon.mcdevmanagermp.data.vo.netease.resource.NewResAnalyzeData
+import com.lemon.mcdevmanagermp.data.vo.netease.analyze.NewResAnalyzeData
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.SummaryMetrics
 import kotlinx.datetime.DateTimeUnit

@@ -1,12 +1,12 @@
 package com.lemon.mcdevmanagermp.data.api
 
-import com.lemon.mcdevmanagermp.data.consts.NETEASE_MC_DEV_LINK
 import com.lemon.mcdevmanagermp.data.common.ResponseData
+import com.lemon.mcdevmanagermp.data.consts.NETEASE_MC_DEV_LINK
 import com.lemon.mcdevmanagermp.data.vo.netease.ranklist.CommonRankListData
 import com.lemon.mcdevmanagermp.data.vo.netease.ranklist.HotSearchData
 import com.lemon.mcdevmanagermp.data.vo.netease.ranklist.PeHotData
 import com.lemon.mcdevmanagermp.data.vo.netease.ranklist.RankListVO
-import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceVO
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceListVO
 import com.lemon.mcdevmanagermp.data.vo.netease.user.LevelInfoVO
 import com.lemon.mcdevmanagermp.data.vo.netease.user.OverviewVO
 import com.lemon.mcdevmanagermp.data.vo.netease.user.UserInfoVO
@@ -30,7 +30,7 @@ interface InfoApi {
         @Path("platform") platform: String = "pe",
         @Query("start") start: Int = 0,
         @Query("span") span: Int = Int.MAX_VALUE
-    ): ResponseData<ResourceVO>
+    ): ResponseData<ResourceListVO>
 
     @GET("square/us_rank_list/?type=pe_hot")
     suspend fun getPeHotRankList(

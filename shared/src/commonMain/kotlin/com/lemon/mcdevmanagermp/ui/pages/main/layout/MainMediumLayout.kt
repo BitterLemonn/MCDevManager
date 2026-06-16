@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.ui.components.ExpandableNavigateItem
 import com.lemon.mcdevmanagermp.ui.components.IncomeManagementCard
+import com.lemon.mcdevmanagermp.ui.components.MailboxCard
 import com.lemon.mcdevmanagermp.ui.components.MultiLevelRankingCard
 import com.lemon.mcdevmanagermp.ui.components.ProfitCard
 import com.lemon.mcdevmanagermp.ui.components.ProfitSplitWidget
@@ -153,6 +154,9 @@ internal fun MediumLayout(
                         },
                         onNavigateToIncome = {
                             onNavigateToSubPage(Route.Income)
+                        },
+                        onNavigateToMailbox = {
+                            onNavigateToSubPage(Route.Mailbox)
                         }
                     )
 
@@ -177,7 +181,8 @@ internal fun MediumHomeTabContent(
     onAction: (MainAction) -> Unit,
     onNavigateToIncomeDetail: () -> Unit = {},
     onNavigateToLastMonthDetail: () -> Unit = {},
-    onNavigateToIncome: () -> Unit = {}
+    onNavigateToIncome: () -> Unit = {},
+    onNavigateToMailbox: () -> Unit = {}
 ) {
     val colors = LocalAppColors.current
     val userNickname = (state.userInfo as? NetworkState.Success)?.data?.nickname
@@ -249,6 +254,10 @@ internal fun MediumHomeTabContent(
                 Spacer(Modifier.height(12.dp))
 
                 IncomeManagementCard(onClick = onNavigateToIncome)
+
+                Spacer(Modifier.height(12.dp))
+
+                MailboxCard(onClick = onNavigateToMailbox, unreadCount = state.mailboxUnreadCount)
 
                 Spacer(Modifier.height(12.dp))
 

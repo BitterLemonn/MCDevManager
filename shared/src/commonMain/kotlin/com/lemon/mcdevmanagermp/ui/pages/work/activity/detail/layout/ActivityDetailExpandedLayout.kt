@@ -36,11 +36,11 @@ import com.github.panpf.sketch.rememberAsyncImageState
 import com.github.panpf.sketch.request.ComposableImageOptions
 import com.lemon.mcdevmanagermp.data.vo.netease.activity.ReviewActivityItemVO
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
+import com.lemon.mcdevmanagermp.ui.components.RichHtmlText
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.detail.ActivityDetailState
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.layout.ActivityStatusTag
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.layout.formatTimeRange
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import com.lemon.mcdevmanagermp.utils.HtmlParser
 import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
 import mcdevmanagermpr.shared.generated.resources.Res
@@ -162,8 +162,8 @@ internal fun ActivityDetailExpandedLayout(
                             color = colors.textColor
                         )
                         Spacer(Modifier.height(8.dp))
-                        Text(
-                            text = HtmlParser.parse(activity.desc),
+                        RichHtmlText(
+                            html = activity.desc,
                             style = MaterialTheme.typography.bodyMedium,
                             color = colors.onSurfaceVariant
                         )
@@ -244,8 +244,8 @@ internal fun ActivityDetailExpandedLayout(
                             color = colors.textColor
                         )
                         Spacer(Modifier.height(8.dp))
-                        Text(
-                            text = HtmlParser.parse(activity.instruction),
+                        RichHtmlText(
+                            html = activity.instruction,
                             style = MaterialTheme.typography.bodyMedium,
                             color = colors.onSurfaceVariant
                         )
@@ -277,8 +277,8 @@ internal fun ActivityDetailExpandedLayout(
                                     color = colors.textColor
                                 )
                                 if (module.moduleDescription.isNotEmpty()) {
-                                    Text(
-                                        text = HtmlParser.parse(module.moduleDescription),
+                                    RichHtmlText(
+                                        html = module.moduleDescription,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = colors.onSurfaceVariant
                                     )

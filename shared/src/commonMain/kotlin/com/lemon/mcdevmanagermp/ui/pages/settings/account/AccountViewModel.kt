@@ -68,6 +68,7 @@ class AccountViewModel : BaseViewModel<AccountState, AccountAction, AccountEffec
                     is AccountManageUseCase.SwitchResult.Success -> {
                         // 重新加载账号列表以更新 currentAccountId 和账号信息
                         loadAccounts()
+                        Logger.d("已切换到 ${result.nickname}")
                         sendEffect(AccountEffect.ShowToast("已切换到 ${result.nickname}"))
                         sendEffect(AccountEffect.AccountSwitched)
                     }

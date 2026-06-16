@@ -1,5 +1,8 @@
 package com.lemon.mcdevmanagermp.data.vo.netease.resource
 
+import com.lemon.mcdevmanagermp.data.consts.enums.PriceRankEnum
+import com.lemon.mcdevmanagermp.data.consts.enums.PriceTypeEnum
+import com.lemon.mcdevmanagermp.data.consts.enums.WorkItemStatusEnum
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -9,152 +12,55 @@ import kotlinx.serialization.json.JsonObject
  * 资源列表
  */
 @Serializable
-data class ResourceVO(
+data class ResourceListVO(
     val count: Int,
     val item: List<ResourceData>
-)
-
-/**
- * 新版资源详情
- */
-@Serializable
-data class NewResDetailVO(
-    val data: List<NewResAnalyzeData>
-)
-
-/**
- * 资源详情
- */
-@Serializable
-data class ResDetailVO(
-    val data: List<ResAnalyzeData>
-)
-
-/**
- * 资源月详情
- */
-@Serializable
-data class ResMonthDetailVO(
-    val data: List<ResMonthAnalyzeData>
 )
 
 @Serializable
 data class ResourceData(
     @SerialName("create_time")
-    val createTime: String,
+    val createTime: String = "",  // 发布时间
+    @SerialName("apply_review_time")
+    val applyReviewTime: String = "",  // 提审时间
     @SerialName("item_id")
-    val itemId: String,
+    val itemId: String = "",  // 46id
     @SerialName("item_name")
-    val itemName: String,
+    val itemName: String = "",  // 作品名称
     @SerialName("online_time")
-    val onlineTime: String = "UNKNOWN",
-    @SerialName("pri_type")
-    val priType: Int,
-    val price: Int
-)
+    val onlineTime: String = "UNKNOWN",  // 上架时间
+    @SerialName("price_type")
+    val priceType: String = "",  // 价格类型
+    val price: Int = 0,  // 价格
+    @SerialName("price_rank")
+    val priceRank: Int = 0,  // 价格档位
+    @SerialName("item_real_status")
+    val itemRealStatus: Int = 0, // 作品真实状态 未查明 [ItemRealStatusEnum] TODO
+    @SerialName("status")
+    val status: String = "", // 状态字段
+    @SerialName("sync_pc_flag")
+    val syncPcFlag: Boolean = false, // 是否双端同步
+    @SerialName("weak_offline")
+    val weakOffline: Boolean = false, // 是否弱下架
+    @SerialName("weak_offline_reason")
+    val weakOfflineReason: String = "", // 弱下架原因
+    @SerialName("weak_offline_time")
+    val weakOfflineTime: String = "", // 弱下架时间
+    @SerialName("is_original")
+    val isOriginal: Boolean = false,
+) {
+    fun getPriceType(): PriceTypeEnum {
+        return PriceTypeEnum.fromStringType(priceType)
+    }
 
+    fun getPriceRank(): PriceRankEnum {
+        return PriceRankEnum.fromIntType(priceRank)
+    }
 
-@Serializable
-data class ResAnalyzeData(
-    @SerialName("DAU")
-    val dau: Int,
-    @SerialName("cnt_buy")
-    val cntBuy: Int,
-    @SerialName("dateid")
-    val dateId: String,
-    @SerialName("diamond")
-    val diamond: Int,
-    @SerialName("download_num")
-    val downloadNum: Int = 0,
-    @SerialName("iid")
-    val iid: String,
-    @SerialName("platform")
-    val platform: String,
-    @SerialName("points")
-    val points: Int,
-    @SerialName("refund_rate")
-    val refundRate: Double,
-    @SerialName("res_name")
-    val resName: String,
-    @SerialName("upload_time")
-    val uploadTime: String
-)
-
-@Serializable
-data class ResMonthAnalyzeData(
-    @SerialName("avg_dau")
-    val avgDau: Int,
-    @SerialName("avg_day_buy")
-    val avgDayBuy: Int,
-    @SerialName("download_num")
-    val downloadNum: Int,
-    @SerialName("iid")
-    val iid: String,
-    @SerialName("mau")
-    val mau: Int,
-    @SerialName("monthid")
-    val monthId: String,
-    @SerialName("platform")
-    val platform: String,
-    @SerialName("res_name")
-    val resName: String,
-    @SerialName("total_diamond")
-    val totalDiamond: Int,
-    @SerialName("total_points")
-    val totalPoints: Int,
-    @SerialName("upload_time")
-    val uploadTime: String = "UNKNOWN"
-)
-
-@Serializable
-data class NewResAnalyzeData(
-    @SerialName("DAU")
-    val dau: Int,
-    @SerialName("avg_first_type_buy")
-    val avgFirstTypeBuy: Double,
-    @SerialName("avg_first_type_diamond")
-    val avgFirstTypeDiamond: Double,
-    @SerialName("avg_first_type_focus")
-    val avgFirstTypeFocus: Double,
-    @SerialName("avg_first_type_role_play")
-    val avgFirstTypeRolePlay: Double,
-    @SerialName("avg_playtime")
-    val avgPlaytime: Double,
-    @SerialName("avg_total_first_type_buy")
-    val avgTotalFirstTypeBuy: Double,
-    @SerialName("cnt_buy")
-    val cntBuy: Int,
-    @SerialName("dateid")
-    val dateId: String,
-    val diamond: Int,
-    @SerialName("download_num")
-    val downloadNum: Int,
-    @SerialName("first_type_avg_role_time")
-    val firstTypeAvgRoleTime: Double,
-    @SerialName("focus_cnt")
-    val focusCnt: Int,
-    val iid: String,
-    @SerialName("pass_avg_role_time_ratio")
-    val passAvgRoleTimeRatio: Double,
-    @SerialName("pass_buy_cnt_ratio")
-    val passBuyCntRatio: Double,
-    @SerialName("pass_cnt_role_play_ratio")
-    val passCntRolePlayRatio: Double,
-    @SerialName("pass_focus_cnt_ratio")
-    val passFocusCntRatio: Double,
-    @SerialName("pass_pay_diamond_ratio")
-    val passPayDiamondRatio: Double,
-    val platform: String,
-    val points: Int,
-    @SerialName("refund_rate")
-    val refundRate: Double,
-    @SerialName("res_name")
-    val resName: String,
-    @SerialName("star_adjusted")
-    val starAdjusted: Double,
-    @SerialName("upload_time")
-    val uploadTime: String
-)
+    fun getStatus(): WorkItemStatusEnum {
+        return WorkItemStatusEnum.fromStatusString(status)
+    }
+}
 
 /**
  * 资源详情

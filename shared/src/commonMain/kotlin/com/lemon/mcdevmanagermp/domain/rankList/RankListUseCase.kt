@@ -1,12 +1,12 @@
 package com.lemon.mcdevmanagermp.domain.rankList
 
 import com.lemon.mcdevmanagermp.data.common.NetworkState
+import com.lemon.mcdevmanagermp.data.consts.enums.RankCategoryTypeEnum
+import com.lemon.mcdevmanagermp.data.consts.enums.RankSubCategoryTypeEnum
 import com.lemon.mcdevmanagermp.data.page.RankCategoryContent
 import com.lemon.mcdevmanagermp.data.page.RankCategoryData
-import com.lemon.mcdevmanagermp.data.page.RankCategoryTypeEnum
 import com.lemon.mcdevmanagermp.data.page.RankGroupData
 import com.lemon.mcdevmanagermp.data.page.RankListItemData
-import com.lemon.mcdevmanagermp.data.page.RankSubCategoryTypeEnum
 import com.lemon.mcdevmanagermp.data.page.commonRankCategoryContent
 import com.lemon.mcdevmanagermp.data.vo.netease.ranklist.CommonRankListData
 import com.lemon.mcdevmanagermp.data.vo.netease.ranklist.HotSearchData

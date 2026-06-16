@@ -38,6 +38,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResAnalyzeData
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.pages.analyze.dayDetail.CHART_COLORS
 import com.lemon.mcdevmanagermp.ui.pages.analyze.dayDetail.DayDetailAction
@@ -411,7 +412,7 @@ internal fun DetailDataSection(state: DayDetailState) {
 @Composable
 private fun DateGroupCard(
     dateId: String,
-    detailData: Map<String, List<com.lemon.mcdevmanagermp.data.vo.netease.resource.ResAnalyzeData>>,
+    detailData: Map<String, List<ResAnalyzeData>>,
     metricType: Int,
 ) {
     val colors = LocalAppColors.current
@@ -481,7 +482,7 @@ internal fun buildResNameMap(state: DayDetailState): Map<String, String> {
 }
 
 private fun formatMetricValue(
-    data: com.lemon.mcdevmanagermp.data.vo.netease.resource.ResAnalyzeData,
+    data: ResAnalyzeData,
     metricType: Int
 ): String {
     return when (metricType) {

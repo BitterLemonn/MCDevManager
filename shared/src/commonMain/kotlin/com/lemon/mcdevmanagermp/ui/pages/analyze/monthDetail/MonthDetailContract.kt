@@ -1,6 +1,6 @@
 package com.lemon.mcdevmanagermp.ui.pages.analyze.monthDetail
 
-import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResMonthAnalyzeData
+import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResMonthAnalyzeData
 import com.lemon.mcdevmanagermp.utils.extension.IUiAction
 import com.lemon.mcdevmanagermp.utils.extension.IUiEffect
 import com.lemon.mcdevmanagermp.utils.extension.IUiState

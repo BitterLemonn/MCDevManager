@@ -2,9 +2,20 @@ package com.lemon.mcdevmanagermp.utils.extension
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.font.FontFamily
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.minus
+import kotlinx.datetime.number
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
 import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.roundToLong
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 fun Typography.applyDefaultFont(fontFamily: FontFamily): Typography {
     return this.copy(
@@ -62,3 +73,94 @@ fun Double.formatDecimal(digits: Int = 1): String {
 }
 
 fun Float.formatDecimal(digits: Int = 1): String = this.toDouble().formatDecimal(digits)
+
+private val timeZoneCN = TimeZone.of("Asia/Shanghai")
+
+/**
+ * 将后端时间字符串格式化为可读形式。
+ *
+ * 解析顺序：ISO8601 带时区（Instant） → 本地日期时间（yyyy-MM-ddTHH:mm:ss） →
+ * 纯日期（yyyy-MM-dd） → 毫秒时间戳。解析失败时原样返回。
+ *
+ * 输出规则（基于 Asia/Shanghai 时区）：
+ * - 1 分钟内：刚刚
+ * - 60 分钟内：N 分钟前
+ * - 当天内：N 小时前
+ * - 昨天：昨天 HH:mm
+ * - 本年内：MM-dd HH:mm
+ * - 跨年：yyyy-MM-dd
+ */
+fun String.toReadableTime(): String {
+    if (isBlank()) return this
+    val (targetEpochMillis, isTimestamp) = parseToEpochMillisOrNull(this) ?: return this
+
+    val zone = timeZoneCN
+    val nowEpochMillis = Clock.System.now().toEpochMilliseconds()
+    val targetInstant = Instant.fromEpochMilliseconds(targetEpochMillis)
+    val targetLocal = targetInstant.toLocalDateTime(zone)
+    val nowLocal = Instant.fromEpochMilliseconds(nowEpochMillis).toLocalDateTime(zone)
+
+    // 时间戳（秒/毫秒）不显示相对时间，直接给绝对时间，避免与系统时钟错位
+    if (isTimestamp) {
+        return formatDateRelative(targetLocal, nowLocal)
+    }
+
+    val diffMillis = nowEpochMillis - targetEpochMillis
+    // 未来时间直接显示绝对时间
+    if (diffMillis < 0) return formatDateRelative(targetLocal, nowLocal)
+
+    val diffMinutes = diffMillis / 60_000
+    val diffHours = diffMinutes / 60
+
+    val isSameDay = targetLocal.date == nowLocal.date
+    val isYesterday = targetLocal.date == nowLocal.date.minus(1, DateTimeUnit.DAY)
+
+    return when {
+        isSameDay && diffMinutes < 1 -> "刚刚"
+        isSameDay && diffMinutes < 60 -> "$diffMinutes 分钟前"
+        isSameDay -> "$diffHours 小时前"
+        isYesterday -> "昨天 ${pad2(targetLocal.hour)}:${pad2(targetLocal.minute)}"
+        else -> formatDateRelative(targetLocal, nowLocal)
+    }
+}
+
+/** 绝对时间：本年内 MM-dd HH:mm，跨年 yyyy-MM-dd */
+private fun formatDateRelative(target: LocalDateTime, now: LocalDateTime): String {
+    val month = target.month.number
+    val day = target.day
+    return if (target.year == now.year) {
+        "${pad2(month)}-${pad2(day)} ${pad2(target.hour)}:${pad2(target.minute)}"
+    } else {
+        "${target.year}-${pad2(month)}-${pad2(day)}"
+    }
+}
+
+private fun pad2(v: Int): String = v.toString().padStart(2, '0')
+
+/**
+ * 尝试把字符串解析为 epoch 毫秒。返回 (epochMillis, isTimestamp) 或 null。
+ * isTimestamp=true 表示源是数字时间戳（已按系统时区还原）。
+ */
+private fun parseToEpochMillisOrNull(raw: String): Pair<Long, Boolean>? {
+    val s = raw.trim()
+    // 1. ISO8601（Instant.parse 接受 2024-01-15T10:30:00Z / 带偏移）
+    runCatching { return Instant.parse(s).toEpochMilliseconds() to false }
+    // 2. 本地日期时间 2024-01-15T10:30:00[.sss]（无时区，按 Asia/Shanghai 还原）
+    runCatching {
+        return LocalDateTime.parse(s).toInstant(timeZoneCN).toEpochMilliseconds() to false
+    }
+    // 3. 纯日期 yyyy-MM-dd（按当天 00:00:00 Asia/Shanghai）
+    runCatching {
+        return LocalDate.parse(s).atStartOfDayIn(timeZoneCN).toEpochMilliseconds() to false
+    }
+    // 4. 数字时间戳（秒 10 位 / 毫秒 13 位）
+    s.toLongOrNull()?.let { ts ->
+        val millis = when {
+            s.length == 10 -> ts * 1000
+            s.length == 13 -> ts
+            else -> return null
+        }
+        runCatching { return millis to true }
+    }
+    return null
+}

@@ -39,7 +39,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,8 +49,8 @@ import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.data.vo.netease.comment.CommentData
 import com.lemon.mcdevmanagermp.platform.BackHandler
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
-import com.lemon.mcdevmanagermp.ui.components.LocalSnackbarHostState
 import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
+import com.lemon.mcdevmanagermp.ui.components.collectUiEffect
 import com.lemon.mcdevmanagermp.ui.pages.community.comment.layout.CompactCommentLayout
 import com.lemon.mcdevmanagermp.ui.pages.community.comment.layout.ExpandedCommentLayout
 import com.lemon.mcdevmanagermp.ui.pages.community.components.DateRangeChipGroup
@@ -60,7 +59,6 @@ import com.lemon.mcdevmanagermp.ui.pages.community.components.ModernFilterBar
 import com.lemon.mcdevmanagermp.ui.pages.community.components.ReplyInputBar
 import com.lemon.mcdevmanagermp.ui.pages.community.components.StarChipGroup
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
@@ -78,19 +76,10 @@ fun CommentPage(onBack: () -> Unit) {
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
-    val snackbarHostState = LocalSnackbarHostState.current
-    val scope = rememberCoroutineScope()
-
-    LaunchedEffect(viewModel.effect) {
-        viewModel.effect.collect { effect ->
-            when (effect) {
-                is CommentEffect.ShowToast -> {
-                    scope.launch { snackbarHostState.showSnackbar(effect.message) }
-                }
-                CommentEffect.ReplySuccess -> {
-                    scope.launch { snackbarHostState.showSnackbar("回复成功") }
-                }
-            }
+    viewModel.effect.collectUiEffect { effect ->
+        when (effect) {
+            is CommentEffect.ShowToast -> showToast(effect.message)
+            CommentEffect.ReplySuccess -> showToast("回复成功")
         }
     }
 

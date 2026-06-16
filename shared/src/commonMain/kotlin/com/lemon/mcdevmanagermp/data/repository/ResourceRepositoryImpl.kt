@@ -3,10 +3,10 @@ package com.lemon.mcdevmanagermp.data.repository
 import com.lemon.mcdevmanagermp.data.api.AnalyzeApi
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.dto.netease.income.OneResRealtimeIncomeVO
-import com.lemon.mcdevmanagermp.data.vo.netease.resource.NewResDetailVO
-import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResDetailVO
-import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResMonthDetailVO
-import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceVO
+import com.lemon.mcdevmanagermp.data.vo.netease.analyze.NewResDetailVO
+import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResDetailVO
+import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResMonthDetailVO
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceListVO
 import com.lemon.mcdevmanagermp.domain.resource.ResourceRepository
 import com.lemon.mcdevmanagermp.utils.UnifiedExceptionHandler
 
@@ -16,7 +16,7 @@ class ResourceRepositoryImpl : ResourceRepository {
         private val analyzeApi = AnalyzeApi.INSTANCE
     }
 
-    override suspend fun getAllResources(platform: String): NetworkState<ResourceVO> {
+    override suspend fun getAllResources(platform: String): NetworkState<ResourceListVO> {
         return UnifiedExceptionHandler.handleRequest {
             analyzeApi.getAllResource(platform = platform)
         }

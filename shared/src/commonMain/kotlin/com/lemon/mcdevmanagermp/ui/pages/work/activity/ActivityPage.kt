@@ -10,19 +10,17 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.lemon.mcdevmanagermp.data.vo.netease.activity.ReviewActivityItemVO
-import com.lemon.mcdevmanagermp.ui.components.LocalSnackbarHostState
 import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
+import com.lemon.mcdevmanagermp.ui.components.collectUiEffect
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.detail.ActivityDetailPage
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.layout.ActivityCompactLayout
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.layout.ActivityExpandedLayout
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.layout.ActivityMediumLayout
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.participate.ActivityParticipatePage
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import kotlinx.coroutines.launch
 
 @Composable
 fun ActivityPage(
@@ -31,9 +29,6 @@ fun ActivityPage(
     val viewModel = remember { ActivityViewModel() }
     val state by viewModel.state.collectAsState()
     val colors = LocalAppColors.current
-
-    val snackbarHostState = LocalSnackbarHostState.current
-    val scope = rememberCoroutineScope()
 
     // 内部子页面导航状态
     var selectedActivity by remember { mutableStateOf<ReviewActivityItemVO?>(null) }
@@ -45,13 +40,9 @@ fun ActivityPage(
         viewModel.dispatch(ActivityAction.RefreshData)
     }
 
-    LaunchedEffect(viewModel.effect) {
-        viewModel.effect.collect { effect ->
-            when (effect) {
-                is ActivityEffect.ShowToast -> {
-                    scope.launch { snackbarHostState.showSnackbar(effect.message) }
-                }
-            }
+    viewModel.effect.collectUiEffect { effect ->
+        when (effect) {
+            is ActivityEffect.ShowToast -> showToast(effect.message)
         }
     }
 

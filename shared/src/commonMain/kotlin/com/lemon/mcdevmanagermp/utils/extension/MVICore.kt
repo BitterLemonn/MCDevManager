@@ -4,20 +4,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 
 /**
  * MVI 状态标记接口
@@ -35,19 +31,17 @@ interface IUiAction
 interface IUiEffect
 
 /**
- * 创建一个配置为一次性事件 (Effects) 的 [MutableSharedFlow]。
+ * 创建一个用于一次性事件 (Effects) 的 [Channel]。
  *
- * 配置:
- * - replay = 0: 新的订阅者不会收到旧的事件。
- * - extraBufferCapacity = 1: 允许缓冲一个事件。
- * - onBufferOverflow = BufferOverflow.DROP_OLDEST: 如果缓冲区已满，丢弃最旧的事件。
+ * 使用 [Channel.UNLIMITED] 无界缓冲：发送的 effect 会无条件暂存，直到订阅者消费，
+ * **绝不会因为订阅者尚未就绪或连续快速发送而丢失**。
+ *
+ * 之前使用 `MutableSharedFlow(replay = 0)` 时，当收集协程尚未注册为订阅者
+ * （页面刚进入、嵌套重组、连续快速 emit）期间发出的 effect 会被静默丢弃，
+ * 导致子页面 Toast 不显示。改用 Channel 彻底解决该问题。
  */
-fun <T : IUiEffect> createEffectFlow(): MutableSharedFlow<T> {
-    return MutableSharedFlow(
-        replay = 0,
-        extraBufferCapacity = 1,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST
-    )
+fun <T : IUiEffect> createEffectChannel(): Channel<T> {
+    return Channel(Channel.UNLIMITED)
 }
 
 /**
@@ -60,36 +54,15 @@ fun <T : IUiState> MutableStateFlow<T>.setState(reducer: T.() -> T) {
 }
 
 /**
- * [ViewModel] 的扩展函数，用于向 [MutableSharedFlow] 发送副作用 (Effect)。
- * 在 [viewModelScope] 中启动协程。
- */
-fun <T : IUiEffect> ViewModel.sendEffect(
-    effectFlow: MutableSharedFlow<T>,
-    effect: T
-) {
-    viewModelScope.launch {
-        effectFlow.emit(effect)
-    }
-}
-
-/**
- * [ViewModel] 的扩展函数，用于使用构建器向 [MutableSharedFlow] 发送副作用 (Effect)。
- */
-fun <T : IUiEffect> ViewModel.sendEffect(
-    effectFlow: MutableSharedFlow<T>,
-    builder: () -> T
-) {
-    viewModelScope.launch {
-        effectFlow.emit(builder())
-    }
-}
-
-/**
  * 在 Composable 中收集副作用 (Effect) 的扩展函数。
  * 自动处理生命周期，当生命周期至少为 STARTED 时收集，离开页面自动取消。
+ *
+ * 接收 [Flow]（[MVIContainer] 内部为 Channel + receiveAsFlow）。由于 Channel 会暂存
+ * 未消费的 effect，即使在生命周期低于 STARTED 期间发出的事件，重新进入 STARTED 后
+ * 仍能被收到，不会丢失。
  */
 @Composable
-fun <T : IUiEffect> SharedFlow<T>.collectEffect(
+fun <T : IUiEffect> Flow<T>.collectEffect(
     lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
     minActiveState: Lifecycle.State = Lifecycle.State.STARTED,
     collector: suspend (T) -> Unit
@@ -114,7 +87,7 @@ fun <T : IUiEffect> SharedFlow<T>.collectEffect(
  *
  *     fun doSomething() {
  *         mvi.setState { copy(loading = true) }
- *         mvi.sendEffect(MyEffect.ShowToast("Hello"))
+ *         mvi.tryEmitEffect(MyEffect.ShowToast("Hello"))
  *     }
  * }
  * ```
@@ -126,18 +99,18 @@ class MVIContainer<STATE : IUiState, EFFECT : IUiEffect>(
     private val _state = MutableStateFlow(initialState)
     val state: StateFlow<STATE> = _state.asStateFlow()
 
-    private val _effect = createEffectFlow<EFFECT>()
-    val effect: SharedFlow<EFFECT> = _effect.asSharedFlow()
+    private val _effect = createEffectChannel<EFFECT>()
+    val effect: Flow<EFFECT> = _effect.receiveAsFlow()
 
     fun setState(reducer: STATE.() -> STATE) {
         _state.update(reducer)
     }
 
     suspend fun emitEffect(effect: EFFECT) {
-        _effect.emit(effect)
+        _effect.send(effect)
     }
-    
+
     fun tryEmitEffect(effect: EFFECT) {
-        _effect.tryEmit(effect)
+        _effect.trySend(effect)
     }
 }
