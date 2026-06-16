@@ -1,0 +1,87 @@
+name: iOS Build
+
+# 独立的 iOS 构建入口，仅手动触发。
+# 用于反复调试 / 按需构建未签名 IPA，无需等待其他平台。
+# 与 Release / Build Test 中的 ios 任务逻辑一致，互不影响。
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '版本号 (可选，留空则用 ci-<run_number>)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  # ============================================================
+  # iOS — 未签名 IPA（用户自行通过 Sideloadly/AltStore 签名）
+  # ============================================================
+  ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # CMP 1.11.x 的 Skiko 引用了 iOS 26 的 UIUtilities 框架，需要 Xcode 26+ SDK
+      # 详见: https://youtrack.jetbrains.com/issue/CMP-10179
+      - name: Select Xcode (iOS 26 SDK)
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest
+
+      - name: Determine version
+        id: vars
+        run: |
+          V="${{ inputs.version }}"
+          if [ -z "$V" ]; then
+            V="ci-${{ github.run_number }}"
+          fi
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+
+      - name: Switch Gradle mirror to official source
+        run: sed -i '' 's|distributionUrl=.*|distributionUrl=https://services.gradle.org/distributions/gradle-9.5.0-bin.zip|' gradle/wrapper/gradle-wrapper.properties
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      # Kotlin/Native Release 链接 (DevirtualizationAnalysis) 较吃堆内存，
+      # 上限由 gradle.properties 的 kotlin.daemon.jvmargs 控制，此处无需额外设置。
+      - name: Build iOS framework
+        run: ./gradlew :shared:linkReleaseFrameworkIosArm64 --no-daemon
+
+      - name: Build unsigned app
+        run: |
+          xcodebuild -project iosApp/iosApp.xcodeproj \
+            -scheme iosApp \
+            -sdk iphoneos \
+            -configuration Release \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            DEBUG_INFORMATION_FORMAT=dwarf \
+            -quiet
+
+      - name: Package & rename IPA
+        run: |
+          APP_PATH=$(find build/Build/Products/Release-iphoneos -name '*.app' | head -1)
+          mkdir -p Payload
+          cp -r "$APP_PATH" Payload/
+          zip -qr "MCDevManagerMP-V${{ steps.vars.outputs.version }}-ios-arm64.ipa" Payload
+          rm -rf Payload
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa
+          path: MCDevManagerMP-V${{ steps.vars.outputs.version }}-ios-arm64.ipa
