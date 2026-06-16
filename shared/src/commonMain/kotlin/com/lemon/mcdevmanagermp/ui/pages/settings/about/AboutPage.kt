@@ -80,6 +80,10 @@ private val OPEN_SOURCE_LIBS = listOf(
     OpenSourceLib("logback", "QOS.ch", "EPL 1.0 / LGPL 2.1", "Java 日志框架"),
     OpenSourceLib("SLF4J", "QOS.ch", "MIT", "日志门面框架"),
     OpenSourceLib("kotlin-logging", "oshai", "MIT", "Kotlin 日志封装库"),
+    OpenSourceLib("Calf", "Mohamed Rejeb", "Apache 2.0", "跨平台权限适配库"),
+    OpenSourceLib("Cryptography", "whyoleg", "Apache 2.0", "Kotlin 跨平台加密库"),
+    OpenSourceLib("FileKit", "Vincent", "MIT", "跨平台文件选择库"),
+    OpenSourceLib("Rich Editor", "Mohamed Rejeb", "Apache 2.0", "Compose 富文本编辑器"),
 )
 
 // ============================================================

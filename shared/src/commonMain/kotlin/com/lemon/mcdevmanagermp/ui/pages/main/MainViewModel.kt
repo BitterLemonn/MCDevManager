@@ -63,8 +63,6 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
         // 消息未读数缓存（按天）
         var cachedMailboxUnreadCount: Int = 0
             private set
-        var cachedMailboxUnreadDate: String? = null
-            private set
 
         private fun todayString(): String {
             val now = Clock.System.now().toLocalDateTime(cacheTimeZone)
@@ -85,7 +83,6 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
             cachedProfitData = null
             cachedLastMonthProfitData = null
             cachedRankListData = emptyList()
-            cachedMailboxUnreadDate = null
         }
     }
 
@@ -137,12 +134,11 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
             loadProfit()
         }
 
-        // 消息未读数
-        if (today == cachedMailboxUnreadDate) {
-            setState { copy(mailboxUnreadCount = cachedMailboxUnreadCount) }
-        } else {
-            loadMailboxUnread()
-        }
+        // 消息未读数：先从静态缓存恢复（避免角标闪烁），随后无条件刷新以同步已读状态。
+        // MainViewModel 每次从子页面返回首页时都会重建（companion 缓存即为此设计），
+        // 因此用户在邮箱中读完邮件返回后，此处会重新拉取 count，及时清理已读提示。
+        setState { copy(mailboxUnreadCount = cachedMailboxUnreadCount) }
+        loadMailboxUnread()
 
         // 启动未读消息定时轮询：每 60s 刷新一次，保证首页角标新鲜
         startMailboxUnreadPolling()
@@ -269,7 +265,6 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
             when (val r = mailboxRepository.getUnReadCount()) {
                 is NetworkState.Success -> {
                     cachedMailboxUnreadCount = r.data?.count ?: 0
-                    cachedMailboxUnreadDate = todayString()
                     setState { copy(mailboxUnreadCount = cachedMailboxUnreadCount) }
                 }
 
