@@ -52,7 +52,6 @@ import com.lemon.mcdevmanagermp.ui.pages.work.activity.ActivityPage
 import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.WorkManagePage
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_mod
 import mcdevmanagermpr.shared.generated.resources.ic_sale
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
@@ -127,6 +126,21 @@ private fun WorkListPage(
 
         Spacer(Modifier.height(4.dp))
 
+        // BETA功能未完成 TODO
+//        ElevatedCard(
+//            modifier = Modifier.fillMaxWidth(),
+//            colors = CardDefaults.elevatedCardColors(containerColor = colors.surfaceContainerHigh),
+//            shape = RoundedCornerShape(16.dp),
+//            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+//        ) {
+//            WorkItem(
+//                icon = Res.drawable.ic_mod,
+//                title = "上架管理",
+//                subtitle = "管理作品上架与审核状态",
+//                onClick = onNavigateToWorkManage
+//            )
+//        }
+
         ElevatedCard(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.elevatedCardColors(containerColor = colors.surfaceContainerHigh),
@@ -138,20 +152,6 @@ private fun WorkListPage(
                 title = "作品活动",
                 subtitle = "查看和参与平台作品活动",
                 onClick = onNavigateToActivity
-            )
-        }
-
-        ElevatedCard(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.elevatedCardColors(containerColor = colors.surfaceContainerHigh),
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-        ) {
-            WorkItem(
-                icon = Res.drawable.ic_mod,
-                title = "上架管理",
-                subtitle = "管理作品上架与审核状态",
-                onClick = onNavigateToWorkManage
             )
         }
     }
