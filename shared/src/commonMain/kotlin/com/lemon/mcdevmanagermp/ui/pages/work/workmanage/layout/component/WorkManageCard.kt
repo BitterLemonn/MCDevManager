@@ -30,9 +30,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.lemon.mcdevmanagermp.data.consts.enums.WorkItemActionEnum
+import com.lemon.mcdevmanagermp.data.consts.enums.WorkItemStatusEnum
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
-import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.model.WorkItemAction
-import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.model.WorkItemStatus
 import com.lemon.mcdevmanagermp.ui.theme.AppColors
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import mcdevmanagermpr.shared.generated.resources.Res
@@ -49,10 +49,10 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 internal fun WorkManageCard(
     item: ResourceData,
-    onActionClick: (WorkItemAction) -> Unit
+    onActionClick: (WorkItemActionEnum) -> Unit
 ) {
     val colors = LocalAppColors.current
-    val status = WorkItemStatus.fromRealStatus(item.itemRealStatus)
+    val status = WorkItemStatusEnum.fromRealStatus(item.itemRealStatus)
     val actions = status.actions(isFree = item.price <= 0)
 
     Card(
@@ -130,16 +130,16 @@ internal fun WorkManageCard(
  */
 @Composable
 private fun ActionButton(
-    action: WorkItemAction,
+    action: WorkItemActionEnum,
     onClick: () -> Unit
 ) {
     val colors = LocalAppColors.current
     val accent = colors.primary
     val iconRes: DrawableResource = when (action) {
-        WorkItemAction.SUBMIT_REVIEW -> Res.drawable.ic_correct
-        WorkItemAction.PUBLISH -> Res.drawable.ic_sale
-        WorkItemAction.UPDATE -> Res.drawable.ic_refresh
-        WorkItemAction.ADJUST_PRICE -> Res.drawable.ic_diamond
+        WorkItemActionEnum.SUBMIT_REVIEW -> Res.drawable.ic_correct
+        WorkItemActionEnum.PUBLISH -> Res.drawable.ic_sale
+        WorkItemActionEnum.UPDATE -> Res.drawable.ic_refresh
+        WorkItemActionEnum.ADJUST_PRICE -> Res.drawable.ic_diamond
     }
     val interaction = remember { MutableInteractionSource() }
     val isHovered by interaction.collectIsHoveredAsState()
@@ -178,15 +178,15 @@ private fun ActionButton(
  * 状态标签：保留语义色（绿/橙/红/灰）以传递状态信息。
  */
 @Composable
-private fun WorkStatusTag(status: WorkItemStatus, colors: AppColors) {
+private fun WorkStatusTag(status: WorkItemStatusEnum, colors: AppColors) {
     val accent = when (status) {
-        WorkItemStatus.ONLINE -> colors.online
-        WorkItemStatus.REVIEWING -> colors.warning
-        WorkItemStatus.REJECTED -> colors.danger
-        WorkItemStatus.UNPUBLISHED -> colors.warning
-        WorkItemStatus.OFFLINE -> colors.offline
-        WorkItemStatus.SYSTEM_OFFLINE -> colors.offline
-        WorkItemStatus.UNKNOWN -> colors.onSurfaceVariant
+        WorkItemStatusEnum.ONLINE -> colors.online
+        WorkItemStatusEnum.REVIEWING -> colors.warning
+        WorkItemStatusEnum.REJECTED -> colors.danger
+        WorkItemStatusEnum.UNPUBLISHED -> colors.warning
+        WorkItemStatusEnum.OFFLINE -> colors.offline
+        WorkItemStatusEnum.SYSTEM_OFFLINE -> colors.offline
+        WorkItemStatusEnum.UNKNOWN -> colors.onSurfaceVariant
     }
     Text(
         text = status.label,

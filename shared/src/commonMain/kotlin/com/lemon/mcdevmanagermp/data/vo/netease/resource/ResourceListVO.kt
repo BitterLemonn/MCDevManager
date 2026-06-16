@@ -1,5 +1,7 @@
 package com.lemon.mcdevmanagermp.data.vo.netease.resource
 
+import com.lemon.mcdevmanagermp.data.consts.enums.PriceRankEnum
+import com.lemon.mcdevmanagermp.data.consts.enums.PriceTypeEnum
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -9,7 +11,7 @@ import kotlinx.serialization.json.JsonObject
  * 资源列表
  */
 @Serializable
-data class ResourceVO(
+data class ResourceListVO(
     val count: Int,
     val item: List<ResourceData>
 )
@@ -17,39 +19,34 @@ data class ResourceVO(
 @Serializable
 data class ResourceData(
     @SerialName("create_time")
-    val createTime: String = "",
-    @SerialName("item_id")
-    val itemId: String = "",
-    @SerialName("item_name")
-    val itemName: String = "",
-    @SerialName("online_time")
-    val onlineTime: String = "UNKNOWN",
-    @SerialName("pri_type")
-    val priType: Int = 0,
-    val price: Int = 0,
-    // —— 上架管理相关字段（列表接口已返回，旧版本未声明）——
-    @SerialName("item_real_status")
-    val itemRealStatus: Int = 0,
-    @SerialName("price_type")
-    val priceType: String = "",
-    @SerialName("price_rank")
-    val priceRank: Int = 0,
-    @SerialName("is_premium")
-    val isPremium: Boolean = false,
-    @SerialName("is_original")
-    val isOriginal: Boolean = false,
-    @SerialName("is_ea")
-    val isEa: Int = 0,
-    @SerialName("premium_apply_status")
-    val premiumApplyStatus: String = "",
+    val createTime: String = "",  // 发布时间
     @SerialName("apply_review_time")
-    val applyReviewTime: String = "",
-    @SerialName("can_update_pc")
-    val canUpdatePc: Boolean = false,
-    @SerialName("rating_level")
-    val ratingLevel: Int = 0
-)
-
+    val applyReviewTime: String = "",  // 提审时间
+    @SerialName("item_id")
+    val itemId: String = "",  // 46id
+    @SerialName("item_name")
+    val itemName: String = "",  // 作品名称
+    @SerialName("online_time")
+    val onlineTime: String = "UNKNOWN",  // 上架时间
+    @SerialName("price_type")
+    val _priceType: String = "",  // 价格类型
+    val price: Int = 0,  // 价格
+    @SerialName("price_rank")
+    val _priceRank: Int = 0,  // 价格档位
+    @SerialName("item_real_status")
+    val itemRealStatus: Int = 0, // 作品真实状态 未查明 [ItemRealStatusEnum] TODO
+    @SerialName("sync_pc_flag")
+    val syncPcFlag: Boolean = false, // 是否双端同步
+    @SerialName("weak_offline")
+    val weakOffline: Boolean = false, // 是否弱下架
+    @SerialName("weak_offline_reason")
+    val weakOfflineReason: String = "", // 弱下架原因
+    @SerialName("weak_offline_time")
+    val weakOfflineTime: String = "", // 弱下架时间
+) {
+    val priceType: PriceTypeEnum = PriceTypeEnum.fromStringType(_priceType)
+    val priceRank: PriceRankEnum = PriceRankEnum.fromIntType(_priceRank)
+}
 
 /**
  * 资源详情

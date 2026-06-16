@@ -1,8 +1,8 @@
 package com.lemon.mcdevmanagermp.ui.pages.work.workmanage.layout.component
 
 import androidx.compose.runtime.Composable
+import com.lemon.mcdevmanagermp.data.consts.enums.WorkItemActionEnum
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
-import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.model.WorkItemAction
 
 /**
  * 卡片操作触发的待确认操作，决定弹出哪种对话框。
@@ -11,7 +11,8 @@ sealed interface WorkManagePendingOp {
     val item: ResourceData
 
     /** 普通操作（提交审核/上架/更新等）→ 确认弹窗 */
-    data class Confirm(override val item: ResourceData, val action: WorkItemAction) : WorkManagePendingOp
+    data class Confirm(override val item: ResourceData, val action: WorkItemActionEnum) :
+        WorkManagePendingOp
 
     /** 调整定价 → 价格输入弹窗 */
     data class AdjustPrice(override val item: ResourceData) : WorkManagePendingOp
@@ -23,7 +24,7 @@ sealed interface WorkManagePendingOp {
 @Composable
 internal fun WorkManageActionDialog(
     pending: WorkManagePendingOp?,
-    onConfirmAction: (ResourceData, WorkItemAction) -> Unit,
+    onConfirmAction: (ResourceData, WorkItemActionEnum) -> Unit,
     onAdjustPrice: (ResourceData, Int) -> Unit,
     onDismiss: () -> Unit
 ) {

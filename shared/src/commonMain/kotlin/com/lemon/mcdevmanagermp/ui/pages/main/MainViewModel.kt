@@ -2,8 +2,9 @@ package com.lemon.mcdevmanagermp.ui.pages.main
 
 import androidx.lifecycle.viewModelScope
 import com.lemon.mcdevmanagermp.data.common.NetworkState
+import com.lemon.mcdevmanagermp.data.consts.enums.RankCategoryTypeEnum
+import com.lemon.mcdevmanagermp.data.consts.enums.RankSubCategoryTypeEnum
 import com.lemon.mcdevmanagermp.data.page.RankCategoryData
-import com.lemon.mcdevmanagermp.data.page.RankCategoryTypeEnum
 import com.lemon.mcdevmanagermp.data.repository.AccountRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.RankListRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
@@ -195,7 +196,13 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
     }
 
     private fun loadProfit() {
-        setState { copy(isProfitLoading = true, profitExpanded = false, lastProfitExpanded = false) }
+        setState {
+            copy(
+                isProfitLoading = true,
+                profitExpanded = false,
+                lastProfitExpanded = false
+            )
+        }
         viewModelScope.launch {
             try {
                 val timeZone = TimeZone.of("Asia/Shanghai")
@@ -245,7 +252,7 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
 
     private fun loadRankCategory(
         category: RankCategoryTypeEnum,
-        subCategory: com.lemon.mcdevmanagermp.data.page.RankSubCategoryTypeEnum?
+        subCategory: RankSubCategoryTypeEnum?
     ) {
         viewModelScope.launch {
             try {

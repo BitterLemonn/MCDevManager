@@ -23,13 +23,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.lemon.mcdevmanagermp.data.consts.enums.WorkItemActionEnum
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.WorkManageAction
 import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.WorkManageState
 import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.layout.component.WorkManageActionDialog
 import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.layout.component.WorkManageCard
 import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.layout.component.WorkManagePendingOp
-import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.model.WorkItemAction
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_refresh
@@ -106,7 +106,7 @@ internal fun WorkManageCompactLayout(
             ) {
                 items(state.items, key = { it.itemId }) { item ->
                     WorkManageCard(item) { action ->
-                        pending = if (action == WorkItemAction.ADJUST_PRICE) {
+                        pending = if (action == WorkItemActionEnum.ADJUST_PRICE) {
                             WorkManagePendingOp.AdjustPrice(item)
                         } else {
                             WorkManagePendingOp.Confirm(item, action)

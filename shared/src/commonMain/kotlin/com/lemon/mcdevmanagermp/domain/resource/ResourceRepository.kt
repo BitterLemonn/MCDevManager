@@ -5,10 +5,10 @@ import com.lemon.mcdevmanagermp.data.dto.netease.income.OneResRealtimeIncomeVO
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.NewResDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResMonthDetailVO
-import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceVO
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceListVO
 
 interface ResourceRepository {
-    suspend fun getAllResources(platform: String = "pe"): NetworkState<ResourceVO>
+    suspend fun getAllResources(platform: String = "pe"): NetworkState<ResourceListVO>
     suspend fun getDayDetail(
         platform: String,
         category: String,

@@ -6,8 +6,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import com.lemon.mcdevmanagermp.data.consts.enums.WorkItemActionEnum
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
-import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.model.WorkItemAction
 
 /**
  * 确认上架操作弹窗。
@@ -18,7 +18,7 @@ import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.model.WorkItemAction
 @Composable
 internal fun ConfirmActionDialog(
     item: ResourceData,
-    action: WorkItemAction,
+    action: WorkItemActionEnum,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {

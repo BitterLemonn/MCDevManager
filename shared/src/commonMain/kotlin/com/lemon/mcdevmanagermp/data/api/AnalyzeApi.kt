@@ -6,7 +6,7 @@ import com.lemon.mcdevmanagermp.data.dto.netease.income.OneResRealtimeIncomeVO
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.NewResDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResMonthDetailVO
-import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceVO
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceListVO
 import de.jensklingenberg.ktorfit.http.GET
 import de.jensklingenberg.ktorfit.http.Path
 import de.jensklingenberg.ktorfit.http.Query
@@ -17,7 +17,7 @@ interface AnalyzeApi {
         @Path("platform") platform: String = "pe",
         @Query("start") start: Int = 0,
         @Query("span") span: Int = Int.MAX_VALUE
-    ): ResponseData<ResourceVO>
+    ): ResponseData<ResourceListVO>
 
     @GET("/data_analysis/day_detail/")
     suspend fun getDayDetail(

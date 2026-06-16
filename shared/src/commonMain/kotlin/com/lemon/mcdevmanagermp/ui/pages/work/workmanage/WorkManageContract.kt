@@ -1,7 +1,7 @@
 package com.lemon.mcdevmanagermp.ui.pages.work.workmanage
 
+import com.lemon.mcdevmanagermp.data.consts.enums.WorkItemActionEnum
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
-import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.model.WorkItemAction
 import com.lemon.mcdevmanagermp.utils.extension.IUiAction
 import com.lemon.mcdevmanagermp.utils.extension.IUiEffect
 import com.lemon.mcdevmanagermp.utils.extension.IUiState
@@ -17,7 +17,8 @@ sealed interface WorkManageAction : IUiAction {
     data object RefreshData : WorkManageAction
 
     /** 执行上架操作（当前占位，后续接真实接口） */
-    data class PerformAction(val item: ResourceData, val action: WorkItemAction) : WorkManageAction
+    data class PerformAction(val item: ResourceData, val action: WorkItemActionEnum) :
+        WorkManageAction
 
     /** 调整定价（当前占位，后续接真实接口） */
     data class AdjustPrice(val item: ResourceData, val newPrice: Int) : WorkManageAction
