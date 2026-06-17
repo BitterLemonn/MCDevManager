@@ -49,18 +49,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lemon.mcdevmanagermp.platform.BackHandler
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.ActivityPage
+import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailPage
 import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.WorkManagePage
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import mcdevmanagermpr.shared.generated.resources.Res
+import mcdevmanagermpr.shared.generated.resources.ic_mod
 import mcdevmanagermpr.shared.generated.resources.ic_sale
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 
-private enum class WorkSubPage { List, Activity, WorkManage }
+private enum class WorkSubPage { List, Activity, WorkManage, WorkDetail }
 
 @Composable
 fun WorkContent() {
     var currentSubPage by remember { mutableStateOf(WorkSubPage.List) }
+    var detailItemId by remember { mutableStateOf("") }
 
     BackHandler(enabled = currentSubPage != WorkSubPage.List) {
         currentSubPage = WorkSubPage.List
@@ -93,7 +96,16 @@ fun WorkContent() {
             )
 
             WorkSubPage.WorkManage -> WorkManagePage(
-                onBack = { currentSubPage = WorkSubPage.List }
+                onBack = { currentSubPage = WorkSubPage.List },
+                onNavigateToDetail = { id ->
+                    detailItemId = id
+                    currentSubPage = WorkSubPage.WorkDetail
+                }
+            )
+
+            WorkSubPage.WorkDetail -> WorkDetailPage(
+                itemId = detailItemId,
+                onBack = { currentSubPage = WorkSubPage.WorkManage }
             )
         }
     }
@@ -127,19 +139,19 @@ private fun WorkListPage(
         Spacer(Modifier.height(4.dp))
 
         // BETA功能未完成 TODO
-//        ElevatedCard(
-//            modifier = Modifier.fillMaxWidth(),
-//            colors = CardDefaults.elevatedCardColors(containerColor = colors.surfaceContainerHigh),
-//            shape = RoundedCornerShape(16.dp),
-//            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-//        ) {
-//            WorkItem(
-//                icon = Res.drawable.ic_mod,
-//                title = "上架管理",
-//                subtitle = "管理作品上架与审核状态",
-//                onClick = onNavigateToWorkManage
-//            )
-//        }
+        ElevatedCard(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.elevatedCardColors(containerColor = colors.surfaceContainerHigh),
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        ) {
+            WorkItem(
+                icon = Res.drawable.ic_mod,
+                title = "上架管理",
+                subtitle = "管理作品上架与审核状态",
+                onClick = onNavigateToWorkManage
+            )
+        }
 
         ElevatedCard(
             modifier = Modifier.fillMaxWidth(),

@@ -144,16 +144,6 @@ kotlin {
     }
 }
 
-configurations.all {
-    resolutionStrategy {
-        eachDependency {
-            if (requested.group == "org.jetbrains.skiko") {
-                useVersion("0.144.6")
-            }
-        }
-    }
-}
-
 dependencies {
     androidRuntimeClasspath(libs.compose.uiTooling)
     add("kspAndroid", libs.room.compiler)

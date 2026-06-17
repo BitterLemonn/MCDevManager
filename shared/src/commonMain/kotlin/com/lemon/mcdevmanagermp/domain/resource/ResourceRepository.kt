@@ -5,10 +5,14 @@ import com.lemon.mcdevmanagermp.data.dto.netease.income.OneResRealtimeIncomeVO
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.NewResDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResMonthDetailVO
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceListVO
 
 interface ResourceRepository {
     suspend fun getAllResources(platform: String = "pe"): NetworkState<ResourceListVO>
+
+    /** 获取指定作品的详情（基本信息 / PC 同步 / PE 等完整字段） */
+    suspend fun getResourceDetail(itemId: String): NetworkState<ResourceDetailVO>
     suspend fun getDayDetail(
         platform: String,
         category: String,

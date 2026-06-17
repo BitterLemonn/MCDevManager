@@ -40,7 +40,8 @@ import org.jetbrains.compose.resources.painterResource
 internal fun WorkManageMediumLayout(
     state: WorkManageState,
     onAction: (WorkManageAction) -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onNavigateToDetail: (String) -> Unit = {}
 ) {
     val colors = LocalAppColors.current
     val gridState = rememberLazyGridState()
@@ -109,10 +110,11 @@ internal fun WorkManageMediumLayout(
             ) {
                 items(state.items, key = { it.itemId }) { item ->
                     WorkManageCard(item) { action ->
-                        pending = if (action == WorkItemActionEnum.ADJUST_PRICE) {
-                            WorkManagePendingOp.AdjustPrice(item)
-                        } else {
-                            WorkManagePendingOp.Confirm(item, action)
+                        when (action) {
+                            WorkItemActionEnum.UPDATE -> onNavigateToDetail(item.itemId)
+                            WorkItemActionEnum.ADJUST_PRICE ->
+                                pending = WorkManagePendingOp.AdjustPrice(item)
+                            else -> pending = WorkManagePendingOp.Confirm(item, action)
                         }
                     }
                 }
