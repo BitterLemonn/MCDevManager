@@ -10,10 +10,10 @@ import de.jensklingenberg.ktorfit.http.Path
 
 interface ResourceApi {
 
-    @GET("/items/categories/pe/{itemId}")
+    @GET("items/categories/pe/{itemId}")
     suspend fun getResourceDetail(@Path("itemId") itemId: String): ResponseData<ResourceDetailVO>
 
-    @POST("/items/categories/pe/{itemId}/cancel_review")
+    @POST("items/categories/pe/{itemId}/cancel_review")
     suspend fun cancelReview(@Path("itemId") itemId: String): ResponseData<NoNeedData>
 
     companion object {

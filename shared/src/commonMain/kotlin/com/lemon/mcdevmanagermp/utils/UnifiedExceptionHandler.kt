@@ -21,11 +21,30 @@ object UnifiedExceptionHandler {
     suspend fun <T> handleRequest(
         block: suspend () -> ResponseData<T>
     ): NetworkState<T> {
+        // 首次执行
+        var result = runRequestOnce(block)
+        // 若判定为登录过期，自动重试一次，避免 Cookie 短暂失效或服务端瞬时异常导致的误判
+        if (result.isLoginExpiredError()) {
+            Logger.d("$TAG:检测到登录过期，自动重试一次以避免误判")
+            result = runRequestOnce(block)
+        }
+        return result
+    }
+
+    private suspend fun <T> runRequestOnce(
+        block: suspend () -> ResponseData<T>
+    ): NetworkState<T> {
         return try {
             parseData(block())
         } catch (e: Exception) {
             handleException(e)
         }
+    }
+
+    private fun <T> NetworkState<T>.isLoginExpiredError(): Boolean {
+        if (this !is NetworkState.Error) return false
+        val cause = e ?: return false
+        return cause is LoginException || cause is CookiesExpiredException
     }
 
     suspend fun handleGithubRequest(

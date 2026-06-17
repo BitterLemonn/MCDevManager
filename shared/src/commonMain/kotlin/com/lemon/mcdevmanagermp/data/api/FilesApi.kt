@@ -8,7 +8,7 @@ import de.jensklingenberg.ktorfit.http.Query
 
 interface FilesApi {
 
-    @GET("/filepicker/file_token")
+    @GET("filepicker/file_token")
     suspend fun getFileToken(
         @Query("file_type") fileType: String,
         @Query("secure") secure: String = "false"

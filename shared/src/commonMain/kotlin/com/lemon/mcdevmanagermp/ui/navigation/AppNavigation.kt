@@ -18,6 +18,7 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -26,6 +27,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.lemon.mcdevmanagermp.ui.components.LocalSnackbarHostState
+import com.lemon.mcdevmanagermp.ui.components.LocalToastScope
 import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
 import com.lemon.mcdevmanagermp.ui.pages.income.IncomePage
 import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.IncomeDetailPage
@@ -40,9 +42,15 @@ import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 fun AppNavigation(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     val snackbarHostState = remember { SnackbarHostState() }
+    // 此 scope 生命周期与整个导航树绑定，比任何子页面都长；
+    // 用于驱动 showToast 中的 showSnackbar，避免页面销毁时正在显示的 Toast 被取消。
+    val toastScope = rememberCoroutineScope()
     val colors = LocalAppColors.current
 
-    CompositionLocalProvider(LocalSnackbarHostState provides snackbarHostState) {
+    CompositionLocalProvider(
+        LocalSnackbarHostState provides snackbarHostState,
+        LocalToastScope provides toastScope
+    ) {
         BoxWithConstraints(modifier = modifier) {
             val widthSizeClass = when {
                 maxWidth < 600.dp -> WindowWidthSizeClass.Compact

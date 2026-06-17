@@ -13,19 +13,19 @@ import de.jensklingenberg.ktorfit.http.POST
 interface LoginApi {
 
     @Headers("Content-Type: application/json")
-    @POST("/dl/zj/mail/ini")
+    @POST("dl/zj/mail/ini")
     suspend fun init(@Body encParams: EncParamsDTO): CapIdVO
 
     @Headers("Content-Type: application/json")
-    @POST("/dl/zj/mail/powGetP")
+    @POST("dl/zj/mail/powGetP")
     suspend fun getPower(@Body encParams: EncParamsDTO): PowerVO
 
     @Headers("Content-Type: application/json")
-    @POST("/dl/zj/mail/gt")
+    @POST("dl/zj/mail/gt")
     suspend fun getTicket(@Body encParams: EncParamsDTO): TicketVO
 
     @Headers("Content-Type: application/json")
-    @POST("/dl/zj/mail/l")
+    @POST("dl/zj/mail/l")
     suspend fun safeLogin(@Body encParams: EncParamsDTO): BaseLoginVO
 
     companion object {

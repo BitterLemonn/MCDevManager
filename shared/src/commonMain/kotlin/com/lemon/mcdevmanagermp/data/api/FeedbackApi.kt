@@ -1,12 +1,12 @@
 package com.lemon.mcdevmanagermp.data.api
 
-import com.lemon.mcdevmanagermp.data.consts.NETEASE_MC_DEV_LINK
 import com.lemon.mcdevmanagermp.data.common.NoNeedData
 import com.lemon.mcdevmanagermp.data.common.ResponseData
+import com.lemon.mcdevmanagermp.data.consts.NETEASE_MC_DEV_LINK
 import com.lemon.mcdevmanagermp.data.dto.netease.feedback.DeveloperFeedbackDTO
+import com.lemon.mcdevmanagermp.data.dto.netease.feedback.ReplyDTO
 import com.lemon.mcdevmanagermp.data.vo.netease.feedback.DeveloperFeedbackVO
 import com.lemon.mcdevmanagermp.data.vo.netease.feedback.FeedbackVO
-import com.lemon.mcdevmanagermp.data.dto.netease.feedback.ReplyDTO
 import de.jensklingenberg.ktorfit.http.Body
 import de.jensklingenberg.ktorfit.http.GET
 import de.jensklingenberg.ktorfit.http.Headers
@@ -17,7 +17,7 @@ import de.jensklingenberg.ktorfit.http.Query
 
 interface FeedbackApi {
 
-    @GET("/items/feedback/pe/")
+    @GET("items/feedback/pe/")
     suspend fun loadFeedback(
         @Query("start") from: Int,
         @Query("span") size: Int,
@@ -29,13 +29,13 @@ interface FeedbackApi {
     ): ResponseData<FeedbackVO>
 
     @Headers("Content-Type: application/json")
-    @PUT("/items/feedback/pe/{id}/reply")
+    @PUT("items/feedback/pe/{id}/reply/")
     suspend fun sendReply(
         @Path("id") feedbackId: String,
         @Body content: ReplyDTO
     ): ResponseData<NoNeedData>
 
-    @POST("/developer/feedback/add_feedback")
+    @POST("developer/feedback/add_feedback/")
     suspend fun seedFeedback(@Body feedbackBean: DeveloperFeedbackDTO): ResponseData<DeveloperFeedbackVO>
 
     companion object {

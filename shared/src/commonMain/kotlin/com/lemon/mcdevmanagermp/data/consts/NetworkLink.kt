@@ -1,5 +1,8 @@
 package com.lemon.mcdevmanagermp.data.consts
 
+const val NETEASE_FILE_SIGN_MARKER = "x-ntes-signature"
+const val TRAILING_SLASH_MARKER = "X-Trailing-Slash"
+
 const val NETEASE_LOGIN_LINK = "https://dl.reg.163.com/"
 const val NETEASE_MC_DEV_LINK = "https://mc-launcher.webapp.163.com/"
 const val NETEASE_UPLOAD_LINK = "https://fp.ps.netease.com/"

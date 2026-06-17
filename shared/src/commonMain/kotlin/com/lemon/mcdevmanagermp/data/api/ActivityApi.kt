@@ -54,7 +54,7 @@ interface ActivityApi {
     ): ResponseData<NoNeedData>
 
     companion object {
-        const val NETEASE_ACTIVITY_BASE_INTERFACE = "/activities/pe-review-activities"
+        const val NETEASE_ACTIVITY_BASE_INTERFACE = "activities/pe-review-activities"
         val INSTANCE by lazy {
             provideKtorfit(NETEASE_MC_DEV_LINK).createActivityApi()
         }

@@ -1,5 +1,6 @@
 package com.lemon.mcdevmanagermp.data.api
 
+import com.lemon.mcdevmanagermp.data.consts.NETEASE_FILE_SIGN_MARKER
 import com.lemon.mcdevmanagermp.data.consts.NETEASE_UPLOAD_LINK
 import com.lemon.mcdevmanagermp.data.vo.netease.upload.UploadFileResponseVO
 import io.github.vinceglb.filekit.PlatformFile
@@ -59,7 +60,7 @@ object UploadApi {
                 )
             }
         )
-        val sign = response.headers["x-ntes-signature"]
+        val sign = response.headers[NETEASE_FILE_SIGN_MARKER]
         return UploadFileResponseVO(
             body = response.bodyAsText(),
             sign = sign

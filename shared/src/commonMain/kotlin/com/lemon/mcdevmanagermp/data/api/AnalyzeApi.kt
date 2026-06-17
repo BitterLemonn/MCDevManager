@@ -12,14 +12,14 @@ import de.jensklingenberg.ktorfit.http.Path
 import de.jensklingenberg.ktorfit.http.Query
 
 interface AnalyzeApi {
-    @GET("/items/categories/{platform}/")
+    @GET("items/categories/{platform}/")
     suspend fun getAllResource(
         @Path("platform") platform: String = "pe",
         @Query("start") start: Int = 0,
         @Query("span") span: Int = Int.MAX_VALUE
     ): ResponseData<ResourceListVO>
 
-    @GET("/data_analysis/day_detail/")
+    @GET("data_analysis/day_detail/")
     suspend fun getDayDetail(
         @Query("platform") platform: String,
         @Query("category") category: String,
@@ -32,7 +32,7 @@ interface AnalyzeApi {
         @Query("span") span: Int = Int.MAX_VALUE
     ): ResponseData<ResDetailVO>
 
-    @GET("/data_analysis/day_detail/")
+    @GET("data_analysis/day_detail/")
     suspend fun getNewDayDetail(
         @Query("platform") platform: String,
         @Query("category") category: String,
@@ -46,7 +46,7 @@ interface AnalyzeApi {
         @Query("is_need_us_rank_data") isNeedUsRankData: Boolean = true
     ): ResponseData<NewResDetailVO>
 
-    @GET("/data_analysis/month_detail/")
+    @GET("data_analysis/month_detail/")
     suspend fun getMonthDetail(
         @Query("platform") platform: String,
         @Query("category") category: String,
@@ -61,7 +61,7 @@ interface AnalyzeApi {
         @Query("day_dateid") dayDateId: String
     ): ResponseData<ResMonthDetailVO>
 
-    @GET("/items/categories/{platform}/{iid}/incomes/")
+    @GET("items/categories/{platform}/{iid}/incomes/")
     suspend fun getOneResRealtimeIncome(
         @Path("platform") platform: String,
         @Path("iid") iid: String,

@@ -7,6 +7,9 @@ import com.lemon.mcdevmanagermp.utils.extension.IUiAction
 import com.lemon.mcdevmanagermp.utils.extension.IUiEffect
 import com.lemon.mcdevmanagermp.utils.extension.IUiState
 
+/** 邮箱列表单页大小（与后端默认 span 对齐） */
+const val MAIL_PAGE_SIZE: Int = 20
+
 data class MailboxState(
     val isLoading: Boolean = false,
     val isDetailLoading: Boolean = false,
@@ -21,7 +24,9 @@ data class MailboxState(
     val isDeleting: Boolean = false,
     val isMarkingRead: Boolean = false,
     val showDeleteReadConfirm: Boolean = false,
-    val isDeletingRead: Boolean = false
+    val isDeletingRead: Boolean = false,
+    val isLoadingMore: Boolean = false,
+    val hasMore: Boolean = true
 ) : IUiState {
     val hasUnread: Boolean get() = unreadCount > 0
     val hasReadMails: Boolean get() = mailList.any { it.haveRead }
@@ -29,6 +34,7 @@ data class MailboxState(
 
 sealed interface MailboxAction : IUiAction {
     data object LoadData : MailboxAction
+    data object LoadMore : MailboxAction
     data class SelectMailType(val mailType: String?) : MailboxAction
     data class OpenMail(val mailId: String) : MailboxAction
     data object CloseDetail : MailboxAction
