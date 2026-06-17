@@ -15,6 +15,7 @@ class MailboxViewModel :
     override fun dispatch(action: MailboxAction) {
         when (action) {
             MailboxAction.LoadData -> loadMailList()
+            MailboxAction.LoadMore -> loadMore()
             is MailboxAction.SelectMailType -> {
                 setState { copy(selectedMailType = action.mailType) }
                 loadMailList()
@@ -37,14 +38,19 @@ class MailboxViewModel :
         setState { copy(isLoading = true) }
         viewModelScope.launch {
             when (val r = mailboxUseCase.loadMailList(state.value.selectedMailType)) {
-                is NetworkState.Success -> setState {
-                    copy(
-                        isLoading = false,
-                        mailList = r.data?.mail ?: emptyList(),
-                        totalCount = r.data?.count ?: 0,
-                        unreadCount = r.data?.unreadCount ?: 0,
-                        unreadMailCounts = r.data?.unreadMailCounts
-                    )
+                is NetworkState.Success -> {
+                    val newList = r.data?.mail ?: emptyList()
+                    val total = r.data?.count ?: 0
+                    setState {
+                        copy(
+                            isLoading = false,
+                            mailList = newList,
+                            totalCount = total,
+                            unreadCount = r.data?.unreadCount ?: 0,
+                            unreadMailCounts = r.data?.unreadMailCounts,
+                            hasMore = newList.size >= MAIL_PAGE_SIZE && newList.size < total
+                        )
+                    }
                 }
 
                 is NetworkState.Error -> {
@@ -53,6 +59,41 @@ class MailboxViewModel :
                         r,
                         onNeedReLogin = { MailboxEffect.NeedReLogin },
                         onShowToast = { MailboxEffect.ShowToast("加载消息失败: $it") }
+                    )
+                }
+            }
+        }
+    }
+
+    /** 追加加载下一页：以当前列表大小为起点，追加到列表尾部。 */
+    private fun loadMore() {
+        val current = state.value
+        if (!current.hasMore || current.isLoadingMore || current.isLoading) return
+        setState { copy(isLoadingMore = true) }
+        viewModelScope.launch {
+            when (val r = mailboxUseCase.loadMailList(
+                mailType = current.selectedMailType,
+                start = current.mailList.size,
+                initLoad = false
+            )) {
+                is NetworkState.Success -> {
+                    val more = r.data?.mail ?: emptyList()
+                    val newList = current.mailList + more
+                    setState {
+                        copy(
+                            isLoadingMore = false,
+                            mailList = newList,
+                            hasMore = more.size >= MAIL_PAGE_SIZE && newList.size < totalCount
+                        )
+                    }
+                }
+
+                is NetworkState.Error -> {
+                    setState { copy(isLoadingMore = false) }
+                    handleError(
+                        r,
+                        onNeedReLogin = { MailboxEffect.NeedReLogin },
+                        onShowToast = { MailboxEffect.ShowToast("加载更多失败: $it") }
                     )
                 }
             }

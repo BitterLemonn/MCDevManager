@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -48,6 +49,7 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -297,10 +299,26 @@ private fun MailTypeChip(
 internal fun MailList(
     list: List<MailListContentVO>,
     isLoading: Boolean,
+    hasMore: Boolean,
+    isLoadingMore: Boolean,
     onOpen: (String) -> Unit,
+    onLoadMore: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val colors = LocalAppColors.current
+    val listState = rememberLazyListState()
+
+    // 接近底部（剩余 ≤ 5 条）时触发加载下一页。
+    val shouldLoadMore by remember(list.size, hasMore, isLoadingMore, isLoading) {
+        derivedStateOf {
+            if (isLoading || isLoadingMore || !hasMore || list.isEmpty()) return@derivedStateOf false
+            val lastVisible = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            lastVisible >= list.size - 5
+        }
+    }
+    LaunchedEffect(shouldLoadMore) {
+        if (shouldLoadMore) onLoadMore()
+    }
 
     if (!isLoading && list.isEmpty()) {
         Box(
@@ -318,11 +336,27 @@ internal fun MailList(
 
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
+        state = listState,
         contentPadding = PaddingValues(bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         itemsIndexed(list) { _, mail ->
             MailItemCard(mail = mail, onOpen = onOpen)
+        }
+        // 加载中：底部小转圈；到底后完全静默（无任何 footer）
+        if (isLoadingMore) {
+            item {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = colors.primary,
+                        strokeWidth = 3.dp
+                    )
+                }
+            }
         }
     }
 }

@@ -57,7 +57,10 @@ internal fun CompactMailboxLayout(
             MailList(
                 list = state.mailList,
                 isLoading = state.isLoading,
+                hasMore = state.hasMore,
+                isLoadingMore = state.isLoadingMore,
                 onOpen = { onAction(MailboxAction.OpenMail(it)) },
+                onLoadMore = { onAction(MailboxAction.LoadMore) },
                 modifier = Modifier.fillMaxWidth().weight(1f)
             )
         }
