@@ -7,9 +7,6 @@ import com.lemon.mcdevmanagermp.utils.extension.IUiAction
 import com.lemon.mcdevmanagermp.utils.extension.IUiEffect
 import com.lemon.mcdevmanagermp.utils.extension.IUiState
 
-/** 邮箱列表单页大小（与后端默认 span 对齐） */
-const val MAIL_PAGE_SIZE: Int = 20
-
 data class MailboxState(
     val isLoading: Boolean = false,
     val isDetailLoading: Boolean = false,

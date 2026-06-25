@@ -5,6 +5,7 @@ import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.consts.enums.WorkItemActionEnum
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
+import com.lemon.mcdevmanagermp.domain.resource.GetResourceListUseCase
 import com.lemon.mcdevmanagermp.domain.work.WorkManageUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
 import kotlinx.coroutines.launch
@@ -13,7 +14,7 @@ class WorkManageViewModel :
     BaseViewModel<WorkManageState, WorkManageAction, WorkManageEffect>(WorkManageState()) {
 
     private val workManageUseCase = WorkManageUseCase(
-        resourceRepository = ResourceRepositoryImpl.INSTANCE
+        getResourceListUseCase = GetResourceListUseCase(ResourceRepositoryImpl.INSTANCE)
     )
 
     override fun dispatch(action: WorkManageAction) {

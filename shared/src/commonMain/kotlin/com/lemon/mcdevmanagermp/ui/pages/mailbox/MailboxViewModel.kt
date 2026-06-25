@@ -48,7 +48,7 @@ class MailboxViewModel :
                             totalCount = total,
                             unreadCount = r.data?.unreadCount ?: 0,
                             unreadMailCounts = r.data?.unreadMailCounts,
-                            hasMore = newList.size >= MAIL_PAGE_SIZE && newList.size < total
+                            hasMore = newList.size >= MailboxUseCase.MAIL_PAGE_SIZE && newList.size < total
                         )
                     }
                 }
@@ -83,7 +83,7 @@ class MailboxViewModel :
                         copy(
                             isLoadingMore = false,
                             mailList = newList,
-                            hasMore = more.size >= MAIL_PAGE_SIZE && newList.size < totalCount
+                            hasMore = more.size >= MailboxUseCase.MAIL_PAGE_SIZE && newList.size < totalCount
                         )
                     }
                 }

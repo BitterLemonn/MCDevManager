@@ -4,21 +4,22 @@ import com.lemon.mcdevmanagermp.data.api.GithubUpdateApi
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.vo.github.AssetBean
 import com.lemon.mcdevmanagermp.data.vo.github.LatestReleaseVO
+import com.lemon.mcdevmanagermp.domain.update.UpdateRepository
 import com.lemon.mcdevmanagermp.utils.UnifiedExceptionHandler
 
-class UpdateRepositoryImpl {
+class UpdateRepositoryImpl : UpdateRepository {
 
     companion object {
         val INSTANCE by lazy { UpdateRepositoryImpl() }
     }
 
-    suspend fun checkForUpdate(): NetworkState<LatestReleaseVO> {
+    override suspend fun checkForUpdate(): NetworkState<LatestReleaseVO> {
         return UnifiedExceptionHandler.handleGithubRequest {
             GithubUpdateApi.INSTANCE.getLatestRelease()
         }
     }
 
-    fun selectBestAsset(release: LatestReleaseVO, matcher: String): AssetBean? {
+    override fun selectBestAsset(release: LatestReleaseVO, matcher: String): AssetBean? {
         return release.assets.firstOrNull { it.name.contains(matcher, ignoreCase = true) }
     }
 }

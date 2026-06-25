@@ -1,9 +1,7 @@
-package com.lemon.mcdevmanagermp.domain.resource
+package com.lemon.mcdevmanagermp.domain.analyze
 
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.NewResAnalyzeData
-import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
-import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.SummaryMetrics
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
@@ -12,7 +10,7 @@ import kotlinx.datetime.minus
  * 模组分析 UseCase：封装资源列表获取、模组分析数据获取与指标汇总逻辑
  */
 class ModAnalysisUseCase(
-    private val resourceRepository: ResourceRepository
+    private val analyzeRepository: AnalyzeRepository
 ) {
     companion object {
         private const val ANALYSIS_DAYS = 7
@@ -26,20 +24,6 @@ class ModAnalysisUseCase(
         val endDate = today.minus(1, DateTimeUnit.DAY)
         val startDate = endDate.minus(ANALYSIS_DAYS - 1, DateTimeUnit.DAY)
         return formatDateParam(startDate) to formatDateParam(endDate)
-    }
-
-    /**
-     * 获取指定平台的资源列表
-     */
-    suspend fun getResourceList(platform: String): NetworkState<List<ResourceData>> {
-        return when (val result = resourceRepository.getAllResources(platform)) {
-            is NetworkState.Success -> {
-                val list = result.data?.item ?: emptyList()
-                NetworkState.Success(list)
-            }
-
-            is NetworkState.Error -> NetworkState.Error(result.msg, result.e)
-        }
     }
 
     /**
@@ -58,7 +42,7 @@ class ModAnalysisUseCase(
     ): NetworkState<ModAnalysisResult> {
         val apiPlatform = if (platform == "pe") "pe" else "comp"
 
-        return when (val result = resourceRepository.getNewDayDetail(
+        return when (val result = analyzeRepository.getNewDayDetail(
             platform = apiPlatform,
             category = apiPlatform,
             startDate = startDate,
@@ -96,6 +80,20 @@ class ModAnalysisUseCase(
         return date.toString().replace("-", "")
     }
 }
+
+/**
+ * 四指标汇总数据
+ */
+data class SummaryMetrics(
+    val newPurchaseCount: Int = 0,
+    val newPurchasePercent: Double = 0.0,
+    val dau: Int = 0,
+    val dauPercent: Double = 0.0,
+    val newFollowCount: Int = 0,
+    val newFollowPercent: Double = 0.0,
+    val avgPlayTime: Double = 0.0,
+    val avgPlayTimePercent: Double = 0.0,
+)
 
 /**
  * 模组分析结果

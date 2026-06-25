@@ -2,9 +2,12 @@ package com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis
 
 import androidx.lifecycle.viewModelScope
 import com.lemon.mcdevmanagermp.data.common.NetworkState
+import com.lemon.mcdevmanagermp.data.repository.AnalyzeRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
-import com.lemon.mcdevmanagermp.domain.resource.ModAnalysisResult
-import com.lemon.mcdevmanagermp.domain.resource.ModAnalysisUseCase
+import com.lemon.mcdevmanagermp.domain.analyze.ModAnalysisResult
+import com.lemon.mcdevmanagermp.domain.analyze.ModAnalysisUseCase
+import com.lemon.mcdevmanagermp.domain.analyze.SummaryMetrics
+import com.lemon.mcdevmanagermp.domain.resource.GetResourceListUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
 import com.lemon.mcdevmanagermp.utils.Logger
 import kotlinx.coroutines.launch
@@ -16,8 +19,9 @@ class ModAnalysisViewModel : BaseViewModel<ModAnalysisState, ModAnalysisAction, 
     ModAnalysisState()
 ) {
     private val modAnalysisUseCase = ModAnalysisUseCase(
-        resourceRepository = ResourceRepositoryImpl.INSTANCE
+        analyzeRepository = AnalyzeRepositoryImpl.INSTANCE
     )
+    private val getResourceListUseCase = GetResourceListUseCase(ResourceRepositoryImpl.INSTANCE)
 
     companion object {
         private const val TAG = "ModAnalysisVM"
@@ -56,7 +60,7 @@ class ModAnalysisViewModel : BaseViewModel<ModAnalysisState, ModAnalysisAction, 
     private fun initLoad(iid: String, platform: String) {
         setState { copy(selectedPlatform = platform, isResListLoading = true) }
         viewModelScope.launch {
-            when (val result = modAnalysisUseCase.getResourceList(platform)) {
+            when (val result = getResourceListUseCase(platform)) {
                 is NetworkState.Success -> {
                     setState { copy(resList = result.data ?: emptyList(), isResListLoading = false) }
                     // 若预设了 iid，直接加载分析数据

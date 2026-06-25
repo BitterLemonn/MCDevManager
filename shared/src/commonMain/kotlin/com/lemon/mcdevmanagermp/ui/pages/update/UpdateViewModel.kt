@@ -1,6 +1,7 @@
 package com.lemon.mcdevmanagermp.ui.pages.update
 
 import androidx.lifecycle.viewModelScope
+import com.lemon.mcdevmanagermp.data.repository.UpdateRepositoryImpl
 import com.lemon.mcdevmanagermp.domain.update.CheckUpdateResult
 import com.lemon.mcdevmanagermp.domain.update.CheckUpdateUseCase
 import com.lemon.mcdevmanagermp.platform.AppUpdateManager
@@ -22,7 +23,7 @@ class UpdateViewModel : BaseViewModel<UpdateState, UpdateAction, UpdateEffect>(U
             private set
     }
 
-    private val checkUpdateUseCase = CheckUpdateUseCase()
+    private val checkUpdateUseCase = CheckUpdateUseCase(UpdateRepositoryImpl.INSTANCE)
     private val updateManager = AppUpdateManager()
     private val notifier = DownloadNotifier()
     private val updatePreferences = UpdatePreferences()

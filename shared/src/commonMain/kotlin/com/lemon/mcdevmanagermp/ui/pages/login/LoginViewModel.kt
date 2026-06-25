@@ -2,6 +2,7 @@ package com.lemon.mcdevmanagermp.ui.pages.login
 
 import androidx.lifecycle.viewModelScope
 import com.lemon.mcdevmanagermp.data.repository.AccountRepositoryImpl
+import com.lemon.mcdevmanagermp.data.repository.CookieRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.LoginRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.UserRepositoryImpl
 import com.lemon.mcdevmanagermp.domain.account.SaveAccountUseCase
@@ -15,12 +16,14 @@ class LoginViewModel : BaseViewModel<LoginState, LoginAction, LoginEffect>(Login
 
     private val loginUseCase = LoginUseCase(
         loginRepository = LoginRepositoryImpl.INSTANCE,
-        userRepository = UserRepositoryImpl.INSTANCE
+        userRepository = UserRepositoryImpl.INSTANCE,
+        cookieRepository = CookieRepositoryImpl.INSTANCE
     )
 
     private val saveAccountUseCase = SaveAccountUseCase(
         accountRepository = AccountRepositoryImpl.INSTANCE,
-        userRepository = UserRepositoryImpl.INSTANCE
+        userRepository = UserRepositoryImpl.INSTANCE,
+        cookieRepository = CookieRepositoryImpl.INSTANCE
     )
 
     override fun dispatch(action: LoginAction) {

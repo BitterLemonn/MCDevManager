@@ -1,9 +1,7 @@
 package com.lemon.mcdevmanagermp.domain.account
 
-import com.lemon.mcdevmanagermp.data.common.AppContext
 import com.lemon.mcdevmanagermp.data.common.JSONConverter
 import com.lemon.mcdevmanagermp.data.common.NetworkState
-import com.lemon.mcdevmanagermp.data.db.entity.AccountEntity
 import com.lemon.mcdevmanagermp.domain.user.UserRepository
 import kotlin.time.Clock
 
@@ -12,7 +10,8 @@ import kotlin.time.Clock
  */
 class AccountManageUseCase(
     private val accountRepository: AccountRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val cookieRepository: CookieRepository
 ) {
     /**
      * 获取所有账号及最后使用的账号信息
@@ -28,10 +27,10 @@ class AccountManageUseCase(
      * 切换账号：恢复 cookies → 验证有效性 → 更新最后登录时间
      * @return 切换结果
      */
-    suspend fun switchAccount(account: AccountEntity): SwitchResult {
+    suspend fun switchAccount(account: Account): SwitchResult {
         val cookies: Map<String, String> = JSONConverter.decodeFromString(account.cookiesJson)
-        AppContext.cookiesStore.clearCookies()
-        cookies.forEach { (k, v) -> AppContext.cookiesStore.addCookie(k, v) }
+        cookieRepository.clearCookies()
+        cookies.forEach { (k, v) -> cookieRepository.addCookie(k, v) }
 
         val result = userRepository.getUserInfo()
         return if (result is NetworkState.Success) {
@@ -44,7 +43,7 @@ class AccountManageUseCase(
             )
             SwitchResult.Success(account.nickname)
         } else {
-            AppContext.cookiesStore.clearCookies()
+            cookieRepository.clearCookies()
             SwitchResult.Expired
         }
     }
@@ -63,6 +62,6 @@ class AccountManageUseCase(
 }
 
 data class AccountListResult(
-    val accounts: List<AccountEntity>,
+    val accounts: List<Account>,
     val currentAccountId: Long?
 )

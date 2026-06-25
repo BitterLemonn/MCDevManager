@@ -1,18 +1,27 @@
-package com.lemon.mcdevmanagermp.domain.resource
+package com.lemon.mcdevmanagermp.domain.analyze
 
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResMonthAnalyzeData
-import com.lemon.mcdevmanagermp.ui.pages.analyze.monthDetail.QuickTimeRange
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
 import kotlinx.datetime.number
 
 /**
+ * 快捷时间范围
+ */
+object QuickTimeRange {
+    const val THIS_MONTH = 0
+    const val LAST_3_MONTHS = 1
+    const val LAST_6_MONTHS = 2
+    const val LAST_12_MONTHS = 3
+}
+
+/**
  * 月详情 UseCase：封装月度汇总数据获取与排序逻辑
  */
 class MonthDetailUseCase(
-    private val resourceRepository: ResourceRepository
+    private val analyzeRepository: AnalyzeRepository
 ) {
     /**
      * 获取月度汇总数据，按 monthId 降序排列
@@ -28,7 +37,7 @@ class MonthDetailUseCase(
     ): NetworkState<List<ResMonthAnalyzeData>> {
         val apiPlatform = if (platform == "pe") "pe" else "comp"
 
-        return when (val result = resourceRepository.getMonthDetail(
+        return when (val result = analyzeRepository.getMonthDetail(
             platform = apiPlatform,
             category = apiPlatform,
             startDate = startDate,

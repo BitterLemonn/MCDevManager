@@ -37,12 +37,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.lemon.mcdevmanagermp.domain.analyze.SummaryMetrics
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.ChartType
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.MetricType
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.ModAnalysisAction
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.ModAnalysisState
-import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.SummaryMetrics
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.components.ChartSection
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.components.MetricCard
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.components.ResourceSelector

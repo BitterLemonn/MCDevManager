@@ -1,19 +1,10 @@
 package com.lemon.mcdevmanagermp.ui.pages.analyze.monthDetail
 
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResMonthAnalyzeData
+import com.lemon.mcdevmanagermp.domain.analyze.QuickTimeRange
 import com.lemon.mcdevmanagermp.utils.extension.IUiAction
 import com.lemon.mcdevmanagermp.utils.extension.IUiEffect
 import com.lemon.mcdevmanagermp.utils.extension.IUiState
-
-/**
- * 快捷时间范围
- */
-object QuickTimeRange {
-    const val THIS_MONTH = 0
-    const val LAST_3_MONTHS = 1
-    const val LAST_6_MONTHS = 2
-    const val LAST_12_MONTHS = 3
-}
 
 /**
  * 月度趋势图指标类型

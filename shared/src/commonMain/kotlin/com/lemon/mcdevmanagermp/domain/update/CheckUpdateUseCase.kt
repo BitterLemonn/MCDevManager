@@ -1,13 +1,12 @@
 package com.lemon.mcdevmanagermp.domain.update
 
 import com.lemon.mcdevmanagermp.data.common.NetworkState
-import com.lemon.mcdevmanagermp.data.repository.UpdateRepositoryImpl
 import com.lemon.mcdevmanagermp.platform.AppUpdateManager
 import com.lemon.mcdevmanagermp.platform.UpdateStrategy
 import com.lemon.mcdevmanagermp.utils.VersionComparator
 
 class CheckUpdateUseCase(
-    private val updateRepository: UpdateRepositoryImpl = UpdateRepositoryImpl.INSTANCE,
+    private val updateRepository: UpdateRepository,
     private val updateManager: AppUpdateManager = AppUpdateManager()
 ) {
     suspend operator fun invoke(): CheckUpdateResult {

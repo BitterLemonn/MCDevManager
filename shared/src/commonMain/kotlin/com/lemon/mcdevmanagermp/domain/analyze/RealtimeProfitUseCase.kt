@@ -1,8 +1,7 @@
-package com.lemon.mcdevmanagermp.domain.resource
+package com.lemon.mcdevmanagermp.domain.analyze
 
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.dto.netease.income.OneResRealtimeIncomeVO
-import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
@@ -11,22 +10,8 @@ import kotlinx.datetime.minus
  * 实时收益 UseCase：封装资源列表获取与逐资源实时收益查询逻辑
  */
 class RealtimeProfitUseCase(
-    private val resourceRepository: ResourceRepository
+    private val analyzeRepository: AnalyzeRepository
 ) {
-    /**
-     * 获取指定平台的资源列表
-     */
-    suspend fun getResourceList(platform: String): NetworkState<List<ResourceData>> {
-        return when (val result = resourceRepository.getAllResources(platform)) {
-            is NetworkState.Success -> {
-                val list = result.data?.item ?: emptyList()
-                NetworkState.Success(list)
-            }
-
-            is NetworkState.Error -> NetworkState.Error(result.msg, result.e)
-        }
-    }
-
     /**
      * 获取单个资源的实时收益
      */
@@ -37,7 +22,7 @@ class RealtimeProfitUseCase(
         endTime: String
     ): NetworkState<OneResRealtimeIncomeVO> {
         val apiPlatform = if (platform == "pe") "pe" else "comp"
-        return resourceRepository.getOneResRealtimeIncome(
+        return analyzeRepository.getOneResRealtimeIncome(
             platform = apiPlatform,
             iid = iid,
             beginTime = beginTime,

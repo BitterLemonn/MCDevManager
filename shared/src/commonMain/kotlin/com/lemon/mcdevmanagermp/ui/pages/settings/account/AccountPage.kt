@@ -53,7 +53,7 @@ import com.github.panpf.sketch.request.ComposableImageOptions
 import com.github.panpf.sketch.request.error
 import com.github.panpf.sketch.request.fallback
 import com.github.panpf.sketch.request.placeholder
-import com.lemon.mcdevmanagermp.data.db.entity.AccountEntity
+import com.lemon.mcdevmanagermp.domain.account.Account
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
 import com.lemon.mcdevmanagermp.ui.components.collectUiEffect
@@ -333,7 +333,7 @@ internal fun SavedAccountsSection(
 
 @Composable
 private fun AccountCard(
-    account: AccountEntity,
+    account: Account,
     isCurrent: Boolean,
     isSwitching: Boolean,
     onSwitch: () -> Unit,

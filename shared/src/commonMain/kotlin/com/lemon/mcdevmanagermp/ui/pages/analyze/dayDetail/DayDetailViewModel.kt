@@ -2,8 +2,10 @@ package com.lemon.mcdevmanagermp.ui.pages.analyze.dayDetail
 
 import androidx.lifecycle.viewModelScope
 import com.lemon.mcdevmanagermp.data.common.NetworkState
+import com.lemon.mcdevmanagermp.data.repository.AnalyzeRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
-import com.lemon.mcdevmanagermp.domain.resource.DayDetailUseCase
+import com.lemon.mcdevmanagermp.domain.analyze.DayDetailUseCase
+import com.lemon.mcdevmanagermp.domain.resource.GetResourceListUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.ChartType
 import com.lemon.mcdevmanagermp.utils.Logger
@@ -16,8 +18,9 @@ class DayDetailViewModel : BaseViewModel<DayDetailState, DayDetailAction, DayDet
     DayDetailState()
 ) {
     private val dayDetailUseCase = DayDetailUseCase(
-        resourceRepository = ResourceRepositoryImpl.INSTANCE
+        analyzeRepository = AnalyzeRepositoryImpl.INSTANCE
     )
+    private val getResourceListUseCase = GetResourceListUseCase(ResourceRepositoryImpl.INSTANCE)
 
     companion object {
         private const val TAG = "DayDetailVM"
@@ -72,7 +75,7 @@ class DayDetailViewModel : BaseViewModel<DayDetailState, DayDetailAction, DayDet
         }
 
         viewModelScope.launch {
-            when (val result = dayDetailUseCase.getResourceList(state.value.platform)) {
+            when (val result = getResourceListUseCase(state.value.platform)) {
                 is NetworkState.Success -> {
                     setState { copy(resList = result.data ?: emptyList(), isResListLoading = false) }
                 }

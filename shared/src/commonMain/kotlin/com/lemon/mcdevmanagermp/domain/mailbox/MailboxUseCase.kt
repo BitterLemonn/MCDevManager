@@ -5,7 +5,6 @@ import com.lemon.mcdevmanagermp.data.common.NoNeedData
 import com.lemon.mcdevmanagermp.data.vo.netease.mailbox.MailContentVO
 import com.lemon.mcdevmanagermp.data.vo.netease.mailbox.MailListVO
 import com.lemon.mcdevmanagermp.data.vo.netease.mailbox.UnReadMailVO
-import com.lemon.mcdevmanagermp.ui.pages.mailbox.MAIL_PAGE_SIZE
 
 /**
  * 消息 UseCase：封装消息列表、详情、删除、全部已读、未读数逻辑
@@ -13,6 +12,11 @@ import com.lemon.mcdevmanagermp.ui.pages.mailbox.MAIL_PAGE_SIZE
 class MailboxUseCase(
     private val mailboxRepository: MailboxRepository
 ) {
+    companion object {
+        /** 邮箱列表单页大小（与后端默认 span 对齐） */
+        const val MAIL_PAGE_SIZE: Int = 20
+    }
+
     /**
      * 加载消息列表，mailType 为 null/空字符串时表示全部。
      * - [start] 分页起点，0 为首屏；追加加载时传入当前列表大小。

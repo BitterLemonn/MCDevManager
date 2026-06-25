@@ -6,7 +6,8 @@ import com.lemon.mcdevmanagermp.data.consts.LoginException
 import com.lemon.mcdevmanagermp.data.vo.netease.user.LevelInfoVO
 import com.lemon.mcdevmanagermp.data.vo.netease.user.OverviewVO
 import com.lemon.mcdevmanagermp.data.vo.netease.user.UserInfoVO
-import com.lemon.mcdevmanagermp.domain.resource.ResourceRepository
+import com.lemon.mcdevmanagermp.domain.analyze.AnalyzeRepository
+import com.lemon.mcdevmanagermp.domain.resource.GetResourceListUseCase
 import com.lemon.mcdevmanagermp.domain.user.UserRepository
 import com.lemon.mcdevmanagermp.utils.ProfitData
 import com.lemon.mcdevmanagermp.utils.calculateProfit
@@ -31,7 +32,8 @@ data class ProfitResult(
 
 class MainUseCase(
     private val userRepository: UserRepository,
-    private val resourceRepository: ResourceRepository
+    private val analyzeRepository: AnalyzeRepository,
+    private val getResourceListUseCase: GetResourceListUseCase
 ) {
     suspend fun loadDashboard(): MainDashboardData = coroutineScope {
         val userInfoDeferred = async { userRepository.getUserInfo() }
@@ -61,15 +63,16 @@ class MainUseCase(
 
     private suspend fun getOneMonthComponentDiamonds(year: Int, month: Int): Map<String, Double> =
         coroutineScope {
-            val resources = resourceRepository.getAllResources()
-            val resList = if (resources is NetworkState.Success) resources.data?.item
-                ?: emptyList() else emptyList()
+            val resList = when (val resources = getResourceListUseCase("pe")) {
+                is NetworkState.Success -> resources.data ?: emptyList()
+                is NetworkState.Error -> emptyList()
+            }
 
             val dateRange = monthDateRange(year, month)
 
             resList.map { res ->
                 async {
-                    val result = resourceRepository.getNewDayDetail(
+                    val result = analyzeRepository.getNewDayDetail(
                         platform = "pe",
                         category = "pe",
                         startDate = dateRange.first,

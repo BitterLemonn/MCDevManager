@@ -1,10 +1,10 @@
 package com.lemon.mcdevmanagermp.ui.pages.settings.account
 
 import androidx.lifecycle.viewModelScope
-import com.lemon.mcdevmanagermp.data.common.AppContext
-import com.lemon.mcdevmanagermp.data.db.entity.AccountEntity
 import com.lemon.mcdevmanagermp.data.repository.AccountRepositoryImpl
+import com.lemon.mcdevmanagermp.data.repository.CookieRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.UserRepositoryImpl
+import com.lemon.mcdevmanagermp.domain.account.Account
 import com.lemon.mcdevmanagermp.domain.account.AccountManageUseCase
 import com.lemon.mcdevmanagermp.domain.account.SaveAccountUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
@@ -13,13 +13,16 @@ import kotlinx.coroutines.launch
 
 class AccountViewModel : BaseViewModel<AccountState, AccountAction, AccountEffect>(AccountState()) {
 
+    private val cookieRepository = CookieRepositoryImpl.INSTANCE
     private val accountManageUseCase = AccountManageUseCase(
         accountRepository = AccountRepositoryImpl.INSTANCE,
-        userRepository = UserRepositoryImpl.INSTANCE
+        userRepository = UserRepositoryImpl.INSTANCE,
+        cookieRepository = cookieRepository
     )
     private val saveAccountUseCase = SaveAccountUseCase(
         accountRepository = AccountRepositoryImpl.INSTANCE,
-        userRepository = UserRepositoryImpl.INSTANCE
+        userRepository = UserRepositoryImpl.INSTANCE,
+        cookieRepository = cookieRepository
     )
 
     init {
@@ -60,7 +63,7 @@ class AccountViewModel : BaseViewModel<AccountState, AccountAction, AccountEffec
         }
     }
 
-    private fun switchAccount(account: AccountEntity) {
+    private fun switchAccount(account: Account) {
         setState { copy(isSwitching = account.id) }
         viewModelScope.launch {
             try {
@@ -80,7 +83,7 @@ class AccountViewModel : BaseViewModel<AccountState, AccountAction, AccountEffec
                     }
                 }
             } catch (e: Exception) {
-                AppContext.cookiesStore.clearCookies()
+                cookieRepository.clearCookies()
                 sendEffect(AccountEffect.ShowToast("切换失败: ${e.message}"))
                 Logger.e("切换账号失败: $e")
             } finally {
@@ -106,7 +109,7 @@ class AccountViewModel : BaseViewModel<AccountState, AccountAction, AccountEffec
             if (currentId != null) {
                 accountManageUseCase.deleteAccount(currentId)
             }
-            AppContext.cookiesStore.clearCookies()
+            cookieRepository.clearCookies()
             sendEffect(AccountEffect.NavigateToLogin)
         }
     }

@@ -1,11 +1,11 @@
 package com.lemon.mcdevmanagermp.domain.login
 
-import com.lemon.mcdevmanagermp.data.common.AppContext
 import com.lemon.mcdevmanagermp.data.common.JSONConverter
 import com.lemon.mcdevmanagermp.data.consts.CookiesNotValidException
 import com.lemon.mcdevmanagermp.data.consts.NETEASE_TOP_URL
 import com.lemon.mcdevmanagermp.data.consts.NETEASE_USER_COOKIE
 import com.lemon.mcdevmanagermp.data.vo.netease.login.PVInfoVO
+import com.lemon.mcdevmanagermp.domain.account.CookieRepository
 import com.lemon.mcdevmanagermp.domain.user.UserRepository
 import com.lemon.mcdevmanagermp.utils.Logger
 import com.lemon.mcdevmanagermp.utils.UnifiedExceptionHandler.unwrapNetworkState
@@ -15,7 +15,8 @@ import com.lemon.mcdevmanagermp.utils.extension.isValidCookiesStr
 
 class LoginUseCase(
     private val loginRepository: LoginRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val cookieRepository: CookieRepository
 ) {
 
     @Throws(Exception::class)
@@ -64,7 +65,7 @@ class LoginUseCase(
             cookies.isNotBlank() -> cookies.trim()
             else -> null
         } ?: failCookiesLogin()
-        AppContext.cookiesStore.addCookie(NETEASE_USER_COOKIE, cookieValue)
+        cookieRepository.addCookie(NETEASE_USER_COOKIE, cookieValue)
         try {
             unwrapNetworkState(userRepository.getUserInfo())
         } catch (_: Exception) {
@@ -73,7 +74,7 @@ class LoginUseCase(
     }
 
     private fun failCookiesLogin(): Nothing {
-        AppContext.cookiesStore.clearCookies()
+        cookieRepository.clearCookies()
         throw CookiesNotValidException()
     }
 }

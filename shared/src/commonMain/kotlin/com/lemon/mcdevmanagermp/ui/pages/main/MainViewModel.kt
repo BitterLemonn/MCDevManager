@@ -6,6 +6,7 @@ import com.lemon.mcdevmanagermp.data.consts.enums.RankCategoryTypeEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.RankSubCategoryTypeEnum
 import com.lemon.mcdevmanagermp.data.page.RankCategoryData
 import com.lemon.mcdevmanagermp.data.repository.AccountRepositoryImpl
+import com.lemon.mcdevmanagermp.data.repository.AnalyzeRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.MailboxRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.RankListRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
@@ -15,6 +16,7 @@ import com.lemon.mcdevmanagermp.data.vo.netease.user.OverviewVO
 import com.lemon.mcdevmanagermp.data.vo.netease.user.UserInfoVO
 import com.lemon.mcdevmanagermp.domain.main.MainUseCase
 import com.lemon.mcdevmanagermp.domain.rankList.RankListUseCase
+import com.lemon.mcdevmanagermp.domain.resource.GetResourceListUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
 import com.lemon.mcdevmanagermp.utils.ProfitData
 import kotlinx.coroutines.async
@@ -88,7 +90,8 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
 
     private val mainUseCase = MainUseCase(
         userRepository = UserRepositoryImpl.INSTANCE,
-        resourceRepository = ResourceRepositoryImpl.INSTANCE
+        analyzeRepository = AnalyzeRepositoryImpl.INSTANCE,
+        getResourceListUseCase = GetResourceListUseCase(ResourceRepositoryImpl.INSTANCE)
     )
     private val rankListUseCase = RankListUseCase(
         rankListRepository = RankListRepositoryImpl.INSTANCE
