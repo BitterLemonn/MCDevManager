@@ -8,6 +8,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 
+
 /**
  * 资源列表
  */
@@ -98,6 +99,10 @@ data class ResourceDetailVO(
     // 作者信息
     @SerialName("author_info")
     val authorInfo: String = "",
+
+    // 授权信息
+    @SerialName("corp_proof_image")
+    val corpProofImage: String = "",
 
     // 描述信息
     @SerialName("info")
@@ -223,7 +228,7 @@ data class ResourceDetailVO(
     @SerialName("is_official_item")
     val isOfficialItem: Boolean = false,
     @SerialName("is_original")
-    val isOriginal: Boolean = false,
+    val isOriginal: Boolean = true,
     @SerialName("is_persona")
     val isPersona: Boolean = false,
     @SerialName("is_premium")
@@ -446,7 +451,13 @@ data class ResourceDetailDlcInfo(
     val master: String? = null,
     @SerialName("slave_list")
     val slaveList: String? = null
-)
+) {
+    @Serializable
+    enum class DlcType(val type: String) {
+        MASTER("master"),
+        SLAVE("slave")
+    }
+}
 
 @Serializable
 data class ResourceDetailLobbyRes(

@@ -7,6 +7,8 @@ import com.lemon.mcdevmanagermp.data.dto.netease.income.OneResRealtimeIncomeVO
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.NewResDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResMonthDetailVO
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ItemTagVO
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.MCConstsVO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceListVO
 import com.lemon.mcdevmanagermp.domain.resource.ResourceRepository
@@ -98,6 +100,18 @@ class ResourceRepositoryImpl : ResourceRepository {
     override suspend fun getResourceDetail(itemId: String): NetworkState<ResourceDetailVO> {
         return UnifiedExceptionHandler.handleRequest {
             resourceApi.getResourceDetail(itemId)
+        }
+    }
+
+    override suspend fun getItemTag(): NetworkState<ItemTagVO> {
+        return UnifiedExceptionHandler.handleRequest {
+            resourceApi.getItemTag()
+        }
+    }
+
+    override suspend fun getMCConsts(): NetworkState<MCConstsVO> {
+        return UnifiedExceptionHandler.handleRequest {
+            resourceApi.getMCConsts()
         }
     }
 }

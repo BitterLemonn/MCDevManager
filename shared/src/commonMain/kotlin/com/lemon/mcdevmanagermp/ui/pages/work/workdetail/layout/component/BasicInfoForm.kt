@@ -126,6 +126,17 @@ internal fun BasicInfoForm(
             )
         }
 
+        // 授权信息图片（非原创必填）
+        if (!state.isOriginal) {
+            CorpProofImageUploader(
+                imageUrl = state.corpProofImage,
+                localFile = state.corpProofFile,
+                onSelect = { onAction(WorkDetailAction.SelectCorpProof(it)) },
+                onRemove = { onAction(WorkDetailAction.RemoveCorpProof) },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
         // 关联模组（选「是」时展开补充字段）
         if (state.isRelatedMod) {
             RelatedModFields(
@@ -159,7 +170,8 @@ internal fun BasicInfoForm(
             onAdd = { onAction(WorkDetailAction.AddTag(it)) },
             onRemove = { onAction(WorkDetailAction.RemoveTag(it)) },
             modifier = Modifier.fillMaxWidth(),
-            placeholder = "搜索标签 / 输入自定义标签"
+            placeholder = "搜索标签 / 输入自定义标签",
+            suggestions = state.availableTags
         )
 
         // 活动参与说明（整行，多行）

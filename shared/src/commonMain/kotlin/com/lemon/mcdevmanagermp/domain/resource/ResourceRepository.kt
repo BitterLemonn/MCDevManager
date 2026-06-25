@@ -5,14 +5,20 @@ import com.lemon.mcdevmanagermp.data.dto.netease.income.OneResRealtimeIncomeVO
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.NewResDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResMonthDetailVO
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ItemTagVO
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.MCConstsVO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceListVO
 
 interface ResourceRepository {
     suspend fun getAllResources(platform: String = "pe"): NetworkState<ResourceListVO>
 
-    /** 获取指定作品的详情（基本信息 / PC 同步 / PE 等完整字段） */
     suspend fun getResourceDetail(itemId: String): NetworkState<ResourceDetailVO>
+
+    suspend fun getItemTag(): NetworkState<ItemTagVO>
+
+    suspend fun getMCConsts(): NetworkState<MCConstsVO>
+
     suspend fun getDayDetail(
         platform: String,
         category: String,
@@ -20,6 +26,7 @@ interface ResourceRepository {
         endDate: String,
         itemListStr: String
     ): NetworkState<ResDetailVO>
+
     suspend fun getNewDayDetail(
         platform: String,
         category: String,
@@ -27,6 +34,7 @@ interface ResourceRepository {
         endDate: String,
         itemListStr: String
     ): NetworkState<NewResDetailVO>
+
     suspend fun getMonthDetail(
         platform: String,
         category: String,
@@ -34,6 +42,7 @@ interface ResourceRepository {
         endDate: String,
         dayDateId: String
     ): NetworkState<ResMonthDetailVO>
+
     suspend fun getOneResRealtimeIncome(
         platform: String,
         iid: String,

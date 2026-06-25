@@ -23,10 +23,14 @@ import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailAction
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailState
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.BasicInfoForm
+import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.MetaInfoBar
+import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PcBasicInfoForm
+import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PriceInfoForm
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 
 /**
- * 平板布局（600-840dp）：双列网格，短字段两两并排，长字段整行，容器铺满充分利用宽度。
+ * 平板布局（600-840dp）：顶部作品信息条（只读元数据横排仪表盘式）+ 双列网格编辑表单，
+ * 短字段两两并排，长字段整行，容器铺满充分利用宽度。
  */
 @Composable
 internal fun WorkDetailMediumLayout(
@@ -72,11 +76,27 @@ internal fun WorkDetailMediumLayout(
                     .padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // 顶部作品信息条（只读元数据横排展示，与 Expanded 视觉统一）
+                MetaInfoBar(state = state)
+                // 基本信息（元数据已由顶栏展示，关闭卡片内元数据组）
                 BasicInfoForm(
                     state = state,
                     onAction = onAction,
                     modifier = Modifier.fillMaxWidth(),
-                    columns = 2
+                    columns = 2,
+                    showMetaRow = false
+                )
+                if (state.syncPc) {
+                    PcBasicInfoForm(
+                        state = state,
+                        onAction = onAction,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                PriceInfoForm(
+                    state = state,
+                    onAction = onAction,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }

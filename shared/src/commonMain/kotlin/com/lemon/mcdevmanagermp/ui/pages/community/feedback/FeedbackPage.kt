@@ -2,7 +2,6 @@ package com.lemon.mcdevmanagermp.ui.pages.community.feedback
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -49,10 +48,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -66,6 +61,7 @@ import com.lemon.mcdevmanagermp.data.vo.netease.feedback.ConflictModsVO
 import com.lemon.mcdevmanagermp.data.vo.netease.feedback.FeedbackData
 import com.lemon.mcdevmanagermp.platform.BackHandler
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
+import com.lemon.mcdevmanagermp.ui.components.ImagePreviewOverlay
 import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
 import com.lemon.mcdevmanagermp.ui.components.collectUiEffect
 import com.lemon.mcdevmanagermp.ui.pages.community.components.FilterChipItem
@@ -618,7 +614,7 @@ internal fun FeedbackDetailPanel(
 
         val currentViewerUrl = viewerImageUrl
         if (currentViewerUrl != null) {
-            ImageViewerOverlay(
+            ImagePreviewOverlay(
                 imageUrl = currentViewerUrl,
                 onDismiss = { viewerImageUrl = null }
             )
@@ -626,87 +622,6 @@ internal fun FeedbackDetailPanel(
     }
 }
 
-// ============================================================
-// Image Viewer Overlay
-// ============================================================
-
-@Composable
-private fun ImageViewerOverlay(
-    imageUrl: String,
-    onDismiss: () -> Unit
-) {
-    val colors = LocalAppColors.current
-    var scale by remember { mutableStateOf(1f) }
-    var offset by remember { mutableStateOf(Offset.Zero) }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(colors.background.copy(alpha = 0.92f))
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onDismiss
-            )
-            .pointerInput(Unit) {
-                detectTransformGestures { _, pan, zoom, _ ->
-                    scale = (scale * zoom).coerceIn(0.5f, 5f)
-                    offset = Offset(
-                        offset.x + pan.x,
-                        offset.y + pan.y
-                    )
-                }
-            }
-            .pointerInput(Unit) {
-                // Desktop: scroll wheel zoom (zoom toward cursor position)
-                awaitPointerEventScope {
-                    while (true) {
-                        val event = awaitPointerEvent()
-                        if (event.type == PointerEventType.Scroll) {
-                            val change = event.changes.firstOrNull() ?: continue
-                            val scrollDelta = change.scrollDelta.y
-                            if (scrollDelta != 0f) {
-                                val cursorPos = change.position
-                                val center = Offset(size.width / 2f, size.height / 2f)
-                                val zoomFactor = if (scrollDelta > 0f) 1.1f else 0.9f
-                                val newScale = (scale * zoomFactor).coerceIn(0.5f, 5f)
-                                val ratio = newScale / scale
-                                offset = Offset(
-                                    offset.x * ratio + (cursorPos.x - center.x) * (1f - ratio),
-                                    offset.y * ratio + (cursorPos.y - center.y) * (1f - ratio)
-                                )
-                                scale = newScale
-                            }
-                            change.consume()
-                        }
-                    }
-                }
-            },
-        contentAlignment = Alignment.Center
-    ) {
-        AsyncImage(
-            uri = imageUrl,
-            contentDescription = null,
-            modifier = Modifier
-                .graphicsLayer(
-                    scaleX = scale,
-                    scaleY = scale,
-                    translationX = offset.x,
-                    translationY = offset.y
-                ),
-            contentScale = ContentScale.Fit
-        )
-
-        Text(
-            text = "点击任意处关闭 · 滚轮缩放",
-            style = MaterialTheme.typography.bodySmall,
-            color = colors.onSurfaceVariant,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 32.dp)
-        )
-    }
-}
 
 // ============================================================
 // Utility
