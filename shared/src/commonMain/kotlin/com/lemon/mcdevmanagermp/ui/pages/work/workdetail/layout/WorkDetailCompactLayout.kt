@@ -23,6 +23,7 @@ import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailAction
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailState
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.BasicInfoForm
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PcBasicInfoForm
+import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PeDetailForm
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PriceInfoForm
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 
@@ -71,6 +72,7 @@ internal fun WorkDetailCompactLayout(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 BasicInfoForm(state = state, onAction = onAction)
+                PeDetailForm(state = state, onAction = onAction)
                 if (state.syncPc) {
                     PcBasicInfoForm(state = state, onAction = onAction)
                 }

@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.ui.components.BinarySelector
 import com.lemon.mcdevmanagermp.ui.components.FormSection
+import com.lemon.mcdevmanagermp.ui.components.ModSearchSelectField
 import com.lemon.mcdevmanagermp.ui.components.TagInputField
 import com.lemon.mcdevmanagermp.ui.components.YesNoSelector
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailAction
@@ -58,18 +59,19 @@ internal fun PcBasicInfoForm(
             modifier = Modifier.fillMaxWidth()
         )
 
-        // 包含时输入前置模组 iid（提交映射 relate_item_id）
+        // 包含时搜索选择前置模组（comp，mcStatus=1；提交映射 relate_item_id）
         if (state.pcHasPrerequisite) {
-            OutlinedTextField(
-                value = state.pcPrerequisiteIid,
-                onValueChange = { onAction(WorkDetailAction.UpdatePcPrerequisiteIid(it)) },
+            ModSearchSelectField(
+                label = "PC 前置模组",
+                results = state.pcPrereqSearchResults,
+                isLoading = state.isSearchingPcPrereq,
+                selected = state.pcPrerequisites,
+                onSearch = { onAction(WorkDetailAction.SearchPcPrereqMods(it)) },
+                onSelect = { onAction(WorkDetailAction.SelectPcPrereqMod(it)) },
+                onRemove = { onAction(WorkDetailAction.RemovePcPrereqMod(it)) },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                label = { Text("PC 前置模组") },
-                placeholder = { Text("输入 PC 前置模组 iid") },
-                supportingText = {
-                    Text("输入关联前置模组的 iid，将映射到 relate_item_id 字段")
-                }
+                placeholder = "搜索 PC 前置模组名称",
+                multiSelect = true
             )
         }
 

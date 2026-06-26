@@ -20,33 +20,48 @@ data class ResourceListVO(
 
 @Serializable
 data class ResourceData(
+    // 发布时间
     @SerialName("create_time")
-    val createTime: String = "",  // 发布时间
+    val createTime: String = "",
+    // 提审时间
     @SerialName("apply_review_time")
-    val applyReviewTime: String = "",  // 提审时间
+    val applyReviewTime: String = "",
+    // 46id
     @SerialName("item_id")
-    val itemId: String = "",  // 46id
+    val itemId: String = "",
+    // 作品名称
     @SerialName("item_name")
-    val itemName: String = "",  // 作品名称
+    val itemName: String = "",
+    // 上架时间
     @SerialName("online_time")
-    val onlineTime: String = "UNKNOWN",  // 上架时间
+    val onlineTime: String = "UNKNOWN",
+    // 价格类型
     @SerialName("price_type")
-    val priceType: String = "",  // 价格类型
-    val price: Int = 0,  // 价格
+    val priceType: String = "",
+    // 价格
+    val price: Int = 0,
+    // 价格档位
     @SerialName("price_rank")
-    val priceRank: Int = 0,  // 价格档位
+    val priceRank: Int = 0,
+    // 作品真实状态 未查明 [ItemRealStatusEnum] TODO
     @SerialName("item_real_status")
-    val itemRealStatus: Int = 0, // 作品真实状态 未查明 [ItemRealStatusEnum] TODO
+    val itemRealStatus: Int = 0,
+    // 状态字段
     @SerialName("status")
-    val status: String = "", // 状态字段
+    val status: String = "",
+    // 是否双端同步
     @SerialName("sync_pc_flag")
-    val syncPcFlag: Boolean = false, // 是否双端同步
+    val syncPcFlag: Boolean = false,
+    // 是否弱下架
     @SerialName("weak_offline")
-    val weakOffline: Boolean = false, // 是否弱下架
+    val weakOffline: Boolean = false,
+    // 弱下架原因
     @SerialName("weak_offline_reason")
-    val weakOfflineReason: String = "", // 弱下架原因
+    val weakOfflineReason: String = "",
+    // 弱下架时间
     @SerialName("weak_offline_time")
-    val weakOfflineTime: String = "", // 弱下架时间
+    val weakOfflineTime: String = "",
+    // 基本信息-是否为原创作品
     @SerialName("is_original")
     val isOriginal: Boolean = false,
 ) {
@@ -68,13 +83,16 @@ data class ResourceData(
  */
 @Serializable
 data class ResourceDetailVO(
-    // 基础信息
+    // 基础信息-资源id
     @SerialName("item_id")
     val itemId: String = "",
+    // 基本信息-资源名称
     @SerialName("item_name")
     val itemName: String = "",
+    // 基本信息-资源版本
     @SerialName("item_version")
     val itemVersion: String = "",
+    // 基本信息-模组码
     @SerialName("normal_number")
     val normalNumber: String = "",
     @SerialName("status")
@@ -181,7 +199,7 @@ data class ResourceDetailVO(
     val perfData: ResourceDetailPerfData = ResourceDetailPerfData(),
     @SerialName("lobby_res")
     val lobbyRes: ResourceDetailLobbyRes = ResourceDetailLobbyRes(),
-    @SerialName("sync_item_info")
+    @SerialName("sync_item_info")  // 同步PC基本信息
     val syncItemInfo: ResourceDetailSyncItemInfo = ResourceDetailSyncItemInfo(),
 
     // 大厅相关
@@ -513,15 +531,21 @@ data class ResourceDetailResFileInfo(
 
 @Serializable
 data class ResourceDetailSyncItemInfo(
+    // PC模组信息-适用范围
     @SerialName("available_scope")
     val availableScope: String = "",
+    // PC基本信息-模组简介
     val brief: String = "",
+    // 未知(应该为comp)
     val category: String = "",
+    // 宣传图
     val channel: List<ResourceDetailSyncChannel> = emptyList(),
     @SerialName("game_host")
     val gameHost: String? = null,
+    // PC基本信息-是否包含地图
     @SerialName("include_map")
     val includeMap: Boolean = false,
+    // PC详细信息(html)
     val info: String = "",
     @SerialName("item_id")
     val itemId: String = "",
@@ -532,10 +556,12 @@ data class ResourceDetailSyncItemInfo(
     @SerialName("pri_type")
     val priType: Int = 0,
     val rarity: Int = 0,
-    val requirement: List<JsonElement> = emptyList(),
+    // PC基本信息-PC前置模组
+    val requirement: List<ResourceRequirementData> = emptyList(),
     val status: String = "",
     @SerialName("sub_type")
     val subType: Int = 0,
+    // PC基本信息-PC模组标签
     val tag: List<Int> = emptyList(),
     @SerialName("weak_offline")
     val weakOffline: Boolean = false,
@@ -563,4 +589,12 @@ data class ResourceDetailVideoInfo(
     val cover: String = "",
     val size: Int = 0,
     val url: String = ""
+)
+
+@Serializable
+data class ResourceRequirementData(
+    @SerialName("item_id")
+    val itemId: String = "",
+    @SerialName("item_name")
+    val itemName: String = ""
 )

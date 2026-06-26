@@ -5,6 +5,7 @@ import com.lemon.mcdevmanagermp.data.common.ResponseData
 import com.lemon.mcdevmanagermp.data.consts.NETEASE_MC_DEV_LINK
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ItemTagVO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.MCConstsVO
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.RequirementVO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceListVO
 import de.jensklingenberg.ktorfit.http.GET
@@ -18,8 +19,12 @@ interface ResourceApi {
         @Path("platform") platform: String = "pe",
         @Query("start") start: Int = 0,
         @Query("span") span: Int = Int.MAX_VALUE,
+        @Query("item_name") itemName: String? = null,
         @Query("mc_status") mcStatus: Int? = null
     ): ResponseData<ResourceListVO>
+
+    @GET("/items/categories/comp/requirements")
+    suspend fun getRequirements(@Query("query_str") itemName: String): ResponseData<RequirementVO>
 
     @GET("items/categories/pe/{itemId}")
     suspend fun getResourceDetail(@Path("itemId") itemId: String): ResponseData<ResourceDetailVO>

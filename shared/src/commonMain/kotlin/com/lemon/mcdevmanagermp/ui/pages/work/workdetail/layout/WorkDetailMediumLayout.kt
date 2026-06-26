@@ -25,6 +25,7 @@ import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailState
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.BasicInfoForm
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.MetaInfoBar
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PcBasicInfoForm
+import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PeDetailForm
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PriceInfoForm
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 
@@ -85,6 +86,11 @@ internal fun WorkDetailMediumLayout(
                     modifier = Modifier.fillMaxWidth(),
                     columns = 2,
                     showMetaRow = false
+                )
+                PeDetailForm(
+                    state = state,
+                    onAction = onAction,
+                    modifier = Modifier.fillMaxWidth()
                 )
                 if (state.syncPc) {
                     PcBasicInfoForm(

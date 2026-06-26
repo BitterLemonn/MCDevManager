@@ -26,6 +26,8 @@ import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.ui.components.BinarySelector
 import com.lemon.mcdevmanagermp.ui.components.FieldLabel
 import com.lemon.mcdevmanagermp.ui.components.FormSection
+import com.lemon.mcdevmanagermp.ui.components.ModSearchSelectField
+import com.lemon.mcdevmanagermp.ui.components.ModSelectOption
 import com.lemon.mcdevmanagermp.ui.components.ReadOnlyField
 import com.lemon.mcdevmanagermp.ui.components.TagInputField
 import com.lemon.mcdevmanagermp.ui.components.YesNoSelector
@@ -146,7 +148,7 @@ internal fun BasicInfoForm(
             )
         }
 
-        // 前置模组（整行）
+        // 前置模组
         OutlinedTextField(
             value = state.prerequisite,
             onValueChange = { onAction(WorkDetailAction.UpdatePrerequisite(it)) },
@@ -174,7 +176,7 @@ internal fun BasicInfoForm(
             suggestions = state.availableTags
         )
 
-        // 活动参与说明（整行，多行）
+        // 活动参与说明
         OutlinedTextField(
             value = state.activityDesc,
             onValueChange = { onAction(WorkDetailAction.UpdateActivityDesc(it)) },
@@ -263,14 +265,18 @@ internal fun RelatedModFields(
             modifier = Modifier.fillMaxWidth()
         )
 
-        // 搜索模组
-        OutlinedTextField(
-            value = state.relatedSearchKey,
-            onValueChange = { onAction(WorkDetailAction.UpdateRelatedSearch(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            label = { Text("搜索模组") },
-            placeholder = { Text("搜索模组名称") }
+        // 搜索模组（pe，mcStatus=1）
+        ModSearchSelectField(
+            label = "搜索模组",
+            results = state.relatedSearchResults,
+            isLoading = state.isSearchingRelated,
+            selected = if (state.relatedItemId.isNotEmpty())
+                listOf(ModSelectOption(state.relatedItemId, state.relatedItemName))
+            else emptyList(),
+            onSearch = { onAction(WorkDetailAction.SearchRelatedMods(it)) },
+            onSelect = { onAction(WorkDetailAction.SelectRelatedMod(it)) },
+            onRemove = { onAction(WorkDetailAction.ClearRelatedMod) },
+            modifier = Modifier.fillMaxWidth()
         )
 
         // 当前关联模组（只读）

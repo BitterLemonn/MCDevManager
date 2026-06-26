@@ -37,13 +37,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntRect
-import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
-import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import mcdevmanagermpr.shared.generated.resources.Res
@@ -187,24 +182,4 @@ fun TagInputField(
     }
 }
 
-/**
- * 强制 Popup 出现在锚点（输入框所在 Box）**下方**：y = anchorBounds.bottom。
- *
- * 与 [androidx.compose.material3.DropdownMenu] 的自动上下翻转不同，此处始终向下展开，
- * 避免遮挡输入框上方的已选标签；若下方空间不足以容纳整个菜单，则上沿对齐窗口底部
- * （尽量靠下、不向上翻转），超出部分由菜单内部滚动消化。
- */
-private object BelowAnchorPositionProvider : PopupPositionProvider {
-    override fun calculatePosition(
-        anchorBounds: IntRect,
-        windowSize: IntSize,
-        layoutDirection: LayoutDirection,
-        popupContentSize: IntSize
-    ): IntOffset {
-        val x = anchorBounds.left
-            .coerceIn(0, (windowSize.width - popupContentSize.width).coerceAtLeast(0))
-        val y = anchorBounds.bottom
-            .coerceIn(0, (windowSize.height - popupContentSize.height).coerceAtLeast(0))
-        return IntOffset(x, y)
-    }
-}
+// BelowAnchorPositionProvider 已提取至同包 PopupPosition.kt，供向下展开的下拉共用。

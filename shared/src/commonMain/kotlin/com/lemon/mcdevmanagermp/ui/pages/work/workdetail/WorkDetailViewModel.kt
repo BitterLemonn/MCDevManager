@@ -8,6 +8,7 @@ import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailDlcInfo
 import com.lemon.mcdevmanagermp.domain.work.WorkDetailUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
+import com.lemon.mcdevmanagermp.ui.components.ModSelectOption
 import com.lemon.mcdevmanagermp.utils.Logger
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
@@ -55,8 +56,16 @@ class WorkDetailViewModel :
             is WorkDetailAction.AddPcTag -> addPcTag(action.name)
             is WorkDetailAction.RemovePcTag -> removePcTag(action.index)
             is WorkDetailAction.TogglePcPrerequisite -> setState { copy(pcHasPrerequisite = action.value) }
-            is WorkDetailAction.UpdatePcPrerequisiteIid -> setState { copy(pcPrerequisiteIid = action.value) }
             is WorkDetailAction.UpdatePcIntro -> setState { copy(pcBrief = action.value) }
+            is WorkDetailAction.UpdatePeDetail -> setState { copy(peDetail = action.value) }
+
+            // —— 模组搜索选择 ——
+            is WorkDetailAction.SearchRelatedMods -> searchRelatedMods(action.query)
+            is WorkDetailAction.SelectRelatedMod -> selectRelatedMod(action.option)
+            WorkDetailAction.ClearRelatedMod -> clearRelatedMod()
+            is WorkDetailAction.SearchPcPrereqMods -> searchPcPrereqMods(action.query)
+            is WorkDetailAction.SelectPcPrereqMod -> selectPcPrereqMod(action.option)
+            is WorkDetailAction.RemovePcPrereqMod -> removePcPrereqMod(action.option)
 
             // —— 定价 ——
             is WorkDetailAction.ChangePriceType -> changePriceType(action.type)
@@ -112,7 +121,13 @@ class WorkDetailViewModel :
                                 // —— PC 基本信息 ——
                                 pcIncludeMap = d.syncItemInfo.includeMap,
                                 pcBrief = d.syncItemInfo.brief,
-                                pcPrerequisiteIid = d.relateItemId,
+                                // —— PC 前置模组 ——
+                                pcHasPrerequisite = d.syncItemInfo.requirement.isNotEmpty(),
+                                pcPrerequisites = d.syncItemInfo.requirement.map {
+                                    ModSelectOption(it.itemId, it.itemName)
+                                },
+                                // —— PE 详情信息 ——
+                                peDetail = d.info,
                                 // —— 定价 ——
                                 priceType = priceType,
                                 priceRank = PriceRankEnum.fromIntType(d.priceRank),
@@ -155,17 +170,102 @@ class WorkDetailViewModel :
         }
     }
 
-    /** 加载 PC 模组可选标签（mc_consts.tag.comp）；失败静默处理，不影响详情。 */
+    /** 加载 PC 模组可选标签（mc_consts.tag.comp）并回显 PC 模组标签（syncItemInfo.tag 的 id → title）；失败静默。 */
     private fun loadPcTagOptions() {
         viewModelScope.launch {
             when (val result = workDetailUseCase.getMCConsts()) {
                 is NetworkState.Success -> result.data?.let { consts ->
                     val options = consts.tag.comp
-                    setState { copy(pcTagOptions = options) }
+                    // 回显 PC 模组标签：syncItemInfo.tag(List<Int> id) 用 options 映射为 title
+                    val tagTitles = (state.value.detail?.syncItemInfo?.tag ?: emptyList())
+                        .mapNotNull { id -> options.firstOrNull { it.id == id }?.title }
+                    setState {
+                        copy(
+                            pcTagOptions = options,
+                            pcTags = tagTitles
+                        )
+                    }
                 }
 
                 is NetworkState.Error -> Logger.d("PC标签选项: 加载失败 ${result.msg}")
             }
+        }
+    }
+
+    // ===== 模组搜索选择（关联模组 pe / PC 前置 comp） =====
+
+    /** 关联模组搜索（pe，mcStatus=1）；空 query 清空结果不请求。 */
+    private fun searchRelatedMods(query: String) {
+        val q = query.trim()
+        if (q.isEmpty()) {
+            setState { copy(relatedSearchResults = emptyList(), isSearchingRelated = false) }
+            return
+        }
+        viewModelScope.launch {
+            setState { copy(isSearchingRelated = true) }
+            when (val result = workDetailUseCase.getResourceList("pe", q, 1)) {
+                is NetworkState.Success -> setState {
+                    copy(
+                        isSearchingRelated = false,
+                        relatedSearchResults = (result.data ?: emptyList())
+                            .map { ModSelectOption(it.itemId, it.itemName) }
+                    )
+                }
+
+                is NetworkState.Error -> setState { copy(isSearchingRelated = false) }
+            }
+        }
+    }
+
+    private fun selectRelatedMod(option: ModSelectOption) {
+        setState {
+            copy(
+                relatedItemId = option.id,
+                relatedItemName = option.name,
+                relatedSearchResults = emptyList(),
+                isSearchingRelated = false
+            )
+        }
+    }
+
+    private fun clearRelatedMod() {
+        setState { copy(relatedItemId = "", relatedItemName = "") }
+    }
+
+    /** PC 前置模组搜索（comp requirements 接口，按名称搜索可作前置的模组）；空 query 清空结果不请求。 */
+    private fun searchPcPrereqMods(query: String) {
+        val q = query.trim()
+        if (q.isEmpty()) {
+            setState { copy(pcPrereqSearchResults = emptyList(), isSearchingPcPrereq = false) }
+            return
+        }
+        viewModelScope.launch {
+            setState { copy(isSearchingPcPrereq = true) }
+            when (val result = workDetailUseCase.getCompRequirements(q)) {
+                is NetworkState.Success -> setState {
+                    copy(
+                        isSearchingPcPrereq = false,
+                        pcPrereqSearchResults = (result.data ?: emptyList())
+                            .map { ModSelectOption(it.itemId, it.itemName) }
+                    )
+                }
+
+                is NetworkState.Error -> setState { copy(isSearchingPcPrereq = false) }
+            }
+        }
+    }
+
+    private fun selectPcPrereqMod(option: ModSelectOption) {
+        setState {
+            // 多选：去重追加
+            if (pcPrerequisites.any { it.id == option.id }) this
+            else copy(pcPrerequisites = pcPrerequisites + option)
+        }
+    }
+
+    private fun removePcPrereqMod(option: ModSelectOption) {
+        setState {
+            copy(pcPrerequisites = pcPrerequisites.filterNot { it.id == option.id })
         }
     }
 

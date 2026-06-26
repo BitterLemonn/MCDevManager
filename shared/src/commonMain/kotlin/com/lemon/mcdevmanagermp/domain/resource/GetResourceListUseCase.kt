@@ -10,7 +10,7 @@ class GetResourceListUseCase(
     private val resourceRepository: ResourceRepository
 ) {
     suspend operator fun invoke(platform: String): NetworkState<List<ResourceData>> {
-        return when (val result = resourceRepository.getAllResources(platform)) {
+        return when (val result = resourceRepository.getResources(platform)) {
             is NetworkState.Success -> NetworkState.Success(result.data?.item ?: emptyList())
             is NetworkState.Error -> NetworkState.Error(result.msg, result.e)
         }
