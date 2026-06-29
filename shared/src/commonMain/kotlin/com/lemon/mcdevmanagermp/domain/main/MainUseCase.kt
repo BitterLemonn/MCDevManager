@@ -69,7 +69,7 @@ class MainUseCase(
 
             resList.map { res ->
                 async {
-                    val result = resourceRepository.getNewDayDetail(
+                    val result = resourceRepository.getDayDetail(
                         platform = "pe",
                         category = "pe",
                         startDate = dateRange.first,

@@ -3,7 +3,6 @@ package com.lemon.mcdevmanagermp.data.api
 import com.lemon.mcdevmanagermp.data.common.ResponseData
 import com.lemon.mcdevmanagermp.data.consts.NETEASE_MC_DEV_LINK
 import com.lemon.mcdevmanagermp.data.dto.netease.income.OneResRealtimeIncomeVO
-import com.lemon.mcdevmanagermp.data.vo.netease.analyze.NewResDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResMonthDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceListVO
@@ -29,22 +28,9 @@ interface AnalyzeApi {
         @Query("sort") sort: String = "dateid",
         @Query("order") order: String = "ASC",
         @Query("start") start: Int = 0,
-        @Query("span") span: Int = Int.MAX_VALUE
-    ): ResponseData<ResDetailVO>
-
-    @GET("/data_analysis/day_detail/")
-    suspend fun getNewDayDetail(
-        @Query("platform") platform: String,
-        @Query("category") category: String,
-        @Query("start_date") startDate: String,
-        @Query("end_date") endDate: String,
-        @Query("item_list_str") itemListStr: String,
-        @Query("sort") sort: String = "dateid",
-        @Query("order") order: String = "ASC",
-        @Query("start") start: Int = 0,
         @Query("span") span: Int = Int.MAX_VALUE,
         @Query("is_need_us_rank_data") isNeedUsRankData: Boolean = true
-    ): ResponseData<NewResDetailVO>
+    ): ResponseData<ResDetailVO>
 
     @GET("/data_analysis/month_detail/")
     suspend fun getMonthDetail(

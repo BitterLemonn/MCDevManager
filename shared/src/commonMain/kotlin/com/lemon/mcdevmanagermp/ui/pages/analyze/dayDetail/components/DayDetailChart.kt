@@ -36,7 +36,6 @@ import com.patrykandpatrick.vico.compose.common.vicoTheme
 @Composable
 internal fun DayDetailChart(
     detailData: Map<String, List<ResAnalyzeData>>,
-    resNameMap: Map<String, String>,
     metricType: Int,
     chartType: ChartType,
     modifier: Modifier = Modifier,
@@ -138,6 +137,10 @@ private fun getMetricValue(data: ResAnalyzeData, metricType: Int): Double {
         DayDetailMetricType.POINTS -> data.points.toDouble()
         DayDetailMetricType.DAU -> data.dau.toDouble()
         DayDetailMetricType.REFUND_RATE -> data.refundRate * 100
+        DayDetailMetricType.WISHLIST_ADDS -> data.wishlistAddsUv.toDouble()
+        DayDetailMetricType.WISHLIST_GIFTS -> data.wishlistGifts.toDouble()
+        DayDetailMetricType.WISHLIST_PURCHASES -> data.wishlistPurchases.toDouble()
+        DayDetailMetricType.WISHLIST_REMOVES -> data.wishlistRemovesUv.toDouble()
         else -> 0.0
     }
 }
