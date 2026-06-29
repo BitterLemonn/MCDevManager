@@ -155,6 +155,18 @@ internal fun DayDetailExpandedLayout(
                         MetricChipRow("退款率", state.metricType == DayDetailMetricType.REFUND_RATE) {
                             onAction(DayDetailAction.SelectMetric(DayDetailMetricType.REFUND_RATE))
                         }
+                        MetricChipRow("愿望单新增", state.metricType == DayDetailMetricType.WISHLIST_ADDS) {
+                            onAction(DayDetailAction.SelectMetric(DayDetailMetricType.WISHLIST_ADDS))
+                        }
+                        MetricChipRow("愿望单赠送", state.metricType == DayDetailMetricType.WISHLIST_GIFTS) {
+                            onAction(DayDetailAction.SelectMetric(DayDetailMetricType.WISHLIST_GIFTS))
+                        }
+                        MetricChipRow("愿望单购买", state.metricType == DayDetailMetricType.WISHLIST_PURCHASES) {
+                            onAction(DayDetailAction.SelectMetric(DayDetailMetricType.WISHLIST_PURCHASES))
+                        }
+                        MetricChipRow("愿望单移除", state.metricType == DayDetailMetricType.WISHLIST_REMOVES) {
+                            onAction(DayDetailAction.SelectMetric(DayDetailMetricType.WISHLIST_REMOVES))
+                        }
                     }
 
                     // 查询按钮
@@ -196,7 +208,6 @@ internal fun DayDetailExpandedLayout(
                     // 大图表
                     DayDetailChart(
                         detailData = state.detailData,
-                        resNameMap = buildResNameMap(state),
                         metricType = state.metricType,
                         chartType = state.chartType
                     )

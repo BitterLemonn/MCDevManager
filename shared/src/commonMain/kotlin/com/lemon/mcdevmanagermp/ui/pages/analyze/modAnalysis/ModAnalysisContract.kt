@@ -1,6 +1,6 @@
 package com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis
 
-import com.lemon.mcdevmanagermp.data.vo.netease.analyze.NewResAnalyzeData
+import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResAnalyzeData
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
 import com.lemon.mcdevmanagermp.utils.extension.IUiAction
 import com.lemon.mcdevmanagermp.utils.extension.IUiEffect
@@ -43,7 +43,7 @@ data class ModAnalysisState(
     val resList: List<ResourceData> = emptyList(),
     val selectedIid: String = "",
     val selectedPlatform: String = "pe",
-    val analysisData: List<NewResAnalyzeData> = emptyList(),
+    val analysisData: List<ResAnalyzeData> = emptyList(),
     val modName: String = "",
     val modScore: Double = 0.0,
     val metricType: Int = MetricType.NEW_PURCHASE,

@@ -4,20 +4,13 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * 新版资源详情（数据分析）
- */
-@Serializable
-data class NewResDetailVO(
-    val data: List<NewResAnalyzeData>
-)
-
-/**
  * 资源详情（数据分析）
  */
 @Serializable
 data class ResDetailVO(
     val data: List<ResAnalyzeData>
 )
+
 
 /**
  * 资源月详情（数据分析）
@@ -27,31 +20,6 @@ data class ResMonthDetailVO(
     val data: List<ResMonthAnalyzeData>
 )
 
-@Serializable
-data class ResAnalyzeData(
-    @SerialName("DAU")
-    val dau: Int,
-    @SerialName("cnt_buy")
-    val cntBuy: Int,
-    @SerialName("dateid")
-    val dateId: String,
-    @SerialName("diamond")
-    val diamond: Int,
-    @SerialName("download_num")
-    val downloadNum: Int = 0,
-    @SerialName("iid")
-    val iid: String,
-    @SerialName("platform")
-    val platform: String,
-    @SerialName("points")
-    val points: Int,
-    @SerialName("refund_rate")
-    val refundRate: Double,
-    @SerialName("res_name")
-    val resName: String,
-    @SerialName("upload_time")
-    val uploadTime: String
-)
 
 @Serializable
 data class ResMonthAnalyzeData(
@@ -80,7 +48,7 @@ data class ResMonthAnalyzeData(
 )
 
 @Serializable
-data class NewResAnalyzeData(
+data class ResAnalyzeData(
     @SerialName("DAU")
     val dau: Int,
     @SerialName("avg_first_type_buy")
@@ -126,5 +94,13 @@ data class NewResAnalyzeData(
     @SerialName("star_adjusted")
     val starAdjusted: Double,
     @SerialName("upload_time")
-    val uploadTime: String
+    val uploadTime: String,
+    @SerialName("wishlist_adds_uv")
+    val wishlistAddsUv: Int,  // 愿望单新增
+    @SerialName("wishlist_gifts")
+    val wishlistGifts: Int,   // 愿望单赠送
+    @SerialName("wishlist_purchases")
+    val wishlistPurchases: Int, // 愿望单购买
+    @SerialName("wishlist_removes_uv")
+    val wishlistRemovesUv: Int  // 愿望单移除
 )
