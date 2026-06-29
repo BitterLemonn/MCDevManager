@@ -104,11 +104,6 @@ internal fun WorkDetailExpandedLayout(
                                 columns = 2,
                                 showMetaRow = false
                             )
-                            PeDetailForm(
-                                state = state,
-                                onAction = onAction,
-                                modifier = Modifier.fillMaxWidth()
-                            )
                             if (state.syncPc) {
                                 PcBasicInfoForm(
                                     state = state,
@@ -117,12 +112,22 @@ internal fun WorkDetailExpandedLayout(
                                 )
                             }
                         }
-                        // 右栏：定价
-                        PriceInfoForm(
-                            state = state,
-                            onAction = onAction,
-                            modifier = Modifier.weight(0.82f)
-                        )
+                        // 右栏：PE 详情（顶部）+ 定价（下方）
+                        Column(
+                            modifier = Modifier.weight(0.82f),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            PeDetailForm(
+                                state = state,
+                                onAction = onAction,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            PriceInfoForm(
+                                state = state,
+                                onAction = onAction,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
                     }
                 }
             }

@@ -10,10 +10,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -35,10 +37,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -57,6 +63,9 @@ import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.name
 import io.github.vinceglb.filekit.readBytes
 import kotlinx.coroutines.launch
+import mcdevmanagermpr.shared.generated.resources.Res
+import mcdevmanagermpr.shared.generated.resources.ic_preview
+import org.jetbrains.compose.resources.painterResource
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
@@ -84,6 +93,8 @@ internal fun PeDetailForm(
     val colors = LocalAppColors.current
     val richState = rememberRichTextState()
     val scope = rememberCoroutineScope()
+    var showPreview by remember { mutableStateOf(false) }
+    var previewHtml by remember { mutableStateOf("") }
 
     // 回显：仅按 itemId 变化一次，避免与下方 toHtml 同步形成循环
     LaunchedEffect(state.detail?.itemId) {
@@ -113,10 +124,14 @@ internal fun PeDetailForm(
         }
     }
 
-    FormSection(title = "PE 详情信息", modifier = modifier) {
+    FormSection(
+        title = "PE 详情信息",
+        modifier = modifier
+    ) {
         RichTextToolbar(
             richState = richState,
             onPickImage = { imagePicker.launch() },
+            onPreview = { scope.launch { previewHtml = richState.toHtml(); showPreview = true } },
             modifier = Modifier.fillMaxWidth()
         )
         Surface(
@@ -136,16 +151,24 @@ internal fun PeDetailForm(
             )
         }
     }
+    if (showPreview) {
+        PePreviewDialog(
+            html = previewHtml,
+            onDismiss = { showPreview = false }
+        )
+    }
 }
 
 /**
  * 富文本工具栏：粗体/斜体/下划线/删除线/文字颜色/文字底色/插入图片。
  * [FlowRow] 自适应窄屏换行，按钮选中态读 [RichTextState.currentSpanStyle] 高亮。
+ * 预览按钮固定在工具栏最右侧，与格式工具用 [Spacer] 隔开。
  */
 @Composable
 private fun RichTextToolbar(
     richState: RichTextState,
     onPickImage: () -> Unit,
+    onPreview: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val colors = LocalAppColors.current
@@ -158,79 +181,95 @@ private fun RichTextToolbar(
         color = colors.surfaceContainerHigh,
         tonalElevation = 1.dp
     ) {
-        FlowRow(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 4.dp, vertical = 2.dp),
-            horizontalArrangement = Arrangement.spacedBy(2.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp)
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            ToolButton(
-                icon = Icons.Filled.FormatBold,
-                desc = "粗体",
-                selected = current.fontWeight == FontWeight.Bold,
-                onClick = { richState.toggleSpanStyle(SpanStyle(fontWeight = FontWeight.Bold)) }
-            )
-            ToolButton(
-                icon = Icons.Filled.FormatItalic,
-                desc = "斜体",
-                selected = current.fontStyle == FontStyle.Italic,
-                onClick = { richState.toggleSpanStyle(SpanStyle(fontStyle = FontStyle.Italic)) }
-            )
-            ToolButton(
-                icon = Icons.Filled.FormatUnderlined,
-                desc = "下划线",
-                selected = current.textDecoration == TextDecoration.Underline,
-                onClick = { richState.toggleSpanStyle(SpanStyle(textDecoration = TextDecoration.Underline)) }
-            )
-            ToolButton(
-                icon = Icons.Filled.FormatStrikethrough,
-                desc = "删除线",
-                selected = current.textDecoration == TextDecoration.LineThrough,
-                onClick = { richState.toggleSpanStyle(SpanStyle(textDecoration = TextDecoration.LineThrough)) }
-            )
-            // 文字颜色
-            Box {
+            FlowRow(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
                 ToolButton(
-                    icon = Icons.Filled.FormatColorText,
-                    desc = "文字颜色",
-                    selected = colorPickerFor == ColorPickerTarget.Text,
-                    iconTint = current.color.takeIf { it != Color.Unspecified } ?: colors.textColor,
-                    onClick = { colorPickerFor = ColorPickerTarget.Text }
+                    icon = Icons.Filled.FormatBold,
+                    desc = "粗体",
+                    selected = current.fontWeight == FontWeight.Bold,
+                    onClick = { richState.toggleSpanStyle(SpanStyle(fontWeight = FontWeight.Bold)) }
                 )
-                ColorPopover(
-                    expanded = colorPickerFor == ColorPickerTarget.Text,
-                    onDismiss = { colorPickerFor = null },
-                    onPick = { c ->
-                        richState.toggleSpanStyle(SpanStyle(color = c))
-                        colorPickerFor = null
-                    }
+                ToolButton(
+                    icon = Icons.Filled.FormatItalic,
+                    desc = "斜体",
+                    selected = current.fontStyle == FontStyle.Italic,
+                    onClick = { richState.toggleSpanStyle(SpanStyle(fontStyle = FontStyle.Italic)) }
+                )
+                ToolButton(
+                    icon = Icons.Filled.FormatUnderlined,
+                    desc = "下划线",
+                    selected = current.textDecoration == TextDecoration.Underline,
+                    onClick = { richState.toggleSpanStyle(SpanStyle(textDecoration = TextDecoration.Underline)) }
+                )
+                ToolButton(
+                    icon = Icons.Filled.FormatStrikethrough,
+                    desc = "删除线",
+                    selected = current.textDecoration == TextDecoration.LineThrough,
+                    onClick = { richState.toggleSpanStyle(SpanStyle(textDecoration = TextDecoration.LineThrough)) }
+                )
+                // 文字颜色
+                Box {
+                    ToolButton(
+                        icon = Icons.Filled.FormatColorText,
+                        desc = "文字颜色",
+                        selected = colorPickerFor == ColorPickerTarget.Text,
+                        iconTint = current.color.takeIf { it != Color.Unspecified }
+                            ?: colors.textColor,
+                        onClick = { colorPickerFor = ColorPickerTarget.Text }
+                    )
+                    ColorPopover(
+                        expanded = colorPickerFor == ColorPickerTarget.Text,
+                        onDismiss = { colorPickerFor = null },
+                        onPick = { c ->
+                            richState.toggleSpanStyle(SpanStyle(color = c))
+                            colorPickerFor = null
+                        }
+                    )
+                }
+                // 文字底色
+                Box {
+                    ToolButton(
+                        icon = Icons.Filled.FormatColorFill,
+                        desc = "文字底色",
+                        selected = colorPickerFor == ColorPickerTarget.Background,
+                        iconTint = current.background.takeIf { it != Color.Unspecified }
+                            ?: colors.textColor,
+                        onClick = { colorPickerFor = ColorPickerTarget.Background }
+                    )
+                    ColorPopover(
+                        expanded = colorPickerFor == ColorPickerTarget.Background,
+                        onDismiss = { colorPickerFor = null },
+                        onPick = { c ->
+                            richState.toggleSpanStyle(SpanStyle(background = c))
+                            colorPickerFor = null
+                        }
+                    )
+                }
+                ToolButton(
+                    icon = Icons.Filled.Image,
+                    desc = "插入图片",
+                    selected = false,
+                    onClick = onPickImage
                 )
             }
-            // 文字底色
-            Box {
-                ToolButton(
-                    icon = Icons.Filled.FormatColorFill,
-                    desc = "文字底色",
-                    selected = colorPickerFor == ColorPickerTarget.Background,
-                    iconTint = current.background.takeIf { it != Color.Unspecified }
-                        ?: colors.textColor,
-                    onClick = { colorPickerFor = ColorPickerTarget.Background }
-                )
-                ColorPopover(
-                    expanded = colorPickerFor == ColorPickerTarget.Background,
-                    onDismiss = { colorPickerFor = null },
-                    onPick = { c ->
-                        richState.toggleSpanStyle(SpanStyle(background = c))
-                        colorPickerFor = null
-                    }
-                )
-            }
+            // 与格式工具隔开
+            Spacer(Modifier.width(8.dp))
+            // 预览：固定在工具栏最右侧
             ToolButton(
-                icon = Icons.Filled.Image,
-                desc = "插入图片",
+                icon = painterResource(Res.drawable.ic_preview),
+                desc = "预览",
                 selected = false,
-                onClick = onPickImage
+                onClick = onPreview,
+                iconTint = colors.primary
             )
         }
     }
@@ -238,7 +277,22 @@ private fun RichTextToolbar(
 
 @Composable
 private fun ToolButton(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
+    desc: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    iconTint: Color? = null
+) = ToolButton(
+    icon = rememberVectorPainter(icon),
+    desc = desc,
+    selected = selected,
+    onClick = onClick,
+    iconTint = iconTint
+)
+
+@Composable
+private fun ToolButton(
+    icon: Painter,
     desc: String,
     selected: Boolean,
     onClick: () -> Unit,
@@ -256,7 +310,7 @@ private fun ToolButton(
         )
     ) {
         Icon(
-            imageVector = icon,
+            painter = icon,
             contentDescription = desc,
             tint = iconTint ?: if (selected) colors.primary else colors.onSurfaceVariant,
             modifier = Modifier.size(20.dp)

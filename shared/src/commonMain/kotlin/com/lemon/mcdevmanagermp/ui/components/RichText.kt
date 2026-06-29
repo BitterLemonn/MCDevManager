@@ -4,10 +4,12 @@ package com.lemon.mcdevmanagermp.ui.components
 
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import com.mohamedrejeb.richeditor.model.LocalImageLoader
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 
@@ -27,12 +29,16 @@ fun RichHtmlText(
     LaunchedEffect(html) {
         state.setHtml(html)
     }
-    RichText(
-        state = state,
-        modifier = modifier,
-        style = style,
-        color = color,
-    )
+    // 自包含注入图片加载器：Dialog 有独立 CompositionLocal 树，不继承外层 LocalImageLoader，
+    // 此处显式提供 SketchImageLoader，确保 <img> 在任意容器（含 Dialog）内都能渲染
+    CompositionLocalProvider(LocalImageLoader provides SketchImageLoader) {
+        RichText(
+            state = state,
+            modifier = modifier,
+            style = style,
+            color = color,
+        )
+    }
 }
 
 /**
@@ -51,10 +57,13 @@ fun RichMarkdownText(
     LaunchedEffect(markdown) {
         state.setMarkdown(markdown)
     }
-    RichText(
-        state = state,
-        modifier = modifier,
-        style = style,
-        color = color,
-    )
+    // 同 RichHtmlText：自包含注入 SketchImageLoader，覆盖 Dialog 等独立 CompositionLocal 场景
+    CompositionLocalProvider(LocalImageLoader provides SketchImageLoader) {
+        RichText(
+            state = state,
+            modifier = modifier,
+            style = style,
+            color = color,
+        )
+    }
 }

@@ -136,7 +136,7 @@ kotlin {
             implementation(libs.filekit)
             implementation(libs.filekit.dialog.compose)
             // rich editor
-            implementation(libs.rich.editor)
+            implementation(libs.richeditor.compose)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
