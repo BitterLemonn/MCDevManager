@@ -11,8 +11,13 @@ dependencies {
 
     implementation(compose.desktop.currentOs)
     implementation(libs.kotlinx.coroutinesSwing)
-
     implementation(libs.compose.uiToolingPreview)
+    // compose ui —— WindowDragArea / Window / FrameWindowScope 等 desktop API
+    implementation(libs.compose.ui)
+    // material3
+    implementation(libs.compose.material3)
+    // richeditor
+    implementation(libs.richeditor.compose)
     // logback
     implementation(libs.logback.classic)
 }

@@ -74,16 +74,24 @@ fun main() {
 
         val appIcon = remember { loadAppIcon() }
 
+        val onCloseRequest = {
+            saveWindowState(windowState)
+            exitApplication()
+        }
+
         Window(
-            onCloseRequest = {
-                saveWindowState(windowState)
-                exitApplication()
-            },
+            onCloseRequest = onCloseRequest,
             state = windowState,
             title = "开发者内容管理器",
             icon = appIcon?.let { BitmapPainter(it) },
+            undecorated = true,
+            transparent = true,
         ) {
-            App()
+            DesktopRoot(
+                windowState = windowState,
+                title = "开发者内容管理器",
+                onClose = onCloseRequest,
+            )
         }
     }
 }
