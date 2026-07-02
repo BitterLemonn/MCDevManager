@@ -1,6 +1,5 @@
 package com.lemon.mcdevmanagermp.ui.pages.main
 
-import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.consts.enums.RankCategoryTypeEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.RankSubCategoryTypeEnum
 import com.lemon.mcdevmanagermp.data.page.RankCategoryData
@@ -15,9 +14,9 @@ import com.lemon.mcdevmanagermp.utils.extension.IUiState
 
 data class MainState(
     val selectedTab: MainTab = MainTab.Home,
-    val userInfo: NetworkState<UserInfoVO>? = null,
-    val overview: NetworkState<OverviewVO>? = null,
-    val levelInfo: NetworkState<LevelInfoVO>? = null,
+    val userInfo: UserInfoVO? = null,
+    val overview: OverviewVO? = null,
+    val levelInfo: LevelInfoVO? = null,
     val isRefreshing: Boolean = false,
     val showDrawer: Boolean = false,
     val rankListData: List<RankCategoryData> = emptyList(),

@@ -37,17 +37,24 @@ internal fun OptionChip(
     text: String,
     selected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     val colors = LocalAppColors.current
     val shape = RoundedCornerShape(50)
     val interaction = remember { MutableInteractionSource() }
     val isHovered by interaction.collectIsHoveredAsState()
 
-    val content = if (selected) colors.scheme.onPrimary else colors.textColor
+    // 选中态视觉优先保留（即使 enabled=false，当前选中项仍高亮，只是不可切换）；
+    // 未选中且禁用时用 disabled 灰色，明确告知不可选
+    val content = when {
+        selected -> colors.scheme.onPrimary
+        !enabled -> colors.disabled
+        else -> colors.textColor
+    }
     val container = when {
         selected -> colors.primary
-        isHovered -> colors.primary.copy(alpha = 0.06f)
+        isHovered && enabled -> colors.primary.copy(alpha = 0.06f)
         else -> Color.Transparent
     }
 
@@ -61,6 +68,7 @@ internal fun OptionChip(
                 shape = shape
             )
             .clickable(
+                enabled = enabled,
                 interactionSource = interaction,
                 indication = null,
                 onClick = onClick

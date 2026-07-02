@@ -51,7 +51,7 @@ data class MCConstsVO(
     // 未知
     @SerialName("multi_tags")
     val multiTags: List<String> = emptyList(),
-    // 新手保护起始时间（ISO 字符串）
+    // 未知
     @SerialName("need_rookie_time")
     val needRookieTime: String = "",
     // 基岩同步PC版本

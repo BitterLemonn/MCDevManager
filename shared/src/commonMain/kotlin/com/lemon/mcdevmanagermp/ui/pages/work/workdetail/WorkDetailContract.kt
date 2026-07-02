@@ -3,6 +3,8 @@ package com.lemon.mcdevmanagermp.ui.pages.work.workdetail
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceRankEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceTypeEnum
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.MCConstsCommonTitleData
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.MCConstsModSecondTypeData
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.MCConstsRecommendTagData
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailVO
 import com.lemon.mcdevmanagermp.ui.components.ModSelectOption
 import com.lemon.mcdevmanagermp.utils.extension.IUiAction
@@ -48,6 +50,31 @@ data class WorkDetailState(
     val isSearchingPcPrereq: Boolean = false,         // PC 前置搜索中
     val pcBrief: String = "",                         // PC 模组简介
     val peDetail: String = "",                        // PE 详情信息（HTML 富文本，来自 ResourceDetailVO.info）
+    val peUpdateSummary: String = "",                 // PE 更新纪要（来自 ResourceDetailVO.updateSummary，不允许空格/换行，≤200 字）
+    val pcDetail: String = "",                        // PC 详细信息（HTML 富文本，来自 ResourceDetailVO.syncItemInfo.info）
+
+    // —— PE 资源管理 ——
+    val peResourceType: Int = 0,                      // PE 资源类别（priType id；选项来自 mc_consts.pri_type.pe）
+    val peResourceSubType: Int = 0,                   // PE 具体类别（sub_type id；选项随资源类别联动，来自 mc_consts.sub_type.pe）
+    val peResourceModSecondType: Int = 0,             // PE 次级分类（mod_second_type id；仅玩法组件 add_ons 需选，来自 mc_consts.mod_second_type）
+    val peRecommendTags: List<Int> = emptyList(),     // PE 推荐标签（labelTypeList；选项来自 mc_consts.label_type 玩法+主题）
+    val peAddPlayPlan: Boolean = false,               // 是否加入模组畅玩计划（peIsAddPlayPlan）
+    val peMountCallEnabled: Boolean = false,          // 是否启用坐骑召唤功能（mountCallEnabled）
+    val peAddVersion: Boolean = false,                // 本次上传是否提升版本（res.addVersion）
+    val peResource: PeResourceFile? = null,              // PE 资源文件（单文件，res 首项或上传结果）
+    val peResourceTypeOptions: List<MCConstsCommonTitleData> = emptyList(), // 资源类别选项（mc_consts.pri_type.pe）
+    val pePriTypeFileTypes: Map<Int, Set<String>> = emptyMap(), // pri_type id → 接受的 file_type 集合（mc_consts.sub_type.pe；空集=该类别未声明 file_type，视为不限）
+    val peResourceSubTypeOptions: Map<Int, List<MCConstsCommonTitleData>> = emptyMap(), // pri_type id → 具体类别选项（mc_consts.sub_type.pe）
+    val peModSecondTypeOptions: List<MCConstsModSecondTypeData> = emptyList(), // 次级分类选项（mc_consts.mod_second_type；仅玩法组件 add_ons 用）
+    val peRecommendTagOptions: MCConstsRecommendTagData = MCConstsRecommendTagData(), // 推荐标签选项（玩法 + 主题两组）
+    val peRecommendTagLimit: Int = 0,                   // 推荐标签合计上限（mc_consts.item_tag_limit；0=未加载/不限制）
+    val isUploadingPeZip: Boolean = false,            // zip 上传中
+
+    // —— 上架设置（弱下架） ——
+    val peWeakOffline: Boolean = false,               // PE 弱下架（来自 ResourceDetailVO.weakOffline）
+    val peWeakOfflineReason: String = "",             // PE 弱下架理由（来自 ResourceDetailVO.weakOfflineReason）
+    val pcWeakOffline: Boolean = false,               // PC 弱下架（来自 ResourceDetailVO.syncItemInfo.weakOffline）
+    val pcWeakOfflineReason: String = "",             // PC 弱下架理由（来自 ResourceDetailVO.syncItemInfo.weakOfflineReason）
 
     // —— 定价 ——
     val priceType: PriceTypeEnum = PriceTypeEnum.UNKNOWN,   // 定价类型（钻石/绿宝石/免费）
@@ -81,6 +108,27 @@ sealed interface WorkDetailAction : IUiAction {
     data class TogglePcPrerequisite(val value: Boolean) : WorkDetailAction  // 包含 / 不包含
     data class UpdatePcIntro(val value: String) : WorkDetailAction
     data class UpdatePeDetail(val value: String) : WorkDetailAction   // PE 详情信息（HTML 富文本）
+    data class UpdatePeUpdateSummary(val value: String) : WorkDetailAction   // PE 更新纪要
+    data class UpdatePcDetail(val value: String) : WorkDetailAction   // PC 详细信息（HTML 富文本）
+
+    // —— PE 资源管理 ——
+    data class UpdatePeResourceType(val id: Int) : WorkDetailAction
+    data class UpdatePeResourceSubType(val id: Int) : WorkDetailAction   // 具体类别（sub_type）
+    data class UpdatePeResourceModSecondType(val id: Int) :
+        WorkDetailAction   // 次级分类（mod_second_type，仅玩法组件）
+
+    data class TogglePeRecommendTag(val id: Int) : WorkDetailAction   // 推荐标签多选 toggle
+    data class TogglePePlayPlan(val value: Boolean) : WorkDetailAction
+    data class TogglePeMountCall(val value: Boolean) : WorkDetailAction
+    data class TogglePeAddVersion(val value: Boolean) : WorkDetailAction
+    data class UploadPeZip(val file: PlatformFile) : WorkDetailAction
+    data object RemovePeResource : WorkDetailAction
+
+    // —— 上架设置（弱下架） ——
+    data class TogglePeWeakOffline(val value: Boolean) : WorkDetailAction
+    data class UpdatePeWeakOfflineReason(val value: String) : WorkDetailAction
+    data class TogglePcWeakOffline(val value: Boolean) : WorkDetailAction
+    data class UpdatePcWeakOfflineReason(val value: String) : WorkDetailAction
 
     // —— 模组搜索选择（关联模组 pe / PC 前置 comp，mcStatus=1） ——
     data class SearchRelatedMods(val query: String) : WorkDetailAction
@@ -114,4 +162,13 @@ data class DiscountConfig(
     val percent: Int = 90,
     val beginDate: LocalDate,
     val endDate: LocalDate
+)
+
+/** PE 资源文件（对应 ResourceDetailRes，回显与上传结果统一模型）。 */
+data class PeResourceFile(
+    val name: String = "",
+    val url: String = "",
+    val mcVersion: List<String> = emptyList(),
+    val size: Long = 0,
+    val addVersion: Boolean = false
 )

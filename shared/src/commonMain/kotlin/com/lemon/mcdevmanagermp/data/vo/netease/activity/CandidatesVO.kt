@@ -1,5 +1,6 @@
 package com.lemon.mcdevmanagermp.data.vo.netease.activity
 
+import com.lemon.mcdevmanagermp.data.consts.enums.priceTypeLabel
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -24,9 +25,5 @@ data class CandidatesItemVO(
     @SerialName("sub_type")
     val subType: Int
 ) {
-    val priceTypeName: String = when (priceType) {
-        "diamond" -> "钻石"
-        "point" -> "绿宝石"
-        else -> priceType
-    }
+    val priceTypeName: String = priceTypeLabel(priceType)
 }

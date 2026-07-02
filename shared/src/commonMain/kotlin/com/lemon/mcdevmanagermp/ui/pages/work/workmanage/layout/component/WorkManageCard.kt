@@ -32,6 +32,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.data.consts.enums.WorkItemActionEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.WorkItemStatusEnum
+import com.lemon.mcdevmanagermp.data.consts.enums.priceTypeLabel
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
 import com.lemon.mcdevmanagermp.ui.theme.AppColors
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
@@ -226,11 +227,7 @@ private fun FeatureTag(text: String) {
 
 private fun priceText(price: Int, priceType: String): String {
     if (price <= 0) return "免费"
-    val unit = when (priceType) {
-        "diamond" -> "钻石"
-        "point" -> "绿宝石"
-        else -> priceType.ifEmpty { "" }
-    }
+    val unit = priceTypeLabel(priceType)
     return if (unit.isEmpty()) "$price" else "$price $unit"
 }
 

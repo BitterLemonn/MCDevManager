@@ -75,11 +75,14 @@ internal fun PriceInfoForm(
     onAction: (WorkDetailAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = LocalAppColors.current
     val isDiamond = state.priceType == PriceTypeEnum.DIAMOND
     val isEmerald = state.priceType == PriceTypeEnum.EMERALD
     val isFree = state.priceType == PriceTypeEnum.FREE
     // 折扣仅「钻石 + 二档及以上」可编辑（与 ViewModel.canEditDiscount 保持一致）
     val canEditDiscount = isDiamond && state.priceRank.type >= 1
+    // 已上架过的作品（首次上架时间非空）不可变更定价类型——平台规则：一旦产生交易记录即锁定
+    val priceTypeLocked = state.detail?.firstOnlineTime?.isNotEmpty() == true
 
     FormSection(title = "定价", modifier = modifier) {
         // 定价类型（必填）
@@ -92,8 +95,16 @@ internal fun PriceInfoForm(
             ),
             selected = state.priceType.takeIf { it != PriceTypeEnum.UNKNOWN },
             onSelect = { onAction(WorkDetailAction.ChangePriceType(it)) },
-            required = true
+            required = true,
+            enabled = !priceTypeLocked
         )
+        if (priceTypeLocked) {
+            Text(
+                text = "已上架作品不可修改定价类型",
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.onSurfaceVariant
+            )
+        }
 
         // 定价档位（仅钻石）
         if (isDiamond) {

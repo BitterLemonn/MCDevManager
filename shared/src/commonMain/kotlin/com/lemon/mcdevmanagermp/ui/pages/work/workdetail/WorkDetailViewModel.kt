@@ -4,12 +4,17 @@ import androidx.lifecycle.viewModelScope
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceRankEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceTypeEnum
+import com.lemon.mcdevmanagermp.data.repository.FileUploadRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.MCConstsCommonTitleData
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailDlcInfo
+import com.lemon.mcdevmanagermp.domain.upload.FileUploadRepository
 import com.lemon.mcdevmanagermp.domain.work.WorkDetailUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
 import com.lemon.mcdevmanagermp.ui.components.ModSelectOption
 import com.lemon.mcdevmanagermp.utils.Logger
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.name
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
@@ -17,7 +22,9 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
@@ -30,6 +37,8 @@ class WorkDetailViewModel :
     private val workDetailUseCase = WorkDetailUseCase(
         resourceRepository = ResourceRepositoryImpl.INSTANCE
     )
+
+    private val fileUploadRepository: FileUploadRepository = FileUploadRepositoryImpl.INSTANCE
 
     override fun dispatch(action: WorkDetailAction) {
         when (action) {
@@ -58,6 +67,34 @@ class WorkDetailViewModel :
             is WorkDetailAction.TogglePcPrerequisite -> setState { copy(pcHasPrerequisite = action.value) }
             is WorkDetailAction.UpdatePcIntro -> setState { copy(pcBrief = action.value) }
             is WorkDetailAction.UpdatePeDetail -> setState { copy(peDetail = action.value) }
+            is WorkDetailAction.UpdatePeUpdateSummary -> setState { copy(peUpdateSummary = action.value) }
+            is WorkDetailAction.UpdatePcDetail -> setState { copy(pcDetail = action.value) }
+
+            // —— PE 资源管理 ——
+            is WorkDetailAction.UpdatePeResourceType -> setState {
+                // 切换资源类别时清空具体类别与次级分类：旧值不属于新类别，避免脏数据
+                copy(peResourceType = action.id, peResourceSubType = 0, peResourceModSecondType = 0)
+            }
+
+            is WorkDetailAction.UpdatePeResourceSubType -> setState { copy(peResourceSubType = action.id) }
+            is WorkDetailAction.UpdatePeResourceModSecondType -> setState {
+                copy(
+                    peResourceModSecondType = action.id
+                )
+            }
+
+            is WorkDetailAction.TogglePeRecommendTag -> togglePeRecommendTag(action.id)
+            is WorkDetailAction.TogglePePlayPlan -> setState { copy(peAddPlayPlan = action.value) }
+            is WorkDetailAction.TogglePeMountCall -> setState { copy(peMountCallEnabled = action.value) }
+            is WorkDetailAction.TogglePeAddVersion -> setState { copy(peAddVersion = action.value) }
+            is WorkDetailAction.UploadPeZip -> uploadPeZip(action.file)
+            WorkDetailAction.RemovePeResource -> clearPeResource()
+
+            // —— 上架设置（弱下架） ——
+            is WorkDetailAction.TogglePeWeakOffline -> setState { copy(peWeakOffline = action.value) }
+            is WorkDetailAction.UpdatePeWeakOfflineReason -> setState { copy(peWeakOfflineReason = action.value) }
+            is WorkDetailAction.TogglePcWeakOffline -> setState { copy(pcWeakOffline = action.value) }
+            is WorkDetailAction.UpdatePcWeakOfflineReason -> setState { copy(pcWeakOfflineReason = action.value) }
 
             // —— 模组搜索选择 ——
             is WorkDetailAction.SearchRelatedMods -> searchRelatedMods(action.query)
@@ -128,6 +165,31 @@ class WorkDetailViewModel :
                                 },
                                 // —— PE 详情信息 ——
                                 peDetail = d.info,
+                                peUpdateSummary = d.updateSummary,
+                                // —— PC 详细信息 ——
+                                pcDetail = d.syncItemInfo.info,
+                                // —— PE 资源管理 ——
+                                peResourceType = d.priType,
+                                peResourceSubType = d.subType,
+                                peResourceModSecondType = d.modSecondType,
+                                peRecommendTags = d.labelTypeList,
+                                peAddPlayPlan = d.peIsAddPlayPlan,
+                                peMountCallEnabled = d.mountCallEnabled,
+                                peResource = d.res.firstOrNull()?.let { res ->
+                                    PeResourceFile(
+                                        name = res.resName,
+                                        url = res.resUrl,
+                                        mcVersion = res.mcVersion,
+                                        size = res.resInfo.resSize.toLong(),
+                                        addVersion = res.addVersion
+                                    )
+                                },
+                                peAddVersion = d.res.firstOrNull()?.addVersion ?: false,
+                                // —— 上架设置（弱下架） ——
+                                peWeakOffline = d.weakOffline,
+                                peWeakOfflineReason = d.weakOfflineReason,
+                                pcWeakOffline = d.syncItemInfo.weakOffline,
+                                pcWeakOfflineReason = d.syncItemInfo.weakOfflineReason,
                                 // —— 定价 ——
                                 priceType = priceType,
                                 priceRank = PriceRankEnum.fromIntType(d.priceRank),
@@ -182,7 +244,13 @@ class WorkDetailViewModel :
                     setState {
                         copy(
                             pcTagOptions = options,
-                            pcTags = tagTitles
+                            pcTags = tagTitles,
+                            peResourceTypeOptions = consts.priType.pe,
+                            peRecommendTagOptions = consts.labelType,
+                            peRecommendTagLimit = consts.itemTagLimit,
+                            pePriTypeFileTypes = parsePriTypeFileTypes(consts.subType.pe),
+                            peResourceSubTypeOptions = parsePriTypeSubTypeOptions(consts.subType.pe),
+                            peModSecondTypeOptions = consts.modSecondType.subTag
                         )
                     }
                 }
@@ -405,6 +473,126 @@ class WorkDetailViewModel :
             if (index !in pcTags.indices) this
             else copy(pcTags = pcTags.toMutableList().apply { removeAt(index) })
         }
+    }
+
+    // ===== PE 资源管理 =====
+
+    private fun togglePeRecommendTag(id: Int) {
+        val current = state.value
+        val limit = current.peRecommendTagLimit
+        // 合计上限：玩法+主题共享 item_tag_limit；已达上限且为新增时拒绝并提示（limit<=0 视为不限制）
+        val willAdd = id !in current.peRecommendTags
+        if (willAdd && limit > 0 && current.peRecommendTags.size >= limit) {
+            sendEffect(WorkDetailEffect.ShowToast("推荐标签最多选 $limit 个"))
+            return
+        }
+        setState {
+            copy(
+                peRecommendTags = if (id in peRecommendTags) {
+                    peRecommendTags.filterNot { it == id }
+                } else {
+                    peRecommendTags + id
+                }
+            )
+        }
+    }
+
+    private fun clearPeResource() {
+        setState { copy(peResource = null) }
+    }
+
+    private fun uploadPeZip(file: PlatformFile) {
+        if (state.value.isUploadingPeZip) return
+        // 选定资源类别后，按其 sub_type.file_type 限定上传文件类型（consts 无该类别分组/未声明 file_type 时不限）
+        val accepted = state.value.pePriTypeFileTypes[state.value.peResourceType]
+        val fileType = inferFileType(file.name)
+        if (fileType != null && !accepted.isNullOrEmpty() && fileType !in accepted) {
+            sendEffect(WorkDetailEffect.ShowToast("该资源类别仅支持 ${accepted.joinToString("/")} 文件"))
+            return
+        }
+        viewModelScope.launch {
+            setState { copy(isUploadingPeZip = true) }
+            // ponytail: fileType 待按网易 FP 模组文件类型实测微调（现有接口仅用过 image/video）
+            val result = fileUploadRepository.uploadFile(
+                fileType = "mod",
+                fileName = file.name,
+                file = file,
+                mimeType = "application/zip"
+            )
+            when (result) {
+                is NetworkState.Success -> {
+                    val url = parseUploadUrl(result.data?.body.orEmpty())
+                    setState {
+                        copy(
+                            isUploadingPeZip = false,
+                            peResource = PeResourceFile(
+                                name = file.name,
+                                url = url,
+                                addVersion = peAddVersion
+                            )
+                        )
+                    }
+                    if (url.isEmpty()) {
+                        sendEffect(WorkDetailEffect.ShowToast("上传成功但未能解析资源地址"))
+                    }
+                }
+
+                is NetworkState.Error -> {
+                    setState { copy(isUploadingPeZip = false) }
+                    sendEffect(WorkDetailEffect.ShowToast(result.msg))
+                }
+            }
+        }
+    }
+
+    /** best-effort 解析网易 FP 上传响应（textarea 内 JSON）中的资源地址；结构需实测，用正则取常见字段。 */
+    private fun parseUploadUrl(body: String): String {
+        if (body.isEmpty()) return ""
+        return Regex(""""url"\s*:\s*"([^"]+)"""").find(body)?.groupValues?.get(1)
+            ?: Regex(""""filename"\s*:\s*"([^"]+)"""").find(body)?.groupValues?.get(1)
+            ?: ""
+    }
+}
+
+/** 解析 mc_consts.sub_type.pe → {pri_type id → 接受的 file_type 集合}；空集表示该类别子类型未声明 file_type，视为不限。 */
+internal fun parsePriTypeFileTypes(peSubType: JsonObject): Map<Int, Set<String>> {
+    val result = mutableMapOf<Int, MutableSet<String>>()
+    for ((priTypeKey, childrenEl) in peSubType) {
+        val priType = priTypeKey.toIntOrNull() ?: continue
+        val accepted = mutableSetOf<String>()
+        childrenEl.jsonArray.forEach { el ->
+            val ft = el.jsonObject["file_type"]?.jsonPrimitive?.content
+            if (!ft.isNullOrEmpty()) accepted.add(ft)
+        }
+        result[priType] = accepted
+    }
+    return result
+}
+
+/** 解析 mc_consts.sub_type.pe → {pri_type id → 具体类别选项(id+title)}；仅保留有子类别的 priType。 */
+internal fun parsePriTypeSubTypeOptions(peSubType: JsonObject): Map<Int, List<MCConstsCommonTitleData>> {
+    val result = mutableMapOf<Int, List<MCConstsCommonTitleData>>()
+    for ((priTypeKey, childrenEl) in peSubType) {
+        val priType = priTypeKey.toIntOrNull() ?: continue
+        val options = childrenEl.jsonArray.mapNotNull { el ->
+            val obj = el.jsonObject
+            val id = obj["id"]?.jsonPrimitive?.intOrNull ?: return@mapNotNull null
+            MCConstsCommonTitleData(id, obj["title"]?.jsonPrimitive?.content ?: "")
+        }
+        if (options.isNotEmpty()) result[priType] = options
+    }
+    return result
+}
+
+/** 由文件名扩展名推断网易 file_type：.png→png，.zip/.mcworld/.mcpack/.mcaddon→zip，其余 null（未知，不过滤）。 */
+internal fun inferFileType(fileName: String): String? {
+    val lower = fileName.lowercase()
+    return when {
+        lower.endsWith(".png") -> "png"
+        lower.endsWith(".zip") || lower.endsWith(".mcworld") ||
+                lower.endsWith(".mcpack") || lower.endsWith(".mcaddon") -> "zip"
+
+        else -> null
     }
 }
 

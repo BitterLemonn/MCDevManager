@@ -28,7 +28,8 @@ fun <T> OptionChips(
     selected: T?,
     onSelect: (T) -> Unit,
     modifier: Modifier = Modifier,
-    required: Boolean = false
+    required: Boolean = false,
+    enabled: Boolean = true
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         FieldLabel(text = label, required = required)
@@ -42,7 +43,8 @@ fun <T> OptionChips(
                 OptionChip(
                     text = text,
                     selected = value == selected,
-                    onClick = { onSelect(value) }
+                    onClick = { onSelect(value) },
+                    enabled = enabled
                 )
             }
         }

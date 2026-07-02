@@ -23,8 +23,13 @@ import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailAction
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailState
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.BasicInfoForm
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PcBasicInfoForm
-import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PeDetailForm
+import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PeResourceManageForm
+import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PeUpdateSummaryForm
+import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PlaceholderModule
+import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PlaceholderSection
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PriceInfoForm
+import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.RichDetailForm
+import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.ShelfSettingsForm
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 
 @Composable
@@ -71,12 +76,65 @@ internal fun WorkDetailCompactLayout(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // 1. 基本信息
                 BasicInfoForm(state = state, onAction = onAction)
-                PeDetailForm(state = state, onAction = onAction)
+                // 2. PC 基本信息（同步生成 PC 时）
                 if (state.syncPc) {
                     PcBasicInfoForm(state = state, onAction = onAction)
                 }
+                // 3. 资源定价
                 PriceInfoForm(state = state, onAction = onAction)
+                // 4. PE 详情信息
+                RichDetailForm(
+                    title = "PE 详情信息",
+                    html = state.detail?.info ?: "",
+                    echoKey = state.detail?.itemId,
+                    onHtmlChange = { onAction(WorkDetailAction.UpdatePeDetail(it)) }
+                )
+                // 5. PE 更新纪要
+                PeUpdateSummaryForm(state = state, onAction = onAction)
+                // 6. PC 详情信息（同步生成 PC 时）
+                if (state.syncPc) {
+                    RichDetailForm(
+                        title = "PC 详细信息",
+                        html = state.detail?.syncItemInfo?.info ?: "",
+                        echoKey = state.detail?.itemId,
+                        onHtmlChange = { onAction(WorkDetailAction.UpdatePcDetail(it)) },
+                        syncFromPeHtml = { state.peDetail },
+                        showPreviewButton = false
+                    )
+                }
+                // 7. PE 上架设置
+                ShelfSettingsForm(
+                    title = "PE 上架设置",
+                    weakOffline = state.peWeakOffline,
+                    reason = state.peWeakOfflineReason,
+                    onToggleWeakOffline = { onAction(WorkDetailAction.TogglePeWeakOffline(it)) },
+                    onReasonChange = { onAction(WorkDetailAction.UpdatePeWeakOfflineReason(it)) }
+                )
+                // 8. PC 上架设置（同步生成 PC 时）
+                if (state.syncPc) {
+                    ShelfSettingsForm(
+                        title = "PC 上架设置",
+                        weakOffline = state.pcWeakOffline,
+                        reason = state.pcWeakOfflineReason,
+                        onToggleWeakOffline = { onAction(WorkDetailAction.TogglePcWeakOffline(it)) },
+                        onReasonChange = { onAction(WorkDetailAction.UpdatePcWeakOfflineReason(it)) }
+                    )
+                }
+                // 9. 上传 PE 资源管理
+                PeResourceManageForm(state = state, onAction = onAction)
+                // 10. 编辑 PE 图片
+                PlaceholderSection(module = PlaceholderModule.PE_IMAGE)
+                // 11. PE 资源中心首页轮播推广图
+                PlaceholderSection(module = PlaceholderModule.PE_CAROUSEL)
+                // 12. 上传视频
+                PlaceholderSection(module = PlaceholderModule.VIDEO)
+                // 13/14. 上传 PC 模组信息 / 编辑 PC 图片（同步生成 PC 时）
+                if (state.syncPc) {
+                    PlaceholderSection(module = PlaceholderModule.PC_RESOURCE)
+                    PlaceholderSection(module = PlaceholderModule.PC_IMAGE)
+                }
             }
         }
     }

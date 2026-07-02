@@ -26,10 +26,14 @@ import androidx.compose.material.icons.filled.FormatItalic
 import androidx.compose.material.icons.filled.FormatStrikethrough
 import androidx.compose.material.icons.filled.FormatUnderlined
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Preview
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -46,13 +50,12 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.ui.components.FormSection
-import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailAction
-import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailState
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
@@ -63,9 +66,6 @@ import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.name
 import io.github.vinceglb.filekit.readBytes
 import kotlinx.coroutines.launch
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_preview
-import org.jetbrains.compose.resources.painterResource
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
@@ -77,32 +77,50 @@ private val PRESET_COLORS = listOf(
 )
 
 /**
- * PE 详情信息编辑（HTML 富文本）。所见即所得编辑，支持
- * 粗体/斜体/下划线/删除线/文字颜色/文字底色/图片，HTML 与 [WorkDetailState.peDetail] 双向同步。
+ * HTML 富文本详情编辑器（PE 详情信息 / PC 详细信息共用）。
  *
+ * 所见即所得编辑，支持粗体/斜体/下划线/删除线/文字颜色/文字底色/图片，HTML 与调用方 state 双向同步。
  * 基于 rich-editor 的 [RichTextEditor]（移动端原生输入体验）。工具栏 [FlowRow] 自适应窄屏换行；
  * 颜色为预设色板弹层；图片以 base64 data URI 内嵌（编辑器内渲染依赖 rich-editor 能力，HTML 始终正确）。
+ *
+ * - [html] 为回显源（如 `state.detail?.info` / `state.detail?.syncItemInfo?.info`）；
+ *   [echoKey] 仅用于触发首次回显（如 `itemId`），**不可**用 [html] 本身——否则与下方 toHtml 同步形成回写死循环。
+ * - [onHtmlChange] 把编辑/规范化后的 HTML 同步回 VM。
+ * - [syncFromPeHtml] 非 null 时工具栏显示「同步 PE」按钮：点击将其返回的 HTML 灌入本编辑器（仅 PC 详情用，
+ *   返回 `state.peDetail` 即可把 PE 详情一键同步到 PC）。
  */
 @OptIn(ExperimentalEncodingApi::class)
 @Composable
-internal fun PeDetailForm(
-    state: WorkDetailState,
-    onAction: (WorkDetailAction) -> Unit,
-    modifier: Modifier = Modifier
+internal fun RichDetailForm(
+    title: String,
+    html: String,
+    echoKey: Any?,
+    onHtmlChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    syncFromPeHtml: (() -> String?)? = null,
+    showPreviewButton: Boolean = true
 ) {
     val colors = LocalAppColors.current
     val richState = rememberRichTextState()
     val scope = rememberCoroutineScope()
     var showPreview by remember { mutableStateOf(false) }
     var previewHtml by remember { mutableStateOf("") }
+    // 字符计数：纯文本长度（不含 HTML 标签 / 图片 data），网易详情上限 1000
+    val charCount = richState.annotatedString.text.length
+    val maxCharCount = 1000
+    val isOverLimit = charCount > maxCharCount
 
-    // 回显：仅按 itemId 变化一次，避免与下方 toHtml 同步形成循环
-    LaunchedEffect(state.detail?.itemId) {
-        state.detail?.info?.takeIf { it.isNotEmpty() }?.let { richState.setHtml(it) }
+    // 回显：仅按 echoKey 变化一次，避免与下方 toHtml 同步形成循环
+    LaunchedEffect(echoKey) {
+        html.takeIf { it.isNotEmpty() }?.let {
+            richState.setHtml(it)
+            // setHtml 后光标默认落在末尾，会导致编辑器滚动到底；移到开头以默认显示第一行
+            richState.selection = TextRange(0)
+        }
     }
     // 编辑/规范化后同步 HTML 到 VM（toHtml 为 suspend，置于协程内）
     LaunchedEffect(richState.annotatedString) {
-        onAction(WorkDetailAction.UpdatePeDetail(richState.toHtml()))
+        onHtmlChange(richState.toHtml())
     }
 
     // 图片选择：读 bytes → base64 → 插入 <img>
@@ -125,29 +143,58 @@ internal fun PeDetailForm(
     }
 
     FormSection(
-        title = "PE 详情信息",
+        title = title,
         modifier = modifier
     ) {
         RichTextToolbar(
             richState = richState,
             onPickImage = { imagePicker.launch() },
             onPreview = { scope.launch { previewHtml = richState.toHtml(); showPreview = true } },
+            onSyncFromPe = syncFromPeHtml?.let { fn ->
+                {
+                    scope.launch {
+                        val peHtml = fn()
+                        if (!peHtml.isNullOrEmpty()) {
+                            richState.setHtml(peHtml)
+                            richState.selection = TextRange(0)
+                        }
+                    }
+                }
+            },
+            showPreviewButton = showPreviewButton,
             modifier = Modifier.fillMaxWidth()
+        )
+        Text(
+            text = "图片在编辑时会以乱码占位符显示, 具体效果请点击预览",
+            style = MaterialTheme.typography.bodySmall,
+            color = colors.onSurfaceVariant,
+            modifier = Modifier.padding(top = 4.dp)
         )
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 240.dp),
+                .heightIn(min = 300.dp, max = 480.dp),
             shape = RoundedCornerShape(12.dp),
             color = colors.scheme.surface,
             tonalElevation = 1.dp,
-            border = BorderStroke(1.dp, colors.outlineVariant)
+            border = BorderStroke(1.dp, if (isOverLimit) colors.error else colors.outlineVariant)
         ) {
             RichTextEditor(
                 state = richState,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(12.dp)
+            )
+        }
+        // 字符计数器
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End
+        ) {
+            Text(
+                text = "$charCount/$maxCharCount",
+                style = MaterialTheme.typography.bodySmall,
+                color = if (isOverLimit) colors.error else colors.onSurfaceVariant
             )
         }
     }
@@ -162,14 +209,16 @@ internal fun PeDetailForm(
 /**
  * 富文本工具栏：粗体/斜体/下划线/删除线/文字颜色/文字底色/插入图片。
  * [FlowRow] 自适应窄屏换行，按钮选中态读 [RichTextState.currentSpanStyle] 高亮。
- * 预览按钮固定在工具栏最右侧，与格式工具用 [Spacer] 隔开。
+ * 「同步 PE」(仅 [onSyncFromPe] 非 null) 与预览按钮固定在工具栏最右侧，与格式工具用 [Spacer] 隔开。
  */
 @Composable
 private fun RichTextToolbar(
     richState: RichTextState,
     onPickImage: () -> Unit,
     onPreview: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onSyncFromPe: (() -> Unit)? = null,
+    showPreviewButton: Boolean = true
 ) {
     val colors = LocalAppColors.current
     val current = richState.currentSpanStyle
@@ -184,7 +233,7 @@ private fun RichTextToolbar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 4.dp, vertical = 2.dp),
+                .padding(horizontal = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             FlowRow(
@@ -263,14 +312,25 @@ private fun RichTextToolbar(
             }
             // 与格式工具隔开
             Spacer(Modifier.width(8.dp))
-            // 预览：固定在工具栏最右侧
-            ToolButton(
-                icon = painterResource(Res.drawable.ic_preview),
-                desc = "预览",
-                selected = false,
-                onClick = onPreview,
-                iconTint = colors.primary
-            )
+            // 同步 PE：仅 PC 详情显示（PE 详情不传 onSyncFromPe）
+            if (onSyncFromPe != null) {
+                ToolButton(
+                    icon = Icons.Filled.Sync,
+                    desc = "同步 PE",
+                    selected = false,
+                    onClick = onSyncFromPe
+                )
+                Spacer(Modifier.width(4.dp))
+            }
+            // 预览：固定在工具栏最右侧（PC 详情隐藏，仅 PE 详情显示）
+            if (showPreviewButton) {
+                ToolButton(
+                    icon = Icons.Filled.Preview,
+                    desc = "预览",
+                    selected = false,
+                    onClick = onPreview
+                )
+            }
         }
     }
 }

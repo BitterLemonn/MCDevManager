@@ -19,5 +19,8 @@ data class UserInfoVO(
     @SerialName("cur_month_incentive_fund")
     val curMonthIncentiveFund: Double,
     @SerialName("unextract_income")
-    val unExtractIncome: String
+    val unExtractIncome: String,
+    // 是否开通前置模组功能
+    @SerialName("prerequisite_switch")
+    val prerequisiteSwitch: Boolean
 )

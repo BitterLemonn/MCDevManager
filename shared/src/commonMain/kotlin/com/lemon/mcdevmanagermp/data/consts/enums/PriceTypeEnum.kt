@@ -60,3 +60,9 @@ enum class PriceRankEnum(val type: Int, val label: String, val diamondPrice: Int
         }
     }
 }
+
+/** priceType 字符串 → 中文展示文案；未知值原样返回（避免把异常值显示成"未知"）。 */
+fun priceTypeLabel(priceType: String): String {
+    val t = PriceTypeEnum.fromStringType(priceType)
+    return if (t == PriceTypeEnum.UNKNOWN) priceType else t.label
+}

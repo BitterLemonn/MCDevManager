@@ -9,14 +9,28 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -34,6 +48,7 @@ import com.lemon.mcdevmanagermp.ui.components.YesNoSelector
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailAction
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailState
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
+import kotlinx.coroutines.delay
 
 /**
  * 基本信息区块表单（图1）。三档布局共用，按 [columns] 自适应排列。
@@ -79,12 +94,14 @@ internal fun BasicInfoForm(
                 ReadOnlyField(
                     label = "资源ID",
                     value = state.itemId,
-                    modifier = Modifier.weight(1f).widthIn(min = minFieldWidth)
+                    modifier = Modifier.weight(1f).widthIn(min = minFieldWidth),
+                    trailing = { CopyButton(state.itemId) }
                 )
                 ReadOnlyField(
                     label = "模组码",
                     value = state.normalNumber,
-                    modifier = Modifier.weight(1f).widthIn(min = minFieldWidth)
+                    modifier = Modifier.weight(1f).widthIn(min = minFieldWidth),
+                    trailing = { CopyButton(state.normalNumber) }
                 )
                 ReadOnlyField(
                     label = "资源版本",
@@ -206,8 +223,18 @@ internal fun MetaInfoBar(
             .padding(16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        MetaItem(label = "资源ID", value = state.itemId, modifier = Modifier.weight(1f))
-        MetaItem(label = "模组码", value = state.normalNumber, modifier = Modifier.weight(1f))
+        MetaItem(
+            label = "资源ID",
+            value = state.itemId,
+            modifier = Modifier.weight(1f),
+            copyable = true
+        )
+        MetaItem(
+            label = "模组码",
+            value = state.normalNumber,
+            modifier = Modifier.weight(1f),
+            copyable = true
+        )
         MetaItem(label = "资源版本", value = state.itemVersion, modifier = Modifier.weight(1f))
     }
 }
@@ -216,24 +243,32 @@ internal fun MetaInfoBar(
 private fun MetaItem(
     label: String,
     value: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    copyable: Boolean = false
 ) {
     val colors = LocalAppColors.current
-    Column(modifier = modifier) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = colors.onSurfaceVariant
-        )
-        Spacer(Modifier.height(2.dp))
-        Text(
-            text = value.ifEmpty { "—" },
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = colors.textColor,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.Bottom,
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Column(modifier = Modifier.weight(1f, fill = false)) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = colors.onSurfaceVariant
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = value.ifEmpty { "—" },
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = colors.textColor,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        if (copyable) CopyButton(value)
     }
 }
 
@@ -283,5 +318,36 @@ internal fun RelatedModFields(
         FieldLabel(text = "当前关联模组")
         ReadOnlyField(label = "主包", value = state.detail?.dlcInfo?.master ?: "")
         ReadOnlyField(label = "副包", value = state.detail?.dlcInfo?.slaveList ?: "")
+    }
+}
+
+/**
+ * 复制按钮：点击将 [value] 写入剪贴板，复制成功后图标短暂变为勾选反馈。
+ */
+@Composable
+private fun CopyButton(value: String, modifier: Modifier = Modifier) {
+    val colors = LocalAppColors.current
+    val clipboardManager = LocalClipboardManager.current
+    var copied by remember { mutableStateOf(false) }
+    LaunchedEffect(copied) {
+        if (copied) {
+            delay(1000)
+            copied = false
+        }
+    }
+    IconButton(
+        onClick = {
+            if (value.isNotEmpty()) {
+                clipboardManager.setText(AnnotatedString(value))
+                copied = true
+            }
+        },
+        modifier = modifier.size(32.dp)
+    ) {
+        Icon(
+            imageVector = if (copied) Icons.Filled.Check else Icons.Filled.ContentCopy,
+            contentDescription = "复制",
+            tint = if (copied) colors.success else colors.onSurfaceVariant
+        )
     }
 }

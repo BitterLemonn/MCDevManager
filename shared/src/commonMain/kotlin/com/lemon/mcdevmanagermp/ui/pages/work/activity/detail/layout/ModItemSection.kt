@@ -22,6 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.lemon.mcdevmanagermp.data.consts.enums.ActivityStatusEnum
+import com.lemon.mcdevmanagermp.data.consts.enums.priceTypeLabel
 import com.lemon.mcdevmanagermp.data.vo.netease.activity.ActivityItemVO
 import com.lemon.mcdevmanagermp.data.vo.netease.activity.ReviewActivityItemVO
 import com.lemon.mcdevmanagermp.ui.theme.AppColors
@@ -31,12 +33,7 @@ import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
  * 模组状态标签颜色
  */
 private val ActivityItemVO.statusLabel: String
-    get() = when (status) {
-        "reviewing" -> "审核中"
-        "approved" -> "已通过"
-        "rejected" -> "已拒绝"
-        else -> status
-    }
+    get() = ActivityStatusEnum.fromValue(status)?.label ?: status
 
 /**
  * 模组列表展示区域 - 在活动详情页中显示审核中/已通过/已拒绝的模组
@@ -215,11 +212,11 @@ private fun ModItemCard(
         Spacer(Modifier.width(8.dp))
 
         // 状态标签
-        val statusColor = when (item.status) {
-            "reviewing" -> colors.tertiary
-            "approved" -> colors.primary
-            "rejected" -> colors.error
-            else -> colors.onSurfaceVariant
+        val statusColor = when (ActivityStatusEnum.fromValue(item.status)) {
+            ActivityStatusEnum.REVIEWING -> colors.tertiary
+            ActivityStatusEnum.APPROVED -> colors.primary
+            ActivityStatusEnum.REJECTED -> colors.error
+            null -> colors.onSurfaceVariant
         }
         Box(
             modifier = Modifier
@@ -238,8 +235,4 @@ private fun ModItemCard(
 }
 
 private val ActivityItemVO.priceTypeName: String
-    get() = when (priceType) {
-        "diamond" -> "钻石"
-        "point" -> "绿宝石"
-        else -> priceType
-    }
+    get() = priceTypeLabel(priceType)

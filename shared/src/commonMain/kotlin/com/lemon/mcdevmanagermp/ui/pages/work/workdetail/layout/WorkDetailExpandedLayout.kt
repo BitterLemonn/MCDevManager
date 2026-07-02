@@ -27,13 +27,20 @@ import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailState
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.BasicInfoForm
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.MetaInfoBar
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PcBasicInfoForm
-import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PeDetailForm
+import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PeResourceManageForm
+import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PeUpdateSummaryForm
+import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PlaceholderModule
+import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PlaceholderSection
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PriceInfoForm
+import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.RichDetailForm
+import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.ShelfSettingsForm
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 
 /**
- * 桌面布局（>840dp）：顶部作品信息条（只读元数据横排仪表盘式）+ 双栏并排编辑表单
- * （左基本信息主编辑区 / 右定价侧边配置），限宽 1200dp 居中，充分利用宽屏。
+ * 桌面布局（>840dp）：顶部作品信息条 + 双栏并排。
+ * 左栏 = 信息与配置（基本信息 / PC 基本 / 定价 / PE 详情 / PE 纪要 / PC 详情 / PE 上架 / PC 上架），
+ * 右栏 = 资源与媒体（PE 资源 / PE 图片 / 轮播 / 视频 / PC 资源 / PC 图片）。
+ * 两栏内部均遵循统一模块顺序，限宽 1200dp 居中。
  */
 @Composable
 internal fun WorkDetailExpandedLayout(
@@ -87,16 +94,17 @@ internal fun WorkDetailExpandedLayout(
                 ) {
                     // 顶部作品信息条（只读元数据横排展示）
                     MetaInfoBar(state = state)
-                    // 双栏并排：左基本信息（主编辑区）/ 右定价（侧边配置），同屏可见，充分利用宽屏
+                    // 双栏：左信息配置 / 右资源媒体，同屏可见，充分利用宽屏
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        // 左栏：基本信息 +（勾选同步生成 PC 模组时）PC 基本信息
+                        // 左栏：信息与配置（模块顺序 1-8）
                         Column(
                             modifier = Modifier.weight(1f),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
+                            // 1. 基本信息
                             BasicInfoForm(
                                 state = state,
                                 onAction = onAction,
@@ -104,6 +112,7 @@ internal fun WorkDetailExpandedLayout(
                                 columns = 2,
                                 showMetaRow = false
                             )
+                            // 2. PC 基本信息（同步生成 PC 时）
                             if (state.syncPc) {
                                 PcBasicInfoForm(
                                     state = state,
@@ -111,22 +120,120 @@ internal fun WorkDetailExpandedLayout(
                                     modifier = Modifier.fillMaxWidth()
                                 )
                             }
-                        }
-                        // 右栏：PE 详情（顶部）+ 定价（下方）
-                        Column(
-                            modifier = Modifier.weight(0.82f),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            PeDetailForm(
-                                state = state,
-                                onAction = onAction,
-                                modifier = Modifier.fillMaxWidth()
-                            )
+                            // 3. 资源定价
                             PriceInfoForm(
                                 state = state,
                                 onAction = onAction,
                                 modifier = Modifier.fillMaxWidth()
                             )
+                            // 4. PE 详情信息
+                            RichDetailForm(
+                                title = "PE 详情信息",
+                                html = state.detail?.info ?: "",
+                                echoKey = state.detail?.itemId,
+                                onHtmlChange = { onAction(WorkDetailAction.UpdatePeDetail(it)) },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            // 5. PE 更新纪要
+                            PeUpdateSummaryForm(
+                                state = state,
+                                onAction = onAction,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            // 6. PC 详情信息（同步生成 PC 时）
+                            if (state.syncPc) {
+                                RichDetailForm(
+                                    title = "PC 详细信息",
+                                    html = state.detail?.syncItemInfo?.info ?: "",
+                                    echoKey = state.detail?.itemId,
+                                    onHtmlChange = { onAction(WorkDetailAction.UpdatePcDetail(it)) },
+                                    syncFromPeHtml = { state.peDetail },
+                                    showPreviewButton = false,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                            // 7. PE 上架设置
+                            ShelfSettingsForm(
+                                title = "PE 上架设置",
+                                weakOffline = state.peWeakOffline,
+                                reason = state.peWeakOfflineReason,
+                                onToggleWeakOffline = {
+                                    onAction(
+                                        WorkDetailAction.TogglePeWeakOffline(
+                                            it
+                                        )
+                                    )
+                                },
+                                onReasonChange = {
+                                    onAction(
+                                        WorkDetailAction.UpdatePeWeakOfflineReason(
+                                            it
+                                        )
+                                    )
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            // 8. PC 上架设置（同步生成 PC 时）
+                            if (state.syncPc) {
+                                ShelfSettingsForm(
+                                    title = "PC 上架设置",
+                                    weakOffline = state.pcWeakOffline,
+                                    reason = state.pcWeakOfflineReason,
+                                    onToggleWeakOffline = {
+                                        onAction(
+                                            WorkDetailAction.TogglePcWeakOffline(
+                                                it
+                                            )
+                                        )
+                                    },
+                                    onReasonChange = {
+                                        onAction(
+                                            WorkDetailAction.UpdatePcWeakOfflineReason(
+                                                it
+                                            )
+                                        )
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+                        // 右栏：资源与媒体（模块顺序 9-14）
+                        Column(
+                            modifier = Modifier.weight(0.82f),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            // 9. 上传 PE 资源管理
+                            PeResourceManageForm(
+                                state = state,
+                                onAction = onAction,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            // 10. 编辑 PE 图片
+                            PlaceholderSection(
+                                module = PlaceholderModule.PE_IMAGE,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            // 11. PE 资源中心首页轮播推广图
+                            PlaceholderSection(
+                                module = PlaceholderModule.PE_CAROUSEL,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            // 12. 上传视频
+                            PlaceholderSection(
+                                module = PlaceholderModule.VIDEO,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            // 13/14. 上传 PC 模组信息 / 编辑 PC 图片（同步生成 PC 时）
+                            if (state.syncPc) {
+                                PlaceholderSection(
+                                    module = PlaceholderModule.PC_RESOURCE,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                PlaceholderSection(
+                                    module = PlaceholderModule.PC_IMAGE,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
                         }
                     }
                 }

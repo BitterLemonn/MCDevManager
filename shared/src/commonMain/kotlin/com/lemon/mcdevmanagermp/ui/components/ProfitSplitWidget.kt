@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -30,6 +29,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lemon.mcdevmanagermp.data.vo.netease.user.OverviewVO
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_diamond
@@ -39,12 +39,12 @@ import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun ProfitSplitWidget(
-    overview: com.lemon.mcdevmanagermp.data.common.NetworkState<com.lemon.mcdevmanagermp.data.vo.netease.user.OverviewVO>?,
+    overview: OverviewVO?,
     isLoading: Boolean,
     onClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val data = (overview as? com.lemon.mcdevmanagermp.data.common.NetworkState.Success)?.data
+    val data = overview
 
     Column(
         modifier = modifier.fillMaxWidth().height(IntrinsicSize.Min),
