@@ -69,6 +69,7 @@ import mcdevmanagermpr.shared.generated.resources.ic_add
 import mcdevmanagermpr.shared.generated.resources.ic_del
 import mcdevmanagermpr.shared.generated.resources.img_avatar
 import org.jetbrains.compose.resources.painterResource
+import kotlin.time.Clock
 
 @Composable
 fun AccountManagementPage(
@@ -220,10 +221,12 @@ internal fun CurrentAccountSection(
                             fontWeight = FontWeight.Medium,
                             color = colors.textColor
                         )
+                        val expired = isLoginExpired(currentAccount.lastLoginTime)
                         Text(
-                            text = formatLoginTime(currentAccount.lastLoginTime),
+                            text = formatLoginTime(currentAccount.lastLoginTime) +
+                                    if (expired) " · 登录已过期" else "",
                             style = MaterialTheme.typography.bodySmall,
-                            color = colors.onSurfaceVariant
+                            color = if (expired) colors.danger else colors.onSurfaceVariant
                         )
                     }
                 }
@@ -388,10 +391,12 @@ private fun AccountCard(
                             )
                         }
                     }
+                    val expired = isLoginExpired(account.lastLoginTime)
                     Text(
-                        text = formatLoginTime(account.lastLoginTime),
+                        text = formatLoginTime(account.lastLoginTime) +
+                                if (expired) " · 登录已过期" else "",
                         style = MaterialTheme.typography.bodySmall,
-                        color = colors.onSurfaceVariant
+                        color = if (expired) colors.danger else colors.onSurfaceVariant
                     )
                 }
 
@@ -522,4 +527,11 @@ private fun formatLoginTime(epochMillis: Long): String {
     return "上次登录: ${localDateTime.year}/${localDateTime.month.number}/${localDateTime.day} " +
             "${localDateTime.hour.toString().padStart(2, '0')}:" +
             localDateTime.minute.toString().padStart(2, '0')
+}
+
+private const val LOGIN_EXPIRE_DAYS = 5
+
+private fun isLoginExpired(epochMillis: Long): Boolean {
+    val expireMillis = LOGIN_EXPIRE_DAYS * 24L * 60 * 60 * 1000
+    return Clock.System.now().toEpochMilliseconds() - epochMillis > expireMillis
 }

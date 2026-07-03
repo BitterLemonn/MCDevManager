@@ -106,9 +106,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                             )
                         }
 
-                        composable<Route.Login>(
-                            enterTransition = { fadeIn(tween(500)) }
-                        ) {
+                        composable<Route.Login> {
                             val hasPrevious = navController.previousBackStackEntry != null
                             LoginPage(
                                 onNavigateToMain = {
