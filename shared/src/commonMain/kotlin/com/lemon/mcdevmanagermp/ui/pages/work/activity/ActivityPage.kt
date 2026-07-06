@@ -12,7 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.lemon.mcdevmanagermp.data.vo.netease.activity.ReviewActivityItemVO
+import com.lemon.mcdevmanagermp.data.vo.netease.activity.ActivityReviewItemVO
 import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
 import com.lemon.mcdevmanagermp.ui.components.collectUiEffect
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.detail.ActivityDetailPage
@@ -31,9 +31,9 @@ fun ActivityPage(
     val colors = LocalAppColors.current
 
     // 内部子页面导航状态
-    var selectedActivity by remember { mutableStateOf<ReviewActivityItemVO?>(null) }
+    var selectedActivity by remember { mutableStateOf<ActivityReviewItemVO?>(null) }
     // 参与页面导航状态
-    var participateTarget by remember { mutableStateOf<ReviewActivityItemVO?>(null) }
+    var participateTarget by remember { mutableStateOf<ActivityReviewItemVO?>(null) }
 
     val onParticipateSuccess: () -> Unit = {
         // 仅刷新活动列表数据，不清除导航状态（参与页面自行刷新模组列表）

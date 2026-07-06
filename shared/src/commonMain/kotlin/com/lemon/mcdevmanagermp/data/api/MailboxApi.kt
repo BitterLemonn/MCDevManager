@@ -18,7 +18,7 @@ import de.jensklingenberg.ktorfit.http.Query
 
 interface MailboxApi {
 
-    @GET("/mailbox/unread/count")
+    @GET("mailbox/unread/count")
     suspend fun getUnReadCount(): ResponseData<UnReadMailVO>
 
     @GET("mailbox")

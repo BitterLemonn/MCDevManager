@@ -5,13 +5,13 @@ import kotlinx.serialization.Serializable
 import kotlin.time.Clock
 
 @Serializable
-data class ReviewActivityVO(
-    val data: List<ReviewActivityItemVO>,
+data class ActivityReviewVO(
+    val data: List<ActivityReviewItemVO>,
     val count: Int
 )
 
 @Serializable
-data class ReviewActivityItemVO(
+data class ActivityReviewItemVO(
     @SerialName("activity_description")
     val desc: String,
     @SerialName("activity_id")
@@ -19,7 +19,7 @@ data class ReviewActivityItemVO(
     @SerialName("activity_instruction")
     val instruction: String,
     @SerialName("activity_modules")
-    val modules: List<ReviewActivityModuleVO> = emptyList(),
+    val modules: List<ActivityReviewModuleVO> = emptyList(),
     @SerialName("activity_name")
     val name: String,
     @SerialName("apply_end_at")
@@ -47,7 +47,7 @@ data class ReviewActivityItemVO(
 }
 
 @Serializable
-data class ReviewActivityModuleVO(
+data class ActivityReviewModuleVO(
     @SerialName("item_pri_type_list")
     val itemPriTypeList: List<Int> = emptyList(),
     @SerialName("item_status_list")

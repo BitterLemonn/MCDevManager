@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import com.github.panpf.sketch.AsyncImage
 import com.github.panpf.sketch.rememberAsyncImageState
 import com.github.panpf.sketch.request.ComposableImageOptions
-import com.lemon.mcdevmanagermp.data.vo.netease.activity.ReviewActivityItemVO
+import com.lemon.mcdevmanagermp.data.vo.netease.activity.ActivityReviewItemVO
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.components.RichHtmlText
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.detail.ActivityDetailState
@@ -54,7 +54,7 @@ internal fun ActivityDetailCompactLayout(
     state: ActivityDetailState,
     onBack: () -> Unit,
     showTopBar: Boolean = true,
-    onParticipate: (ReviewActivityItemVO) -> Unit = {}
+    onParticipate: (ActivityReviewItemVO) -> Unit = {}
 ) {
     val colors = LocalAppColors.current
     val activity = state.activity ?: return
@@ -181,8 +181,8 @@ internal fun ActivityDetailCompactLayout(
                 // Module 摘要
                 if (activity.modules.isNotEmpty()) {
                     InfoChipRow(
-                        label = "活动赛道",
-                        value = "共 ${activity.modules.size} 个赛道"
+                        label = "活动分区",
+                        value = "共 ${activity.modules.size} 个分区"
                     )
                 }
             }
@@ -217,7 +217,7 @@ internal fun ActivityDetailCompactLayout(
                 )
             }
 
-            // 赛道信息摘要（仅显示赛道名称和描述，不显示作品列表）
+            // 分区信息摘要（仅显示分区名称和描述，不显示作品列表）
             if (activity.modules.isNotEmpty()) {
                 Column(
                     modifier = Modifier
@@ -228,7 +228,7 @@ internal fun ActivityDetailCompactLayout(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = "赛道信息",
+                        text = "分区信息",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = colors.textColor

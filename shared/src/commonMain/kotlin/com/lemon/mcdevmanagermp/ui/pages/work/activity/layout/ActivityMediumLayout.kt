@@ -33,7 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.lemon.mcdevmanagermp.data.vo.netease.activity.ReviewActivityItemVO
+import com.lemon.mcdevmanagermp.data.vo.netease.activity.ActivityReviewItemVO
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.ActivityAction
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.ActivityState
@@ -48,7 +48,7 @@ internal fun ActivityMediumLayout(
     state: ActivityState,
     onAction: (ActivityAction) -> Unit,
     onBack: () -> Unit,
-    onItemClick: (ReviewActivityItemVO) -> Unit
+    onItemClick: (ActivityReviewItemVO) -> Unit
 ) {
     val colors = LocalAppColors.current
     val gridState = rememberLazyGridState()

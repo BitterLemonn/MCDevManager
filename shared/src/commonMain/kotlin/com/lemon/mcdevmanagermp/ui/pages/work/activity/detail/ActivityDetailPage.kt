@@ -10,7 +10,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import com.lemon.mcdevmanagermp.data.vo.netease.activity.ReviewActivityItemVO
+import com.lemon.mcdevmanagermp.data.vo.netease.activity.ActivityReviewItemVO
 import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
 import com.lemon.mcdevmanagermp.ui.components.collectUiEffect
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.detail.layout.ActivityDetailCompactLayout
@@ -20,10 +20,10 @@ import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 
 @Composable
 fun ActivityDetailPage(
-    activity: ReviewActivityItemVO,
+    activity: ActivityReviewItemVO,
     onBack: () -> Unit,
     showTopBar: Boolean = true,
-    onNavigateToParticipate: (ReviewActivityItemVO) -> Unit = {}
+    onNavigateToParticipate: (ActivityReviewItemVO) -> Unit = {}
 ) {
     val viewModel = remember { ActivityDetailViewModel() }
     val state by viewModel.state.collectAsState()
@@ -46,7 +46,7 @@ fun ActivityDetailPage(
     Box(modifier = Modifier.fillMaxSize().background(colors.background)) {
         val widthSizeClass = LocalWindowWidthSizeClass.current
 
-        val onParticipate: (ReviewActivityItemVO) -> Unit = { target ->
+        val onParticipate: (ActivityReviewItemVO) -> Unit = { target ->
             onNavigateToParticipate(target)
         }
 

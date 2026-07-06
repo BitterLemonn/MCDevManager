@@ -5,7 +5,7 @@ import com.lemon.mcdevmanagermp.data.dto.netease.activity.FileInfoDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.activity.JoinActivityDTO
 import com.lemon.mcdevmanagermp.data.repository.ActivityRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.FileUploadRepositoryImpl
-import com.lemon.mcdevmanagermp.data.vo.netease.activity.ReviewActivityItemVO
+import com.lemon.mcdevmanagermp.data.vo.netease.activity.ActivityReviewItemVO
 import com.lemon.mcdevmanagermp.domain.activity.ActivityUseCase
 import com.lemon.mcdevmanagermp.domain.upload.FileUploadUseCase
 import com.lemon.mcdevmanagermp.domain.upload.UploadFileEntry
@@ -45,7 +45,7 @@ class ActivityParticipateViewModel :
         }
     }
 
-    private fun loadActivity(activity: ReviewActivityItemVO) {
+    private fun loadActivity(activity: ActivityReviewItemVO) {
         val firstModuleId = activity.modules.firstOrNull()?.moduleId
         setState { copy(activity = activity, selectedModuleId = firstModuleId) }
 

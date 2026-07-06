@@ -38,7 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.lemon.mcdevmanagermp.data.vo.netease.activity.CandidatesItemVO
+import com.lemon.mcdevmanagermp.data.vo.netease.activity.ActivityCandidatesItemVO
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.participate.ActivityParticipateAction
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.participate.ActivityParticipateState
@@ -311,7 +311,7 @@ private fun ModuleTabRow(
 
 @Composable
 private fun CandidateItem(
-    candidate: CandidatesItemVO,
+    candidate: ActivityCandidatesItemVO,
     isSelected: Boolean,
     onSelect: () -> Unit,
     colors: com.lemon.mcdevmanagermp.ui.theme.AppColors

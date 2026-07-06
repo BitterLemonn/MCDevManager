@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.data.consts.enums.ActivityStatusEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.priceTypeLabel
 import com.lemon.mcdevmanagermp.data.vo.netease.activity.ActivityItemVO
-import com.lemon.mcdevmanagermp.data.vo.netease.activity.ReviewActivityItemVO
+import com.lemon.mcdevmanagermp.data.vo.netease.activity.ActivityReviewItemVO
 import com.lemon.mcdevmanagermp.ui.theme.AppColors
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 
@@ -40,7 +40,7 @@ private val ActivityItemVO.statusLabel: String
  */
 @Composable
 internal fun ModItemsSection(
-    activity: ReviewActivityItemVO,
+    activity: ActivityReviewItemVO,
     reviewingItems: Map<Int, List<ActivityItemVO>>,
     approvedItems: Map<Int, List<ActivityItemVO>>,
     rejectedItems: Map<Int, List<ActivityItemVO>>,

@@ -32,6 +32,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -49,16 +50,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lemon.mcdevmanagermp.platform.BackHandler
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.ActivityPage
+import com.lemon.mcdevmanagermp.ui.pages.work.activity.discount.DiscountActivityPage
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailPage
 import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.WorkManagePage
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_mod
+import mcdevmanagermpr.shared.generated.resources.ic_profit
 import mcdevmanagermpr.shared.generated.resources.ic_sale
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 
-private enum class WorkSubPage { List, Activity, WorkManage, WorkDetail }
+private enum class WorkSubPage { List, Activity, Discount, WorkManage, WorkDetail }
 
 @Composable
 fun WorkContent() {
@@ -88,10 +91,15 @@ fun WorkContent() {
             WorkSubPage.List -> WorkListPage(
                 statusBarTop = statusBarTop,
                 onNavigateToActivity = { currentSubPage = WorkSubPage.Activity },
+                onNavigateToDiscount = { currentSubPage = WorkSubPage.Discount },
                 onNavigateToWorkManage = { currentSubPage = WorkSubPage.WorkManage }
             )
 
             WorkSubPage.Activity -> ActivityPage(
+                onBack = { currentSubPage = WorkSubPage.List }
+            )
+
+            WorkSubPage.Discount -> DiscountActivityPage(
                 onBack = { currentSubPage = WorkSubPage.List }
             )
 
@@ -115,6 +123,7 @@ fun WorkContent() {
 private fun WorkListPage(
     statusBarTop: androidx.compose.ui.unit.Dp,
     onNavigateToActivity: () -> Unit,
+    onNavigateToDiscount: () -> Unit,
     onNavigateToWorkManage: () -> Unit
 ) {
     val colors = LocalAppColors.current
@@ -138,7 +147,6 @@ private fun WorkListPage(
 
         Spacer(Modifier.height(4.dp))
 
-        // BETA功能未完成 TODO
         ElevatedCard(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.elevatedCardColors(containerColor = colors.surfaceContainerHigh),
@@ -151,19 +159,31 @@ private fun WorkListPage(
                 subtitle = "管理作品上架与审核状态",
                 onClick = onNavigateToWorkManage
             )
-        }
 
-        ElevatedCard(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.elevatedCardColors(containerColor = colors.surfaceContainerHigh),
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-        ) {
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                color = colors.outlineVariant,
+                thickness = 0.5.dp
+            )
+
             WorkItem(
                 icon = Res.drawable.ic_sale,
                 title = "作品活动",
                 subtitle = "查看和参与平台作品活动",
                 onClick = onNavigateToActivity
+            )
+
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                color = colors.outlineVariant,
+                thickness = 0.5.dp
+            )
+
+            WorkItem(
+                icon = Res.drawable.ic_profit,
+                title = "折扣特卖",
+                subtitle = "参与平台折扣特卖，提升作品销量",
+                onClick = onNavigateToDiscount
             )
         }
     }

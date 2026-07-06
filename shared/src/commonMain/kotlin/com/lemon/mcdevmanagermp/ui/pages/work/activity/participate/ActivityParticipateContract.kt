@@ -1,7 +1,7 @@
 package com.lemon.mcdevmanagermp.ui.pages.work.activity.participate
 
-import com.lemon.mcdevmanagermp.data.vo.netease.activity.CandidatesItemVO
-import com.lemon.mcdevmanagermp.data.vo.netease.activity.ReviewActivityItemVO
+import com.lemon.mcdevmanagermp.data.vo.netease.activity.ActivityCandidatesItemVO
+import com.lemon.mcdevmanagermp.data.vo.netease.activity.ActivityReviewItemVO
 import com.lemon.mcdevmanagermp.utils.extension.IUiAction
 import com.lemon.mcdevmanagermp.utils.extension.IUiEffect
 import com.lemon.mcdevmanagermp.utils.extension.IUiState
@@ -12,9 +12,9 @@ data class ActivityParticipateState(
     val isLoading: Boolean = false,
     val isSubmitting: Boolean = false,
     val isUploading: Boolean = false,
-    val activity: ReviewActivityItemVO? = null,
+    val activity: ActivityReviewItemVO? = null,
     val selectedModuleId: Int? = null,
-    val candidates: List<CandidatesItemVO> = emptyList(),
+    val candidates: List<ActivityCandidatesItemVO> = emptyList(),
     val selectedCandidateId: String? = null,
     val applyIntro: String = "",
     val selectedImages: List<SelectedImage> = emptyList(),
@@ -63,7 +63,7 @@ data class SelectedVideo(
 }
 
 sealed interface ActivityParticipateAction : IUiAction {
-    data class LoadData(val activity: ReviewActivityItemVO) : ActivityParticipateAction
+    data class LoadData(val activity: ActivityReviewItemVO) : ActivityParticipateAction
     data class SelectModule(val moduleId: Int) : ActivityParticipateAction
     data class SelectCandidate(val itemId: String) : ActivityParticipateAction
     data class UpdateApplyIntro(val intro: String) : ActivityParticipateAction
