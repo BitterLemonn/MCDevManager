@@ -2,6 +2,7 @@ package com.lemon.mcdevmanagermp.utils.extension
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.font.FontFamily
+import com.lemon.mcdevmanagermp.utils.Logger
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
@@ -136,6 +137,30 @@ private fun formatDateRelative(target: LocalDateTime, now: LocalDateTime): Strin
 }
 
 private fun pad2(v: Int): String = v.toString().padStart(2, '0')
+
+/** Unix 秒/毫秒 → "yyyy-MM-dd"（Asia/Shanghai）；0 或解析失败返回 ""。 */
+fun Long.toDateString(): String {
+    if (this == 0L) return ""
+    return try {
+        val millis = if (this < 1_000_000_000_000) this * 1000 else this
+        val dt = Instant.fromEpochMilliseconds(millis).toLocalDateTime(timeZoneCN)
+        "${dt.year}-${pad2(dt.month.number)}-${pad2(dt.day)}"
+    } catch (e: Exception) {
+        Logger.e("解析DateString失败: $e")
+        ""
+    }
+}
+
+/** Unix 秒 → "yyyy/MM/dd HH:mm"（系统时区）；解析失败返回 ""。 */
+fun Long.toDateTimeString(): String {
+    return try {
+        val dt = Instant.fromEpochSeconds(this).toLocalDateTime(TimeZone.currentSystemDefault())
+        "${dt.year}/${pad2(dt.month.number)}/${pad2(dt.day)} ${pad2(dt.hour)}:${pad2(dt.minute)}"
+    } catch (e: Exception) {
+        Logger.e("解析DateTimeString失败: $e")
+        ""
+    }
+}
 
 /**
  * 尝试把字符串解析为 epoch 毫秒。返回 (epochMillis, isTimestamp) 或 null。

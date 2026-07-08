@@ -53,6 +53,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.data.consts.enums.ActivityStatusEnum
+import com.lemon.mcdevmanagermp.data.consts.enums.priceTypeLabel
 import com.lemon.mcdevmanagermp.data.vo.netease.activity.DiscountActivityVO
 import com.lemon.mcdevmanagermp.ui.components.RichHtmlText
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.discount.DiscountActivityAction
@@ -60,8 +61,7 @@ import com.lemon.mcdevmanagermp.ui.pages.work.activity.discount.DiscountActivity
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.layout.ActivityStatusTag
 import com.lemon.mcdevmanagermp.ui.theme.AppColors
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import kotlinx.datetime.number
-import kotlinx.datetime.toLocalDateTime
+import com.lemon.mcdevmanagermp.utils.extension.toDateString
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_add
 import org.jetbrains.compose.resources.painterResource
@@ -156,7 +156,7 @@ internal fun DiscountInfoHeader(
         // 时间/赛道摘要
         InfoChipRow(label = "活动时间", value = formatTimeRange(activity.beginAt, activity.endAt))
         if (activity.applyEndAt > 0) {
-            InfoChipRow(label = "报名截止", value = formatTimestamp(activity.applyEndAt.toLong()))
+            InfoChipRow(label = "报名截止", value = activity.applyEndAt.toLong().toDateString())
         }
         if (activity.modules.isNotEmpty()) {
             InfoChipRow(label = "活动赛道", value = "共 ${activity.modules.size} 个赛道")
@@ -770,7 +770,6 @@ private fun JoinedItemRow(
 
 /**
  * 价格行：免费 / 原价 / 原价划线 + 折后价（折后价高亮）。
- * ponytail: discount 按"折后百分比"计（如 70 表示 7 折 → finalPrice = price*discount/100）；
  * 准确语义以后端为准，若实为"减免百分比"，把公式改为 price*(100-discount)/100。
  */
 @Composable
@@ -900,26 +899,10 @@ private fun rememberMutableInteractionSource(): MutableInteractionSource {
 
 // ==================== 工具函数 ====================
 
-private fun formatTimestamp(timestamp: Long): String {
-    if (timestamp == 0L) return ""
-    return try {
-        val millis = if (timestamp < 1_000_000_000_000) timestamp * 1000 else timestamp
-        val instant = kotlin.time.Instant.fromEpochMilliseconds(millis)
-        val localDateTime = instant.toLocalDateTime(kotlinx.datetime.TimeZone.of("Asia/Shanghai"))
-        "${localDateTime.year}-${
-            localDateTime.month.number.toString().padStart(2, '0')
-        }-${localDateTime.day.toString().padStart(2, '0')}"
-    } catch (_: Exception) {
-        ""
-    }
-}
 
 private fun formatTimeRange(beginAt: Int, endAt: Int): String {
     if (beginAt == 0 && endAt == 0) return ""
-    val begin = if (beginAt > 0) formatTimestamp(beginAt.toLong()) else "未知"
-    val end = if (endAt > 0) formatTimestamp(endAt.toLong()) else "未知"
+    val begin = if (beginAt > 0) beginAt.toLong().toDateString() else "未知"
+    val end = if (endAt > 0) endAt.toLong().toDateString() else "未知"
     return "$begin ~ $end"
 }
-
-private fun priceTypeLabel(priceType: String): String =
-    com.lemon.mcdevmanagermp.data.consts.enums.priceTypeLabel(priceType)

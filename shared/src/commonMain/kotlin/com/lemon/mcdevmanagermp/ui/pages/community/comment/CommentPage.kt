@@ -59,14 +59,11 @@ import com.lemon.mcdevmanagermp.ui.pages.community.components.ModernFilterBar
 import com.lemon.mcdevmanagermp.ui.pages.community.components.ReplyInputBar
 import com.lemon.mcdevmanagermp.ui.pages.community.components.StarChipGroup
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.number
-import kotlinx.datetime.toLocalDateTime
+import com.lemon.mcdevmanagermp.utils.extension.toDateTimeString
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_refresh
 import mcdevmanagermpr.shared.generated.resources.ic_star
 import org.jetbrains.compose.resources.painterResource
-import kotlin.time.Instant
 
 @Composable
 fun CommentPage(onBack: () -> Unit) {
@@ -323,7 +320,7 @@ private fun CommentSummaryCard(
                     modifier = Modifier.weight(1f)
                 )
                 Text(
-                    text = formatTimestamp(comment.publishTime),
+                    text = comment.publishTime.toDateTimeString(),
                     style = MaterialTheme.typography.labelSmall,
                     color = colors.onSurfaceVariant
                 )
@@ -400,7 +397,7 @@ internal fun CommentDetailPanel(
                 }
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = formatTimestamp(comment.publishTime),
+                        text = comment.publishTime.toDateTimeString(),
                         style = MaterialTheme.typography.bodySmall,
                         color = colors.onSurfaceVariant
                     )
@@ -479,12 +476,3 @@ private fun StarRating(stars: String) {
     }
 }
 
-private fun formatTimestamp(epochSeconds: Long): String {
-    return try {
-        val instant = Instant.fromEpochSeconds(epochSeconds)
-        val localDateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
-        "${localDateTime.year}/${localDateTime.month.number.toString().padStart(2, '0')}/${localDateTime.day.toString().padStart(2, '0')} ${localDateTime.hour.toString().padStart(2, '0')}:${localDateTime.minute.toString().padStart(2, '0')}"
-    } catch (_: Exception) {
-        ""
-    }
-}

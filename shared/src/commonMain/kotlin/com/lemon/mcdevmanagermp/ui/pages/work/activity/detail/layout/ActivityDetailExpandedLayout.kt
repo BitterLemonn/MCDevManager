@@ -41,8 +41,7 @@ import com.lemon.mcdevmanagermp.ui.pages.work.activity.detail.ActivityDetailStat
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.layout.ActivityStatusTag
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.layout.formatTimeRange
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import kotlinx.datetime.number
-import kotlinx.datetime.toLocalDateTime
+import com.lemon.mcdevmanagermp.utils.extension.toDateString
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_add
 import org.jetbrains.compose.resources.painterResource
@@ -216,7 +215,7 @@ internal fun ActivityDetailExpandedLayout(
                     if (activity.applyEndAt > 0) {
                         InfoChipRow(
                             label = "报名截止",
-                            value = formatTimestampExpanded(activity.applyEndAt.toLong())
+                            value = activity.applyEndAt.toLong().toDateString()
                         )
                     }
 
@@ -350,16 +349,3 @@ private fun InfoChipRow(label: String, value: String) {
     }
 }
 
-private fun formatTimestampExpanded(timestamp: Long): String {
-    if (timestamp == 0L) return ""
-    return try {
-        val millis = if (timestamp < 1_000_000_000_000) timestamp * 1000 else timestamp
-        val instant = kotlin.time.Instant.fromEpochMilliseconds(millis)
-        val localDateTime = instant.toLocalDateTime(kotlinx.datetime.TimeZone.of("Asia/Shanghai"))
-        "${localDateTime.year}-${
-            localDateTime.month.number.toString().padStart(2, '0')
-        }-${localDateTime.day.toString().padStart(2, '0')}"
-    } catch (_: Exception) {
-        ""
-    }
-}

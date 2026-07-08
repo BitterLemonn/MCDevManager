@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.sp
 import com.lemon.mcdevmanagermp.platform.BackHandler
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.ActivityPage
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.discount.DiscountActivityPage
+import com.lemon.mcdevmanagermp.ui.pages.work.promotion.PromotionPage
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailPage
 import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.WorkManagePage
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
@@ -58,10 +59,11 @@ import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_mod
 import mcdevmanagermpr.shared.generated.resources.ic_profit
 import mcdevmanagermpr.shared.generated.resources.ic_sale
+import mcdevmanagermpr.shared.generated.resources.ic_star
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 
-private enum class WorkSubPage { List, Activity, Discount, WorkManage, WorkDetail }
+private enum class WorkSubPage { List, Activity, Discount, Promotion, WorkManage, WorkDetail }
 
 @Composable
 fun WorkContent() {
@@ -92,6 +94,7 @@ fun WorkContent() {
                 statusBarTop = statusBarTop,
                 onNavigateToActivity = { currentSubPage = WorkSubPage.Activity },
                 onNavigateToDiscount = { currentSubPage = WorkSubPage.Discount },
+                onNavigateToPromotion = { currentSubPage = WorkSubPage.Promotion },
                 onNavigateToWorkManage = { currentSubPage = WorkSubPage.WorkManage }
             )
 
@@ -100,6 +103,10 @@ fun WorkContent() {
             )
 
             WorkSubPage.Discount -> DiscountActivityPage(
+                onBack = { currentSubPage = WorkSubPage.List }
+            )
+
+            WorkSubPage.Promotion -> PromotionPage(
                 onBack = { currentSubPage = WorkSubPage.List }
             )
 
@@ -124,6 +131,7 @@ private fun WorkListPage(
     statusBarTop: androidx.compose.ui.unit.Dp,
     onNavigateToActivity: () -> Unit,
     onNavigateToDiscount: () -> Unit,
+    onNavigateToPromotion: () -> Unit,
     onNavigateToWorkManage: () -> Unit
 ) {
     val colors = LocalAppColors.current
@@ -184,6 +192,19 @@ private fun WorkListPage(
                 title = "折扣特卖",
                 subtitle = "参与平台折扣特卖，提升作品销量",
                 onClick = onNavigateToDiscount
+            )
+
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                color = colors.outlineVariant,
+                thickness = 0.5.dp
+            )
+
+            WorkItem(
+                icon = Res.drawable.ic_star,
+                title = "PE 轮播图申请",
+                subtitle = "申请首页 banner 推广位",
+                onClick = onNavigateToPromotion
             )
         }
     }

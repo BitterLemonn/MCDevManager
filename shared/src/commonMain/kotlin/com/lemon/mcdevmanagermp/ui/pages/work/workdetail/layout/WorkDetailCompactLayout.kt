@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
+import com.lemon.mcdevmanagermp.ui.components.RichDetailForm
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailAction
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailState
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.BasicInfoForm
@@ -28,7 +29,6 @@ import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PeUpda
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PlaceholderModule
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PlaceholderSection
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PriceInfoForm
-import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.RichDetailForm
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.ShelfSettingsForm
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 

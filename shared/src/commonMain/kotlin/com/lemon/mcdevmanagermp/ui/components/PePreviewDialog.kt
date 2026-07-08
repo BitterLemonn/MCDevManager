@@ -1,4 +1,4 @@
-package com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component
+package com.lemon.mcdevmanagermp.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -28,8 +28,6 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.lemon.mcdevmanagermp.ui.components.RichHtmlText
-import com.lemon.mcdevmanagermp.ui.components.SketchImageLoader
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.LocalImageLoader
@@ -52,7 +50,7 @@ private const val TARGET_RATIO = 16f / 9f
  */
 @OptIn(ExperimentalRichTextApi::class)
 @Composable
-internal fun PePreviewDialog(
+fun PePreviewDialog(
     html: String,
     onDismiss: () -> Unit
 ) {

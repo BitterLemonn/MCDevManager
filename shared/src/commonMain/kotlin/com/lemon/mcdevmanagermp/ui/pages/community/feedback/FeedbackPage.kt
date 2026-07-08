@@ -71,15 +71,12 @@ import com.lemon.mcdevmanagermp.ui.pages.community.components.ReplyInputBar
 import com.lemon.mcdevmanagermp.ui.pages.community.feedback.layout.CompactFeedbackLayout
 import com.lemon.mcdevmanagermp.ui.pages.community.feedback.layout.ExpandedFeedbackLayout
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.number
-import kotlinx.datetime.toLocalDateTime
+import com.lemon.mcdevmanagermp.utils.extension.toDateTimeString
 import kotlinx.serialization.json.Json
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_refresh
 import mcdevmanagermpr.shared.generated.resources.ic_replied
 import org.jetbrains.compose.resources.painterResource
-import kotlin.time.Instant
 
 // ============================================================
 // FeedbackType enum
@@ -376,7 +373,7 @@ private fun FeedbackSummaryCard(
                     modifier = Modifier.weight(1f)
                 )
                 Text(
-                    text = formatTimestamp(feedback.createTime),
+                    text = feedback.createTime.toDateTimeString(),
                     style = MaterialTheme.typography.labelSmall,
                     color = colors.onSurfaceVariant
                 )
@@ -477,7 +474,7 @@ internal fun FeedbackDetailPanel(
                         )
                     }
                     Text(
-                        text = formatTimestamp(feedback.createTime),
+                        text = feedback.createTime.toDateTimeString(),
                         style = MaterialTheme.typography.bodySmall,
                         color = colors.onSurfaceVariant
                     )
@@ -643,12 +640,3 @@ private fun ChipLabel(text: String, color: androidx.compose.ui.graphics.Color) {
     }
 }
 
-private fun formatTimestamp(epochSeconds: Long): String {
-    return try {
-        val instant = Instant.fromEpochSeconds(epochSeconds)
-        val localDateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
-        "${localDateTime.year}/${localDateTime.month.number.toString().padStart(2, '0')}/${localDateTime.day.toString().padStart(2, '0')} ${localDateTime.hour.toString().padStart(2, '0')}:${localDateTime.minute.toString().padStart(2, '0')}"
-    } catch (_: Exception) {
-        ""
-    }
-}

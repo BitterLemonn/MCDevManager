@@ -1,6 +1,6 @@
 @file:OptIn(com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi::class)
 
-package com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component
+package com.lemon.mcdevmanagermp.ui.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -55,7 +55,6 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import com.lemon.mcdevmanagermp.ui.components.FormSection
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
@@ -91,7 +90,7 @@ private val PRESET_COLORS = listOf(
  */
 @OptIn(ExperimentalEncodingApi::class)
 @Composable
-internal fun RichDetailForm(
+fun RichDetailForm(
     title: String,
     html: String,
     echoKey: Any?,

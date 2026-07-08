@@ -33,9 +33,7 @@ import com.lemon.mcdevmanagermp.ui.pages.work.activity.ActivityAction
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.ActivityState
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.layout.component.ActivityCard
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.number
-import kotlinx.datetime.toLocalDateTime
+import com.lemon.mcdevmanagermp.utils.extension.toDateString
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_refresh
 import org.jetbrains.compose.resources.painterResource
@@ -209,21 +207,8 @@ internal fun ActivityStatusTag(status: String) {
 
 internal fun formatTimeRange(beginAt: Int, endAt: Int): String {
     if (beginAt == 0 && endAt == 0) return ""
-    val begin = if (beginAt > 0) formatTimestamp(beginAt.toLong()) else "未知"
-    val end = if (endAt > 0) formatTimestamp(endAt.toLong()) else "未知"
+    val begin = if (beginAt > 0) beginAt.toLong().toDateString() else "未知"
+    val end = if (endAt > 0) endAt.toLong().toDateString() else "未知"
     return "$begin ~ $end"
 }
 
-private fun formatTimestamp(timestamp: Long): String {
-    if (timestamp == 0L) return ""
-    return try {
-        val millis = if (timestamp < 1_000_000_000_000) timestamp * 1000 else timestamp
-        val instant = kotlin.time.Instant.fromEpochMilliseconds(millis)
-        val localDateTime = instant.toLocalDateTime(TimeZone.of("Asia/Shanghai"))
-        "${localDateTime.year}-${
-            localDateTime.month.number.toString().padStart(2, '0')
-        }-${localDateTime.day.toString().padStart(2, '0')}"
-    } catch (_: Exception) {
-        ""
-    }
-}
