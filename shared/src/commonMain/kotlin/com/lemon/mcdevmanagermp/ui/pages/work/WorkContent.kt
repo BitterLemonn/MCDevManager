@@ -23,11 +23,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CardDefaults
@@ -39,6 +41,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -48,6 +51,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lemon.mcdevmanagermp.data.common.NetworkState
+import com.lemon.mcdevmanagermp.data.repository.OtherRepositoryImpl
 import com.lemon.mcdevmanagermp.platform.BackHandler
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.ActivityPage
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.discount.DiscountActivityPage
@@ -64,6 +69,27 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 
 private enum class WorkSubPage { List, Activity, Discount, Promotion, WorkManage, WorkDetail }
+
+/** 作品活动 / 折扣特卖 的"进行中"角标状态（入口 badge 用）。 */
+private data class WorkBadges(
+    val hasOngoingActivity: Boolean = false,
+    val hasOngoingDiscount: Boolean = false
+)
+
+/**
+ * 拉取红点接口，按未读数控制入口"进行中"角标。
+ * unreadPeReviewActivityCount→作品活动，unreadDiscountActivityCount→折扣特卖。
+ */
+private suspend fun loadWorkBadges(): WorkBadges {
+    val spots = when (val r = OtherRepositoryImpl.INSTANCE.getRedSpots()) {
+        is NetworkState.Success -> r.data
+        is NetworkState.Error -> null
+    } ?: return WorkBadges()
+    return WorkBadges(
+        hasOngoingActivity = spots.unreadPeReviewActivityCount > 0,
+        hasOngoingDiscount = spots.unreadDiscountActivityCount > 0
+    )
+}
 
 @Composable
 fun WorkContent() {
@@ -137,6 +163,12 @@ private fun WorkListPage(
     val colors = LocalAppColors.current
     val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
+    // 入口"进行中"角标：进入列表时拉取一次红点接口
+    val badges by produceState<WorkBadges?>(initialValue = null) {
+        value = loadWorkBadges()
+    }
+    val b = badges ?: WorkBadges()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -178,7 +210,8 @@ private fun WorkListPage(
                 icon = Res.drawable.ic_sale,
                 title = "作品活动",
                 subtitle = "查看和参与平台作品活动",
-                onClick = onNavigateToActivity
+                onClick = onNavigateToActivity,
+                showBadge = b.hasOngoingActivity
             )
 
             HorizontalDivider(
@@ -191,7 +224,8 @@ private fun WorkListPage(
                 icon = Res.drawable.ic_profit,
                 title = "折扣特卖",
                 subtitle = "参与平台折扣特卖，提升作品销量",
-                onClick = onNavigateToDiscount
+                onClick = onNavigateToDiscount,
+                showBadge = b.hasOngoingDiscount
             )
 
             HorizontalDivider(
@@ -215,7 +249,8 @@ private fun WorkItem(
     icon: DrawableResource,
     title: String,
     subtitle: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    showBadge: Boolean = false
 ) {
     val colors = LocalAppColors.current
     val interactionSource = remember { MutableInteractionSource() }
@@ -235,19 +270,31 @@ private fun WorkItem(
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(colors.primary.copy(alpha = 0.12f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = painterResource(icon),
-                contentDescription = title,
-                tint = colors.primary,
-                modifier = Modifier.size(20.dp)
-            )
+        Box(modifier = Modifier.size(36.dp)) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(colors.primary.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(icon),
+                    contentDescription = title,
+                    tint = colors.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            if (showBadge) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .offset(x = 3.dp, y = (-3).dp)
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(colors.danger)
+                )
+            }
         }
 
         Spacer(Modifier.width(12.dp))
