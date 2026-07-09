@@ -70,12 +70,11 @@ internal fun PeResourceManageForm(
     }
 
     FormSection(title = "上传 PE 资源管理", modifier = modifier) {
-        // 推荐标签合计上限（玩法+主题共享 item_tag_limit；达上限后未选项置灰）
+        // 推荐标签合计上限
         val tagLimit = state.peRecommendTagLimit
         val tagAtLimit = tagLimit > 0 && state.peRecommendTags.size >= tagLimit
 
-        // 资源类别（单选下拉，必选；选项来自 mc_consts.pri_type.pe）
-        // 过滤：① 个性化 永不展示；② 联机大厅 仅新建态或作品原本即联机大厅时展示；③ 已上传文件按 file_type 过滤
+        // 资源类别
         var typeExpanded by remember { mutableStateOf(false) }
         val uploadedFileType = state.peResource?.name?.let { inferFileType(it) }
         val personalizeId = PePriTypeEnum.PERSONALIZE.value.toInt()
@@ -83,7 +82,7 @@ internal fun PeResourceManageForm(
         val isCreateMode = state.detail == null
         val typeOptions = state.peResourceTypeOptions.filter { opt ->
             val notPersonalize = opt.id != personalizeId
-            val lobbyOk = opt.id != lobbyId || isCreateMode || state.detail?.priType == lobbyId
+            val lobbyOk = opt.id != lobbyId || isCreateMode || state.detail.priType == lobbyId
             val fileTypes = state.pePriTypeFileTypes[opt.id]
             val fileTypeOk =
                 uploadedFileType == null || fileTypes.isNullOrEmpty() || uploadedFileType in fileTypes
@@ -116,7 +115,7 @@ internal fun PeResourceManageForm(
             }
         }
 
-        // 具体类别（单选下拉，必填；仅当前资源类别在 mc_consts.sub_type.pe 下有子类别时显示）
+        // 具体类别
         val subTypeOptions = state.peResourceSubTypeOptions[state.peResourceType].orEmpty()
         if (subTypeOptions.isNotEmpty()) {
             var subTypeExpanded by remember { mutableStateOf(false) }

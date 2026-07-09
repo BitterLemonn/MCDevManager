@@ -26,10 +26,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -277,19 +276,17 @@ private fun ModuleTabRowMedium(
 ) {
     val selectedIndex = modules.indexOfFirst { it.second == selectedModuleId }.coerceAtLeast(0)
 
-    TabRow(
+    SecondaryTabRow(
         selectedTabIndex = selectedIndex,
         modifier = Modifier.clip(RoundedCornerShape(12.dp)),
         containerColor = colors.surfaceContainerHigh,
         contentColor = colors.textColor,
-        indicator = { tabPositions ->
-            if (tabPositions.isNotEmpty() && selectedIndex < tabPositions.size) {
-                TabRowDefaults.SecondaryIndicator(
-                    modifier = Modifier.tabIndicatorOffset(tabPositions[selectedIndex]),
-                    color = colors.primary,
-                    height = 3.dp
-                )
-            }
+        indicator = {
+            TabRowDefaults.SecondaryIndicator(
+                modifier = Modifier.tabIndicatorOffset(selectedIndex),
+                color = colors.primary,
+                height = 3.dp
+            )
         }
     ) {
         modules.forEachIndexed { index, (name, id) ->

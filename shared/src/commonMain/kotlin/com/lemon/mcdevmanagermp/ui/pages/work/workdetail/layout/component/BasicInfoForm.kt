@@ -29,14 +29,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import com.lemon.mcdevmanagermp.platform.copyTextToClipboard
 import com.lemon.mcdevmanagermp.ui.components.BinarySelector
 import com.lemon.mcdevmanagermp.ui.components.FieldLabel
 import com.lemon.mcdevmanagermp.ui.components.FormSection
@@ -327,7 +326,6 @@ internal fun RelatedModFields(
 @Composable
 private fun CopyButton(value: String, modifier: Modifier = Modifier) {
     val colors = LocalAppColors.current
-    val clipboardManager = LocalClipboardManager.current
     var copied by remember { mutableStateOf(false) }
     LaunchedEffect(copied) {
         if (copied) {
@@ -338,7 +336,7 @@ private fun CopyButton(value: String, modifier: Modifier = Modifier) {
     IconButton(
         onClick = {
             if (value.isNotEmpty()) {
-                clipboardManager.setText(AnnotatedString(value))
+                copyTextToClipboard(value)
                 copied = true
             }
         },
