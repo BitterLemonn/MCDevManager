@@ -2,6 +2,7 @@ package com.lemon.mcdevmanagermp.ui.pages.work.workdetail
 
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceRankEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceTypeEnum
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.AvailableScopeData
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.MCConstsCommonTitleData
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.MCConstsModSecondTypeData
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.MCConstsRecommendTagData
@@ -70,6 +71,14 @@ data class WorkDetailState(
     val peRecommendTagLimit: Int = 0,                   // 推荐标签合计上限（mc_consts.item_tag_limit；0=未加载/不限制）
     val isUploadingPeZip: Boolean = false,            // zip 上传中
 
+    // —— PC 资源管理（syncPc=true 时编辑） ——
+    val pcResourceType: Int = 0,                      // PC 模组类别（priType id；选项来自 mc_consts.pri_type.comp）
+    val pcAvailableScope: String = "",                // PC 适用范围（available_scope id；选项来自 mc_consts.available_scope）
+    val pcResourceSubType: Int = 0,                   // PC 具体类别（sub_type id；随模组类别联动，来自 mc_consts.sub_type.comp）
+    val pcResourceTypeOptions: List<MCConstsCommonTitleData> = emptyList(),  // 模组类别选项（mc_consts.pri_type.comp）
+    val pcAvailableScopeOptions: List<AvailableScopeData> = emptyList(),     // 适用范围选项（mc_consts.available_scope）
+    val pcResourceSubTypeOptions: Map<Int, List<MCConstsCommonTitleData>> = emptyMap(), // pri_type id → 具体类别选项（mc_consts.sub_type.pc）
+
     // —— 上架设置（弱下架） ——
     val peWeakOffline: Boolean = false,               // PE 弱下架（来自 ResourceDetailVO.weakOffline）
     val peWeakOfflineReason: String = "",             // PE 弱下架理由（来自 ResourceDetailVO.weakOfflineReason）
@@ -80,7 +89,15 @@ data class WorkDetailState(
     val priceType: PriceTypeEnum = PriceTypeEnum.UNKNOWN,   // 定价类型（钻石/绿宝石/免费）
     val priceRank: PriceRankEnum = PriceRankEnum.UNKNOWN,   // 钻石档位（仅钻石有效）
     val emeraldPrice: Int = 0,                              // 绿宝石自填价格
-    val discounts: List<DiscountConfig> = emptyList()       // 折扣列表（仅钻石二档及以上可编辑）
+    val discounts: List<DiscountConfig> = emptyList(),       // 折扣列表（仅钻石二档及以上可编辑）
+
+    // —— PE/PC 宣传图 ——
+    val peImageSlots: List<ChannelImageSlot> = emptyList(),  // PE 宣传图位（mc_consts.channel.pe+peMulti 定义，detail.channel 回显）
+    val pcImageSlots: List<ChannelImageSlot> = emptyList(),  // PC 宣传图位（mc_consts.channel.comp+multi 定义，syncItemInfo.channel 回显）
+
+    // —— 视频 ——
+    val videos: List<VideoItem> = emptyList(),               // 宣传视频（video_info_list 回显 + 上传结果；上限 1）
+    val isUploadingVideo: Boolean = false                    // 视频上传中
 ) : IUiState
 
 sealed interface WorkDetailAction : IUiAction {
@@ -124,6 +141,19 @@ sealed interface WorkDetailAction : IUiAction {
     data class UploadPeZip(val file: PlatformFile) : WorkDetailAction
     data object RemovePeResource : WorkDetailAction
 
+    // —— PC 资源管理 ——
+    data class UpdatePcResourceType(val id: Int) : WorkDetailAction   // 模组类别（pri_type.comp）
+    data class UpdatePcAvailableScope(val id: String) :
+        WorkDetailAction   // 适用范围（available_scope，id 为 String）
+
+    data class UpdatePcResourceSubType(val id: Int) : WorkDetailAction   // 具体类别（sub_type.pc）
+
+    // —— 视频 ——
+    data class UploadVideo(val file: PlatformFile) : WorkDetailAction
+    data class RemoveVideo(val index: Int) : WorkDetailAction
+    data class UploadVideoCover(val index: Int, val file: PlatformFile, val mimeType: String) :
+        WorkDetailAction
+
     // —— 上架设置（弱下架） ——
     data class TogglePeWeakOffline(val value: Boolean) : WorkDetailAction
     data class UpdatePeWeakOfflineReason(val value: String) : WorkDetailAction
@@ -150,6 +180,22 @@ sealed interface WorkDetailAction : IUiAction {
     data class UpdateDiscountBegin(val index: Int, val date: LocalDate) : WorkDetailAction
     data class UpdateDiscountEnd(val index: Int, val date: LocalDate) : WorkDetailAction
 
+    // —— PE/PC 宣传图（file 为裁剪后的 PlatformFile，ViewModel 立即上传） ——
+    data class SelectPeChannelImage(
+        val channelId: Int,
+        val file: PlatformFile,
+        val mimeType: String
+    ) : WorkDetailAction
+
+    data class RemovePeChannelImage(val channelId: Int) : WorkDetailAction
+    data class SelectPcChannelImage(
+        val channelId: Int,
+        val file: PlatformFile,
+        val mimeType: String
+    ) : WorkDetailAction
+
+    data class RemovePcChannelImage(val channelId: Int) : WorkDetailAction
+
     data object Submit : WorkDetailAction
 }
 
@@ -171,4 +217,25 @@ data class PeResourceFile(
     val mcVersion: List<String> = emptyList(),
     val size: Long = 0,
     val addVersion: Boolean = false
+)
+
+/**
+ * 宣传图图片位（PE/PC 通用）。channel 定义来自 mc_consts.channel.*（title/width/height），
+ * channelUrl 来自详情回显或上传结果。
+ */
+data class ChannelImageSlot(
+    val channelId: Int,
+    val title: String,
+    val width: Int,
+    val height: Int,
+    val channelUrl: String,
+    val isUploading: Boolean = false
+)
+
+/** 宣传视频（对应 ResourceDetailVideoInfo，回显与上传结果统一模型；cover 由用户上传封面图得到）。 */
+data class VideoItem(
+    val cover: String = "",
+    val size: Long = 0,
+    val url: String = "",
+    val isUploadingCover: Boolean = false
 )

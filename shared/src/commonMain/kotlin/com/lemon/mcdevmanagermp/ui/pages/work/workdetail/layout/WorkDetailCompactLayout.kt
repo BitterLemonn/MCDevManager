@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -23,13 +24,16 @@ import com.lemon.mcdevmanagermp.ui.components.RichDetailForm
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailAction
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailState
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.BasicInfoForm
+import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.ChannelImageForm
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PcBasicInfoForm
+import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PcResourceManageForm
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PeResourceManageForm
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PeUpdateSummaryForm
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PlaceholderModule
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PlaceholderSection
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PriceInfoForm
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.ShelfSettingsForm
+import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.VideoUploadForm
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 
 @Composable
@@ -125,15 +129,51 @@ internal fun WorkDetailCompactLayout(
                 // 9. 上传 PE 资源管理
                 PeResourceManageForm(state = state, onAction = onAction)
                 // 10. 编辑 PE 图片
-                PlaceholderSection(module = PlaceholderModule.PE_IMAGE)
+                ChannelImageForm(
+                    title = "编辑 PE 图片",
+                    slots = state.peImageSlots,
+                    onSelect = { c, f, m ->
+                        onAction(
+                            WorkDetailAction.SelectPeChannelImage(
+                                c,
+                                f,
+                                m
+                            )
+                        )
+                    },
+                    onRemove = { onAction(WorkDetailAction.RemovePeChannelImage(it)) },
+                    modifier = Modifier.fillMaxWidth()
+                )
                 // 11. PE 资源中心首页轮播推广图
                 PlaceholderSection(module = PlaceholderModule.PE_CAROUSEL)
                 // 12. 上传视频
-                PlaceholderSection(module = PlaceholderModule.VIDEO)
+                VideoUploadForm(
+                    state = state,
+                    onAction = onAction,
+                    modifier = Modifier.fillMaxWidth()
+                )
                 // 13/14. 上传 PC 模组信息 / 编辑 PC 图片（同步生成 PC 时）
                 if (state.syncPc) {
-                    PlaceholderSection(module = PlaceholderModule.PC_RESOURCE)
-                    PlaceholderSection(module = PlaceholderModule.PC_IMAGE)
+                    PcResourceManageForm(
+                        state = state,
+                        onAction = onAction,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    ChannelImageForm(
+                        title = "编辑 PC 图片",
+                        slots = state.pcImageSlots,
+                        onSelect = { c, f, m ->
+                            onAction(
+                                WorkDetailAction.SelectPcChannelImage(
+                                    c,
+                                    f,
+                                    m
+                                )
+                            )
+                        },
+                        onRemove = { onAction(WorkDetailAction.RemovePcChannelImage(it)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
         }

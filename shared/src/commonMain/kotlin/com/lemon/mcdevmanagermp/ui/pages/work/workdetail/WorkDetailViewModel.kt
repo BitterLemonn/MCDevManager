@@ -6,16 +6,23 @@ import com.lemon.mcdevmanagermp.data.consts.enums.PriceRankEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceTypeEnum
 import com.lemon.mcdevmanagermp.data.repository.FileUploadRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.MCConstsChannelData
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.MCConstsCommonTitleData
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailDlcInfo
 import com.lemon.mcdevmanagermp.domain.upload.FileUploadRepository
 import com.lemon.mcdevmanagermp.domain.work.WorkDetailUseCase
+import com.lemon.mcdevmanagermp.platform.validateVideoFile
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
 import com.lemon.mcdevmanagermp.ui.components.ModSelectOption
 import com.lemon.mcdevmanagermp.utils.Logger
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.mimeType
 import io.github.vinceglb.filekit.name
+import io.github.vinceglb.filekit.size
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -90,6 +97,24 @@ class WorkDetailViewModel :
             is WorkDetailAction.UploadPeZip -> uploadPeZip(action.file)
             WorkDetailAction.RemovePeResource -> clearPeResource()
 
+            // —— PC 资源管理 ——
+            is WorkDetailAction.UpdatePcResourceType -> setState {
+                // 切换模组类别时清空具体类别：旧 subType 不属于新类别，避免脏数据
+                copy(pcResourceType = action.id, pcResourceSubType = 0)
+            }
+
+            is WorkDetailAction.UpdatePcAvailableScope -> setState { copy(pcAvailableScope = action.id) }
+            is WorkDetailAction.UpdatePcResourceSubType -> setState { copy(pcResourceSubType = action.id) }
+
+            // —— 视频 ——
+            is WorkDetailAction.UploadVideo -> uploadVideo(action.file)
+            is WorkDetailAction.RemoveVideo -> removeVideo(action.index)
+            is WorkDetailAction.UploadVideoCover -> uploadVideoCover(
+                action.index,
+                action.file,
+                action.mimeType
+            )
+
             // —— 上架设置（弱下架） ——
             is WorkDetailAction.TogglePeWeakOffline -> setState { copy(peWeakOffline = action.value) }
             is WorkDetailAction.UpdatePeWeakOfflineReason -> setState { copy(peWeakOfflineReason = action.value) }
@@ -123,6 +148,31 @@ class WorkDetailViewModel :
             )
 
             is WorkDetailAction.UpdateDiscountEnd -> updateDiscountEnd(action.index, action.date)
+
+            // —— PE/PC 宣传图 ——
+            is WorkDetailAction.SelectPeChannelImage -> uploadChannelImage(
+                isPe = true,
+                channelId = action.channelId,
+                file = action.file,
+                mimeType = action.mimeType
+            )
+
+            is WorkDetailAction.RemovePeChannelImage -> removeChannelImage(
+                isPe = true,
+                channelId = action.channelId
+            )
+
+            is WorkDetailAction.SelectPcChannelImage -> uploadChannelImage(
+                isPe = false,
+                channelId = action.channelId,
+                file = action.file,
+                mimeType = action.mimeType
+            )
+
+            is WorkDetailAction.RemovePcChannelImage -> removeChannelImage(
+                isPe = false,
+                channelId = action.channelId
+            )
 
             WorkDetailAction.Submit -> sendEffect(WorkDetailEffect.ShowToast("更新接口暂未接入"))
         }
@@ -168,6 +218,10 @@ class WorkDetailViewModel :
                                 peUpdateSummary = d.updateSummary,
                                 // —— PC 详细信息 ——
                                 pcDetail = d.syncItemInfo.info,
+                                // —— PC 资源管理 ——
+                                pcResourceType = d.syncItemInfo.priType,
+                                pcAvailableScope = d.syncItemInfo.availableScope,
+                                pcResourceSubType = d.syncItemInfo.subType,
                                 // —— PE 资源管理 ——
                                 peResourceType = d.priType,
                                 peResourceSubType = d.subType,
@@ -185,6 +239,14 @@ class WorkDetailViewModel :
                                     )
                                 },
                                 peAddVersion = d.res.firstOrNull()?.addVersion ?: false,
+                                // —— 视频 ——
+                                videos = d.videoInfoList.map {
+                                    VideoItem(
+                                        cover = it.cover,
+                                        size = it.size.toLong(),
+                                        url = it.url
+                                    )
+                                },
                                 // —— 上架设置（弱下架） ——
                                 peWeakOffline = d.weakOffline,
                                 peWeakOfflineReason = d.weakOfflineReason,
@@ -245,12 +307,28 @@ class WorkDetailViewModel :
                         copy(
                             pcTagOptions = options,
                             pcTags = tagTitles,
+                            pcResourceTypeOptions = consts.priType.comp,
+                            pcAvailableScopeOptions = consts.availableScope,
+                            pcResourceSubTypeOptions = parsePriTypeSubTypeOptions(consts.subType.pc),
                             peResourceTypeOptions = consts.priType.pe,
                             peRecommendTagOptions = consts.labelType,
                             peRecommendTagLimit = consts.itemTagLimit,
                             pePriTypeFileTypes = parsePriTypeFileTypes(consts.subType.pe),
                             peResourceSubTypeOptions = parsePriTypeSubTypeOptions(consts.subType.pe),
-                            peModSecondTypeOptions = consts.modSecondType.subTag
+                            peModSecondTypeOptions = consts.modSecondType.subTag,
+                            // PE/PC 宣传图位：detail 的 channel 列表 × mc_consts.channel 定义（pe+peMulti / comp+multi）
+                            peImageSlots = buildChannelSlots(
+                                raw = detail?.channel.orEmpty(),
+                                defs = consts.channel.pe + consts.channel.peMulti,
+                                channelIdOf = { it.channelId },
+                                urlOf = { it.channelUrl }
+                            ),
+                            pcImageSlots = buildChannelSlots(
+                                raw = detail?.syncItemInfo?.channel.orEmpty(),
+                                defs = consts.channel.comp + consts.channel.multi,
+                                channelIdOf = { it.channelId },
+                                urlOf = { it.channelUrl }
+                            )
                         )
                     }
                 }
@@ -514,10 +592,11 @@ class WorkDetailViewModel :
             setState { copy(isUploadingPeZip = true) }
             // ponytail: fileType 待按网易 FP 模组文件类型实测微调（现有接口仅用过 image/video）
             val result = fileUploadRepository.uploadFile(
-                fileType = "mod",
+                fileType = "zip_package",
                 fileName = file.name,
                 file = file,
-                mimeType = "application/zip"
+                mimeType = "application/zip",
+                secure = "true"
             )
             when (result) {
                 is NetworkState.Success -> {
@@ -542,6 +621,181 @@ class WorkDetailViewModel :
                     sendEffect(WorkDetailEffect.ShowToast(result.msg))
                 }
             }
+        }
+    }
+
+    private fun removeVideo(index: Int) {
+        setState { copy(videos = videos.filterIndexed { i, _ -> i != index }) }
+    }
+
+    private fun uploadVideo(file: PlatformFile) {
+        if (state.value.isUploadingVideo) return
+        viewModelScope.launch {
+            val size = try {
+                file.size()
+            } catch (_: Exception) {
+                0L
+            }
+            // 格式校验：16:9 / 时长 ≤1:30 / H264 / ≤50MB（各平台实现，阻塞 IO）
+            val validation = withContext(Dispatchers.IO) { validateVideoFile(file, size) }
+            if (!validation.isValid) {
+                sendEffect(
+                    WorkDetailEffect.ShowToast(
+                        validation.errorMessage ?: "视频文件不符合要求"
+                    )
+                )
+                return@launch
+            }
+            setState { copy(isUploadingVideo = true) }
+            val mimeType = try {
+                file.mimeType()?.toString()
+            } catch (_: Exception) {
+                null
+            } ?: "video/mp4"
+            val result = fileUploadRepository.uploadFile(
+                fileType = "video",
+                fileName = file.name,
+                file = file,
+                mimeType = mimeType
+            )
+            when (result) {
+                is NetworkState.Success -> {
+                    val url = parseUploadUrl(result.data?.body.orEmpty())
+                    setState {
+                        copy(
+                            isUploadingVideo = false,
+                            videos = listOf(VideoItem(cover = "", size = size, url = url))
+                        )
+                    }
+                    if (url.isEmpty()) sendEffect(WorkDetailEffect.ShowToast("上传成功但未能解析视频地址"))
+                }
+
+                is NetworkState.Error -> {
+                    setState { copy(isUploadingVideo = false) }
+                    sendEffect(WorkDetailEffect.ShowToast(result.msg))
+                }
+            }
+        }
+    }
+
+    private fun uploadVideoCover(index: Int, file: PlatformFile, mimeType: String) {
+        viewModelScope.launch {
+            setState {
+                copy(videos = videos.mapIndexed { i, v ->
+                    if (i == index) v.copy(isUploadingCover = true) else v
+                })
+            }
+            val result = fileUploadRepository.uploadFile(
+                fileType = "image",
+                fileName = file.name,
+                file = file,
+                mimeType = mimeType
+            )
+            when (result) {
+                is NetworkState.Success -> {
+                    val coverUrl = parseUploadUrl(result.data?.body.orEmpty())
+                    setState {
+                        copy(videos = videos.mapIndexed { i, v ->
+                            if (i == index) v.copy(
+                                cover = coverUrl,
+                                isUploadingCover = false
+                            ) else v
+                        })
+                    }
+                    if (coverUrl.isEmpty()) sendEffect(WorkDetailEffect.ShowToast("封面上传失败"))
+                }
+
+                is NetworkState.Error -> {
+                    setState {
+                        copy(videos = videos.mapIndexed { i, v ->
+                            if (i == index) v.copy(isUploadingCover = false) else v
+                        })
+                    }
+                    sendEffect(WorkDetailEffect.ShowToast(result.msg))
+                }
+            }
+        }
+    }
+
+    // ===== PE/PC 宣传图 =====
+
+    /** 按 isPe 更新对应 slot 列表里指定 channelId 的项（setState 内调用）。 */
+    private fun WorkDetailState.updateImageSlot(
+        isPe: Boolean,
+        channelId: Int,
+        transform: (ChannelImageSlot) -> ChannelImageSlot
+    ): WorkDetailState = if (isPe) {
+        copy(peImageSlots = peImageSlots.map { if (it.channelId == channelId) transform(it) else it })
+    } else {
+        copy(pcImageSlots = pcImageSlots.map { if (it.channelId == channelId) transform(it) else it })
+    }
+
+    private fun removeChannelImage(isPe: Boolean, channelId: Int) {
+        setState {
+            updateImageSlot(isPe, channelId) {
+                it.copy(
+                    channelUrl = "",
+                    isUploading = false
+                )
+            }
+        }
+    }
+
+    /** 选图（裁剪后）立即上传到网易 FP，成功后更新对应 slot 的 channelUrl。 */
+    private fun uploadChannelImage(
+        isPe: Boolean,
+        channelId: Int,
+        file: PlatformFile,
+        mimeType: String
+    ) {
+        viewModelScope.launch {
+            setState { updateImageSlot(isPe, channelId) { it.copy(isUploading = true) } }
+            val result = fileUploadRepository.uploadFile(
+                fileType = "image",
+                fileName = file.name,
+                file = file,
+                mimeType = mimeType
+            )
+            when (result) {
+                is NetworkState.Success -> {
+                    val url = parseUploadUrl(result.data?.body.orEmpty())
+                    setState {
+                        updateImageSlot(isPe, channelId) {
+                            it.copy(
+                                channelUrl = url,
+                                isUploading = false
+                            )
+                        }
+                    }
+                    if (url.isEmpty()) sendEffect(WorkDetailEffect.ShowToast("上传成功但未能解析图片地址"))
+                }
+
+                is NetworkState.Error -> {
+                    setState { updateImageSlot(isPe, channelId) { it.copy(isUploading = false) } }
+                    sendEffect(WorkDetailEffect.ShowToast(result.msg))
+                }
+            }
+        }
+    }
+
+    /** detail.channel(× mc_consts.channel 定义) → ChannelImageSlot 列表；defs 找不到 id 的项跳过。 */
+    private fun <T> buildChannelSlots(
+        raw: List<T>,
+        defs: List<MCConstsChannelData>,
+        channelIdOf: (T) -> Int,
+        urlOf: (T) -> String
+    ): List<ChannelImageSlot> {
+        if (raw.isEmpty() || defs.isEmpty()) return emptyList()
+        return raw.mapNotNull { item ->
+            val id = channelIdOf(item)
+            val def = defs.firstOrNull { it.id == id } ?: return@mapNotNull null
+            ChannelImageSlot(
+                channelId = id,
+                title = def.title,
+                width = def.width,
+                height = def.height,
+                channelUrl = urlOf(item)
+            )
         }
     }
 

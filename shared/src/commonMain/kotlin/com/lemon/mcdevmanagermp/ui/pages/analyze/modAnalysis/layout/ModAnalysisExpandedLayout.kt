@@ -83,8 +83,7 @@ internal fun ModAnalysisExpandedLayout(
                         Icon(
                             painter = painterResource(Res.drawable.ic_refresh),
                             contentDescription = "刷新",
-                            modifier = Modifier.size(20.dp),
-                            tint = colors.textColor
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }

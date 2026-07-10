@@ -10,11 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DesktopWindows
 import androidx.compose.material.icons.filled.FolderZip
-import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.PhotoLibrary
-import androidx.compose.material.icons.filled.VideoFile
 import androidx.compose.material.icons.filled.ViewCarousel
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -43,30 +39,10 @@ internal enum class PlaceholderModule(
         description = "管理 PE 端模组资源文件",
         icon = Icons.Filled.FolderZip
     ),
-    PE_IMAGE(
-        title = "编辑 PE 图片",
-        description = "上传与裁剪 PE 宣传图",
-        icon = Icons.Filled.Image
-    ),
     PE_CAROUSEL(
         title = "PE 资源中心首页轮播推广图",
         description = "配置资源中心首页轮播推广图",
         icon = Icons.Filled.ViewCarousel
-    ),
-    VIDEO(
-        title = "上传视频",
-        description = "上传模组宣传视频",
-        icon = Icons.Filled.VideoFile
-    ),
-    PC_RESOURCE(
-        title = "上传 PC 模组信息",
-        description = "管理 PC 端模组资源文件",
-        icon = Icons.Filled.DesktopWindows
-    ),
-    PC_IMAGE(
-        title = "编辑 PC 图片",
-        description = "上传与裁剪 PC 宣传图",
-        icon = Icons.Filled.PhotoLibrary
     )
 }
 

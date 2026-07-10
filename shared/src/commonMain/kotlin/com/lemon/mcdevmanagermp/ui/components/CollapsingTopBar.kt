@@ -14,9 +14,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -84,7 +86,11 @@ fun CollapsingTopBar(
                 modifier = Modifier.weight(1f)
             )
 
-            actions()
+            // 将吸顶/主题驱动的 contentColor 通过 LocalContentColor 透传给 actions 插槽，
+            // 使右侧按钮（IconButton/Icon 默认 tint 取 LocalContentColor）与左侧标题同色、随吸顶渐变
+            CompositionLocalProvider(LocalContentColor provides contentColor) {
+                actions()
+            }
         }
     }
 }

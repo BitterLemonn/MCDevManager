@@ -198,13 +198,13 @@ internal fun MailboxTopBar(
                         CircularProgressIndicator(
                             modifier = Modifier.size(14.dp),
                             strokeWidth = 2.dp,
-                            color = colors.onSurfaceVariant
+                            color = colors.textColor
                         )
                     } else {
                         Text(
                             text = "全部已读",
                             style = MaterialTheme.typography.labelMedium,
-                            color = colors.onSurfaceVariant
+                            color = colors.textColor
                         )
                     }
                 }
@@ -219,13 +219,13 @@ internal fun MailboxTopBar(
                         CircularProgressIndicator(
                             modifier = Modifier.size(14.dp),
                             strokeWidth = 2.dp,
-                            color = colors.onSurfaceVariant
+                            color = colors.textColor
                         )
                     } else {
                         Text(
                             text = "删除已读",
                             style = MaterialTheme.typography.labelMedium,
-                            color = colors.onSurfaceVariant
+                            color = colors.textColor
                         )
                     }
                 }
@@ -234,7 +234,6 @@ internal fun MailboxTopBar(
                 Icon(
                     painter = painterResource(Res.drawable.ic_refresh),
                     contentDescription = "刷新",
-                    tint = colors.onSurfaceVariant,
                     modifier = Modifier.size(20.dp)
                 )
             }

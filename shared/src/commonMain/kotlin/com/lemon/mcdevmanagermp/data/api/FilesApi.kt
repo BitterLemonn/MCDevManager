@@ -16,7 +16,7 @@ interface FilesApi {
 
     companion object {
         val INSTANCE by lazy {
-            ApiFactory.provideKtorfit(NETEASE_MC_DEV_LINK).createFilesApi()
+            ApiFactory.provideLoggerKtorfit(NETEASE_MC_DEV_LINK).createFilesApi()
         }
     }
 }

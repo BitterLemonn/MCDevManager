@@ -13,6 +13,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import kotlinx.io.buffered
+import kotlin.io.encoding.Base64
 
 /**
  * 文件上传 API
@@ -21,9 +22,12 @@ object UploadApi {
 
     private val client = ApiFactory.provideUploadHttpClient()
 
+    // 默认上传地址：token 解析失败时的回退（兼容历史 image/video 流程）
+    private const val DEFAULT_UPLOAD_URL = "${NETEASE_UPLOAD_LINK}x19/file/new/"
+
     /**
      * 上传文件到网易 FP 服务
-     * @param auth 上传 token
+     * @param auth 上传 token（形如 "Policy <sig>:<base64-policy>"，policy 内 url 为实际上传地址）
      * @param fileName 文件名
      * @param file 文件引用（延迟读取）
      * @param mimeType MIME 类型
@@ -41,8 +45,12 @@ object UploadApi {
             null
         }
 
+        // 不同 file_type 路由到不同子域（zip_package → pfp，image → fp），
+        // 上传地址以 token policy 内签发的 url 为准，硬编码 host 会导致跨子域 token 校验失败
+        val uploadUrl = resolveUploadUrl(auth)
+
         val response = client.submitFormWithBinaryData(
-            url = "${NETEASE_UPLOAD_LINK}x19/file/new/",
+            url = uploadUrl,
             formData = formData {
                 append("Authorization", auth)
                 append(
@@ -65,5 +73,21 @@ object UploadApi {
             body = response.bodyAsText(),
             sign = sign
         )
+    }
+
+    /**
+     * 从 token policy 解析实际上传地址：token 形如 "Policy <sig>:<base64-json>"，
+     * base64 解码后取 "url" 字段。解析失败回退默认地址（不破坏现有 image/video 流程）。
+     */
+    private fun resolveUploadUrl(auth: String): String {
+        val payload = auth.substringAfter(":", "").trim()
+        if (payload.isEmpty()) return DEFAULT_UPLOAD_URL
+        return try {
+            val json = Base64.decode(payload.encodeToByteArray()).decodeToString()
+            Regex(""""url"\s*:\s*"([^"]+)"""").find(json)?.groupValues?.get(1)
+                ?: DEFAULT_UPLOAD_URL
+        } catch (_: Exception) {
+            DEFAULT_UPLOAD_URL
+        }
     }
 }

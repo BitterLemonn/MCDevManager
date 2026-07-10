@@ -261,6 +261,7 @@ data class MCConstsTagData(
 @Serializable
 data class MCConstsCommonPlatformData(
     val pe: JsonObject = JsonObject(emptyMap()),
+    val pc: JsonObject = JsonObject(emptyMap()),
     val comp: JsonObject = JsonObject(emptyMap()),
     val single: JsonObject = JsonObject(emptyMap()),
     val multi: JsonObject = JsonObject(emptyMap())

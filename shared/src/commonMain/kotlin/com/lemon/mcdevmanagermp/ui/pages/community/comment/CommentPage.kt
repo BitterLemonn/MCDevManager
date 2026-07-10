@@ -178,7 +178,6 @@ internal fun CommentTopBar(
                 Icon(
                     painter = painterResource(Res.drawable.ic_refresh),
                     contentDescription = "刷新",
-                    tint = colors.onSurfaceVariant,
                     modifier = Modifier.size(20.dp)
                 )
             }

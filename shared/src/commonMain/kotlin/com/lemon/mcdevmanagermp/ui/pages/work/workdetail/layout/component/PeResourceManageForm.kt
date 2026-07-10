@@ -401,15 +401,16 @@ private fun ResourceFileRow(
     }
 }
 
-/** 下拉锚点字段：标签 + 当前值 + 展开箭头，点击切换展开（视觉与 DateField 一致）。 */
+/** 下拉锚点字段：标签 + 当前值 + 展开箭头，点击切换展开（视觉与 DateField 一致）。enabled=false 时置灰不可点。 */
 @Composable
-private fun DropdownField(
+internal fun DropdownField(
     label: String,
     valueText: String,
     expanded: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    required: Boolean = false
+    required: Boolean = false,
+    enabled: Boolean = true
 ) {
     val colors = LocalAppColors.current
     Column(
@@ -417,7 +418,7 @@ private fun DropdownField(
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .border(1.dp, colors.outlineVariant, RoundedCornerShape(8.dp))
-            .clickable(onClick = onClick)
+            .clickable(enabled = enabled, onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 10.dp)
     ) {
         FieldLabel(text = label, required = required)
@@ -426,13 +427,13 @@ private fun DropdownField(
             Text(
                 text = valueText,
                 style = MaterialTheme.typography.bodyMedium,
-                color = colors.textColor,
+                color = if (enabled) colors.textColor else colors.disabled,
                 modifier = Modifier.weight(1f)
             )
             Icon(
                 imageVector = Icons.Filled.ArrowDropDown,
                 contentDescription = null,
-                tint = colors.onSurfaceVariant
+                tint = if (enabled) colors.onSurfaceVariant else colors.disabled
             )
         }
     }
@@ -440,7 +441,7 @@ private fun DropdownField(
 
 /** 推荐标签多选项：勾选图标 + 标题，点击 toggle（自定义行，不关闭菜单）；enabled=false 时置灰不可选。 */
 @Composable
-private fun TagCheckItem(
+internal fun TagCheckItem(
     title: String,
     selected: Boolean,
     onClick: () -> Unit,
