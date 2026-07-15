@@ -37,8 +37,10 @@ import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
 import com.lemon.mcdevmanagermp.ui.theme.AppColors
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import mcdevmanagermpr.shared.generated.resources.Res
+import mcdevmanagermpr.shared.generated.resources.ic_calendar
 import mcdevmanagermpr.shared.generated.resources.ic_correct
 import mcdevmanagermpr.shared.generated.resources.ic_diamond
+import mcdevmanagermpr.shared.generated.resources.ic_feedback
 import mcdevmanagermpr.shared.generated.resources.ic_refresh
 import mcdevmanagermpr.shared.generated.resources.ic_sale
 import org.jetbrains.compose.resources.DrawableResource
@@ -142,6 +144,8 @@ private fun ActionButton(
         WorkItemActionEnum.CANCEL_TEST -> Res.drawable.ic_refresh
         WorkItemActionEnum.CANCEL_REVIEW -> Res.drawable.ic_refresh
         WorkItemActionEnum.ADJUST_PRICE -> Res.drawable.ic_diamond
+        WorkItemActionEnum.VIEW_FEEDBACK -> Res.drawable.ic_feedback
+        WorkItemActionEnum.APPOINT_ONLINE -> Res.drawable.ic_calendar
     }
     val interaction = remember { MutableInteractionSource() }
     val isHovered by interaction.collectIsHoveredAsState()
@@ -183,6 +187,7 @@ private fun ActionButton(
 private fun WorkStatusTag(status: WorkItemStatusEnum, colors: AppColors) {
     val accent = when (status) {
         WorkItemStatusEnum.ONLINE -> colors.online
+        WorkItemStatusEnum.INIT -> colors.warning
         WorkItemStatusEnum.SELF_TEST -> colors.warning
         WorkItemStatusEnum.REVIEWING -> colors.warning
         WorkItemStatusEnum.REJECTED -> colors.danger

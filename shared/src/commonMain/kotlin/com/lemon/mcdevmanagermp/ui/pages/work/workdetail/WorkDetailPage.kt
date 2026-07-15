@@ -10,6 +10,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import com.lemon.mcdevmanagermp.ui.components.LoadingDialog
 import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
 import com.lemon.mcdevmanagermp.ui.components.collectUiEffect
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.WorkDetailCompactLayout
@@ -31,6 +32,7 @@ fun WorkDetailPage(
         when (effect) {
             is WorkDetailEffect.ShowToast -> showToast(effect.message)
             WorkDetailEffect.NeedReLogin -> onNeedReLogin()
+            WorkDetailEffect.NavigateBack -> onBack()
         }
     }
 
@@ -58,6 +60,11 @@ fun WorkDetailPage(
                 onAction = viewModel::dispatch,
                 onBack = onBack
             )
+        }
+
+        // 提交审核/保存期间的阻塞式等待弹窗
+        if (state.isSubmitting) {
+            LoadingDialog(state.submittingMessage)
         }
     }
 }

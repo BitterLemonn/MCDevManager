@@ -8,7 +8,14 @@ import com.lemon.mcdevmanagermp.data.repository.FileUploadRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.MCConstsChannelData
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.MCConstsCommonTitleData
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailChannel
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailDlcInfo
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailRes
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailSyncChannel
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailTag
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailVO
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailVideoInfo
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceRequirementData
 import com.lemon.mcdevmanagermp.domain.upload.FileUploadRepository
 import com.lemon.mcdevmanagermp.domain.work.WorkDetailUseCase
 import com.lemon.mcdevmanagermp.platform.validateVideoFile
@@ -26,15 +33,18 @@ import kotlinx.coroutines.withContext
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
+import kotlinx.serialization.json.put
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -174,7 +184,8 @@ class WorkDetailViewModel :
                 channelId = action.channelId
             )
 
-            WorkDetailAction.Submit -> sendEffect(WorkDetailEffect.ShowToast("更新接口暂未接入"))
+            WorkDetailAction.Save -> submit(alsoReview = false)
+            WorkDetailAction.SaveAndReview -> submit(alsoReview = true)
         }
     }
 
@@ -195,13 +206,15 @@ class WorkDetailViewModel :
                                 normalNumber = d.normalNumber,
                                 itemVersion = d.itemVersion,
                                 itemName = d.itemName,
+                                joinShantou = d.isDomainServerItem == 1,
                                 isOriginal = d.isOriginal,
                                 tags = d.tags.map { it.name }.filter { it.isNotEmpty() },
                                 // prerequisiteItems 为 List<JsonElement>，结构未知，本期留空由用户手动填写
                                 prerequisite = "",
                                 activityDesc = d.activityDesc,
                                 isRelatedMod = d.dlcInfo.dlcSwitch,
-                                relatedIsMaster = d.dlcInfo.dlcType == ResourceDetailDlcInfo.DlcType.MASTER.type,
+                                relatedIsMaster = d.dlcInfo.dlcType != ResourceDetailDlcInfo.DlcType.SLAVE.type,
+                                relatedItemId = d.relateItemId,
                                 syncPc = d.syncPcFlag,
                                 // —— 授权信息 ——
                                 corpProofImage = d.corpProofImage,
@@ -806,6 +819,207 @@ class WorkDetailViewModel :
             ?: Regex(""""filename"\s*:\s*"([^"]+)"""").find(body)?.groupValues?.get(1)
             ?: ""
     }
+
+    // ===== 提交保存（更新） =====
+
+    /**
+     * 保存作品信息（第1/2节，isCheckApply=false 纯保存）。
+     * [alsoReview]=true 时保存成功后继续调第3节 apply_review 发起提审。
+     * 全流程成功后返回列表；保存成功但提审失败则停留并提示（数据已落库，可重试）。
+     */
+    private fun submit(alsoReview: Boolean) {
+        val s = state.value
+        if (s.isSubmitting) return
+        val detail = s.detail
+        if (detail == null || detail.itemId.isEmpty()) {
+            sendEffect(WorkDetailEffect.ShowToast("作品详情未加载"))
+            return
+        }
+        viewModelScope.launch {
+            setState {
+                copy(
+                    isSubmitting = true,
+                    submittingMessage = if (alsoReview) "提交审核中..." else "保存中..."
+                )
+            }
+            // 授权图：本地新选则先上传，否则沿用远端 URL
+            val corpProofUrl = if (s.corpProofFile != null) {
+                val file = s.corpProofFile
+                val mimeType = runCatching { file.mimeType()?.toString() }.getOrNull() ?: "image/*"
+                when (val r = fileUploadRepository.uploadFile(
+                    fileType = "image",
+                    fileName = file.name,
+                    file = file,
+                    mimeType = mimeType
+                )) {
+                    is NetworkState.Success -> parseUploadUrl(r.data?.body.orEmpty())
+                    is NetworkState.Error -> {
+                        setState { copy(isSubmitting = false, submittingMessage = "") }
+                        sendEffect(WorkDetailEffect.ShowToast(r.msg))
+                        return@launch
+                    }
+                }
+            } else {
+                s.corpProofImage
+            }
+            val payload = buildUpdatePayload(state.value, detail, corpProofUrl)
+            when (val result = workDetailUseCase.updateWork(payload, isCheckApply = false)) {
+                is NetworkState.Success -> if (alsoReview) {
+                    // 保存成功 → 第3节发起提审
+                    when (val review = workDetailUseCase.submitForReview(detail.itemId)) {
+                        is NetworkState.Success -> {
+                            sendEffect(WorkDetailEffect.ShowToast("提审成功"))
+                            sendEffect(WorkDetailEffect.NavigateBack)
+                        }
+
+                        is NetworkState.Error -> sendEffect(
+                            WorkDetailEffect.ShowToast("已保存，提审失败：${review.msg}")
+                        )
+                    }
+                } else {
+                    sendEffect(WorkDetailEffect.ShowToast("保存成功"))
+                    sendEffect(WorkDetailEffect.NavigateBack)
+                }
+
+                is NetworkState.Error -> handleError(
+                    result,
+                    onNeedReLogin = { WorkDetailEffect.NeedReLogin },
+                    onShowToast = { WorkDetailEffect.ShowToast(it) }
+                )
+            }
+            setState { copy(isSubmitting = false, submittingMessage = "") }
+        }
+    }
+
+}
+
+/** 将编辑后的 state 合并回原始详情，构造 update 请求体。 */
+internal fun buildUpdatePayload(
+    s: WorkDetailState,
+    d: ResourceDetailVO,
+    corpProofUrl: String
+): ResourceDetailVO = d.copy(
+    itemName = s.itemName,
+    isDomainServerItem = if (s.joinShantou) 1 else 0,
+    isOriginal = s.isOriginal,
+    tags = s.tags.map { name ->
+        d.tags.firstOrNull { it.name == name } ?: ResourceDetailTag(name = name)
+    },
+    corpProofImage = corpProofUrl,
+    activityDesc = s.activityDesc,
+    info = s.peDetail,
+    updateSummary = s.peUpdateSummary,
+    priType = s.peResourceType,
+    subType = s.peResourceSubType,
+    modSecondType = s.peResourceModSecondType,
+    labelTypeList = s.peRecommendTags,
+    peIsAddPlayPlan = s.peAddPlayPlan,
+    mountCallEnabled = s.peMountCallEnabled,
+    weakOffline = s.peWeakOffline,
+    weakOfflineReason = s.peWeakOfflineReason,
+    syncPcFlag = s.syncPc,
+    priceType = priceTypeString(s.priceType, d.priceType),
+    priceRank = s.priceRank.type,
+    price = when (s.priceType) {
+        PriceTypeEnum.EMERALD -> s.emeraldPrice
+        PriceTypeEnum.DIAMOND -> if (s.priceRank.diamondPrice > 0) s.priceRank.diamondPrice else d.price
+        PriceTypeEnum.FREE -> 0
+        else -> d.price
+    },
+    discount = buildDiscountJson(s.discounts, d.discount),
+    res = buildResList(s.peResource, d.res, s.peAddVersion),
+    videoInfoList = s.videos.map {
+        ResourceDetailVideoInfo(cover = it.cover, size = it.size.toInt(), url = it.url)
+    },
+    channel = if (s.peImageSlots.isEmpty()) d.channel else s.peImageSlots.map { slot ->
+        ResourceDetailChannel(
+            channelId = slot.channelId,
+            channelUrl = slot.channelUrl,
+            version = d.channel.firstOrNull { it.channelId == slot.channelId }?.version ?: 0
+        )
+    },
+    syncItemInfo = d.syncItemInfo.copy(
+        brief = s.pcBrief,
+        info = s.pcDetail,
+        includeMap = s.pcIncludeMap,
+        priType = s.pcResourceType,
+        subType = s.pcResourceSubType,
+        availableScope = s.pcAvailableScope,
+        weakOffline = s.pcWeakOffline,
+        weakOfflineReason = s.pcWeakOfflineReason,
+        tag = if (s.pcTagOptions.isEmpty()) d.syncItemInfo.tag else {
+            s.pcTags.mapNotNull { t -> s.pcTagOptions.firstOrNull { it.title == t }?.id }
+        },
+        channel = if (s.pcImageSlots.isEmpty()) d.syncItemInfo.channel else s.pcImageSlots.map { slot ->
+            val origin = d.syncItemInfo.channel.firstOrNull { it.channelId == slot.channelId }
+            ResourceDetailSyncChannel(
+                channelId = slot.channelId,
+                channelUrl = slot.channelUrl,
+                version = origin?.version
+            )
+        },
+        requirement = if (s.pcHasPrerequisite) {
+            s.pcPrerequisites.map { ResourceRequirementData(itemId = it.id, itemName = it.name) }
+        } else {
+            emptyList()
+        }
+    ),
+    dlcInfo = d.dlcInfo.copy(
+        dlcSwitch = s.isRelatedMod,
+        dlcType = when {
+            !s.isRelatedMod -> "off"
+            s.relatedIsMaster -> ResourceDetailDlcInfo.DlcType.MASTER.type
+            else -> ResourceDetailDlcInfo.DlcType.SLAVE.type
+        }
+    ),
+    relateItemId = if (s.isRelatedMod) s.relatedItemId else ""
+)
+
+/** 折扣：用户未配置时保留原值，避免误清空；已配置则按 Unix 秒重建（vip_discount 暂同 discount）。 */
+private fun buildDiscountJson(
+    discounts: List<DiscountConfig>,
+    origin: List<JsonElement>
+): List<JsonElement> {
+    if (discounts.isEmpty()) return origin
+    return discounts.map { cfg ->
+        buildJsonObject {
+            put("begin_at", cfg.beginDate.atStartOfDayIn(APP_ZONE).epochSeconds)
+            put(
+                "end_at",
+                cfg.endDate.plus(1, DateTimeUnit.DAY).atStartOfDayIn(APP_ZONE).epochSeconds - 1
+            )
+            put("discount", cfg.percent)
+            put("vip_discount", cfg.percent)
+            put("is_activity_discount", 0)
+        }
+    }
+}
+
+/** PE 资源：空值或仍为详情回显资源时保留完整原数据，仅新上传时重建。 */
+private fun buildResList(
+    pe: PeResourceFile?,
+    origin: List<ResourceDetailRes>,
+    addVersion: Boolean
+): List<ResourceDetailRes> {
+    if (pe == null) return origin
+    origin.firstOrNull()?.let {
+        if (pe.name == it.resName && pe.url == it.resUrl) return origin
+    }
+    return listOf(
+        ResourceDetailRes(
+            addVersion = addVersion,
+            resName = pe.name,
+            resUrl = pe.url,
+            mcVersion = pe.mcVersion
+        )
+    )
+}
+
+private fun priceTypeString(t: PriceTypeEnum, fallback: String): String = when (t) {
+    PriceTypeEnum.DIAMOND -> "diamond"
+    PriceTypeEnum.EMERALD -> "point"
+    PriceTypeEnum.FREE -> "free"
+    PriceTypeEnum.UNKNOWN -> fallback
 }
 
 /** 解析 mc_consts.sub_type.pe → {pri_type id → 接受的 file_type 集合}；空集表示该类别子类型未声明 file_type，视为不限。 */

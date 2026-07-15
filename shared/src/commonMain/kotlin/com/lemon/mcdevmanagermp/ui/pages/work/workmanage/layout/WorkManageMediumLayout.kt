@@ -113,6 +113,11 @@ internal fun WorkManageMediumLayout(
                             WorkItemActionEnum.UPDATE -> onNavigateToDetail(item.itemId)
                             WorkItemActionEnum.ADJUST_PRICE ->
                                 pending = WorkManagePendingOp.AdjustPrice(item)
+                            WorkItemActionEnum.APPOINT_ONLINE ->
+                                pending = WorkManagePendingOp.AppointOnline(item)
+
+                            WorkItemActionEnum.VIEW_FEEDBACK ->
+                                onAction(WorkManageAction.LoadFeedback(item))
                             else -> pending = WorkManagePendingOp.Confirm(item, action)
                         }
                     }
@@ -129,6 +134,10 @@ internal fun WorkManageMediumLayout(
         },
         onAdjustPrice = { item, newPrice ->
             onAction(WorkManageAction.AdjustPrice(item, newPrice))
+            pending = null
+        },
+        onAppointOnline = { item, time ->
+            onAction(WorkManageAction.AppointOnline(item, time))
             pending = null
         },
         onDismiss = { pending = null }

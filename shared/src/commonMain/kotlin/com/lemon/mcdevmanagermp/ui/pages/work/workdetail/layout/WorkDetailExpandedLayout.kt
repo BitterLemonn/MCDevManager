@@ -64,9 +64,14 @@ internal fun WorkDetailExpandedLayout(
             collapseFraction = scrollAlpha.value,
             onBack = onBack,
             actions = {
-                TextButton(onClick = { onAction(WorkDetailAction.Submit) }) {
-                    Text("更新", color = contentColor)
-                }
+                TextButton(
+                    onClick = { onAction(WorkDetailAction.Save) },
+                    enabled = !state.isSubmitting
+                ) { Text("保存", color = contentColor) }
+                TextButton(
+                    onClick = { onAction(WorkDetailAction.SaveAndReview) },
+                    enabled = !state.isSubmitting
+                ) { Text("提审", color = contentColor) }
             }
         )
 

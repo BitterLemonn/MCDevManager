@@ -315,8 +315,8 @@ internal fun RelatedModFields(
 
         // 当前关联模组（只读）
         FieldLabel(text = "当前关联模组")
-        ReadOnlyField(label = "主包", value = state.detail?.dlcInfo?.master ?: "")
-        ReadOnlyField(label = "副包", value = state.detail?.dlcInfo?.slaveList ?: "")
+        ReadOnlyField(label = "主包", value = state.detail?.dlcInfo?.master.orEmpty())
+        ReadOnlyField(label = "副包", value = state.detail?.dlcInfo?.slaveList.orEmpty())
     }
 }
 

@@ -16,6 +16,8 @@ import kotlinx.datetime.LocalDate
 
 data class WorkDetailState(
     val isLoading: Boolean = false,
+    val isSubmitting: Boolean = false,
+    val submittingMessage: String = "",
     val detail: ResourceDetailVO? = null,
     // —— 只读字段 ——
     val itemId: String = "",
@@ -196,12 +198,14 @@ sealed interface WorkDetailAction : IUiAction {
 
     data class RemovePcChannelImage(val channelId: Int) : WorkDetailAction
 
-    data object Submit : WorkDetailAction
+    data object Save : WorkDetailAction              // 保存：仅保存并返回列表
+    data object SaveAndReview : WorkDetailAction     // 提审：保存成功后发起提审再返回
 }
 
 sealed interface WorkDetailEffect : IUiEffect {
     data class ShowToast(val message: String) : WorkDetailEffect
     data object NeedReLogin : WorkDetailEffect
+    data object NavigateBack : WorkDetailEffect   // 保存/提审成功后返回作品列表
 }
 
 data class DiscountConfig(
