@@ -5,6 +5,7 @@ import com.lemon.mcdevmanagermp.data.common.NoNeedData
 import com.lemon.mcdevmanagermp.data.dto.netease.work.ApplyReviewDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.work.AppointOnlineDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.work.OnlineItemDTO
+import com.lemon.mcdevmanagermp.data.dto.netease.work.WorkCreateDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.work.WorkUpdateDTO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ItemTagVO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.MCConstsVO
@@ -32,6 +33,9 @@ interface ResourceRepository {
     // ===== 开平写操作（第1-7节）=====
 
     suspend fun updateItem(itemId: String, item: WorkUpdateDTO): NetworkState<NoNeedData>
+
+    /** 新建作品（pe/upload） */
+    suspend fun createItem(body: WorkCreateDTO): NetworkState<NoNeedData>
 
     suspend fun applyReview(
         itemId: String,

@@ -2,6 +2,7 @@ package com.lemon.mcdevmanagermp.ui.pages.work.workdetail
 
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceRankEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceTypeEnum
+import com.lemon.mcdevmanagermp.data.dto.netease.activity.FileInfoDTO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.AvailableScopeData
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.MCConstsCommonTitleData
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.MCConstsModSecondTypeData
@@ -104,6 +105,7 @@ data class WorkDetailState(
 
 sealed interface WorkDetailAction : IUiAction {
     data class LoadDetail(val itemId: String) : WorkDetailAction
+    data object InitNewWork : WorkDetailAction      // 新建模式：仅加载表单选项，不加载详情
     data class UpdateItemName(val value: String) : WorkDetailAction
     data class ToggleJoinShantou(val value: Boolean) : WorkDetailAction
     data class ToggleOriginal(val value: Boolean) : WorkDetailAction
@@ -220,7 +222,8 @@ data class PeResourceFile(
     val url: String = "",
     val mcVersion: List<String> = emptyList(),
     val size: Long = 0,
-    val addVersion: Boolean = false
+    val addVersion: Boolean = false,
+    val fileInfo: FileInfoDTO? = null
 )
 
 /**
@@ -233,7 +236,8 @@ data class ChannelImageSlot(
     val width: Int,
     val height: Int,
     val channelUrl: String,
-    val isUploading: Boolean = false
+    val isUploading: Boolean = false,
+    val fileInfo: FileInfoDTO? = null
 )
 
 /** 宣传视频（对应 ResourceDetailVideoInfo，回显与上传结果统一模型；cover 由用户上传封面图得到）。 */

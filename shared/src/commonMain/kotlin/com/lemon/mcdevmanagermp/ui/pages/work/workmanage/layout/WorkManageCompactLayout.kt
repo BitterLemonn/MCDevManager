@@ -32,6 +32,7 @@ import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.layout.component.WorkMa
 import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.layout.component.WorkManagePendingOp
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import mcdevmanagermpr.shared.generated.resources.Res
+import mcdevmanagermpr.shared.generated.resources.ic_add
 import mcdevmanagermpr.shared.generated.resources.ic_refresh
 import org.jetbrains.compose.resources.painterResource
 
@@ -59,6 +60,13 @@ internal fun WorkManageCompactLayout(
             collapseFraction = scrollAlpha.value,
             onBack = onBack,
             actions = {
+                IconButton(onClick = { onNavigateToDetail("") }) {
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_add),
+                        contentDescription = "新增项目",
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
                 IconButton(onClick = { onAction(WorkManageAction.RefreshData) }) {
                     Icon(
                         painter = painterResource(Res.drawable.ic_refresh),

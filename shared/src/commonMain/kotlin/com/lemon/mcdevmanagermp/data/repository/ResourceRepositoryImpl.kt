@@ -6,6 +6,7 @@ import com.lemon.mcdevmanagermp.data.common.NoNeedData
 import com.lemon.mcdevmanagermp.data.dto.netease.work.ApplyReviewDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.work.AppointOnlineDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.work.OnlineItemDTO
+import com.lemon.mcdevmanagermp.data.dto.netease.work.WorkCreateDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.work.WorkUpdateDTO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ItemTagVO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.MCConstsVO
@@ -64,6 +65,9 @@ class ResourceRepositoryImpl : ResourceRepository {
 
     override suspend fun updateItem(itemId: String, item: WorkUpdateDTO): NetworkState<NoNeedData> =
         UnifiedExceptionHandler.handleRequest { resourceApi.updateItem(itemId, item) }
+
+    override suspend fun createItem(body: WorkCreateDTO): NetworkState<NoNeedData> =
+        UnifiedExceptionHandler.handleRequest { resourceApi.createItem(body) }
 
     override suspend fun applyReview(
         itemId: String,

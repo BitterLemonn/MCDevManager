@@ -3,6 +3,7 @@ package com.lemon.mcdevmanagermp.domain.work
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.common.NoNeedData
 import com.lemon.mcdevmanagermp.data.dto.netease.work.ApplyReviewDTO
+import com.lemon.mcdevmanagermp.data.dto.netease.work.WorkCreateDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.work.toWorkUpdateDTO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ItemTagVO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.MCConstsVO
@@ -69,5 +70,10 @@ class WorkDetailUseCase(
      */
     suspend fun submitForReview(itemId: String): NetworkState<ReviewApplyResultVO> {
         return resourceRepository.applyReview(itemId, ApplyReviewDTO())
+    }
+
+    /** 新建作品（pe/upload）。body 由 ViewModel 从编辑表单构造（res_url/channel_url 为上传回执）。 */
+    suspend fun createWork(body: WorkCreateDTO): NetworkState<NoNeedData> {
+        return resourceRepository.createItem(body)
     }
 }

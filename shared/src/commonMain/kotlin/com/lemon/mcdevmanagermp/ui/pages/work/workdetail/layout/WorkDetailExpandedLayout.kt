@@ -60,7 +60,7 @@ internal fun WorkDetailExpandedLayout(
 
     Column(modifier = Modifier.fillMaxSize()) {
         CollapsingTopBar(
-            title = "作品详情",
+            title = if (state.detail == null) "新建作品" else "作品详情",
             collapseFraction = scrollAlpha.value,
             onBack = onBack,
             actions = {

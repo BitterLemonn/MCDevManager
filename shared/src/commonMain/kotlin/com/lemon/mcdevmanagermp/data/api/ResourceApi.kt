@@ -6,6 +6,7 @@ import com.lemon.mcdevmanagermp.data.consts.NETEASE_MC_DEV_LINK
 import com.lemon.mcdevmanagermp.data.dto.netease.work.ApplyReviewDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.work.AppointOnlineDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.work.OnlineItemDTO
+import com.lemon.mcdevmanagermp.data.dto.netease.work.WorkCreateDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.work.WorkUpdateDTO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ItemTagVO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.MCConstsVO
@@ -22,7 +23,7 @@ import de.jensklingenberg.ktorfit.http.Path
 import de.jensklingenberg.ktorfit.http.Query
 
 interface ResourceApi {
-    @GET("items/categories/{platform}/")
+    @GET("items/categories/{platform}")
     suspend fun getAllResource(
         @Path("platform") platform: String = "pe",
         @Query("start") start: Int = 0,
@@ -42,6 +43,9 @@ interface ResourceApi {
         @Path("itemId") itemId: String,
         @Body item: WorkUpdateDTO
     ): ResponseData<NoNeedData>
+
+    @POST("items/categories/pe/upload")
+    suspend fun createItem(@Body body: WorkCreateDTO): ResponseData<NoNeedData>
 
     @PUT("items/categories/pe/{itemId}/apply_review")
     suspend fun applyReview(

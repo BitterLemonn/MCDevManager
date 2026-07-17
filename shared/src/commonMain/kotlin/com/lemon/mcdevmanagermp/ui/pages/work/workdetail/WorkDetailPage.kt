@@ -37,7 +37,12 @@ fun WorkDetailPage(
     }
 
     LaunchedEffect(itemId) {
-        viewModel.dispatch(WorkDetailAction.LoadDetail(itemId))
+        if (itemId.isNotEmpty()) {
+            viewModel.dispatch(WorkDetailAction.LoadDetail(itemId))
+        } else {
+            // itemId 为空 → 新建模式：进入空表单，仅加载表单选项
+            viewModel.dispatch(WorkDetailAction.InitNewWork)
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize().background(colors.background)) {

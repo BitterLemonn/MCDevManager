@@ -4,6 +4,10 @@ import androidx.lifecycle.viewModelScope
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceRankEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceTypeEnum
+import com.lemon.mcdevmanagermp.data.dto.netease.work.WorkCreateChannel
+import com.lemon.mcdevmanagermp.data.dto.netease.work.WorkCreateDTO
+import com.lemon.mcdevmanagermp.data.dto.netease.work.WorkCreateRes
+import com.lemon.mcdevmanagermp.data.dto.netease.work.WorkUpdateDlcInfoDTO
 import com.lemon.mcdevmanagermp.data.repository.FileUploadRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.MCConstsChannelData
@@ -60,6 +64,7 @@ class WorkDetailViewModel :
     override fun dispatch(action: WorkDetailAction) {
         when (action) {
             is WorkDetailAction.LoadDetail -> loadDetail(action.itemId)
+            WorkDetailAction.InitNewWork -> initNewWork()
             is WorkDetailAction.UpdateItemName -> setState { copy(itemName = action.value) }
             is WorkDetailAction.ToggleJoinShantou -> setState { copy(joinShantou = action.value) }
             is WorkDetailAction.ToggleOriginal -> setState { copy(isOriginal = action.value) }
@@ -613,14 +618,16 @@ class WorkDetailViewModel :
             )
             when (result) {
                 is NetworkState.Success -> {
-                    val url = parseUploadUrl(result.data?.body.orEmpty())
+                    val info = result.data
+                    val url = parseUploadUrl(info?.body.orEmpty())
                     setState {
                         copy(
                             isUploadingPeZip = false,
                             peResource = PeResourceFile(
                                 name = file.name,
                                 url = url,
-                                addVersion = peAddVersion
+                                addVersion = peAddVersion,
+                                fileInfo = info
                             )
                         )
                     }
@@ -771,12 +778,14 @@ class WorkDetailViewModel :
             )
             when (result) {
                 is NetworkState.Success -> {
-                    val url = parseUploadUrl(result.data?.body.orEmpty())
+                    val info = result.data
+                    val url = parseUploadUrl(info?.body.orEmpty())
                     setState {
                         updateImageSlot(isPe, channelId) {
                             it.copy(
                                 channelUrl = url,
-                                isUploading = false
+                                isUploading = false,
+                                fileInfo = info
                             )
                         }
                     }
@@ -822,6 +831,44 @@ class WorkDetailViewModel :
 
     // ===== 提交保存（更新） =====
 
+    /** 新建模式：不加载详情，仅加载表单选项（默认标签 / mc_consts），进入空表单。 */
+    private fun initNewWork() {
+        setState { copy(isLoading = false, detail = null, itemId = "") }
+        loadItemTags()
+        loadPcTagOptions()
+    }
+
+    /**
+     * 新建作品（pe/upload）。res/channel 用上传回执 FileInfoDTO。
+     * [alsoReview]=true 时 is_check_apply=true（创建并发起提审）；成功后返回列表。
+     */
+    private fun createWork(alsoReview: Boolean) {
+        viewModelScope.launch {
+            setState {
+                copy(
+                    isSubmitting = true,
+                    submittingMessage = if (alsoReview) "创建并提审中..." else "创建中..."
+                )
+            }
+            val payload = buildWorkCreatePayload(state.value, isCheckApply = alsoReview)
+            when (val result = workDetailUseCase.createWork(payload)) {
+                is NetworkState.Success -> {
+                    sendEffect(
+                        WorkDetailEffect.ShowToast(if (alsoReview) "创建并提审成功" else "创建成功")
+                    )
+                    sendEffect(WorkDetailEffect.NavigateBack)
+                }
+
+                is NetworkState.Error -> handleError(
+                    result,
+                    onNeedReLogin = { WorkDetailEffect.NeedReLogin },
+                    onShowToast = { WorkDetailEffect.ShowToast(it) }
+                )
+            }
+            setState { copy(isSubmitting = false, submittingMessage = "") }
+        }
+    }
+
     /**
      * 保存作品信息（第1/2节，isCheckApply=false 纯保存）。
      * [alsoReview]=true 时保存成功后继续调第3节 apply_review 发起提审。
@@ -831,7 +878,12 @@ class WorkDetailViewModel :
         val s = state.value
         if (s.isSubmitting) return
         val detail = s.detail
-        if (detail == null || detail.itemId.isEmpty()) {
+        if (detail == null) {
+            // 新建模式：走 pe/upload 创建接口
+            createWork(alsoReview)
+            return
+        }
+        if (detail.itemId.isEmpty()) {
             sendEffect(WorkDetailEffect.ShowToast("作品详情未加载"))
             return
         }
@@ -893,6 +945,44 @@ class WorkDetailViewModel :
 
 }
 
+/** 由编辑态构造新建请求体（pe/upload）。res/channel 仅含已上传（有 fileInfo）的项。 */
+internal fun buildWorkCreatePayload(s: WorkDetailState, isCheckApply: Boolean): WorkCreateDTO =
+    WorkCreateDTO(
+        itemName = s.itemName,
+        itemVersion = bumpVersion(s.itemVersion),
+        labelTypeList = s.peRecommendTags,
+        priType = s.peResourceType,
+        subType = s.peResourceSubType,
+        modSecondType = s.peResourceModSecondType,
+        info = s.peDetail,
+        updateSummary = s.peUpdateSummary,
+        tag = s.tags.map { ResourceDetailTag(name = it) },
+        isOriginal = s.isOriginal,
+        isDomainServerItem = if (s.joinShantou) 1 else 0,
+        priceType = priceTypeString(s.priceType, "free"),
+        priceRank = s.priceRank.type,
+        price = when (s.priceType) {
+            PriceTypeEnum.EMERALD -> s.emeraldPrice
+            PriceTypeEnum.DIAMOND -> if (s.priceRank.diamondPrice > 0) s.priceRank.diamondPrice else 0
+            else -> 0
+        },
+        res = s.peResource?.fileInfo?.let { info ->
+            listOf(WorkCreateRes(resUrl = info, resName = s.peResource.name))
+        } ?: emptyList(),
+        channel = s.peImageSlots.mapNotNull { slot ->
+            slot.fileInfo?.let { WorkCreateChannel(channelId = slot.channelId, channelUrl = it) }
+        },
+        dlcInfo = WorkUpdateDlcInfoDTO(
+            dlcSwitch = s.isRelatedMod,
+            dlcType = when {
+                !s.isRelatedMod -> "off"
+                s.relatedIsMaster -> ResourceDetailDlcInfo.DlcType.MASTER.type
+                else -> ResourceDetailDlcInfo.DlcType.SLAVE.type
+            }
+        ),
+        isCheckApply = isCheckApply
+    )
+
 /** 将编辑后的 state 合并回原始详情，构造 update 请求体。 */
 internal fun buildUpdatePayload(
     s: WorkDetailState,
@@ -900,6 +990,7 @@ internal fun buildUpdatePayload(
     corpProofUrl: String
 ): ResourceDetailVO = d.copy(
     itemName = s.itemName,
+    itemVersion = bumpVersion(d.itemVersion),
     isDomainServerItem = if (s.joinShantou) 1 else 0,
     isOriginal = s.isOriginal,
     tags = s.tags.map { name ->
@@ -1013,6 +1104,19 @@ private fun buildResList(
             mcVersion = pe.mcVersion
         )
     )
+}
+
+/**
+ * 版本号 +0.1（minor 满 9 进位：0.9→1.0、1.9→2.0）；空串视为新作品首版 1.0。
+ * 仅识别 "major.minor" 十进制形式，minor>9 进位。
+ */
+private fun bumpVersion(version: String): String {
+    if (version.isEmpty()) return "0.1"
+    val parts = version.split(".")
+    val major = parts.getOrNull(0)?.toIntOrNull() ?: 0
+    val minor = parts.getOrNull(1)?.toIntOrNull() ?: 0
+    val newMinor = minor + 1
+    return if (newMinor > 9) "${major + 1}.0" else "$major.$newMinor"
 }
 
 private fun priceTypeString(t: PriceTypeEnum, fallback: String): String = when (t) {
