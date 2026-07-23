@@ -1,13 +1,14 @@
 package com.lemon.mcdevmanagermp.platform
 
+import androidx.compose.ui.draganddrop.DragAndDropEvent
 import com.lemon.mcdevmanagermp.utils.CrashHandler
+import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.staticCFunction
 import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSSearchPathForDirectoriesInDomains
 import platform.Foundation.NSUserDomainMask
-import platform.Foundation.NSException
 
 @OptIn(ExperimentalForeignApi::class)
 actual fun getLogDirectory(): String {
@@ -32,3 +33,8 @@ actual fun setupUncaughtExceptionHandler() {
         }
     })
 }
+
+// iOS 无桌面拖放场景
+actual fun platformFileFromPath(path: String): PlatformFile? = null
+
+actual fun DragAndDropEvent.readFilePaths(): List<String> = emptyList()

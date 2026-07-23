@@ -19,6 +19,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -35,19 +39,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.lemon.mcdevmanagermp.domain.analyze.SummaryMetrics
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.ChartType
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.MetricType
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.ModAnalysisAction
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.ModAnalysisState
-import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.SummaryMetrics
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.components.ChartSection
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.components.ResourceSelector
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_bar_chart
 import mcdevmanagermpr.shared.generated.resources.ic_line_chart
-import mcdevmanagermpr.shared.generated.resources.ic_refresh
 import mcdevmanagermpr.shared.generated.resources.ic_star
 import org.jetbrains.compose.resources.painterResource
 
@@ -82,10 +85,9 @@ internal fun ModAnalysisMediumLayout(
                 if (state.selectedIid.isNotEmpty()) {
                     IconButton(onClick = { onAction(ModAnalysisAction.RefreshData) }) {
                         Icon(
-                            painter = painterResource(Res.drawable.ic_refresh),
+                            imageVector = Icons.Filled.Refresh,
                             contentDescription = "刷新",
-                            modifier = Modifier.size(20.dp),
-                            tint = colors.textColor
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
@@ -194,13 +196,10 @@ private fun MediumModTitleCard(
 ) {
     val colors = LocalAppColors.current
 
-    androidx.compose.material3.ElevatedCard(
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = androidx.compose.material3.CardDefaults.elevatedCardColors(
-            containerColor = colors.surfaceContainerHigh
-        ),
-        shape = RoundedCornerShape(12.dp),
-        elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 1.dp)
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh),
+        shape = RoundedCornerShape(12.dp)
     ) {
         Row(
             modifier = Modifier
@@ -266,14 +265,12 @@ private fun MediumMetricsRow(metrics: SummaryMetrics) {
         ),
     )
 
-    androidx.compose.material3.ElevatedCard(
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = androidx.compose.material3.CardDefaults.elevatedCardColors(
-            containerColor = colors.surfaceContainerHigh
-        ),
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh),
         shape = RoundedCornerShape(12.dp),
-        elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
+
+        ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()

@@ -13,6 +13,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -27,25 +29,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.lemon.mcdevmanagermp.data.vo.netease.activity.ReviewActivityItemVO
+import com.lemon.mcdevmanagermp.data.vo.netease.activity.ActivityReviewItemVO
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.ActivityAction
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.ActivityState
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.layout.component.ActivityCard
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.number
-import kotlinx.datetime.toLocalDateTime
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_refresh
-import org.jetbrains.compose.resources.painterResource
+import com.lemon.mcdevmanagermp.utils.extension.toDateString
 
 @Composable
 internal fun ActivityCompactLayout(
     state: ActivityState,
     onAction: (ActivityAction) -> Unit,
     onBack: () -> Unit,
-    onItemClick: (ReviewActivityItemVO) -> Unit
+    onItemClick: (ActivityReviewItemVO) -> Unit
 ) {
     val colors = LocalAppColors.current
     val listState = rememberLazyListState()
@@ -80,9 +77,8 @@ internal fun ActivityCompactLayout(
             actions = {
                 IconButton(onClick = { onAction(ActivityAction.RefreshData) }) {
                     Icon(
-                        painter = painterResource(Res.drawable.ic_refresh),
+                        imageVector = Icons.Filled.Refresh,
                         contentDescription = "刷新",
-                        tint = colors.onSurfaceVariant,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -209,21 +205,8 @@ internal fun ActivityStatusTag(status: String) {
 
 internal fun formatTimeRange(beginAt: Int, endAt: Int): String {
     if (beginAt == 0 && endAt == 0) return ""
-    val begin = if (beginAt > 0) formatTimestamp(beginAt.toLong()) else "未知"
-    val end = if (endAt > 0) formatTimestamp(endAt.toLong()) else "未知"
+    val begin = if (beginAt > 0) beginAt.toLong().toDateString() else "未知"
+    val end = if (endAt > 0) endAt.toLong().toDateString() else "未知"
     return "$begin ~ $end"
 }
 
-private fun formatTimestamp(timestamp: Long): String {
-    if (timestamp == 0L) return ""
-    return try {
-        val millis = if (timestamp < 1_000_000_000_000) timestamp * 1000 else timestamp
-        val instant = kotlin.time.Instant.fromEpochMilliseconds(millis)
-        val localDateTime = instant.toLocalDateTime(TimeZone.of("Asia/Shanghai"))
-        "${localDateTime.year}-${
-            localDateTime.month.number.toString().padStart(2, '0')
-        }-${localDateTime.day.toString().padStart(2, '0')}"
-    } catch (_: Exception) {
-        ""
-    }
-}

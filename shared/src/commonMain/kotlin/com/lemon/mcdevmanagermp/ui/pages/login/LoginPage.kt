@@ -22,6 +22,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -53,7 +55,6 @@ import com.lemon.mcdevmanagermp.ui.components.LoginOutlineTextField
 import com.lemon.mcdevmanagermp.ui.components.collectUiEffect
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_back
 import mcdevmanagermpr.shared.generated.resources.ic_mc
 import mcdevmanagermpr.shared.generated.resources.ic_no_show
 import mcdevmanagermpr.shared.generated.resources.ic_setting
@@ -124,7 +125,7 @@ private fun LoginContent(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    painter = painterResource(Res.drawable.ic_back),
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                     contentDescription = "返回",
                     tint = colors.onSurface,
                     modifier = Modifier.size(24.dp)

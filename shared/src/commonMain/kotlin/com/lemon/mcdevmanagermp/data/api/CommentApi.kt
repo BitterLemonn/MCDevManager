@@ -1,9 +1,9 @@
 package com.lemon.mcdevmanagermp.data.api
 
-import com.lemon.mcdevmanagermp.data.consts.NETEASE_MC_DEV_LINK
 import com.lemon.mcdevmanagermp.data.common.ResponseData
-import com.lemon.mcdevmanagermp.data.vo.netease.comment.CommentListVO
+import com.lemon.mcdevmanagermp.data.consts.NETEASE_MC_DEV_LINK
 import com.lemon.mcdevmanagermp.data.dto.netease.feedback.ReplyDTO
+import com.lemon.mcdevmanagermp.data.vo.netease.comment.CommentListVO
 import de.jensklingenberg.ktorfit.http.Body
 import de.jensklingenberg.ktorfit.http.GET
 import de.jensklingenberg.ktorfit.http.Headers
@@ -25,7 +25,7 @@ interface CommentApi {
     ): ResponseData<CommentListVO>
 
     @Headers("Content-Type: application/json")
-    @PUT("items/comment/pe/{id}/reply")
+    @PUT("items/comment/pe/{id}/reply/")
     suspend fun replyComment(
         @Path("id") commentId: String,
         @Body content: ReplyDTO

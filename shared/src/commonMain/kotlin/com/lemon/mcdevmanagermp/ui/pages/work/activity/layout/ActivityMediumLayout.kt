@@ -19,6 +19,8 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -33,22 +35,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.lemon.mcdevmanagermp.data.vo.netease.activity.ReviewActivityItemVO
+import com.lemon.mcdevmanagermp.data.vo.netease.activity.ActivityReviewItemVO
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.ActivityAction
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.ActivityState
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.layout.component.ActivityCard
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_refresh
-import org.jetbrains.compose.resources.painterResource
 
 @Composable
 internal fun ActivityMediumLayout(
     state: ActivityState,
     onAction: (ActivityAction) -> Unit,
     onBack: () -> Unit,
-    onItemClick: (ReviewActivityItemVO) -> Unit
+    onItemClick: (ActivityReviewItemVO) -> Unit
 ) {
     val colors = LocalAppColors.current
     val gridState = rememberLazyGridState()
@@ -87,9 +86,8 @@ internal fun ActivityMediumLayout(
             actions = {
                 IconButton(onClick = { onAction(ActivityAction.RefreshData) }) {
                     Icon(
-                        painter = painterResource(Res.drawable.ic_refresh),
+                        imageVector = Icons.Filled.Refresh,
                         contentDescription = "刷新",
-                        tint = colors.onSurfaceVariant,
                         modifier = Modifier.size(20.dp)
                     )
                 }

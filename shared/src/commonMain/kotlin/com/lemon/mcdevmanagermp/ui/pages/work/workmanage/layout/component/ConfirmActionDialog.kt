@@ -10,10 +10,7 @@ import com.lemon.mcdevmanagermp.data.consts.enums.WorkItemActionEnum
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
 
 /**
- * 确认上架操作弹窗。
- *
- * 注意：当前为占位实现，确认后仅通过 [onConfirm] 触发提示，不真实联网。
- * 后续接口补齐后由 ViewModel 的 PerformAction 改为真实调用。
+ * 确认上架操作弹窗。确认后由 ViewModel 的 PerformAction 执行真实联网。
  */
 @Composable
 internal fun ConfirmActionDialog(
@@ -28,7 +25,7 @@ internal fun ConfirmActionDialog(
         text = {
             val name = item.itemName.ifEmpty { "未命名" }
             Text(
-                text = "即将对作品《$name》执行「${action.label}」操作。\n\n（操作接口占位，当前不会真实提交）",
+                text = "即将对作品《$name》执行「${action.label}」操作，是否继续？",
                 style = MaterialTheme.typography.bodyMedium
             )
         },

@@ -16,6 +16,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -47,10 +50,6 @@ import io.github.vinceglb.filekit.size
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_add
-import mcdevmanagermpr.shared.generated.resources.ic_close
-import org.jetbrains.compose.resources.painterResource
 
 /**
  * 图片选择行组件
@@ -271,7 +270,7 @@ private fun ImageThumbnailCard(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    painter = painterResource(Res.drawable.ic_close),
+                    imageVector = Icons.Filled.Close,
                     contentDescription = "删除",
                     modifier = Modifier.size(12.dp),
                     tint = colors.onError
@@ -330,7 +329,7 @@ private fun VideoInfoCard(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    painter = painterResource(Res.drawable.ic_close),
+                    imageVector = Icons.Filled.Close,
                     contentDescription = "删除视频",
                     modifier = Modifier.size(14.dp),
                     tint = colors.error
@@ -362,7 +361,7 @@ private fun AddFileButton(
         contentAlignment = Alignment.Center
     ) {
         Icon(
-            painter = painterResource(Res.drawable.ic_add),
+            imageVector = Icons.Filled.Add,
             contentDescription = "添加图片",
             modifier = Modifier.size(24.dp),
             tint = colors.onSurfaceVariant
@@ -397,7 +396,7 @@ private fun AddVideoButton(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                painter = painterResource(Res.drawable.ic_add),
+                imageVector = Icons.Filled.Add,
                 contentDescription = null,
                 modifier = Modifier.size(18.dp),
                 tint = colors.onSurfaceVariant

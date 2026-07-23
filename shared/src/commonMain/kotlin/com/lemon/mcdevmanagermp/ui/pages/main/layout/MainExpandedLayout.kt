@@ -33,6 +33,7 @@ import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -41,7 +42,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.ui.components.ExpandableNavigateItem
 import com.lemon.mcdevmanagermp.ui.components.IncomeManagementCard
 import com.lemon.mcdevmanagermp.ui.components.MailboxCard
@@ -76,8 +76,9 @@ internal fun ExpandedLayout(
 ) {
     val colors = LocalAppColors.current
     var isExpanded by remember { mutableStateOf(false) }
-    val userNickname = (state.userInfo as? NetworkState.Success)?.data?.nickname
-    val userHeadImg = (state.userInfo as? NetworkState.Success)?.data?.headImg
+    var accountNavTrigger by remember { mutableStateOf(0) }
+    val userNickname = state.userInfo?.nickname
+    val userHeadImg = state.userInfo?.headImg
 
     val sidebarWidth by animateDpAsState(
         targetValue = if (isExpanded) ExpandedWidth else CollapsedWidth,
@@ -144,7 +145,10 @@ internal fun ExpandedLayout(
                     icon = userHeadImg,
                     isTinted = false,
                     expanded = isExpanded
-                ) {}
+                ) {
+                    accountNavTrigger++
+                    onAction(MainAction.SelectTab(MainTab.Settings))
+                }
 
                 Spacer(Modifier.height(4.dp))
             }
@@ -189,12 +193,15 @@ internal fun ExpandedLayout(
                     MainTab.Analyze -> AnalyzeTabContent(onNavigateToSubPage = onNavigateToSubPage)
                     MainTab.Community -> CommunityContent()
                     MainTab.Work -> WorkContent()
-                    MainTab.Settings -> SettingsContent(
-                        onNavigateToLogin = onNavigateToLogin,
-                        onNavigateToAddAccount = onNavigateToAddAccount,
-                        onAccountSwitched = onAccountSwitched,
-                        onCheckUpdate = onCheckUpdate
-                    )
+                    MainTab.Settings -> key(accountNavTrigger) {
+                        SettingsContent(
+                            startAtAccount = accountNavTrigger > 0,
+                            onNavigateToLogin = onNavigateToLogin,
+                            onNavigateToAddAccount = onNavigateToAddAccount,
+                            onAccountSwitched = onAccountSwitched,
+                            onCheckUpdate = onCheckUpdate
+                        )
+                    }
                 }
             }
         }
@@ -211,7 +218,7 @@ internal fun ExpandedHomeTabContent(
     onNavigateToMailbox: () -> Unit = {}
 ) {
     val colors = LocalAppColors.current
-    val userNickname = (state.userInfo as? NetworkState.Success)?.data?.nickname
+    val userNickname = state.userInfo?.nickname
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 

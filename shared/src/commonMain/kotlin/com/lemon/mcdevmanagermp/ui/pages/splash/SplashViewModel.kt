@@ -2,6 +2,7 @@ package com.lemon.mcdevmanagermp.ui.pages.splash
 
 import androidx.lifecycle.viewModelScope
 import com.lemon.mcdevmanagermp.data.repository.AccountRepositoryImpl
+import com.lemon.mcdevmanagermp.data.repository.CookieRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.UserRepositoryImpl
 import com.lemon.mcdevmanagermp.domain.account.AutoLoginUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
@@ -13,7 +14,8 @@ class SplashViewModel : BaseViewModel<SplashState, SplashAction, SplashEffect>(S
 
     private val autoLoginUseCase = AutoLoginUseCase(
         accountRepository = AccountRepositoryImpl.INSTANCE,
-        userRepository = UserRepositoryImpl.INSTANCE
+        userRepository = UserRepositoryImpl.INSTANCE,
+        cookieRepository = CookieRepositoryImpl.INSTANCE
     )
 
     private val autoLoginSuccess = MutableStateFlow(false)

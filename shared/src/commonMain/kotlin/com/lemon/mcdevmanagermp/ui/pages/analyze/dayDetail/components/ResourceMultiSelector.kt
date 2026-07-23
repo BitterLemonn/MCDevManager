@@ -19,9 +19,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,11 +46,6 @@ import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
 import com.lemon.mcdevmanagermp.ui.pages.analyze.dayDetail.CHART_COLORS
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_add
-import mcdevmanagermpr.shared.generated.resources.ic_close
-import mcdevmanagermpr.shared.generated.resources.ic_search
-import org.jetbrains.compose.resources.painterResource
 
 /**
  * 多资源选择器
@@ -104,7 +103,7 @@ internal fun ResourceMultiSelector(
             }
 
             Icon(
-                painter = painterResource(if (isExpanded) Res.drawable.ic_close else Res.drawable.ic_add),
+                imageVector = if (isExpanded) Icons.Filled.Close else Icons.Filled.Add,
                 contentDescription = if (isExpanded) "关闭" else "添加",
                 modifier = Modifier.size(18.dp),
                 tint = colors.onSurfaceVariant
@@ -115,7 +114,7 @@ internal fun ResourceMultiSelector(
         if (isExpanded) {
             Spacer(Modifier.height(8.dp))
 
-            ElevatedCard(
+            Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
             ) {
@@ -169,7 +168,7 @@ private fun SelectedTag(
             modifier = Modifier.size(14.dp)
         ) {
             Icon(
-                painter = painterResource(Res.drawable.ic_close),
+                imageVector = Icons.Filled.Close,
                 contentDescription = "移除",
                 modifier = Modifier.size(10.dp),
                 tint = tagColor
@@ -208,7 +207,7 @@ private fun ResourceListPanel(
             },
             leadingIcon = {
                 Icon(
-                    painter = painterResource(Res.drawable.ic_search),
+                    imageVector = Icons.Filled.Search,
                     contentDescription = "搜索",
                     tint = colors.onSurfaceVariant,
                     modifier = Modifier.size(18.dp)

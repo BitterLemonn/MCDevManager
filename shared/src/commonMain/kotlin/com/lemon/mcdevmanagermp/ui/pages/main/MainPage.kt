@@ -1,17 +1,13 @@
 package com.lemon.mcdevmanagermp.ui.pages.main
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.lemon.mcdevmanagermp.platform.BackHandler
 import com.lemon.mcdevmanagermp.platform.openUrl
@@ -26,7 +22,6 @@ import com.lemon.mcdevmanagermp.ui.pages.update.UpdateAction
 import com.lemon.mcdevmanagermp.ui.pages.update.UpdateDialog
 import com.lemon.mcdevmanagermp.ui.pages.update.UpdateEffect
 import com.lemon.mcdevmanagermp.ui.pages.update.UpdateViewModel
-import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import com.mohamedrejeb.calf.permissions.ExperimentalPermissionsApi
 import com.mohamedrejeb.calf.permissions.Notification
 import com.mohamedrejeb.calf.permissions.Permission
@@ -121,21 +116,6 @@ fun MainPage(
             state = updateState,
             onAction = updateViewModel::dispatch,
             notificationPermissionState = notificationPermissionState
-        )
-    }
-}
-
-@Composable
-internal fun PlaceholderTabContent(name: String) {
-    val colors = LocalAppColors.current
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = name,
-            style = MaterialTheme.typography.headlineMedium,
-            color = colors.onSurface.copy(alpha = 0.5f)
         )
     }
 }

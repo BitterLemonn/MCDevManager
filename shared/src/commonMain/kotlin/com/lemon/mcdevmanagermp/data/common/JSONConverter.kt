@@ -11,6 +11,8 @@ val JSONConverter = Json {
     encodeDefaults = true
     // 忽略json空值
     coerceInputValues = true
+    // 宽松解析：允许数字字面量解析为字符串（mc_consts 中 tag/label_type 等的 id 为数字，需宽松解析为 String 字段）
+    isLenient = true
     // 忽略实体类空值
     explicitNulls = false
 }

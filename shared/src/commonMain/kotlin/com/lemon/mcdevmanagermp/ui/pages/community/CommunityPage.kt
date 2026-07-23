@@ -30,8 +30,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -52,7 +52,7 @@ import com.lemon.mcdevmanagermp.ui.pages.community.comment.CommentPage
 import com.lemon.mcdevmanagermp.ui.pages.community.feedback.FeedbackPage
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_comment_line
+import mcdevmanagermpr.shared.generated.resources.ic_comment
 import mcdevmanagermpr.shared.generated.resources.ic_feedback
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
@@ -127,11 +127,11 @@ private fun CommunityListPage(
 
         Spacer(Modifier.height(4.dp))
 
-        ElevatedCard(
+        Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.elevatedCardColors(containerColor = colors.surfaceContainerHigh),
+            colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh),
             shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+
         ) {
             CommunityItem(
                 icon = Res.drawable.ic_feedback,
@@ -147,7 +147,7 @@ private fun CommunityListPage(
             )
 
             CommunityItem(
-                icon = Res.drawable.ic_comment_line,
+                icon = Res.drawable.ic_comment,
                 title = "组件评论",
                 subtitle = "查看和回复玩家的组件评论",
                 onClick = onNavigateToComment

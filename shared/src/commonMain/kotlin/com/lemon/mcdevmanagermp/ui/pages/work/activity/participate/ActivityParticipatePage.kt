@@ -10,7 +10,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import com.lemon.mcdevmanagermp.data.vo.netease.activity.ReviewActivityItemVO
+import com.lemon.mcdevmanagermp.data.vo.netease.activity.ActivityReviewItemVO
 import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
 import com.lemon.mcdevmanagermp.ui.components.collectUiEffect
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.participate.layout.ActivityParticipateCompactLayout
@@ -20,7 +20,7 @@ import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 
 @Composable
 fun ActivityParticipatePage(
-    activity: ReviewActivityItemVO,
+    activity: ActivityReviewItemVO,
     onBack: () -> Unit,
     showTopBar: Boolean = true,
     onSuccess: () -> Unit = {}

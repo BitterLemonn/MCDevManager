@@ -16,6 +16,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -27,18 +30,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.data.consts.enums.WorkItemActionEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.WorkItemStatusEnum
+import com.lemon.mcdevmanagermp.data.consts.enums.priceTypeLabel
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
 import com.lemon.mcdevmanagermp.ui.theme.AppColors
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_correct
-import mcdevmanagermpr.shared.generated.resources.ic_diamond
-import mcdevmanagermpr.shared.generated.resources.ic_refresh
+import mcdevmanagermpr.shared.generated.resources.ic_calendar
+import mcdevmanagermpr.shared.generated.resources.ic_feedback
+import mcdevmanagermpr.shared.generated.resources.ic_modified
 import mcdevmanagermpr.shared.generated.resources.ic_sale
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
@@ -134,13 +139,20 @@ private fun ActionButton(
 ) {
     val colors = LocalAppColors.current
     val accent = colors.primary
-    val iconRes: DrawableResource = when (action) {
-        WorkItemActionEnum.SUBMIT_REVIEW -> Res.drawable.ic_correct
+    val iconVector: ImageVector? = when (action) {
+        WorkItemActionEnum.SUBMIT_REVIEW -> Icons.Default.Check
+        WorkItemActionEnum.UPDATE,
+        WorkItemActionEnum.CANCEL_TEST,
+        WorkItemActionEnum.CANCEL_REVIEW -> Icons.Default.Refresh
+
+        else -> null
+    }
+    val iconRes: DrawableResource? = when (action) {
         WorkItemActionEnum.PUBLISH -> Res.drawable.ic_sale
-        WorkItemActionEnum.UPDATE -> Res.drawable.ic_refresh
-        WorkItemActionEnum.CANCEL_TEST -> Res.drawable.ic_refresh
-        WorkItemActionEnum.CANCEL_REVIEW -> Res.drawable.ic_refresh
-        WorkItemActionEnum.ADJUST_PRICE -> Res.drawable.ic_diamond
+        WorkItemActionEnum.ADJUST_PRICE -> Res.drawable.ic_modified
+        WorkItemActionEnum.VIEW_FEEDBACK -> Res.drawable.ic_feedback
+        WorkItemActionEnum.APPOINT_ONLINE -> Res.drawable.ic_calendar
+        else -> null
     }
     val interaction = remember { MutableInteractionSource() }
     val isHovered by interaction.collectIsHoveredAsState()
@@ -160,12 +172,21 @@ private fun ActionButton(
         horizontalArrangement = Arrangement.spacedBy(5.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            painter = painterResource(iconRes),
-            contentDescription = null,
-            tint = accent,
-            modifier = Modifier.size(14.dp)
-        )
+        when {
+            iconVector != null -> Icon(
+                imageVector = iconVector,
+                contentDescription = null,
+                tint = accent,
+                modifier = Modifier.size(14.dp)
+            )
+
+            iconRes != null -> Icon(
+                painter = painterResource(iconRes),
+                contentDescription = null,
+                tint = accent,
+                modifier = Modifier.size(14.dp)
+            )
+        }
         Text(
             text = action.label,
             style = MaterialTheme.typography.labelMedium,
@@ -182,12 +203,14 @@ private fun ActionButton(
 private fun WorkStatusTag(status: WorkItemStatusEnum, colors: AppColors) {
     val accent = when (status) {
         WorkItemStatusEnum.ONLINE -> colors.online
+        WorkItemStatusEnum.INIT -> colors.warning
         WorkItemStatusEnum.SELF_TEST -> colors.warning
         WorkItemStatusEnum.REVIEWING -> colors.warning
         WorkItemStatusEnum.REJECTED -> colors.danger
         WorkItemStatusEnum.ACCEPT -> colors.warning
         WorkItemStatusEnum.OFFLINE -> colors.offline
         WorkItemStatusEnum.SYSTEM_OFFLINE -> colors.offline
+        WorkItemStatusEnum.ONLINE_PREPARING -> colors.onSurfaceVariant
         WorkItemStatusEnum.SELF_TEST_PREPARE -> colors.onSurfaceVariant
         WorkItemStatusEnum.PREPARE -> colors.onSurfaceVariant
         WorkItemStatusEnum.UNKNOWN -> colors.onSurfaceVariant
@@ -226,11 +249,7 @@ private fun FeatureTag(text: String) {
 
 private fun priceText(price: Int, priceType: String): String {
     if (price <= 0) return "免费"
-    val unit = when (priceType) {
-        "diamond" -> "钻石"
-        "point" -> "绿宝石"
-        else -> priceType.ifEmpty { "" }
-    }
+    val unit = priceTypeLabel(priceType)
     return if (unit.isEmpty()) "$price" else "$price $unit"
 }
 

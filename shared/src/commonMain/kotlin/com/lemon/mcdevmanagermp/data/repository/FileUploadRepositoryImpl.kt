@@ -22,11 +22,12 @@ class FileUploadRepositoryImpl : FileUploadRepository {
         fileType: String,
         fileName: String,
         file: PlatformFile,
-        mimeType: String
+        mimeType: String,
+        secure: String
     ): NetworkState<FileInfoDTO> {
         return try {
             val tokenResult = UnifiedExceptionHandler.handleRequest {
-                filesApi.getFileToken(fileType = fileType)
+                filesApi.getFileToken(fileType = fileType, secure = secure)
             }
             val token = when (tokenResult) {
                 is NetworkState.Success -> tokenResult.data?.token
@@ -46,7 +47,10 @@ class FileUploadRepositoryImpl : FileUploadRepository {
             val responseText = uploadResponse.body
             val jsonText = Regex("<textarea>(.*?)</textarea>")
                 .find(responseText)?.groupValues?.get(1)?.trim()
-                ?: return NetworkState.Error("解析上传响应失败")
+                ?: run {
+                    Logger.e("$TAG: 解析上传响应失败: $uploadResponse")
+                    return NetworkState.Error("解析上传响应失败")
+                }
             val sign = uploadResponse.sign ?: return NetworkState.Error("上传失败，文件签名为空")
             Logger.d("$TAG: 上传响应: $responseText, sign: $sign")
 

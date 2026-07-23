@@ -30,32 +30,56 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lemon.mcdevmanagermp.platform.AppUpdateManager
@@ -79,21 +103,29 @@ import com.lemon.mcdevmanagermp.ui.theme.PredefinedSeedColors
 import com.lemon.mcdevmanagermp.ui.theme.ThemeMode
 import com.lemon.mcdevmanagermp.ui.theme.seedDarkColorScheme
 import com.lemon.mcdevmanagermp.ui.theme.seedLightColorScheme
+import com.lemon.mcdevmanagermp.utils.LogFileInfo
+import com.lemon.mcdevmanagermp.utils.Logger
 import com.mohamedrejeb.calf.permissions.ExperimentalPermissionsApi
 import com.mohamedrejeb.calf.permissions.Notification
 import com.mohamedrejeb.calf.permissions.Permission
 import com.mohamedrejeb.calf.permissions.rememberPermissionState
+import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
+import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher
+import io.github.vinceglb.filekit.writeString
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_correct
 import mcdevmanagermpr.shared.generated.resources.ic_download
 import mcdevmanagermpr.shared.generated.resources.ic_feedback
-import mcdevmanagermpr.shared.generated.resources.ic_lisence
+import mcdevmanagermpr.shared.generated.resources.ic_license
 import mcdevmanagermpr.shared.generated.resources.ic_setting
 import mcdevmanagermpr.shared.generated.resources.ic_star
 import mcdevmanagermpr.shared.generated.resources.ic_user
 import org.jetbrains.compose.resources.painterResource
 
-private enum class SettingsSubPage { List, Theme, Account, About }
+private enum class SettingsSubPage { List, Theme, Account, Log, About }
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -102,10 +134,13 @@ fun SettingsContent(
     onNavigateToAddAccount: () -> Unit = {},
     onAccountSwitched: () -> Unit = {},
     showAccountManagement: Boolean = true,
+    startAtAccount: Boolean = false,
     onBack: (() -> Unit)? = null,
     onCheckUpdate: (() -> Unit)? = null
 ) {
-    var currentSubPage by remember { mutableStateOf(SettingsSubPage.List) }
+    var currentSubPage by remember {
+        mutableStateOf(if (startAtAccount) SettingsSubPage.Account else SettingsSubPage.List)
+    }
     val currentVersion = remember { AppUpdateManager().getCurrentVersion() }
 
     // 独立使用时（如 Route.Settings），自建 UpdateViewModel 处理手动检查
@@ -153,6 +188,7 @@ fun SettingsContent(
                 onNavigateToTheme = { currentSubPage = SettingsSubPage.Theme },
                 onNavigateToAccount = { currentSubPage = SettingsSubPage.Account },
                 onNavigateToAbout = { currentSubPage = SettingsSubPage.About },
+                onNavigateToLog = { currentSubPage = SettingsSubPage.Log },
                 showAccountManagement = showAccountManagement,
                 onBack = onBack
             )
@@ -169,6 +205,10 @@ fun SettingsContent(
             )
 
             SettingsSubPage.About -> AboutPage(
+                onBack = { currentSubPage = SettingsSubPage.List }
+            )
+
+            SettingsSubPage.Log -> LogViewerPage(
                 onBack = { currentSubPage = SettingsSubPage.List }
             )
         }
@@ -195,6 +235,7 @@ private fun SettingsListPage(
     onNavigateToTheme: () -> Unit,
     onNavigateToAccount: () -> Unit = {},
     onNavigateToAbout: () -> Unit = {},
+    onNavigateToLog: () -> Unit = {},
     showAccountManagement: Boolean = true,
     onBack: (() -> Unit)? = null
 ) {
@@ -303,7 +344,20 @@ private fun SettingsListPage(
             )
 
             SettingsItem(
-                icon = Res.drawable.ic_lisence,
+                iconVector = Icons.Default.Description,
+                title = "日志查看",
+                subtitle = "查看运行日志",
+                onClick = onNavigateToLog
+            )
+
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                color = colors.outlineVariant,
+                thickness = 0.5.dp
+            )
+
+            SettingsItem(
+                icon = Res.drawable.ic_license,
                 title = "关于",
                 subtitle = "版本信息与开源协议",
                 onClick = onNavigateToAbout
@@ -317,11 +371,11 @@ private fun SettingsGroupCard(
     content: @Composable () -> Unit
 ) {
     val colors = LocalAppColors.current
-    ElevatedCard(
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.elevatedCardColors(containerColor = colors.surfaceContainerHigh),
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh),
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+
     ) {
         content()
     }
@@ -329,7 +383,8 @@ private fun SettingsGroupCard(
 
 @Composable
 private fun SettingsItem(
-    icon: org.jetbrains.compose.resources.DrawableResource,
+    icon: org.jetbrains.compose.resources.DrawableResource? = null,
+    iconVector: ImageVector? = null,
     title: String,
     subtitle: String,
     showArrow: Boolean = true,
@@ -360,12 +415,21 @@ private fun SettingsItem(
                 .background(colors.primary.copy(alpha = 0.12f)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                painter = painterResource(icon),
-                contentDescription = title,
-                tint = colors.primary,
-                modifier = Modifier.size(20.dp)
-            )
+            when {
+                iconVector != null -> Icon(
+                    imageVector = iconVector,
+                    contentDescription = title,
+                    tint = colors.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+
+                icon != null -> Icon(
+                    painter = painterResource(icon),
+                    contentDescription = title,
+                    tint = colors.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         }
 
         Spacer(Modifier.width(12.dp))
@@ -779,7 +843,7 @@ private fun ColorSwatch(
         }
         if (isSelected) {
             Image(
-                painter = painterResource(Res.drawable.ic_correct),
+                imageVector = Icons.Filled.Check,
                 contentDescription = "Selected",
                 modifier = Modifier.size(20.dp)
             )
@@ -798,12 +862,12 @@ private fun SettingsSectionCard(
 ) {
     val colors = LocalAppColors.current
 
-    ElevatedCard(
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.elevatedCardColors(containerColor = colors.surfaceContainerHigh),
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh),
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
+
+        ) {
         Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
             Text(
                 text = title,
@@ -815,4 +879,287 @@ private fun SettingsSectionCard(
             content()
         }
     }
+}
+
+// ============================================================
+// Log Viewer Sub-Page
+// ============================================================
+
+private enum class LogLevelFilter(val label: String, val token: String?) {
+    ALL("全部", null),
+    ERROR("ERROR", " [ERROR] "),
+    WARN("WARN", " [WARN] "),
+    INFO("INFO", " [INFO] "),
+    DEBUG("DEBUG", " [DEBUG] ")
+}
+
+@Composable
+private fun LogViewerPage(
+    onBack: () -> Unit
+) {
+    val colors = LocalAppColors.current
+    val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val scope = rememberCoroutineScope()
+    val listState = rememberLazyListState()
+
+    var logFiles by remember { mutableStateOf<List<LogFileInfo>>(emptyList()) }
+    var selectedFile by remember { mutableStateOf<LogFileInfo?>(null) }
+    val rawLines = remember { mutableStateListOf<String>() }
+    val visibleLines = remember { mutableStateListOf<String>() }
+    var levelFilter by remember { mutableStateOf(LogLevelFilter.ALL) }
+    var loading by remember { mutableStateOf(true) }
+    var confirmClear by remember { mutableStateOf(false) }
+
+    val topBarAlpha by remember {
+        derivedStateOf { (listState.firstVisibleItemIndex.toFloat() / 8f).coerceIn(0f, 1f) }
+    }
+
+    fun filterChunk(chunk: List<String>): List<String> {
+        val token = levelFilter.token
+        return if (token == null) chunk else chunk.filter { it.contains(token) }
+    }
+
+    fun reapplyFilter() {
+        visibleLines.clear()
+        visibleLines.addAll(filterChunk(rawLines))
+    }
+
+    suspend fun reloadFiles(pickFirst: Boolean) {
+        val files = withContext(Dispatchers.Default) { Logger.listLogFiles() }
+        logFiles = files
+        if (pickFirst) selectedFile = files.firstOrNull()
+    }
+
+    suspend fun loadContent(path: okio.Path?) {
+        rawLines.clear()
+        visibleLines.clear()
+        if (path == null) return
+        Logger.readLogLines(path)
+            .flowOn(Dispatchers.IO)
+            .collect { chunk ->
+                rawLines.addAll(chunk)
+                visibleLines.addAll(filterChunk(chunk))
+            }
+        if (visibleLines.isNotEmpty()) {
+            listState.scrollToItem(visibleLines.lastIndex.coerceAtLeast(0))
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        loading = true
+        reloadFiles(pickFirst = true)
+        loading = false
+    }
+
+    LaunchedEffect(selectedFile) {
+        loadContent(selectedFile?.path)
+    }
+
+    val saverLauncher = rememberFileSaverLauncher(
+        dialogSettings = FileKitDialogSettings.createDefault()
+    ) { file ->
+        file?.let { f ->
+            scope.launch { runCatching { f.writeString(rawLines.joinToString("\n")) } }
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Spacer(Modifier.height(statusBarTop))
+            Spacer(Modifier.height(56.dp))
+
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                if (logFiles.isNotEmpty()) {
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(logFiles, key = { it.name }) { file ->
+                            LogFilterChip(
+                                label = "${file.name}  (${formatSize(file.size)})",
+                                selected = file.name == selectedFile?.name,
+                                onClick = { selectedFile = file }
+                            )
+                        }
+                    }
+                }
+
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(LogLevelFilter.entries.toList()) { level ->
+                        LogFilterChip(
+                            label = level.label,
+                            selected = level == levelFilter,
+                            onClick = { levelFilter = level; reapplyFilter() }
+                        )
+                    }
+                }
+            }
+
+            when {
+                loading -> Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("加载中…", color = colors.onSurfaceVariant)
+                }
+
+                selectedFile == null -> Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("暂无日志文件", color = colors.onSurfaceVariant)
+                }
+
+                rawLines.isEmpty() -> Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("读取中…", color = colors.onSurfaceVariant)
+                }
+
+                visibleLines.isEmpty() -> Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("没有匹配的日志", color = colors.onSurfaceVariant)
+                }
+
+                else -> LazyColumn(
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+                    state = listState,
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 8.dp)
+                ) {
+                    itemsIndexed(visibleLines, key = { i, _ -> i }) { _, line ->
+                        Text(
+                            text = remember(line, colors) { logLineAnnotated(line, colors) },
+                            style = MaterialTheme.typography.labelSmall,
+                            fontFamily = FontFamily.Monospace,
+                            color = colors.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+            Spacer(Modifier.height(navBarBottom))
+        }
+
+        CollapsingTopBar(
+            title = "日志查看",
+            collapseFraction = topBarAlpha,
+            actions = {
+                IconButton(onClick = {
+                    scope.launch {
+                        val path = selectedFile?.path
+                        reloadFiles(pickFirst = false)
+                        loadContent(path)
+                    }
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "刷新",
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                IconButton(
+                    onClick = {
+                        val f = selectedFile ?: return@IconButton
+                        saverLauncher.launch(
+                            suggestedName = f.name.removeSuffix(".log"),
+                            defaultExtension = "log"
+                        )
+                    },
+                    enabled = selectedFile != null && rawLines.isNotEmpty()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Share,
+                        contentDescription = "导出",
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                IconButton(onClick = { confirmClear = true }) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "清除日志",
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            },
+            onBack = onBack
+        )
+    }
+
+    if (confirmClear) {
+        AlertDialog(
+            onDismissRequest = { confirmClear = false },
+            title = { Text("清除全部日志") },
+            text = { Text("将删除所有日志文件，此操作不可撤销。") },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmClear = false
+                    scope.launch {
+                        withContext(Dispatchers.Default) { Logger.deleteAllLogs() }
+                        selectedFile = null
+                        rawLines.clear()
+                        visibleLines.clear()
+                        reloadFiles(pickFirst = false)
+                    }
+                }) { Text("清除", color = colors.danger) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmClear = false }) { Text("取消") }
+            }
+        )
+    }
+}
+
+@Composable
+private fun LogFilterChip(label: String, selected: Boolean, onClick: () -> Unit) {
+    val colors = LocalAppColors.current
+    FilterChip(
+        selected = selected,
+        onClick = onClick,
+        label = { Text(text = label, style = MaterialTheme.typography.labelMedium) },
+        colors = FilterChipDefaults.filterChipColors(
+            selectedContainerColor = colors.primary.copy(alpha = 0.12f),
+            selectedLabelColor = colors.primary,
+            containerColor = colors.surfaceContainerLow,
+            labelColor = colors.onSurfaceVariant
+        ),
+        border = FilterChipDefaults.filterChipBorder(
+            borderColor = colors.outlineVariant,
+            selectedBorderColor = colors.primary,
+            enabled = true,
+            selected = selected
+        ),
+        shape = RoundedCornerShape(8.dp)
+    )
+}
+
+private fun logLineAnnotated(
+    line: String,
+    colors: com.lemon.mcdevmanagermp.ui.theme.AppColors
+): AnnotatedString =
+    buildAnnotatedString {
+        val match = Regex("""\[(ERROR|WARN|INFO|DEBUG)]""").find(line)
+        if (match == null) {
+            append(line)
+            return@buildAnnotatedString
+        }
+        append(line.substring(0, match.range.first))
+        val color = when (match.groupValues[1]) {
+            "ERROR" -> colors.error
+            "WARN" -> colors.warning
+            "INFO" -> colors.info
+            else -> colors.onSurfaceVariant
+        }
+        withStyle(SpanStyle(color = color, fontWeight = FontWeight.SemiBold)) {
+            append(match.value)
+        }
+        append(line.substring(match.range.last + 1))
+    }
+
+private fun formatSize(bytes: Long): String = when {
+    bytes >= 1024 * 1024 -> "%.1f MB".format(bytes / (1024.0 * 1024.0))
+    bytes >= 1024 -> "%.1f KB".format(bytes / 1024.0)
+    else -> "$bytes B"
 }

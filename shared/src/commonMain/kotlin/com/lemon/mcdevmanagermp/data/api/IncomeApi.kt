@@ -16,13 +16,13 @@ import de.jensklingenberg.ktorfit.http.Query
 interface IncomeApi {
 
     // 结算收益
-    @PUT("/incomes/apply")
+    @PUT("incomes/apply")
     suspend fun applyIncome(
         @Body request: ApplyIncomeDTO
     ): ResponseData<NoNeedData>
 
     // 获取结算信息
-    @GET("/incomes")
+    @GET("incomes")
     suspend fun getIncome(
         @Query("platform") platform: String = "pe",
         @Query("start") start: Int = 0,
@@ -30,13 +30,13 @@ interface IncomeApi {
     ): ResponseData<IncomeDetailVO>
 
     // 获取结算详情
-    @GET("/incomes/{id}")
+    @GET("incomes/{id}")
     suspend fun getApplyDetail(
         @Path("id") id: String
     ): ResponseData<ApplyIncomeDetailVO>
 
     // 获取激励金
-    @GET("/incentive_fund/detail")
+    @GET("incentive_fund/detail")
     suspend fun getIncentiveFund(
         @Query("platform") platform: String = "pe",
         @Query("start") start: Int = 0,

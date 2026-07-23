@@ -19,6 +19,8 @@ captures
 **/xcshareddata/WorkspaceSettings.xcsettings
 node_modules/
 
+CLAUDE.md
 .claude/
+.codegraph/
 androidApp/release/
 

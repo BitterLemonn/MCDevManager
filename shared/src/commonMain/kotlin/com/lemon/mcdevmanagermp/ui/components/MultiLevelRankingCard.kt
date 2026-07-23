@@ -25,8 +25,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -62,7 +64,6 @@ import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_arrow_down
 import mcdevmanagermpr.shared.generated.resources.ic_arrow_normal
 import mcdevmanagermpr.shared.generated.resources.ic_arrow_up
-import mcdevmanagermpr.shared.generated.resources.ic_refresh
 import org.jetbrains.compose.resources.painterResource
 import kotlin.math.abs
 
@@ -133,11 +134,10 @@ fun MultiLevelRankingCard(
         if (currentList.isEmpty()) triggerFetch()
     }
 
-    ElevatedCard(
+    Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = colors.surfaceContainerHigh),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh)
     ) {
         Column {
             Row(
@@ -198,7 +198,7 @@ fun MultiLevelRankingCard(
                         item {
                             IconButton(onClick = { triggerFetch() }) {
                                 Icon(
-                                    painter = painterResource(Res.drawable.ic_refresh),
+                                    imageVector = Icons.Filled.Refresh,
                                     contentDescription = "Refresh",
                                     modifier = Modifier.size(24.dp),
                                     tint = colors.primary

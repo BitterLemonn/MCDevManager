@@ -1,0 +1,3231 @@
+{
+    "admin_recover_machine_time": 86400,
+    "available_scope": [
+        {
+            "id": "client",
+            "title": "客户端"
+        },
+        {
+            "id": "client/server",
+            "title": "双端"
+        },
+        {
+            "id": "server",
+            "title": "服务端"
+        }
+    ],
+    "channel": {
+        "comp": [
+            {
+                "height": 90,
+                "id": 7,
+                "title": "好友动态",
+                "version": 1,
+                "vip_only": false,
+                "width": 160
+            },
+            {
+                "height": 300,
+                "id": 9,
+                "title": "首页-轮播图",
+                "version": 1,
+                "vip_only": false,
+                "width": 1082
+            },
+            {
+                "height": 54,
+                "id": 10,
+                "title": "首页-排行榜",
+                "version": 1,
+                "vip_only": false,
+                "width": 96
+            },
+            {
+                "height": 160,
+                "id": 11,
+                "title": "好友推荐/分类/搜索封面",
+                "version": 1,
+                "vip_only": false,
+                "width": 140
+            },
+            {
+                "height": 160,
+                "id": 12,
+                "title": "首页-近期推荐",
+                "version": 1,
+                "vip_only": false,
+                "width": 140
+            },
+            {
+                "height": 225,
+                "id": 14,
+                "title": "详情页-轮播图",
+                "version": 1,
+                "vip_only": false,
+                "width": 400
+            },
+            {
+                "height": 135,
+                "id": 29,
+                "title": "咨询首页-推荐组件",
+                "version": 1,
+                "vip_only": false,
+                "width": 240
+            },
+            {
+                "height": 225,
+                "id": 1001,
+                "title": "轮播图1",
+                "version": 1,
+                "width": 400
+            },
+            {
+                "height": 225,
+                "id": 1002,
+                "title": "轮播图2",
+                "version": 1,
+                "width": 400
+            },
+            {
+                "height": 225,
+                "id": 1003,
+                "title": "轮播图3",
+                "version": 1,
+                "width": 400
+            },
+            {
+                "height": 225,
+                "id": 1004,
+                "title": "轮播图4",
+                "version": 1,
+                "width": 400
+            },
+            {
+                "height": 225,
+                "id": 1005,
+                "title": "轮播图5",
+                "version": 1,
+                "width": 400
+            }
+        ],
+        "multi": [
+            {
+                "height": 90,
+                "id": 17,
+                "title": "好友动态",
+                "version": 1,
+                "vip_only": false,
+                "width": 160
+            },
+            {
+                "height": 90,
+                "id": 18,
+                "title": "通用界面",
+                "version": 1,
+                "vip_only": false,
+                "width": 160
+            },
+            {
+                "height": 300,
+                "id": 19,
+                "title": "首页-轮播图",
+                "version": 1,
+                "vip_only": false,
+                "width": 1082
+            },
+            {
+                "height": 54,
+                "id": 20,
+                "title": "首页-排行榜",
+                "version": 1,
+                "vip_only": false,
+                "width": 96
+            },
+            {
+                "height": 160,
+                "id": 21,
+                "title": "首页-好友动态",
+                "version": 1,
+                "vip_only": false,
+                "width": 140
+            },
+            {
+                "height": 160,
+                "id": 22,
+                "title": "首页-近期推荐",
+                "version": 1,
+                "vip_only": false,
+                "width": 140
+            },
+            {
+                "height": 180,
+                "id": 23,
+                "title": "新品推荐",
+                "version": 1,
+                "vip_only": false,
+                "width": 140
+            },
+            {
+                "height": 160,
+                "id": 24,
+                "title": "游戏列表",
+                "version": 1,
+                "vip_only": false,
+                "width": 140
+            },
+            {
+                "height": 225,
+                "id": 25,
+                "title": "详情页-轮播图",
+                "version": 1,
+                "vip_only": false,
+                "width": 400
+            },
+            {
+                "height": 180,
+                "id": 27,
+                "title": "详情页-同类游戏",
+                "version": 1,
+                "vip_only": false,
+                "width": 140
+            },
+            {
+                "height": 135,
+                "id": 28,
+                "title": "咨询首页-推荐游戏",
+                "version": 1,
+                "vip_only": false,
+                "width": 240
+            },
+            {
+                "height": 225,
+                "id": 1001,
+                "title": "轮播图1",
+                "version": 1,
+                "width": 400
+            },
+            {
+                "height": 225,
+                "id": 1002,
+                "title": "轮播图2",
+                "version": 1,
+                "width": 400
+            },
+            {
+                "height": 225,
+                "id": 1003,
+                "title": "轮播图3",
+                "version": 1,
+                "width": 400
+            },
+            {
+                "height": 225,
+                "id": 1004,
+                "title": "轮播图4",
+                "version": 1,
+                "width": 400
+            },
+            {
+                "height": 225,
+                "id": 1005,
+                "title": "轮播图5",
+                "version": 1,
+                "width": 400
+            }
+        ],
+        "pe": [
+            {
+                "height": 558,
+                "id": 3,
+                "required": 1,
+                "title": "迭代ICON",
+                "version": 2,
+                "vip_only": false,
+                "width": 992
+            },
+            {
+                "height": 1000,
+                "id": 5,
+                "required": 1,
+                "title": "组件ICON",
+                "version": 3,
+                "vip_only": false,
+                "width": 1000
+            },
+            {
+                "height": 580,
+                "id": 6,
+                "required": 1,
+                "title": "pos机",
+                "version": 1,
+                "vip_only": false,
+                "width": 900
+            },
+            {
+                "height": 200,
+                "id": 7,
+                "required": 0,
+                "title": "封面图",
+                "version": 1,
+                "vip_only": true,
+                "width": 200
+            },
+            {
+                "height": 558,
+                "id": 1001,
+                "title": "轮播图1",
+                "version": 1,
+                "width": 992
+            },
+            {
+                "height": 558,
+                "id": 1002,
+                "title": "轮播图2",
+                "version": 1,
+                "width": 992
+            },
+            {
+                "height": 558,
+                "id": 1003,
+                "title": "轮播图3",
+                "version": 1,
+                "width": 992
+            }
+        ],
+        "pe_multi": [
+            {
+                "height": 558,
+                "id": 3,
+                "required": 1,
+                "title": "迭代ICON",
+                "version": 2,
+                "vip_only": false,
+                "width": 992
+            },
+            {
+                "height": 1000,
+                "id": 5,
+                "required": 1,
+                "title": "组件ICON",
+                "version": 3,
+                "vip_only": false,
+                "width": 1000
+            },
+            {
+                "height": 580,
+                "id": 6,
+                "required": 1,
+                "title": "pos机",
+                "version": 1,
+                "vip_only": false,
+                "width": 900
+            },
+            {
+                "height": 200,
+                "id": 7,
+                "required": 0,
+                "title": "封面图",
+                "version": 1,
+                "vip_only": true,
+                "width": 200
+            },
+            {
+                "height": 558,
+                "id": 1001,
+                "title": "轮播图1",
+                "version": 1,
+                "width": 992
+            },
+            {
+                "height": 558,
+                "id": 1002,
+                "title": "轮播图2",
+                "version": 1,
+                "width": 992
+            },
+            {
+                "height": 558,
+                "id": 1003,
+                "title": "轮播图3",
+                "version": 1,
+                "width": 992
+            }
+        ],
+        "resource_component": [
+            {
+                "height": 325,
+                "id": 1,
+                "title": "轮播图-1(封面)",
+                "version": 1,
+                "width": 576
+            },
+            {
+                "height": 325,
+                "id": 2,
+                "title": "轮播图-2",
+                "version": 1,
+                "width": 576
+            },
+            {
+                "height": 325,
+                "id": 3,
+                "title": "轮播图-3",
+                "version": 1,
+                "width": 576
+            },
+            {
+                "height": 325,
+                "id": 4,
+                "title": "轮播图-4",
+                "version": 1,
+                "width": 576
+            },
+            {
+                "height": 325,
+                "id": 5,
+                "title": "轮播图-5",
+                "version": 1,
+                "width": 576
+            },
+            {
+                "height": 325,
+                "id": 6,
+                "title": "轮播图-6",
+                "version": 1,
+                "width": 576
+            }
+        ],
+        "single": [
+            {
+                "height": 90,
+                "id": 17,
+                "title": "好友动态",
+                "version": 1,
+                "vip_only": false,
+                "width": 160
+            },
+            {
+                "height": 90,
+                "id": 18,
+                "title": "通用界面",
+                "version": 1,
+                "vip_only": false,
+                "width": 160
+            },
+            {
+                "height": 300,
+                "id": 19,
+                "title": "首页-轮播图",
+                "version": 1,
+                "vip_only": false,
+                "width": 1082
+            },
+            {
+                "height": 54,
+                "id": 20,
+                "title": "首页-排行榜",
+                "version": 1,
+                "vip_only": false,
+                "width": 96
+            },
+            {
+                "height": 160,
+                "id": 21,
+                "title": "首页-好友动态",
+                "version": 1,
+                "vip_only": false,
+                "width": 140
+            },
+            {
+                "height": 160,
+                "id": 22,
+                "title": "首页-近期推荐",
+                "version": 1,
+                "vip_only": false,
+                "width": 140
+            },
+            {
+                "height": 180,
+                "id": 23,
+                "title": "新品推荐",
+                "version": 1,
+                "vip_only": false,
+                "width": 140
+            },
+            {
+                "height": 160,
+                "id": 24,
+                "title": "游戏列表",
+                "version": 1,
+                "vip_only": false,
+                "width": 140
+            },
+            {
+                "height": 225,
+                "id": 25,
+                "title": "详情页-轮播图",
+                "version": 1,
+                "vip_only": false,
+                "width": 400
+            },
+            {
+                "height": 180,
+                "id": 27,
+                "title": "详情页-同类游戏",
+                "version": 1,
+                "vip_only": false,
+                "width": 140
+            },
+            {
+                "height": 135,
+                "id": 28,
+                "title": "咨询首页-推荐游戏",
+                "version": 1,
+                "vip_only": false,
+                "width": 240
+            }
+        ]
+    },
+    "charge_type": {
+        "pc": [
+            "mods",
+            "texture packs",
+            "skin packs",
+            "mash-up packs",
+            "worlds",
+            "plugins",
+            "server rent",
+            "server commodity",
+            "live broadcast",
+            "shader packs",
+            "multiplayer world commodity"
+        ],
+        "pe": [
+            "worlds",
+            "add on",
+            "texture packs",
+            "skin packs",
+            "shader packs",
+            "multiplayer world",
+            "gift packs"
+        ]
+    },
+    "developer_class": [
+        {
+            "_id": "1",
+            "class": 1,
+            "class_name": "元气新星",
+            "exp_ceiling": 1000,
+            "exp_floor": 0,
+            "level": 1,
+            "level_exp": 1000,
+            "level_fallback_exp": 100,
+            "level_name": "一级"
+        },
+        {
+            "_id": "2",
+            "class": 1,
+            "class_name": "元气新星",
+            "exp_ceiling": 3000,
+            "exp_floor": 1000,
+            "level": 2,
+            "level_exp": 2000,
+            "level_fallback_exp": 100,
+            "level_name": "二级"
+        },
+        {
+            "_id": "3",
+            "class": 1,
+            "class_name": "元气新星",
+            "exp_ceiling": 6000,
+            "exp_floor": 3000,
+            "level": 3,
+            "level_exp": 3000,
+            "level_fallback_exp": 100,
+            "level_name": "三级"
+        },
+        {
+            "_id": "4",
+            "class": 1,
+            "class_name": "元气新星",
+            "exp_ceiling": 10000,
+            "exp_floor": 6000,
+            "level": 4,
+            "level_exp": 4000,
+            "level_fallback_exp": 100,
+            "level_name": "四级"
+        },
+        {
+            "_id": "5",
+            "class": 2,
+            "class_name": "巧手工匠",
+            "exp_ceiling": 110000,
+            "exp_floor": 10000,
+            "level": 1,
+            "level_exp": 100000,
+            "level_fallback_exp": 10000,
+            "level_name": "一级"
+        },
+        {
+            "_id": "6",
+            "class": 2,
+            "class_name": "巧手工匠",
+            "exp_ceiling": 310000,
+            "exp_floor": 110000,
+            "level": 2,
+            "level_exp": 200000,
+            "level_fallback_exp": 10000,
+            "level_name": "二级"
+        },
+        {
+            "_id": "7",
+            "class": 2,
+            "class_name": "巧手工匠",
+            "exp_ceiling": 610000,
+            "exp_floor": 310000,
+            "level": 3,
+            "level_exp": 300000,
+            "level_fallback_exp": 10000,
+            "level_name": "三级"
+        },
+        {
+            "_id": "8",
+            "class": 2,
+            "class_name": "巧手工匠",
+            "exp_ceiling": 1010000,
+            "exp_floor": 610000,
+            "level": 4,
+            "level_exp": 400000,
+            "level_fallback_exp": 10000,
+            "level_name": "四级"
+        },
+        {
+            "_id": "9",
+            "class": 3,
+            "class_name": "杰出精英",
+            "exp_ceiling": 11010000,
+            "exp_floor": 1010000,
+            "level": 1,
+            "level_exp": 10000000,
+            "level_fallback_exp": 1000000,
+            "level_name": "一级"
+        },
+        {
+            "_id": "10",
+            "class": 3,
+            "class_name": "杰出精英",
+            "exp_ceiling": 31010000,
+            "exp_floor": 11010000,
+            "level": 2,
+            "level_exp": 20000000,
+            "level_fallback_exp": 1000000,
+            "level_name": "二级"
+        },
+        {
+            "_id": "11",
+            "class": 3,
+            "class_name": "杰出精英",
+            "exp_ceiling": 61010000,
+            "exp_floor": 31010000,
+            "level": 3,
+            "level_exp": 30000000,
+            "level_fallback_exp": 1000000,
+            "level_name": "三级"
+        },
+        {
+            "_id": "12",
+            "class": 3,
+            "class_name": "杰出精英",
+            "exp_ceiling": 101010000,
+            "exp_floor": 61010000,
+            "level": 4,
+            "level_exp": 40000000,
+            "level_fallback_exp": 1000000,
+            "level_name": "四级"
+        },
+        {
+            "_id": "13",
+            "class": 4,
+            "class_name": "创造大师",
+            "exp_ceiling": 201010000,
+            "exp_floor": 101010000,
+            "level": 1,
+            "level_exp": 100000000,
+            "level_fallback_exp": 10000000,
+            "level_name": "一级"
+        },
+        {
+            "_id": "14",
+            "class": 4,
+            "class_name": "创造大师",
+            "exp_ceiling": 401010000,
+            "exp_floor": 201010000,
+            "level": 2,
+            "level_exp": 200000000,
+            "level_fallback_exp": 10000000,
+            "level_name": "二级"
+        },
+        {
+            "_id": "15",
+            "class": 4,
+            "class_name": "创造大师",
+            "exp_ceiling": 701010000,
+            "exp_floor": 401010000,
+            "level": 3,
+            "level_exp": 300000000,
+            "level_fallback_exp": 10000000,
+            "level_name": "三级"
+        },
+        {
+            "_id": "16",
+            "class": 4,
+            "class_name": "创造大师",
+            "exp_ceiling": 1101010000,
+            "exp_floor": 701010000,
+            "level": 4,
+            "level_exp": 400000000,
+            "level_fallback_exp": 10000000,
+            "level_name": "四级"
+        },
+        {
+            "_id": "17",
+            "class": 5,
+            "class_name": "传奇宗师",
+            "exp_ceiling": 2101010000,
+            "exp_floor": 1101010000,
+            "level": 1,
+            "level_exp": 1000000000,
+            "level_fallback_exp": 100000000,
+            "level_name": "一级"
+        },
+        {
+            "_id": "18",
+            "class": 5,
+            "class_name": "传奇宗师",
+            "exp_ceiling": 4101010000,
+            "exp_floor": 2101010000,
+            "level": 2,
+            "level_exp": 2000000000,
+            "level_fallback_exp": 100000000,
+            "level_name": "二级"
+        },
+        {
+            "_id": "19",
+            "class": 5,
+            "class_name": "传奇宗师",
+            "exp_ceiling": 7101010000,
+            "exp_floor": 4101010000,
+            "level": 3,
+            "level_exp": 3000000000,
+            "level_fallback_exp": 100000000,
+            "level_name": "三级"
+        },
+        {
+            "_id": "20",
+            "class": 5,
+            "class_name": "传奇宗师",
+            "exp_ceiling": 11101010000,
+            "exp_floor": 7101010000,
+            "level": 4,
+            "level_exp": 4000000000,
+            "level_fallback_exp": 100000000,
+            "level_name": "四级"
+        },
+        {
+            "_id": "21",
+            "class": 5,
+            "class_name": "传奇宗师",
+            "exp_ceiling": 16101010000,
+            "exp_floor": 11101010000,
+            "level": 5,
+            "level_exp": 5000000000,
+            "level_fallback_exp": 100000000,
+            "level_name": "五级"
+        },
+        {
+            "_id": "22",
+            "class": 5,
+            "class_name": "传奇宗师",
+            "exp_ceiling": 22101010000,
+            "exp_floor": 16101010000,
+            "level": 6,
+            "level_exp": 6000000000,
+            "level_fallback_exp": 100000000,
+            "level_name": "六级"
+        },
+        {
+            "_id": "23",
+            "class": 5,
+            "class_name": "传奇宗师",
+            "exp_ceiling": 29101010000,
+            "exp_floor": 22101010000,
+            "level": 7,
+            "level_exp": 7000000000,
+            "level_fallback_exp": 100000000,
+            "level_name": "七级"
+        },
+        {
+            "_id": "24",
+            "class": 5,
+            "class_name": "传奇宗师",
+            "exp_ceiling": 37101010000,
+            "exp_floor": 29101010000,
+            "level": 8,
+            "level_exp": 8000000000,
+            "level_fallback_exp": 100000000,
+            "level_name": "八级"
+        },
+        {
+            "_id": "25",
+            "class": 5,
+            "class_name": "传奇宗师",
+            "exp_ceiling": 46101010000,
+            "exp_floor": 37101010000,
+            "level": 9,
+            "level_exp": 9000000000,
+            "level_fallback_exp": 100000000,
+            "level_name": "九级"
+        },
+        {
+            "_id": "26",
+            "class": 5,
+            "class_name": "传奇宗师",
+            "exp_ceiling": 56101010000,
+            "exp_floor": 46101010000,
+            "level": 10,
+            "level_exp": 10000000000,
+            "level_fallback_exp": 100000000,
+            "level_name": "十级"
+        }
+    ],
+    "game_host": [
+        "product",
+        "pc_review",
+        "simulate",
+        "pe",
+        "pe_sim",
+        "pe_review",
+        "pe-tech",
+        "pe_taitan"
+    ],
+    "item_rarities": [
+        {
+            "name": "ordinary",
+            "rarity": 0,
+            "title": "普通"
+        },
+        {
+            "name": "outstanding",
+            "rarity": 10,
+            "title": "优秀"
+        },
+        {
+            "name": "series_skin",
+            "rarity": 15,
+            "title": "系列皮肤"
+        },
+        {
+            "name": "rare",
+            "rarity": 20,
+            "title": "稀有"
+        },
+        {
+            "name": "epic",
+            "rarity": 30,
+            "title": "史诗"
+        },
+        {
+            "name": "ip_linkage",
+            "rarity": 35,
+            "title": "联动"
+        },
+        {
+            "name": "legend",
+            "rarity": 40,
+            "title": "传说"
+        },
+        {
+            "name": "legend_variation",
+            "rarity": 50,
+            "title": "传说变异"
+        },
+        {
+            "name": "myth",
+            "rarity": 60,
+            "title": "神话"
+        }
+    ],
+    "item_tag_limit": 3,
+    "java_version": [
+        {
+            "id": "java17",
+            "title": "Java 17"
+        },
+        {
+            "id": "java22",
+            "title": "Java 22"
+        },
+        {
+            "id": "java7",
+            "title": "Java 7"
+        },
+        {
+            "id": "java8",
+            "title": "Java 8"
+        }
+    ],
+    "label_type": {
+        "1": [
+            {
+                "id": 102,
+                "title": "解谜"
+            },
+            {
+                "id": 101,
+                "title": "生存"
+            },
+            {
+                "id": 103,
+                "title": "战斗"
+            },
+            {
+                "id": 104,
+                "title": "射击"
+            },
+            {
+                "id": 105,
+                "title": "拟真"
+            },
+            {
+                "id": 106,
+                "title": "建造"
+            },
+            {
+                "id": 107,
+                "title": "红石"
+            },
+            {
+                "id": 108,
+                "title": "扮演"
+            }
+        ],
+        "2": [
+            {
+                "id": 201,
+                "title": "古代"
+            },
+            {
+                "id": 202,
+                "title": "现代"
+            },
+            {
+                "id": 203,
+                "title": "科幻"
+            },
+            {
+                "id": 204,
+                "title": "奇幻"
+            },
+            {
+                "id": 205,
+                "title": "仙侠"
+            },
+            {
+                "id": 206,
+                "title": "惊悚"
+            },
+            {
+                "id": 207,
+                "title": "搞怪"
+            },
+            {
+                "id": 208,
+                "title": "流行"
+            },
+            {
+                "id": 209,
+                "title": "原生"
+            }
+        ]
+    },
+    "lobby_tags": [
+        {
+            "id": 1,
+            "title": "策略对战"
+        },
+        {
+            "id": 2,
+            "title": "职业对战"
+        },
+        {
+            "id": 9,
+            "title": "竞技模式"
+        },
+        {
+            "id": 3,
+            "title": "休闲对抗"
+        },
+        {
+            "id": 4,
+            "title": "竞速"
+        },
+        {
+            "id": 5,
+            "title": "多人生存"
+        },
+        {
+            "id": 6,
+            "title": "多人闯关"
+        },
+        {
+            "id": 7,
+            "title": "多人跑酷"
+        },
+        {
+            "id": 8,
+            "title": "幸运方块"
+        }
+    ],
+    "mc_version": [
+        "1.7.10",
+        "1.8",
+        "1.8.8",
+        "1.8.9",
+        "1.9.4",
+        "1.10.2",
+        "1.11.2",
+        "1.12.2",
+        "1.13.2",
+        "1.14.3",
+        "1.15",
+        "1.16.4",
+        "1.18.1",
+        "1.19.2",
+        "1.20.1",
+        "1.20.6",
+        "1.21.0",
+        "1.21.8",
+        "100.0.0",
+        "200.0.0"
+    ],
+    "mod_second_type": {
+        "2": [
+            {
+                "file_type": "zip",
+                "fp_type": "zip_package",
+                "id": 201,
+                "mod_version": true,
+                "title": "武器装备"
+            },
+            {
+                "file_type": "zip",
+                "fp_type": "zip_package",
+                "id": 208,
+                "mod_version": true,
+                "title": "大型玩法"
+            },
+            {
+                "file_type": "zip",
+                "fp_type": "zip_package",
+                "id": 202,
+                "mod_version": true,
+                "title": "物品道具"
+            },
+            {
+                "file_type": "zip",
+                "fp_type": "zip_package",
+                "id": 203,
+                "mod_version": true,
+                "title": "更多生物"
+            },
+            {
+                "file_type": "zip",
+                "fp_type": "zip_package",
+                "id": 205,
+                "mod_version": true,
+                "title": "辅助工具"
+            },
+            {
+                "file_type": "zip",
+                "fp_type": "zip_package",
+                "id": 206,
+                "mod_version": true,
+                "title": "建筑与家具"
+            },
+            {
+                "file_type": "zip",
+                "fp_type": "zip_package",
+                "id": 207,
+                "mod_version": true,
+                "title": "视觉美化"
+            },
+            {
+                "file_type": "zip",
+                "fp_type": "zip_package",
+                "id": 204,
+                "mod_version": true,
+                "title": "方块与群系"
+            },
+            {
+                "file_type": "zip",
+                "fp_type": "zip_package",
+                "id": 209,
+                "mod_version": true,
+                "title": "服主管理工具"
+            }
+        ]
+    },
+    "mod_version": [
+        "1.7",
+        "1.8",
+        "1.9",
+        "1.10",
+        "1.11",
+        "1.12",
+        "1.13",
+        "1.14",
+        "1.15",
+        "1.16",
+        "1.17",
+        "1.18",
+        "1.19",
+        "1.20",
+        "1.21",
+        "1.22",
+        "1.23",
+        "1.24",
+        "1.25",
+        "2.0",
+        "2.1",
+        "2.2",
+        "2.3",
+        "2.4",
+        "2.5",
+        "2.6",
+        "2.7",
+        "2.8",
+        "2.9",
+        "2.10",
+        "2.11",
+        "2.12",
+        "3.0",
+        "3.1",
+        "3.2",
+        "3.3",
+        "3.4",
+        "3.5",
+        "3.6",
+        "3.7",
+        "3.8"
+    ],
+    "multi_tags": [],
+    "need_rookie_time": "2021-03-12T01:00:00",
+    "pc_relate_version": [
+        "100.0.0"
+    ],
+    "pe_multi_version": [
+        "1.6",
+        "1.7",
+        "1.8",
+        "1.9",
+        "1.10",
+        "1.11",
+        "1.12",
+        "1.13",
+        "1.14",
+        "1.15",
+        "1.16",
+        "1.17",
+        "1.18",
+        "1.19",
+        "1.20",
+        "1.21",
+        "1.22",
+        "1.23",
+        "1.24",
+        "1.25",
+        "2.0",
+        "2.1",
+        "2.2",
+        "2.3",
+        "2.4",
+        "2.5",
+        "2.6",
+        "2.7",
+        "2.8",
+        "2.9",
+        "2.10",
+        "2.11",
+        "2.12",
+        "3.0",
+        "3.1",
+        "3.2",
+        "3.3",
+        "3.4",
+        "3.5",
+        "3.6",
+        "3.7",
+        "3.8"
+    ],
+    "pri_effect_type": {
+        "comp": [
+            {
+                "id": 1,
+                "title": "脚印&粒子"
+            },
+            {
+                "id": 2,
+                "title": "法阵"
+            },
+            {
+                "id": 3,
+                "title": "武器强化"
+            },
+            {
+                "id": 4,
+                "title": "生物改造"
+            },
+            {
+                "id": 5,
+                "title": "外接效果"
+            },
+            {
+                "id": 6,
+                "title": "盔甲"
+            },
+            {
+                "id": 7,
+                "title": "工具方块"
+            },
+            {
+                "id": 8,
+                "title": "皮肤拆件"
+            }
+        ],
+        "pe": [
+            {
+                "id": 1,
+                "title": "脚印&粒子"
+            },
+            {
+                "id": 2,
+                "title": "法阵"
+            },
+            {
+                "id": 3,
+                "title": "武器强化"
+            },
+            {
+                "id": 4,
+                "title": "生物改造"
+            },
+            {
+                "id": 5,
+                "title": "外接效果"
+            },
+            {
+                "id": 6,
+                "title": "盔甲"
+            },
+            {
+                "id": 7,
+                "title": "工具方块"
+            },
+            {
+                "id": 8,
+                "title": "皮肤拆件"
+            }
+        ]
+    },
+    "pri_persona_type": {
+        "pe": [
+            {
+                "id": 1,
+                "title": "身体"
+            },
+            {
+                "id": 2,
+                "title": "装束"
+            }
+        ]
+    },
+    "pri_type": {
+        "comp": [
+            {
+                "id": 3,
+                "title": "功能组件"
+            },
+            {
+                "id": 4,
+                "title": "视觉组件"
+            },
+            {
+                "id": 5,
+                "title": "地图组件"
+            },
+            {
+                "id": 6,
+                "title": "玩法组件"
+            },
+            {
+                "id": 10,
+                "title": "形象组件"
+            },
+            {
+                "id": 11,
+                "title": "联机大厅"
+            },
+            {
+                "id": 12,
+                "title": "礼包"
+            }
+        ],
+        "multi": [
+            {
+                "id": 2,
+                "title": "网络游戏"
+            }
+        ],
+        "pe": [
+            {
+                "id": 1,
+                "title": "地图"
+            },
+            {
+                "id": 2,
+                "title": "add_ons"
+            },
+            {
+                "id": 3,
+                "title": "材质光影"
+            },
+            {
+                "id": 4,
+                "title": "皮肤"
+            },
+            {
+                "id": 6,
+                "title": "联机大厅"
+            },
+            {
+                "id": 7,
+                "title": "个性化"
+            }
+        ],
+        "single": [
+            {
+                "id": 1,
+                "title": "单机游戏"
+            }
+        ]
+    },
+    "price_type": [
+        {
+            "id": "diamond",
+            "min": 10,
+            "step": 10,
+            "title": "钻石"
+        },
+        {
+            "id": "free",
+            "max": 0,
+            "min": 0,
+            "step": 10,
+            "title": "免费"
+        },
+        {
+            "id": "gift",
+            "max": 0,
+            "min": 0,
+            "step": 10,
+            "title": "承接礼包"
+        },
+        {
+            "id": "point",
+            "min": 10,
+            "step": 10,
+            "title": "绿宝石"
+        }
+    ],
+    "realms_only_play_type": {},
+    "self_recover_machine_time": 86400,
+    "special_channel": {
+        "pe": {
+            "13": [
+                5
+            ],
+            "14": [
+                5
+            ],
+            "15": [
+                5
+            ],
+            "16": [
+                5
+            ],
+            "18": [
+                5,
+                7
+            ],
+            "21": [
+                5
+            ]
+        }
+    },
+    "start_rookie": true,
+    "sub_effect_type": {
+        "comp": {
+            "1": [
+                {
+                    "id": 1,
+                    "title": "脚印&粒子"
+                }
+            ],
+            "2": [
+                {
+                    "id": 2,
+                    "title": "法阵"
+                }
+            ],
+            "3": [
+                {
+                    "id": 3,
+                    "title": "钻石剑"
+                },
+                {
+                    "id": 9,
+                    "title": "弓箭"
+                },
+                {
+                    "id": 10,
+                    "title": "钻石斧"
+                },
+                {
+                    "id": 11,
+                    "title": "钻石镐"
+                },
+                {
+                    "id": 13,
+                    "title": "盾牌"
+                }
+            ],
+            "4": [
+                {
+                    "id": 4,
+                    "title": "马"
+                }
+            ],
+            "5": [
+                {
+                    "id": 5,
+                    "title": "头部"
+                },
+                {
+                    "id": 6,
+                    "title": "上身"
+                },
+                {
+                    "id": 7,
+                    "title": "下身"
+                },
+                {
+                    "id": 8,
+                    "title": "脚底"
+                }
+            ],
+            "6": [
+                {
+                    "id": 12,
+                    "title": "盔甲套装"
+                }
+            ],
+            "7": [
+                {
+                    "id": 14,
+                    "title": "工作台"
+                },
+                {
+                    "id": 15,
+                    "title": "熔炉"
+                }
+            ],
+            "8": [
+                {
+                    "id": 16,
+                    "title": "头饰"
+                },
+                {
+                    "id": 17,
+                    "title": "头部"
+                },
+                {
+                    "id": 18,
+                    "title": "上衣"
+                },
+                {
+                    "id": 19,
+                    "title": "下衣"
+                },
+                {
+                    "id": 20,
+                    "title": "背饰"
+                },
+                {
+                    "id": 21,
+                    "title": "周身"
+                },
+                {
+                    "id": 22,
+                    "title": "挂饰"
+                }
+            ]
+        },
+        "pe": {
+            "1": [
+                {
+                    "id": 1,
+                    "title": "脚印&粒子"
+                }
+            ],
+            "2": [
+                {
+                    "id": 2,
+                    "title": "法阵"
+                }
+            ],
+            "3": [
+                {
+                    "id": 3,
+                    "title": "钻石剑"
+                },
+                {
+                    "id": 9,
+                    "title": "弓箭"
+                },
+                {
+                    "id": 10,
+                    "title": "钻石斧"
+                },
+                {
+                    "id": 11,
+                    "title": "钻石镐"
+                },
+                {
+                    "id": 13,
+                    "title": "盾牌"
+                }
+            ],
+            "4": [
+                {
+                    "id": 4,
+                    "title": "马"
+                }
+            ],
+            "5": [
+                {
+                    "id": 5,
+                    "title": "头部"
+                },
+                {
+                    "id": 6,
+                    "title": "上身"
+                },
+                {
+                    "id": 7,
+                    "title": "下身"
+                },
+                {
+                    "id": 8,
+                    "title": "脚底"
+                }
+            ],
+            "6": [
+                {
+                    "id": 12,
+                    "title": "盔甲套装"
+                }
+            ],
+            "7": [
+                {
+                    "id": 14,
+                    "title": "工作台"
+                },
+                {
+                    "id": 15,
+                    "title": "熔炉"
+                }
+            ],
+            "8": [
+                {
+                    "id": 16,
+                    "title": "头饰"
+                },
+                {
+                    "id": 17,
+                    "title": "头部"
+                },
+                {
+                    "id": 18,
+                    "title": "上衣"
+                },
+                {
+                    "id": 19,
+                    "title": "下衣"
+                },
+                {
+                    "id": 20,
+                    "title": "背饰"
+                },
+                {
+                    "id": 21,
+                    "title": "周身"
+                },
+                {
+                    "id": 22,
+                    "title": "挂饰"
+                }
+            ]
+        }
+    },
+    "sub_persona_type": {
+        "pe": {
+            "1": [
+                {
+                    "id": 1,
+                    "title": "肤色"
+                },
+                {
+                    "id": 2,
+                    "title": "头发"
+                },
+                {
+                    "id": 3,
+                    "title": "面部毛发"
+                },
+                {
+                    "id": 4,
+                    "title": "眼睛"
+                },
+                {
+                    "id": 5,
+                    "title": "嘴巴"
+                },
+                {
+                    "id": 6,
+                    "title": "手臂"
+                },
+                {
+                    "id": 7,
+                    "title": "腿部"
+                }
+            ],
+            "2": [
+                {
+                    "id": 8,
+                    "title": "头部饰品"
+                },
+                {
+                    "id": 9,
+                    "title": "面部饰品"
+                },
+                {
+                    "id": 10,
+                    "title": "上衣"
+                },
+                {
+                    "id": 11,
+                    "title": "下装"
+                },
+                {
+                    "id": 12,
+                    "title": "手持物品"
+                },
+                {
+                    "id": 13,
+                    "title": "足部物品"
+                },
+                {
+                    "id": 14,
+                    "title": "外套"
+                },
+                {
+                    "id": 15,
+                    "title": "背部饰品"
+                }
+            ]
+        }
+    },
+    "sub_type": {
+        "pc": {
+            "1": [
+                {
+                    "id": 1,
+                    "title": "休闲类"
+                },
+                {
+                    "id": 2,
+                    "title": "体育类"
+                },
+                {
+                    "id": 3,
+                    "title": "冒险类"
+                },
+                {
+                    "id": 4,
+                    "title": "动作类"
+                },
+                {
+                    "id": 5,
+                    "title": "模拟类"
+                },
+                {
+                    "id": 6,
+                    "title": "策略类"
+                },
+                {
+                    "id": 7,
+                    "title": "角色扮演类"
+                }
+            ],
+            "2": [
+                {
+                    "id": 8,
+                    "title": "休闲类"
+                },
+                {
+                    "id": 9,
+                    "title": "体育类"
+                },
+                {
+                    "id": 10,
+                    "title": "冒险类"
+                },
+                {
+                    "id": 11,
+                    "title": "动作类"
+                },
+                {
+                    "id": 12,
+                    "title": "模拟类"
+                },
+                {
+                    "id": 13,
+                    "title": "策略类"
+                },
+                {
+                    "id": 14,
+                    "title": "角色扮演类"
+                },
+                {
+                    "id": 33,
+                    "title": "Hypixel"
+                }
+            ],
+            "3": [
+                {
+                    "id": 15,
+                    "need_mod_id": true,
+                    "title": "工具类"
+                },
+                {
+                    "id": 16,
+                    "need_mod_id": true,
+                    "title": "冒险类"
+                },
+                {
+                    "id": 17,
+                    "need_mod_id": true,
+                    "title": "科技类"
+                },
+                {
+                    "id": 34,
+                    "need_mod_id": true,
+                    "title": "前置类"
+                },
+                {
+                    "id": 35,
+                    "need_mod_id": true,
+                    "title": "农业类"
+                },
+                {
+                    "id": 36,
+                    "need_mod_id": true,
+                    "title": "装饰类"
+                },
+                {
+                    "id": 37,
+                    "need_mod_id": true,
+                    "title": "魔法类"
+                },
+                {
+                    "id": 38,
+                    "need_mod_id": true,
+                    "title": "其他"
+                },
+                {
+                    "id": 43,
+                    "mod_version": true,
+                    "title": "特色生物",
+                    "vip_only": true
+                },
+                {
+                    "id": 44,
+                    "is_effect": true,
+                    "title": "特效粒子",
+                    "vip_only": true
+                },
+                {
+                    "id": 47,
+                    "need_mod_id": true,
+                    "title": "YSM/CSM"
+                }
+            ],
+            "4": [
+                {
+                    "id": 18,
+                    "need_mod_id": true,
+                    "title": "光影类"
+                },
+                {
+                    "id": 19,
+                    "need_mod_id": true,
+                    "title": "材质类"
+                }
+            ],
+            "5": [
+                {
+                    "available_scope_type": [
+                        {
+                            "id": "client/server",
+                            "title": "双端"
+                        }
+                    ],
+                    "id": 21,
+                    "title": "益智解谜"
+                },
+                {
+                    "available_scope_type": [
+                        {
+                            "id": "client/server",
+                            "title": "双端"
+                        }
+                    ],
+                    "id": 22,
+                    "title": "建筑创造"
+                },
+                {
+                    "available_scope_type": [
+                        {
+                            "id": "client/server",
+                            "title": "双端"
+                        }
+                    ],
+                    "id": 23,
+                    "title": "生存冒险"
+                },
+                {
+                    "available_scope_type": [
+                        {
+                            "id": "client/server",
+                            "title": "双端"
+                        }
+                    ],
+                    "id": 39,
+                    "title": "游戏地图"
+                },
+                {
+                    "available_scope_type": [
+                        {
+                            "id": "client/server",
+                            "title": "双端"
+                        }
+                    ],
+                    "id": 40,
+                    "title": "刺激跑酷"
+                },
+                {
+                    "available_scope_type": [
+                        {
+                            "id": "client/server",
+                            "title": "双端"
+                        }
+                    ],
+                    "id": 45,
+                    "title": "光追地图"
+                }
+            ],
+            "6": [
+                {
+                    "id": 24,
+                    "title": "休闲类"
+                },
+                {
+                    "id": 25,
+                    "title": "体育类"
+                },
+                {
+                    "id": 26,
+                    "title": "冒险类"
+                },
+                {
+                    "id": 27,
+                    "title": "动作类"
+                },
+                {
+                    "id": 28,
+                    "title": "模拟类"
+                },
+                {
+                    "id": 29,
+                    "title": "策略类"
+                },
+                {
+                    "id": 30,
+                    "title": "角色扮演类"
+                }
+            ],
+            "10": [
+                {
+                    "available_scope_type": [
+                        {
+                            "id": "client",
+                            "title": "客户端"
+                        }
+                    ],
+                    "eqsize": [
+                        {
+                            "height": 64,
+                            "width": 64
+                        },
+                        {
+                            "height": 32,
+                            "width": 64
+                        },
+                        {
+                            "height": 128,
+                            "width": 128
+                        }
+                    ],
+                    "file_type": "png",
+                    "fp_type": "png",
+                    "id": 31,
+                    "title": "皮肤类"
+                },
+                {
+                    "file_type": "zip",
+                    "fp_type": "zip_package",
+                    "id": 41,
+                    "title": "4D皮肤",
+                    "vip_only": true
+                },
+                {
+                    "file_type": "png",
+                    "fp_type": "png",
+                    "id": 42,
+                    "title": "特色皮肤",
+                    "vip_only": true
+                }
+            ],
+            "11": [
+                {
+                    "id": 999,
+                    "lobby": true,
+                    "title": "默认"
+                }
+            ],
+            "12": [
+                {
+                    "id": 46,
+                    "title": "会员礼包类"
+                }
+            ]
+        },
+        "pe": {
+            "1": [
+                {
+                    "file_type": "zip",
+                    "fp_type": "zip_package",
+                    "id": 1,
+                    "mod_version": true,
+                    "title": "闯关解密"
+                },
+                {
+                    "file_type": "zip",
+                    "fp_type": "zip_package",
+                    "id": 2,
+                    "mod_version": true,
+                    "title": "角色扮演"
+                },
+                {
+                    "file_type": "zip",
+                    "fp_type": "zip_package",
+                    "id": 3,
+                    "mod_version": true,
+                    "title": "策略大战"
+                },
+                {
+                    "file_type": "zip",
+                    "fp_type": "zip_package",
+                    "id": 4,
+                    "mod_version": true,
+                    "title": "建筑大观"
+                },
+                {
+                    "file_type": "zip",
+                    "fp_type": "zip_package",
+                    "id": 5,
+                    "mod_version": true,
+                    "title": "其他地图"
+                },
+                {
+                    "file_type": "zip",
+                    "fp_type": "zip_package",
+                    "id": 23,
+                    "mod_version": true,
+                    "title": "主城资源"
+                }
+            ],
+            "2": [
+                {
+                    "file_type": "zip",
+                    "fp_type": "zip_package",
+                    "id": 6,
+                    "mod_version": true,
+                    "title": "玩法拓展"
+                },
+                {
+                    "file_type": "zip",
+                    "fp_type": "zip_package",
+                    "id": 7,
+                    "mod_version": true,
+                    "title": "原创道具"
+                },
+                {
+                    "file_type": "zip",
+                    "fp_type": "zip_package",
+                    "id": 8,
+                    "mod_version": true,
+                    "title": "生物改造"
+                },
+                {
+                    "file_type": "zip",
+                    "fp_type": "zip_package",
+                    "id": 9,
+                    "mod_version": true,
+                    "title": "其他功能"
+                },
+                {
+                    "id": 19,
+                    "is_effect": true,
+                    "mod_version": true,
+                    "title": "特效粒子",
+                    "vip_only": true
+                },
+                {
+                    "id": 20,
+                    "mod_version": true,
+                    "title": "特色生物",
+                    "vip_only": true
+                },
+                {
+                    "file_type": "zip",
+                    "fp_type": "zip_package",
+                    "id": 22,
+                    "mod_version": true,
+                    "title": "一键生成"
+                },
+                {
+                    "file_type": "zip",
+                    "fp_type": "zip_package",
+                    "id": 24,
+                    "mod_version": true,
+                    "title": "YSM/CSM"
+                }
+            ],
+            "3": [
+                {
+                    "file_type": "zip",
+                    "fp_type": "zip_package",
+                    "id": 11,
+                    "mod_version": true,
+                    "title": "精美材质"
+                },
+                {
+                    "file_type": "zip",
+                    "fp_type": "zip_package",
+                    "id": 12,
+                    "mod_version": true,
+                    "title": "炫酷光影"
+                }
+            ],
+            "4": [
+                {
+                    "body_type": [
+                        {
+                            "id": "normal",
+                            "title": "标准"
+                        },
+                        {
+                            "id": "slim",
+                            "title": "Slim"
+                        }
+                    ],
+                    "eqsize": [
+                        {
+                            "height": 64,
+                            "width": 64
+                        },
+                        {
+                            "height": 128,
+                            "width": 128
+                        }
+                    ],
+                    "file_type": "png",
+                    "fp_type": "png",
+                    "id": 13,
+                    "mod_version": true,
+                    "pc_relate": false,
+                    "title": "原版风格",
+                    "video": false
+                },
+                {
+                    "body_type": [
+                        {
+                            "id": "normal",
+                            "title": "标准"
+                        },
+                        {
+                            "id": "slim",
+                            "title": "Slim"
+                        }
+                    ],
+                    "eqsize": [
+                        {
+                            "height": 64,
+                            "width": 64
+                        },
+                        {
+                            "height": 128,
+                            "width": 128
+                        }
+                    ],
+                    "file_type": "png",
+                    "fp_type": "png",
+                    "id": 14,
+                    "mod_version": true,
+                    "pc_relate": false,
+                    "title": "科幻风格",
+                    "video": false
+                },
+                {
+                    "body_type": [
+                        {
+                            "id": "normal",
+                            "title": "标准"
+                        },
+                        {
+                            "id": "slim",
+                            "title": "Slim"
+                        }
+                    ],
+                    "eqsize": [
+                        {
+                            "height": 64,
+                            "width": 64
+                        },
+                        {
+                            "height": 128,
+                            "width": 128
+                        }
+                    ],
+                    "file_type": "png",
+                    "fp_type": "png",
+                    "id": 15,
+                    "mod_version": true,
+                    "pc_relate": false,
+                    "title": "神话风格",
+                    "video": false
+                },
+                {
+                    "body_type": [
+                        {
+                            "id": "normal",
+                            "title": "标准"
+                        },
+                        {
+                            "id": "slim",
+                            "title": "Slim"
+                        }
+                    ],
+                    "eqsize": [
+                        {
+                            "height": 64,
+                            "width": 64
+                        },
+                        {
+                            "height": 128,
+                            "width": 128
+                        }
+                    ],
+                    "file_type": "png",
+                    "fp_type": "png",
+                    "id": 16,
+                    "mod_version": true,
+                    "pc_relate": false,
+                    "title": "其他皮肤",
+                    "video": false
+                },
+                {
+                    "id": 18,
+                    "mod_version": true,
+                    "title": "4D皮肤",
+                    "vip_only": true
+                }
+            ],
+            "5": [],
+            "6": [
+                {
+                    "file_type": "zip",
+                    "fp_type": "zip_package",
+                    "id": 999,
+                    "lobby": true,
+                    "mod_version": true,
+                    "title": "默认"
+                }
+            ],
+            "7": []
+        }
+    },
+    "tag": {
+        "comp": [
+            {
+                "id": 86,
+                "title": "动作"
+            },
+            {
+                "id": 87,
+                "title": "冒险"
+            },
+            {
+                "id": 88,
+                "title": "休闲"
+            },
+            {
+                "id": 89,
+                "title": "策略"
+            },
+            {
+                "id": 90,
+                "title": "模拟"
+            },
+            {
+                "id": 91,
+                "title": "角色扮演"
+            },
+            {
+                "id": 92,
+                "title": "单人"
+            },
+            {
+                "id": 93,
+                "title": "大型多人在线"
+            },
+            {
+                "id": 94,
+                "title": "体育"
+            },
+            {
+                "id": 95,
+                "title": "竞速"
+            },
+            {
+                "id": 96,
+                "title": "多人"
+            },
+            {
+                "id": 97,
+                "title": "氛围"
+            },
+            {
+                "id": 98,
+                "title": "解谜"
+            },
+            {
+                "id": 99,
+                "title": "恐怖"
+            },
+            {
+                "id": 100,
+                "title": "开放世界"
+            },
+            {
+                "id": 101,
+                "title": "科幻"
+            },
+            {
+                "id": 102,
+                "title": "合作"
+            },
+            {
+                "id": 103,
+                "title": "奇幻"
+            },
+            {
+                "id": 104,
+                "title": "剧情丰富"
+            },
+            {
+                "id": 105,
+                "title": "射击"
+            },
+            {
+                "id": 106,
+                "title": "暴力"
+            },
+            {
+                "id": 107,
+                "title": "血腥"
+            },
+            {
+                "id": 108,
+                "title": "搞笑"
+            },
+            {
+                "id": 109,
+                "title": "沙盒"
+            },
+            {
+                "id": 110,
+                "title": "欢乐"
+            },
+            {
+                "id": 111,
+                "title": "生存"
+            },
+            {
+                "id": 112,
+                "title": "怀旧"
+            },
+            {
+                "id": 113,
+                "title": "电影"
+            },
+            {
+                "id": 114,
+                "title": "丧尸"
+            },
+            {
+                "id": 115,
+                "title": "探索"
+            },
+            {
+                "id": 116,
+                "title": "在线合作"
+            },
+            {
+                "id": 117,
+                "title": "太空"
+            },
+            {
+                "id": 118,
+                "title": "教育"
+            },
+            {
+                "id": 119,
+                "title": "可爱"
+            },
+            {
+                "id": 120,
+                "title": "战术"
+            },
+            {
+                "id": 121,
+                "title": "悬疑惊悚"
+            },
+            {
+                "id": 122,
+                "title": "单机多人"
+            },
+            {
+                "id": 123,
+                "title": "单机合作"
+            },
+            {
+                "id": 124,
+                "title": "动作角色扮演"
+            },
+            {
+                "id": 125,
+                "title": "物理"
+            },
+            {
+                "id": 126,
+                "title": "生存恐怖"
+            },
+            {
+                "id": 127,
+                "title": "潜行"
+            },
+            {
+                "id": 128,
+                "title": "黑暗"
+            },
+            {
+                "id": 129,
+                "title": "建造"
+            },
+            {
+                "id": 130,
+                "title": "工艺"
+            },
+            {
+                "id": 131,
+                "title": "历史"
+            },
+            {
+                "id": 132,
+                "title": "动作冒险"
+            },
+            {
+                "id": 133,
+                "title": "战争"
+            },
+            {
+                "id": 134,
+                "title": "玩家对战"
+            },
+            {
+                "id": 135,
+                "title": "末日"
+            },
+            {
+                "id": 136,
+                "title": "格斗"
+            },
+            {
+                "id": 137,
+                "title": "塔防"
+            },
+            {
+                "id": 138,
+                "title": "MMORPG"
+            },
+            {
+                "id": 139,
+                "title": "弹幕"
+            },
+            {
+                "id": 140,
+                "title": "竞技"
+            },
+            {
+                "id": 141,
+                "title": "中世纪"
+            },
+            {
+                "id": 142,
+                "title": "黑暗奇幻"
+            },
+            {
+                "id": 143,
+                "title": "二战"
+            },
+            {
+                "id": 144,
+                "title": "未来"
+            },
+            {
+                "id": 145,
+                "title": "迷宫探索"
+            },
+            {
+                "id": 146,
+                "title": "团队角色扮演"
+            },
+            {
+                "id": 147,
+                "title": "军事"
+            },
+            {
+                "id": 148,
+                "title": "跑酷"
+            },
+            {
+                "id": 149,
+                "title": "魔法"
+            },
+            {
+                "id": 150,
+                "title": "驾驶"
+            },
+            {
+                "id": 151,
+                "title": "建筑建造"
+            },
+            {
+                "id": 152,
+                "title": "惊悚"
+            },
+            {
+                "id": 153,
+                "title": "城市营造"
+            },
+            {
+                "id": 154,
+                "title": "多人在线战术竞技"
+            },
+            {
+                "id": 155,
+                "title": "飞行"
+            },
+            {
+                "id": 156,
+                "title": "推理"
+            },
+            {
+                "id": 157,
+                "title": "寻宝"
+            },
+            {
+                "id": 158,
+                "title": "玩家合作"
+            },
+            {
+                "id": 159,
+                "title": "战争游戏"
+            },
+            {
+                "id": 160,
+                "title": "超级英雄"
+            },
+            {
+                "id": 161,
+                "title": "单线剧情"
+            },
+            {
+                "id": 162,
+                "title": "即时"
+            },
+            {
+                "id": 163,
+                "title": "科学"
+            },
+            {
+                "id": 164,
+                "title": "剑术"
+            },
+            {
+                "id": 165,
+                "title": "创世神"
+            },
+            {
+                "id": 166,
+                "title": "枪械"
+            },
+            {
+                "id": 167,
+                "title": "角色动作"
+            },
+            {
+                "id": 168,
+                "title": "农业"
+            },
+            {
+                "id": 169,
+                "title": "现代"
+            },
+            {
+                "id": 170,
+                "title": "工业"
+            },
+            {
+                "id": 9385,
+                "title": "CC像素杯"
+            }
+        ],
+        "multi": [
+            {
+                "id": 1,
+                "title": "动作"
+            },
+            {
+                "id": 2,
+                "title": "冒险"
+            },
+            {
+                "id": 3,
+                "title": "休闲"
+            },
+            {
+                "id": 4,
+                "title": "策略"
+            },
+            {
+                "id": 5,
+                "title": "模拟"
+            },
+            {
+                "id": 6,
+                "title": "角色扮演"
+            },
+            {
+                "id": 7,
+                "title": "单人"
+            },
+            {
+                "id": 8,
+                "title": "大型多人在线"
+            },
+            {
+                "id": 9,
+                "title": "体育"
+            },
+            {
+                "id": 10,
+                "title": "竞速"
+            },
+            {
+                "id": 11,
+                "title": "多人"
+            },
+            {
+                "id": 12,
+                "title": "氛围"
+            },
+            {
+                "id": 13,
+                "title": "解谜"
+            },
+            {
+                "id": 14,
+                "title": "恐怖"
+            },
+            {
+                "id": 15,
+                "title": "开放世界"
+            },
+            {
+                "id": 16,
+                "title": "科幻"
+            },
+            {
+                "id": 17,
+                "title": "合作"
+            },
+            {
+                "id": 18,
+                "title": "奇幻"
+            },
+            {
+                "id": 19,
+                "title": "剧情丰富"
+            },
+            {
+                "id": 20,
+                "title": "射击"
+            },
+            {
+                "id": 21,
+                "title": "暴力"
+            },
+            {
+                "id": 22,
+                "title": "血腥"
+            },
+            {
+                "id": 23,
+                "title": "搞笑"
+            },
+            {
+                "id": 24,
+                "title": "沙盒"
+            },
+            {
+                "id": 25,
+                "title": "欢乐"
+            },
+            {
+                "id": 26,
+                "title": "生存"
+            },
+            {
+                "id": 27,
+                "title": "怀旧"
+            },
+            {
+                "id": 28,
+                "title": "电影"
+            },
+            {
+                "id": 29,
+                "title": "丧尸"
+            },
+            {
+                "id": 30,
+                "title": "探索"
+            },
+            {
+                "id": 31,
+                "title": "在线合作"
+            },
+            {
+                "id": 32,
+                "title": "太空"
+            },
+            {
+                "id": 33,
+                "title": "教育"
+            },
+            {
+                "id": 34,
+                "title": "可爱"
+            },
+            {
+                "id": 35,
+                "title": "战术"
+            },
+            {
+                "id": 36,
+                "title": "悬疑惊悚"
+            },
+            {
+                "id": 37,
+                "title": "单机多人"
+            },
+            {
+                "id": 38,
+                "title": "单机合作"
+            },
+            {
+                "id": 39,
+                "title": "动作角色扮演"
+            },
+            {
+                "id": 40,
+                "title": "物理"
+            },
+            {
+                "id": 41,
+                "title": "生存恐怖"
+            },
+            {
+                "id": 42,
+                "title": "潜行"
+            },
+            {
+                "id": 43,
+                "title": "黑暗"
+            },
+            {
+                "id": 44,
+                "title": "建造"
+            },
+            {
+                "id": 45,
+                "title": "工艺"
+            },
+            {
+                "id": 46,
+                "title": "历史"
+            },
+            {
+                "id": 47,
+                "title": "动作冒险"
+            },
+            {
+                "id": 48,
+                "title": "战争"
+            },
+            {
+                "id": 49,
+                "title": "玩家对战"
+            },
+            {
+                "id": 50,
+                "title": "末日"
+            },
+            {
+                "id": 51,
+                "title": "格斗"
+            },
+            {
+                "id": 52,
+                "title": "塔防"
+            },
+            {
+                "id": 53,
+                "title": "MMORPG"
+            },
+            {
+                "id": 54,
+                "title": "弹幕"
+            },
+            {
+                "id": 55,
+                "title": "竞技"
+            },
+            {
+                "id": 56,
+                "title": "中世纪"
+            },
+            {
+                "id": 57,
+                "title": "黑暗奇幻"
+            },
+            {
+                "id": 58,
+                "title": "二战"
+            },
+            {
+                "id": 59,
+                "title": "未来"
+            },
+            {
+                "id": 60,
+                "title": "迷宫探索"
+            },
+            {
+                "id": 61,
+                "title": "团队角色扮演"
+            },
+            {
+                "id": 62,
+                "title": "军事"
+            },
+            {
+                "id": 63,
+                "title": "跑酷"
+            },
+            {
+                "id": 64,
+                "title": "魔法"
+            },
+            {
+                "id": 65,
+                "title": "驾驶"
+            },
+            {
+                "id": 66,
+                "title": "建筑建造"
+            },
+            {
+                "id": 67,
+                "title": "惊悚"
+            },
+            {
+                "id": 68,
+                "title": "城市营造"
+            },
+            {
+                "id": 69,
+                "title": "多人在线战术竞技"
+            },
+            {
+                "id": 70,
+                "title": "飞行"
+            },
+            {
+                "id": 71,
+                "title": "推理"
+            },
+            {
+                "id": 72,
+                "title": "寻宝"
+            },
+            {
+                "id": 73,
+                "title": "玩家合作"
+            },
+            {
+                "id": 74,
+                "title": "战争游戏"
+            },
+            {
+                "id": 75,
+                "title": "超级英雄"
+            },
+            {
+                "id": 76,
+                "title": "单线剧情"
+            },
+            {
+                "id": 77,
+                "title": "即时"
+            },
+            {
+                "id": 78,
+                "title": "科学"
+            },
+            {
+                "id": 79,
+                "title": "剑术"
+            },
+            {
+                "id": 80,
+                "title": "创世神"
+            },
+            {
+                "id": 81,
+                "title": "枪械"
+            },
+            {
+                "id": 82,
+                "title": "角色动作"
+            },
+            {
+                "id": 83,
+                "title": "农业"
+            },
+            {
+                "id": 84,
+                "title": "现代"
+            },
+            {
+                "id": 85,
+                "title": "工业"
+            }
+        ],
+        "single": [
+            {
+                "id": 1,
+                "title": "动作"
+            },
+            {
+                "id": 2,
+                "title": "冒险"
+            },
+            {
+                "id": 3,
+                "title": "休闲"
+            },
+            {
+                "id": 4,
+                "title": "策略"
+            },
+            {
+                "id": 5,
+                "title": "模拟"
+            },
+            {
+                "id": 6,
+                "title": "角色扮演"
+            },
+            {
+                "id": 7,
+                "title": "单人"
+            },
+            {
+                "id": 8,
+                "title": "大型多人在线"
+            },
+            {
+                "id": 9,
+                "title": "体育"
+            },
+            {
+                "id": 10,
+                "title": "竞速"
+            },
+            {
+                "id": 11,
+                "title": "多人"
+            },
+            {
+                "id": 12,
+                "title": "氛围"
+            },
+            {
+                "id": 13,
+                "title": "解谜"
+            },
+            {
+                "id": 14,
+                "title": "恐怖"
+            },
+            {
+                "id": 15,
+                "title": "开放世界"
+            },
+            {
+                "id": 16,
+                "title": "科幻"
+            },
+            {
+                "id": 17,
+                "title": "合作"
+            },
+            {
+                "id": 18,
+                "title": "奇幻"
+            },
+            {
+                "id": 19,
+                "title": "剧情丰富"
+            },
+            {
+                "id": 20,
+                "title": "射击"
+            },
+            {
+                "id": 21,
+                "title": "暴力"
+            },
+            {
+                "id": 22,
+                "title": "血腥"
+            },
+            {
+                "id": 23,
+                "title": "搞笑"
+            },
+            {
+                "id": 24,
+                "title": "沙盒"
+            },
+            {
+                "id": 25,
+                "title": "欢乐"
+            },
+            {
+                "id": 26,
+                "title": "生存"
+            },
+            {
+                "id": 27,
+                "title": "怀旧"
+            },
+            {
+                "id": 28,
+                "title": "电影"
+            },
+            {
+                "id": 29,
+                "title": "丧尸"
+            },
+            {
+                "id": 30,
+                "title": "探索"
+            },
+            {
+                "id": 31,
+                "title": "在线合作"
+            },
+            {
+                "id": 32,
+                "title": "太空"
+            },
+            {
+                "id": 33,
+                "title": "教育"
+            },
+            {
+                "id": 34,
+                "title": "可爱"
+            },
+            {
+                "id": 35,
+                "title": "战术"
+            },
+            {
+                "id": 36,
+                "title": "悬疑惊悚"
+            },
+            {
+                "id": 37,
+                "title": "单机多人"
+            },
+            {
+                "id": 38,
+                "title": "单机合作"
+            },
+            {
+                "id": 39,
+                "title": "动作角色扮演"
+            },
+            {
+                "id": 40,
+                "title": "物理"
+            },
+            {
+                "id": 41,
+                "title": "生存恐怖"
+            },
+            {
+                "id": 42,
+                "title": "潜行"
+            },
+            {
+                "id": 43,
+                "title": "黑暗"
+            },
+            {
+                "id": 44,
+                "title": "建造"
+            },
+            {
+                "id": 45,
+                "title": "工艺"
+            },
+            {
+                "id": 46,
+                "title": "历史"
+            },
+            {
+                "id": 47,
+                "title": "动作冒险"
+            },
+            {
+                "id": 48,
+                "title": "战争"
+            },
+            {
+                "id": 49,
+                "title": "玩家对战"
+            },
+            {
+                "id": 50,
+                "title": "末日"
+            },
+            {
+                "id": 51,
+                "title": "格斗"
+            },
+            {
+                "id": 52,
+                "title": "塔防"
+            },
+            {
+                "id": 53,
+                "title": "MMORPG"
+            },
+            {
+                "id": 54,
+                "title": "弹幕"
+            },
+            {
+                "id": 55,
+                "title": "竞技"
+            },
+            {
+                "id": 56,
+                "title": "中世纪"
+            },
+            {
+                "id": 57,
+                "title": "黑暗奇幻"
+            },
+            {
+                "id": 58,
+                "title": "二战"
+            },
+            {
+                "id": 59,
+                "title": "未来"
+            },
+            {
+                "id": 60,
+                "title": "迷宫探索"
+            },
+            {
+                "id": 61,
+                "title": "团队角色扮演"
+            },
+            {
+                "id": 62,
+                "title": "军事"
+            },
+            {
+                "id": 63,
+                "title": "跑酷"
+            },
+            {
+                "id": 64,
+                "title": "魔法"
+            },
+            {
+                "id": 65,
+                "title": "驾驶"
+            },
+            {
+                "id": 66,
+                "title": "建筑建造"
+            },
+            {
+                "id": 67,
+                "title": "惊悚"
+            },
+            {
+                "id": 68,
+                "title": "城市营造"
+            },
+            {
+                "id": 69,
+                "title": "多人在线战术竞技"
+            },
+            {
+                "id": 70,
+                "title": "飞行"
+            },
+            {
+                "id": 71,
+                "title": "推理"
+            },
+            {
+                "id": 72,
+                "title": "寻宝"
+            },
+            {
+                "id": 73,
+                "title": "玩家合作"
+            },
+            {
+                "id": 74,
+                "title": "战争游戏"
+            },
+            {
+                "id": 75,
+                "title": "超级英雄"
+            },
+            {
+                "id": 76,
+                "title": "单线剧情"
+            },
+            {
+                "id": 77,
+                "title": "即时"
+            },
+            {
+                "id": 78,
+                "title": "科学"
+            },
+            {
+                "id": 79,
+                "title": "剑术"
+            },
+            {
+                "id": 80,
+                "title": "创世神"
+            },
+            {
+                "id": 81,
+                "title": "枪械"
+            },
+            {
+                "id": 82,
+                "title": "角色动作"
+            },
+            {
+                "id": 83,
+                "title": "农业"
+            },
+            {
+                "id": 84,
+                "title": "现代"
+            },
+            {
+                "id": 85,
+                "title": "工业"
+            }
+        ]
+    }
+}

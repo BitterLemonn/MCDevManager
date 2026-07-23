@@ -35,7 +35,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.ui.components.ExpandableNavigateItem
 import com.lemon.mcdevmanagermp.ui.components.IncomeManagementCard
 import com.lemon.mcdevmanagermp.ui.components.MailboxCard
@@ -66,8 +65,8 @@ internal fun MediumLayout(
     onCheckUpdate: () -> Unit = {}
 ) {
     val colors = LocalAppColors.current
-    val userNickname = (state.userInfo as? NetworkState.Success)?.data?.nickname
-    val userHeadImg = (state.userInfo as? NetworkState.Success)?.data?.headImg
+    val userNickname = state.userInfo?.nickname
+    val userHeadImg = state.userInfo?.headImg
 
     Row(modifier = Modifier.fillMaxSize().background(colors.surface)) {
         NavigationRail(
@@ -185,7 +184,7 @@ internal fun MediumHomeTabContent(
     onNavigateToMailbox: () -> Unit = {}
 ) {
     val colors = LocalAppColors.current
-    val userNickname = (state.userInfo as? NetworkState.Success)?.data?.nickname
+    val userNickname = state.userInfo?.nickname
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 

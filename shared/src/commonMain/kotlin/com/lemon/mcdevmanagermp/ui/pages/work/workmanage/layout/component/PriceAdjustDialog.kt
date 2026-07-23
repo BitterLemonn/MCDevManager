@@ -16,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.lemon.mcdevmanagermp.data.consts.enums.priceTypeLabel
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
 
 /**
@@ -31,11 +32,7 @@ internal fun PriceAdjustDialog(
 ) {
     var priceInput by remember { mutableStateOf(item.price.coerceAtLeast(0).toString()) }
     val name = item.itemName.ifEmpty { "未命名" }
-    val unit = when (item.priceType) {
-        "diamond" -> "钻石"
-        "point" -> "绿宝石"
-        else -> item.priceType.ifEmpty { "" }
-    }
+    val unit = priceTypeLabel(item.priceType)
     val currentLabel = if (item.price <= 0) "免费" else "${item.price} $unit".trim()
     val newPrice = priceInput.toIntOrNull()
 

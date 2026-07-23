@@ -1,7 +1,7 @@
 package com.lemon.mcdevmanagermp.ui.pages.work.activity.detail
 
 import com.lemon.mcdevmanagermp.data.vo.netease.activity.ActivityItemVO
-import com.lemon.mcdevmanagermp.data.vo.netease.activity.ReviewActivityItemVO
+import com.lemon.mcdevmanagermp.data.vo.netease.activity.ActivityReviewItemVO
 import com.lemon.mcdevmanagermp.utils.extension.IUiAction
 import com.lemon.mcdevmanagermp.utils.extension.IUiEffect
 import com.lemon.mcdevmanagermp.utils.extension.IUiState
@@ -9,7 +9,7 @@ import com.lemon.mcdevmanagermp.utils.extension.IUiState
 data class ActivityDetailState(
     val isLoading: Boolean = false,
     val isLoadingModules: Boolean = false,
-    val activity: ReviewActivityItemVO? = null,
+    val activity: ActivityReviewItemVO? = null,
     /**
      * 各赛道的参与模组列表，key 为 moduleId
      */
@@ -48,17 +48,17 @@ data class ActivityDetailState(
 }
 
 sealed interface ActivityDetailAction : IUiAction {
-    data class LoadData(val activity: ReviewActivityItemVO) : ActivityDetailAction
+    data class LoadData(val activity: ActivityReviewItemVO) : ActivityDetailAction
     data class LoadModules(
         val activityId: String,
-        val modules: List<com.lemon.mcdevmanagermp.data.vo.netease.activity.ReviewActivityModuleVO>
+        val modules: List<com.lemon.mcdevmanagermp.data.vo.netease.activity.ActivityReviewModuleVO>
     ) :
         ActivityDetailAction
 
-    data class Participate(val activity: ReviewActivityItemVO) : ActivityDetailAction
+    data class Participate(val activity: ActivityReviewItemVO) : ActivityDetailAction
 }
 
 sealed interface ActivityDetailEffect : IUiEffect {
     data class ShowToast(val message: String) : ActivityDetailEffect
-    data class NavigateToParticipate(val activity: ReviewActivityItemVO) : ActivityDetailEffect
+    data class NavigateToParticipate(val activity: ActivityReviewItemVO) : ActivityDetailEffect
 }

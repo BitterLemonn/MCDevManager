@@ -1,82 +1,99 @@
 # MC开发者管理器
 
-📖 **使用须知**
-本软件正在持续迭代中，如遇到问题欢迎在 [GitHub Issues](https://github.com/BitterLemonn/McDevManagerMP/issues)
-反馈，我会尽快处理！
+一站式网易 MC 开发者平台管理工具：作品、数据、收益、互动，多端支持。
+
+持续迭代中，问题反馈请至 [GitHub Issues](https://github.com/BitterLemonn/McDevManagerMP/issues)。
 
 ---
 
-## ✨ 功能一览
+## 功能
 
-### 📊 首页概览
+### 首页概览
 
-一屏掌握你的开发者核心数据，无需来回切换网页 📋
+- 昨日钻石收益、下载量，14 天趋势与本月/上月对比
+- 收益看板：总收益、开发者分成、平台补贴，可展开查看各组件贡献
+- 排行榜：手游热门/热搜/免费/畅销，端游下载/点赞，按模组/地图/材质光影/联机大厅分类
+- 开发者等级与成长进度
+- 未读消息角标
 
-- **数据总览**：昨日钻石收益、下载量一目了然，14 天趋势、本月/上月对比应有尽有
-- **收益看板**：总收益、开发者分成、平台补贴清晰展示，支持展开查看各组件贡献明细 💰
-- **排行榜**：手游热门飙升、热搜榜、免费榜、畅销榜，以及端游下载榜、点赞榜，模组/地图/材质光影/联机大厅分类查看，随时了解市场动态
-  🏆
-- **开发者等级**：展示当前等级信息，成长进度心中有数
+### 作品管理
 
-### 📈 数据分析
+- **上架管理**：查看作品上架与审核状态，编辑作品信息
+- **作品活动**：查看与参与平台作品活动（进行中入口带角标提醒）
+- **折扣特卖**：参与平台折扣活动，提升作品销量（进行中入口带角标提醒）
+- **PE 轮播图申请**：申请首页 banner 推广位，内置文案模板
 
-全方位的数据分析工具，帮你洞察每一个增长点 📉
+### 数据分析
 
-- **数据追踪**：选择多个资源进行每日数据对比，支持新增购买、下载量、钻石收益、绿宝石收益、日活、退款率六项指标，折线图/柱状图自由切换
-  ✨
-- **数据汇总**：按月查看资源汇总统计，钻石、绿宝石、日活、购买量等趋势一目了然，支持近 3/6/12 个月快捷查询
-- **模组分析**：深入单个模组的趋势数据，新增购买、日活、新增粉丝、人均游玩时间四维分析，图表交互查看 🎯
-- **实时收益**：查看今日各资源的实时收益数据（钻石💎 + 积分），随时掌握收益动态
+- **数据追踪**：多资源每日对比，新增购买/下载量/钻石收益/绿宝石收益/日活/退款率六项指标，折线与柱状切换；自动记忆上次选用的资源与时间跨度
+- **数据汇总**：按月查看资源汇总，钻石/绿宝石/日活/购买趋势，支持近 3/6/12 个月快捷查询
+- **模组分析**：单模组趋势，新增购买/日活/新增粉丝/人均游玩四维分析
+- **实时收益**：今日各资源实时收益（钻石 + 积分）
 
-### 💬 互动管理
+### 互动与消息
 
-高效管理玩家互动，不漏一条消息 🤝
+- **玩家反馈**：按类型/关键词/已回复筛选，快速定位待处理消息
+- **组件评论**：按标签/日期范围/评分筛选
+- **消息中心**：系统通知、审核通知、问题反馈、提醒等集中查看，未读角标
 
-- **玩家反馈**：查看和回复玩家反馈意见，支持按类型筛选、关键词搜索、已回复/未回复过滤，快速定位待处理消息
-- **组件评论**：查看和回复玩家对组件的评论，支持按标签、日期范围、评分星级筛选，互动管理井井有条
+### 收益管理
 
-### 💰 收益管理
+- PE / PC 双平台月度收益列表，结算状态清晰
+- 单笔收益明细与各组件贡献占比
+- 对未结算收益发起结算申请
 
-收益明细与结算一站搞定 🤑
+### 个性化
 
-- **收益总览**：按月查看 PE / PC 双平台收益列表，钻石收益、绿宝石收益、结算状态清晰展示
-- **收益明细**：查看单笔收益的详细数据，各组件贡献占比一目了然
-- **一键结算**：支持对未结算收益发起结算申请，再也不用翻网页操作
-
-### ⚙️ 个性化设置
-
-打造属于你的使用体验 🎨
-
-- **多账号管理**：支持切换、添加和退出账号，多开发者身份无缝切换
-- **主题与色彩**：浅色/深色/跟随系统三种模式，18 种主题色随心选，Android 还支持动态取色 🌈
-- **自动更新**：新版本自动检测提醒，始终保持最新状态
-- **关于页面**：版本信息与开源协议透明展示
+- 多账号管理：切换、添加、退出，配置按账号独立保存
+- 主题：浅色/深色/跟随系统，18 种主题色，Android 支持动态取色
+- 自动更新检测、日志查看、版本与开源协议
 
 ---
 
-## 🖥️ 多端支持
+## 下载安装
 
-| 平台         | 支持情况   | 安装方式          |
-|------------|--------|---------------|
-| 🪟 Windows | ✅ 已支持  | MSI 安装版 / 便携版 |
-| 🍎 macOS   | ✅ 已支持  | DMG 安装包       |
-| 🐧 Linux   | ✅ 已支持  | DEB 安装包       |
-| 📱 Android | ✅ 已支持  | APK 安装        |
-| 🍏 iOS     | ⚙️ 开发中 | IPA（需自行签名）    |
+最新版本见 [GitHub Releases](https://github.com/BitterLemonn/McDevManagerMP/releases)。
 
----
-
-## 📐 多端适配
-
-应用会根据屏幕宽度自动选择最佳布局：
-
-- 📱 **手机布局**（< 600dp）：底部导航栏，适合单手操作
-- 📋 **平板布局**（600-840dp）：侧边导航 + 内容区，空间利用更高效
-- 🖥️ **桌面布局**（> 840dp）：常驻侧边栏 + 宽幅内容区，信息密度拉满
+| 平台      | 状态  | 安装包               |
+|---------|-----|-------------------|
+| Windows | 已支持 | MSI 安装版 / 便携版 zip |
+| macOS   | 已支持 | DMG               |
+| Linux   | 已支持 | DEB               |
+| Android | 已支持 | APK               |
+| iOS     | 开发中 | IPA（需自行签名）        |
 
 ---
 
-## ⚠️ 注意
+## 多端适配
+
+按屏幕宽度自动切换布局：
+
+- 手机（< 600dp）：底部导航栏
+- 平板（600–840dp）：侧边导航 + 内容区
+- 桌面（> 840dp）：常驻侧边栏 + 宽幅内容区
+
+---
+
+## 反馈
+
+- Bug 与功能建议：[GitHub Issues](https://github.com/BitterLemonn/McDevManagerMP/issues)
+- 欢迎在 [GitHub](https://github.com/BitterLemonn/McDevManagerMP) 点 Star
+
+---
+
+## Star History
+
+<a href="https://www.star-history.com/?repos=BitterLemonn%2FMCDevManager&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=BitterLemonn/MCDevManager&type=date&theme=dark&legend=top-left&sealed_token=sN8zBbX2T0wpiKP4DG-q45rupaMxyZT_7HWl8so3vyYScACBc22osJku9Cx8pLwhWrGRzqD5pFYMS4ohaYIXsQL0mogx4VrUEz3qFufxiVaXxH8ubrCskA" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=BitterLemonn/MCDevManager&type=date&legend=top-left&sealed_token=sN8zBbX2T0wpiKP4DG-q45rupaMxyZT_7HWl8so3vyYScACBc22osJku9Cx8pLwhWrGRzqD5pFYMS4ohaYIXsQL0mogx4VrUEz3qFufxiVaXxH8ubrCskA" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=BitterLemonn/MCDevManager&type=date&legend=top-left&sealed_token=sN8zBbX2T0wpiKP4DG-q45rupaMxyZT_7HWl8so3vyYScACBc22osJku9Cx8pLwhWrGRzqD5pFYMS4ohaYIXsQL0mogx4VrUEz3qFufxiVaXxH8ubrCskA" />
+ </picture>
+</a>
+
+---
+
+## 声明
 
 - 本软件为第三方开发工具，与网易官方无关
-- 本软件基于 **GPLv3（禁止商用）** 开源协议！
+- 基于 **GPLv3（禁止商用）** 开源

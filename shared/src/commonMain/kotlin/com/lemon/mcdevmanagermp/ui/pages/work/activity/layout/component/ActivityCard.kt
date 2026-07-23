@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.github.panpf.sketch.AsyncImage
 import com.github.panpf.sketch.rememberAsyncImageState
 import com.github.panpf.sketch.request.ComposableImageOptions
-import com.lemon.mcdevmanagermp.data.vo.netease.activity.ReviewActivityItemVO
+import com.lemon.mcdevmanagermp.data.vo.netease.activity.ActivityReviewItemVO
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.layout.ActivityStatusTag
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.layout.formatTimeRange
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
@@ -36,7 +36,7 @@ import com.lemon.mcdevmanagermp.utils.HtmlParser
 
 @Composable
 internal fun ActivityCard(
-    activity: ReviewActivityItemVO,
+    activity: ActivityReviewItemVO,
     isSelected: Boolean = false,
     onClick: () -> Unit
 ) {

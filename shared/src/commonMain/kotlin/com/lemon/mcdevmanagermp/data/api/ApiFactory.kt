@@ -1,6 +1,7 @@
 package com.lemon.mcdevmanagermp.data.api
 
 import com.lemon.mcdevmanagermp.data.common.JSONConverter
+import com.lemon.mcdevmanagermp.data.consts.TRAILING_SLASH_MARKER
 import com.lemon.mcdevmanagermp.utils.CookiesStore
 import com.lemon.mcdevmanagermp.utils.Logger
 import de.jensklingenberg.ktorfit.Ktorfit
@@ -17,6 +18,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.Cookie
 import io.ktor.http.Url
 import io.ktor.http.contentType
+import io.ktor.http.encodedPath
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.util.AttributeKey
 import kotlin.time.TimeMark
@@ -24,7 +26,6 @@ import kotlin.time.TimeSource
 import io.ktor.client.plugins.logging.Logger as KtorLogger
 
 object ApiFactory {
-
     private val cookiesStorage = object : CookiesStorage {
         override suspend fun addCookie(requestUrl: Url, cookie: Cookie) {
             if (cookie.value.isEmpty()) {
@@ -41,6 +42,21 @@ object ApiFactory {
 
         override fun close() {}
     }
+
+    private val TrailingSlashPlugin = createClientPlugin("TrailingSlashPlugin") {
+        onRequest { request, _ ->
+            // 检查是否有我们自定义的 Header 标记
+            if (request.headers[TRAILING_SLASH_MARKER] == "true") {
+                request.headers.remove(TRAILING_SLASH_MARKER)
+
+                val path = request.url.encodedPath
+                if (!path.endsWith("/")) {
+                    request.url.encodedPath = "$path/"
+                }
+            }
+        }
+    }
+
 
     private val TimeMonitorPlugin = createClientPlugin("TimeMonitorPlugin") {
         onRequest { request, _ ->
@@ -64,6 +80,8 @@ object ApiFactory {
                 contentType(ContentType.Application.Json)
             }
             install(ContentNegotiation) { json(JSONConverter) }
+
+            install(TrailingSlashPlugin)
             install(TimeMonitorPlugin)
             install(HttpTimeout) {
                 connectTimeoutMillis = 15_000
@@ -134,27 +152,19 @@ object ApiFactory {
     }
 
     fun provideLoggerKtorfit(baseUrl: String): Ktorfit {
-        return Ktorfit.Builder()
-            .baseUrl(baseUrl)
-            .httpClient(loggerHttpClient)
-            .build()
+        return Ktorfit.Builder().baseUrl(baseUrl).httpClient(loggerHttpClient).build()
     }
 
 
     fun provideKtorfit(baseUrl: String): Ktorfit {
-        return Ktorfit.Builder()
-            .baseUrl(baseUrl)
-            .httpClient(jsonHttpClient)
-            .build()
+        return Ktorfit.Builder().baseUrl(baseUrl).httpClient(jsonHttpClient).build()
     }
 
 
     fun provideUploadHttpClient(): HttpClient = uploadHttpClient
 
     fun provideDownloadKtorfit(): Ktorfit {
-        return Ktorfit.Builder()
-            .baseUrl("https://localhost/") // 占位符，实际会被 @Url 覆盖
-            .httpClient(downloadHttpClient)
-            .build()
+        return Ktorfit.Builder().baseUrl("https://localhost/") // 占位符，实际会被 @Url 覆盖
+            .httpClient(downloadHttpClient).build()
     }
 }

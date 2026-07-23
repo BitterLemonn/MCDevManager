@@ -10,17 +10,20 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import com.lemon.mcdevmanagermp.ui.components.LoadingDialog
 import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
 import com.lemon.mcdevmanagermp.ui.components.collectUiEffect
 import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.layout.WorkManageCompactLayout
 import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.layout.WorkManageExpandedLayout
 import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.layout.WorkManageMediumLayout
+import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.layout.component.FeedbackDialog
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 
 @Composable
 fun WorkManagePage(
     onBack: () -> Unit,
-    onNeedReLogin: () -> Unit = {}
+    onNeedReLogin: () -> Unit = {},
+    onNavigateToDetail: (String) -> Unit = {}
 ) {
     val viewModel = remember { WorkManageViewModel() }
     val state by viewModel.state.collectAsState()
@@ -44,20 +47,37 @@ fun WorkManagePage(
             WindowWidthSizeClass.Expanded -> WorkManageExpandedLayout(
                 state = state,
                 onAction = viewModel::dispatch,
-                onBack = onBack
+                onBack = onBack,
+                onNavigateToDetail = onNavigateToDetail
             )
 
             WindowWidthSizeClass.Medium -> WorkManageMediumLayout(
                 state = state,
                 onAction = viewModel::dispatch,
-                onBack = onBack
+                onBack = onBack,
+                onNavigateToDetail = onNavigateToDetail
             )
 
             else -> WorkManageCompactLayout(
                 state = state,
                 onAction = viewModel::dispatch,
-                onBack = onBack
+                onBack = onBack,
+                onNavigateToDetail = onNavigateToDetail
             )
+        }
+
+        // 审核反馈弹窗：由 ViewModel 的 feedback 状态驱动，统一在一处渲染
+        state.feedback?.let { fb ->
+            FeedbackDialog(
+                itemName = state.feedbackItemName,
+                feedback = fb,
+                onDismiss = { viewModel.dispatch(WorkManageAction.DismissFeedback) }
+            )
+        }
+
+        // 写操作（提交审核/上架/定时上架等）期间的阻塞式等待弹窗
+        if (state.isPerforming) {
+            LoadingDialog(state.performingMessage)
         }
     }
 }

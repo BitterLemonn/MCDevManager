@@ -8,7 +8,7 @@ import de.jensklingenberg.ktorfit.http.Query
 
 interface FilesApi {
 
-    @GET("/filepicker/file_token")
+    @GET("filepicker/file_token")
     suspend fun getFileToken(
         @Query("file_type") fileType: String,
         @Query("secure") secure: String = "false"
@@ -16,7 +16,7 @@ interface FilesApi {
 
     companion object {
         val INSTANCE by lazy {
-            ApiFactory.provideKtorfit(NETEASE_MC_DEV_LINK).createFilesApi()
+            ApiFactory.provideLoggerKtorfit(NETEASE_MC_DEV_LINK).createFilesApi()
         }
     }
 }

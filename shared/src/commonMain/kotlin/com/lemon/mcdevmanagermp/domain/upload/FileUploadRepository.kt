@@ -17,6 +17,7 @@ interface FileUploadRepository {
         fileType: String,
         fileName: String,
         file: PlatformFile,
-        mimeType: String
+        mimeType: String,
+        secure: String = "false"
     ): NetworkState<FileInfoDTO>
 }

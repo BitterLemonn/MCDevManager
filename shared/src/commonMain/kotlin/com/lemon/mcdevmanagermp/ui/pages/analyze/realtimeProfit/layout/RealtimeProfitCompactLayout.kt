@@ -18,8 +18,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,7 +48,6 @@ import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_calendar
 import mcdevmanagermpr.shared.generated.resources.ic_diamond
 import mcdevmanagermpr.shared.generated.resources.ic_emerald
-import mcdevmanagermpr.shared.generated.resources.ic_refresh
 import org.jetbrains.compose.resources.painterResource
 import kotlin.time.Clock
 import kotlin.time.Instant
@@ -86,16 +87,14 @@ internal fun RealtimeProfitCompactLayout(
                     Icon(
                         painter = painterResource(Res.drawable.ic_calendar),
                         contentDescription = "选择日期",
-                        modifier = Modifier.size(20.dp),
-                        tint = colors.textColor
+                        modifier = Modifier.size(20.dp)
                     )
                 }
                 IconButton(onClick = { onAction(RealtimeProfitAction.RefreshData) }) {
                     Icon(
-                        painter = painterResource(Res.drawable.ic_refresh),
+                        imageVector = Icons.Filled.Refresh,
                         contentDescription = "刷新",
-                        modifier = Modifier.size(20.dp),
-                        tint = colors.textColor
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
@@ -175,11 +174,11 @@ internal fun SummaryCard(
 ) {
     val colors = LocalAppColors.current
 
-    ElevatedCard(
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.elevatedCardColors(containerColor = colors.surfaceContainerHigh),
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh),
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+
     ) {
         Row(
             modifier = Modifier
@@ -275,7 +274,7 @@ internal fun TimeInfoRow(
                     .padding(4.dp)
             ) {
                 Icon(
-                    painter = painterResource(Res.drawable.ic_refresh),
+                    imageVector = Icons.Filled.Refresh,
                     contentDescription = "刷新",
                     modifier = Modifier.size(18.dp),
                     tint = colors.onSurfaceVariant

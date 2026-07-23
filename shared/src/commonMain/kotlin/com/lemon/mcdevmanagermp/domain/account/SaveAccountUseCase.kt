@@ -1,20 +1,19 @@
 package com.lemon.mcdevmanagermp.domain.account
 
-import com.lemon.mcdevmanagermp.data.common.AppContext
 import com.lemon.mcdevmanagermp.data.common.JSONConverter
 import com.lemon.mcdevmanagermp.data.common.NetworkState
-import com.lemon.mcdevmanagermp.data.db.entity.AccountEntity
 import com.lemon.mcdevmanagermp.domain.user.UserRepository
 import kotlinx.serialization.serializer
 import kotlin.time.Clock
 
 class SaveAccountUseCase(
     private val accountRepository: AccountRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val cookieRepository: CookieRepository
 ) {
 
     suspend operator fun invoke(email: String = "") {
-        val cookies = AppContext.cookiesStore.getAllCookiesMap()
+        val cookies = cookieRepository.getAllCookiesMap()
         val cookiesJson = JSONConverter.encodeToString(serializer<Map<String, String>>(), cookies)
         val now = Clock.System.now().toEpochMilliseconds()
         val userInfo = runCatching {
@@ -31,7 +30,7 @@ class SaveAccountUseCase(
             )
         } else {
             accountRepository.upsertAccount(
-                AccountEntity(
+                Account(
                     nickname = accountName,
                     cookiesJson = cookiesJson,
                     lastLoginTime = now,

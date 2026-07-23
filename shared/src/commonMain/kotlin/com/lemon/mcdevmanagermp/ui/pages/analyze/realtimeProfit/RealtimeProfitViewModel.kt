@@ -3,8 +3,10 @@ package com.lemon.mcdevmanagermp.ui.pages.analyze.realtimeProfit
 import androidx.lifecycle.viewModelScope
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.consts.CookiesExpiredException
+import com.lemon.mcdevmanagermp.data.repository.AnalyzeRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
-import com.lemon.mcdevmanagermp.domain.resource.RealtimeProfitUseCase
+import com.lemon.mcdevmanagermp.domain.analyze.RealtimeProfitUseCase
+import com.lemon.mcdevmanagermp.domain.resource.GetResourceListUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
 import com.lemon.mcdevmanagermp.utils.Logger
 import kotlinx.coroutines.launch
@@ -17,8 +19,9 @@ class RealtimeProfitViewModel :
         RealtimeProfitState()
     ) {
     private val realtimeProfitUseCase = RealtimeProfitUseCase(
-        resourceRepository = ResourceRepositoryImpl.INSTANCE
+        analyzeRepository = AnalyzeRepositoryImpl.INSTANCE
     )
+    private val getResourceListUseCase = GetResourceListUseCase(ResourceRepositoryImpl.INSTANCE)
     private val failedResources = mutableListOf<String>()
 
     companion object {
@@ -70,7 +73,7 @@ class RealtimeProfitViewModel :
 
             // 1. 获取资源列表
             when (val resourceResult =
-                realtimeProfitUseCase.getResourceList(state.value.platform)) {
+                getResourceListUseCase(state.value.platform)) {
                 is NetworkState.Success -> {
                     setState { copy(resList = resourceResult.data ?: emptyList()) }
                 }

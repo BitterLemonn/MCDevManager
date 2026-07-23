@@ -15,9 +15,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.outlined.Mail
+import androidx.compose.material.icons.filled.Mail
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -32,32 +32,25 @@ import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 
 @Composable
 fun MailboxCard(
-    onClick: () -> Unit,
-    unreadCount: Int = 0,
-    modifier: Modifier = Modifier
+    onClick: () -> Unit, unreadCount: Int = 0, modifier: Modifier = Modifier
 ) {
     val colors = LocalAppColors.current
 
-    ElevatedCard(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(
+    Card(
+        modifier = modifier.fillMaxWidth().clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
                 onClick = onClick
             ),
-        colors = CardDefaults.elevatedCardColors(containerColor = colors.surfaceContainerHigh),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh),
+        shape = RoundedCornerShape(12.dp)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Outlined.Mail,
+                imageVector = Icons.Filled.Mail,
                 contentDescription = null,
                 tint = colors.primary,
                 modifier = Modifier.size(22.dp)
@@ -78,9 +71,7 @@ fun MailboxCard(
             }
             if (unreadCount > 0) {
                 Box(
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .background(colors.primary)
+                    modifier = Modifier.clip(CircleShape).background(colors.primary)
                         .padding(horizontal = 8.dp, vertical = 2.dp),
                     contentAlignment = Alignment.Center
                 ) {

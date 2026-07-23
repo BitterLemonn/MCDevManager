@@ -51,7 +51,6 @@ import com.github.panpf.sketch.request.ComposableImageOptions
 import com.github.panpf.sketch.request.error
 import com.github.panpf.sketch.request.fallback
 import com.github.panpf.sketch.request.placeholder
-import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.consts.getLevelName
 import com.lemon.mcdevmanagermp.ui.components.IncomeManagementCard
 import com.lemon.mcdevmanagermp.ui.components.MailboxCard
@@ -199,8 +198,8 @@ internal fun CompactHomeTabContent(
     onNavigateToMailbox: () -> Unit = {}
 ) {
     val colors = LocalAppColors.current
-    val user = (state.userInfo as? NetworkState.Success)?.data
-    val level = (state.levelInfo as? NetworkState.Success)?.data
+    val user = state.userInfo
+    val level = state.levelInfo
     val userNickname = user?.nickname
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 

@@ -15,6 +15,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -39,9 +43,6 @@ import com.lemon.mcdevmanagermp.ui.pages.analyze.monthDetail.components.MonthCar
 import com.lemon.mcdevmanagermp.ui.pages.analyze.monthDetail.components.MonthTrendChart
 import com.lemon.mcdevmanagermp.ui.pages.analyze.monthDetail.components.QuickTimeFilter
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_refresh
-import org.jetbrains.compose.resources.painterResource
 
 /**
  * Compact 布局（手机 < 600dp）
@@ -74,10 +75,9 @@ internal fun MonthDetailCompactLayout(
             actions = {
                 IconButton(onClick = { onAction(MonthDetailAction.RefreshData) }) {
                     Icon(
-                        painter = painterResource(Res.drawable.ic_refresh),
+                        imageVector = Icons.Filled.Refresh,
                         contentDescription = "刷新",
-                        modifier = Modifier.size(20.dp),
-                        tint = colors.textColor
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
@@ -192,13 +192,10 @@ private fun SummaryRow(state: MonthDetailState) {
 private fun SummaryItem(label: String, value: String, modifier: Modifier = Modifier) {
     val colors = LocalAppColors.current
 
-    androidx.compose.material3.ElevatedCard(
+    Card(
         modifier = modifier,
-        colors = androidx.compose.material3.CardDefaults.elevatedCardColors(
-            containerColor = colors.surfaceContainerHigh
-        ),
-        shape = RoundedCornerShape(10.dp),
-        elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 0.5.dp)
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh),
+        shape = RoundedCornerShape(10.dp)
     ) {
         Column(
             modifier = Modifier

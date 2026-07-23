@@ -1,11 +1,13 @@
 package com.lemon.mcdevmanagermp.ui.pages.main
 
 import androidx.lifecycle.viewModelScope
+import com.lemon.mcdevmanagermp.data.common.AppContext
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.consts.enums.RankCategoryTypeEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.RankSubCategoryTypeEnum
 import com.lemon.mcdevmanagermp.data.page.RankCategoryData
 import com.lemon.mcdevmanagermp.data.repository.AccountRepositoryImpl
+import com.lemon.mcdevmanagermp.data.repository.AnalyzeRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.MailboxRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.RankListRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
@@ -15,7 +17,9 @@ import com.lemon.mcdevmanagermp.data.vo.netease.user.OverviewVO
 import com.lemon.mcdevmanagermp.data.vo.netease.user.UserInfoVO
 import com.lemon.mcdevmanagermp.domain.main.MainUseCase
 import com.lemon.mcdevmanagermp.domain.rankList.RankListUseCase
+import com.lemon.mcdevmanagermp.domain.resource.GetResourceListUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
+import com.lemon.mcdevmanagermp.utils.Logger
 import com.lemon.mcdevmanagermp.utils.ProfitData
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -38,11 +42,11 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
         private var cachedRankListDate: String? = null
         private var cachedProfitDate: String? = null
 
-        var cachedUserInfo: NetworkState<UserInfoVO>? = null
+        var cachedUserInfo: UserInfoVO? = null
             private set
-        var cachedOverview: NetworkState<OverviewVO>? = null
+        var cachedOverview: OverviewVO? = null
             private set
-        var cachedLevelInfo: NetworkState<LevelInfoVO>? = null
+        var cachedLevelInfo: LevelInfoVO? = null
             private set
 
         var cachedProfitData: ProfitData? = null
@@ -88,7 +92,8 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
 
     private val mainUseCase = MainUseCase(
         userRepository = UserRepositoryImpl.INSTANCE,
-        resourceRepository = ResourceRepositoryImpl.INSTANCE
+        analyzeRepository = AnalyzeRepositoryImpl.INSTANCE,
+        getResourceListUseCase = GetResourceListUseCase(ResourceRepositoryImpl.INSTANCE)
     )
     private val rankListUseCase = RankListUseCase(
         rankListRepository = RankListRepositoryImpl.INSTANCE
@@ -182,28 +187,45 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
         viewModelScope.launch {
             try {
                 val result = mainUseCase.loadDashboard()
-                cachedUserInfo = result.userInfo
-                cachedOverview = result.overview
-                cachedLevelInfo = result.levelInfo
+                // session 过期优先：统一跳登录，不重复弹业务失败 Toast
+                val sessionExpired = mainUseCase.isSessionExpired(
+                    result.userInfo,
+                    result.overview,
+                    result.levelInfo
+                )
+
+                // 对每个 NetworkState 显式分支：Success 取数据；Error 记录日志并反馈
+                fun <T> unpack(state: NetworkState<T>, name: String): T? = when (state) {
+                    is NetworkState.Success -> state.data
+                    is NetworkState.Error -> {
+                        if (!sessionExpired) {
+                            Logger.e("$name 加载失败: ${state.msg}", state.e)
+                            sendEffect(MainEffect.ShowToast("$name 加载失败"))
+                        }
+                        null
+                    }
+                }
+
+                val userInfo = unpack(result.userInfo, "用户信息")
+                val overview = unpack(result.overview, "概览数据")
+                val levelInfo = unpack(result.levelInfo, "等级信息")
+                cachedUserInfo = userInfo
+                cachedOverview = overview
+                cachedLevelInfo = levelInfo
+                AppContext.userInfo = userInfo
                 cachedDashboardDate = todayString()
                 setState {
                     copy(
-                        userInfo = result.userInfo,
-                        overview = result.overview,
-                        levelInfo = result.levelInfo,
+                        userInfo = userInfo,
+                        overview = overview,
+                        levelInfo = levelInfo,
                         isRefreshing = false
                     )
                 }
-                if (mainUseCase.isSessionExpired(
-                        result.userInfo,
-                        result.overview,
-                        result.levelInfo
-                    )
-                ) {
+                if (sessionExpired) {
                     sendEffect(MainEffect.SessionExpired)
                 } else {
                     // 兼容旧版本：将当前账号的 email 字段更新为 nickname
-                    val userInfo = (result.userInfo as? NetworkState.Success)?.data
                     if (userInfo != null) {
                         val currentAccount = accountRepository.getLastUsedAccount()
                         if (currentAccount != null && currentAccount.nickname != userInfo.nickname) {
@@ -213,12 +235,12 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
                             )
                         }
                     }
-                    val overview = (result.overview as? NetworkState.Success)?.data
                     if (overview != null && overview.yesterdayDiamond == 0 && overview.yesterdayDownload == 0) {
                         sendEffect(MainEffect.ShowToast("昨日数据可能未更新"))
                     }
                 }
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                Logger.e("仪表盘加载异常", e)
                 setState { copy(isRefreshing = false) }
                 sendEffect(MainEffect.ShowToast("数据加载失败"))
             }

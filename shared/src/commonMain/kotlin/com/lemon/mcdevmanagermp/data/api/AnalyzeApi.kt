@@ -3,23 +3,29 @@ package com.lemon.mcdevmanagermp.data.api
 import com.lemon.mcdevmanagermp.data.common.ResponseData
 import com.lemon.mcdevmanagermp.data.consts.NETEASE_MC_DEV_LINK
 import com.lemon.mcdevmanagermp.data.dto.netease.income.OneResRealtimeIncomeVO
+import com.lemon.mcdevmanagermp.data.vo.netease.analyze.NewResDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResMonthDetailVO
-import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceListVO
 import de.jensklingenberg.ktorfit.http.GET
 import de.jensklingenberg.ktorfit.http.Path
 import de.jensklingenberg.ktorfit.http.Query
 
 interface AnalyzeApi {
-    @GET("/items/categories/{platform}/")
-    suspend fun getAllResource(
-        @Path("platform") platform: String = "pe",
+    @GET("data_analysis/day_detail/")
+    suspend fun getDayDetail(
+        @Query("platform") platform: String,
+        @Query("category") category: String,
+        @Query("start_date") startDate: String,
+        @Query("end_date") endDate: String,
+        @Query("item_list_str") itemListStr: String,
+        @Query("sort") sort: String = "dateid",
+        @Query("order") order: String = "ASC",
         @Query("start") start: Int = 0,
         @Query("span") span: Int = Int.MAX_VALUE
-    ): ResponseData<ResourceListVO>
+    ): ResponseData<ResDetailVO>
 
-    @GET("/data_analysis/day_detail/")
-    suspend fun getDayDetail(
+    @GET("data_analysis/day_detail/")
+    suspend fun getNewDayDetail(
         @Query("platform") platform: String,
         @Query("category") category: String,
         @Query("start_date") startDate: String,
@@ -30,9 +36,9 @@ interface AnalyzeApi {
         @Query("start") start: Int = 0,
         @Query("span") span: Int = Int.MAX_VALUE,
         @Query("is_need_us_rank_data") isNeedUsRankData: Boolean = true
-    ): ResponseData<ResDetailVO>
+    ): ResponseData<NewResDetailVO>
 
-    @GET("/data_analysis/month_detail/")
+    @GET("data_analysis/month_detail/")
     suspend fun getMonthDetail(
         @Query("platform") platform: String,
         @Query("category") category: String,
@@ -47,7 +53,7 @@ interface AnalyzeApi {
         @Query("day_dateid") dayDateId: String
     ): ResponseData<ResMonthDetailVO>
 
-    @GET("/items/categories/{platform}/{iid}/incomes/")
+    @GET("items/categories/{platform}/{iid}/incomes/")
     suspend fun getOneResRealtimeIncome(
         @Path("platform") platform: String,
         @Path("iid") iid: String,

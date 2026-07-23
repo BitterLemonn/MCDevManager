@@ -10,6 +10,9 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,15 +35,13 @@ import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.layout.component.WorkMa
 import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.layout.component.WorkManageCard
 import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.layout.component.WorkManagePendingOp
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_refresh
-import org.jetbrains.compose.resources.painterResource
 
 @Composable
 internal fun WorkManageMediumLayout(
     state: WorkManageState,
     onAction: (WorkManageAction) -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onNavigateToDetail: (String) -> Unit = {}
 ) {
     val colors = LocalAppColors.current
     val gridState = rememberLazyGridState()
@@ -59,11 +60,17 @@ internal fun WorkManageMediumLayout(
             collapseFraction = scrollAlpha.value,
             onBack = onBack,
             actions = {
+                IconButton(onClick = { onNavigateToDetail("") }) {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = "新增项目",
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
                 IconButton(onClick = { onAction(WorkManageAction.RefreshData) }) {
                     Icon(
-                        painter = painterResource(Res.drawable.ic_refresh),
+                        imageVector = Icons.Filled.Refresh,
                         contentDescription = "刷新",
-                        tint = colors.onSurfaceVariant,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -109,10 +116,16 @@ internal fun WorkManageMediumLayout(
             ) {
                 items(state.items, key = { it.itemId }) { item ->
                     WorkManageCard(item) { action ->
-                        pending = if (action == WorkItemActionEnum.ADJUST_PRICE) {
-                            WorkManagePendingOp.AdjustPrice(item)
-                        } else {
-                            WorkManagePendingOp.Confirm(item, action)
+                        when (action) {
+                            WorkItemActionEnum.UPDATE -> onNavigateToDetail(item.itemId)
+                            WorkItemActionEnum.ADJUST_PRICE ->
+                                pending = WorkManagePendingOp.AdjustPrice(item)
+                            WorkItemActionEnum.APPOINT_ONLINE ->
+                                pending = WorkManagePendingOp.AppointOnline(item)
+
+                            WorkItemActionEnum.VIEW_FEEDBACK ->
+                                onAction(WorkManageAction.LoadFeedback(item))
+                            else -> pending = WorkManagePendingOp.Confirm(item, action)
                         }
                     }
                 }
@@ -128,6 +141,10 @@ internal fun WorkManageMediumLayout(
         },
         onAdjustPrice = { item, newPrice ->
             onAction(WorkManageAction.AdjustPrice(item, newPrice))
+            pending = null
+        },
+        onAppointOnline = { item, time ->
+            onAction(WorkManageAction.AppointOnline(item, time))
             pending = null
         },
         onDismiss = { pending = null }

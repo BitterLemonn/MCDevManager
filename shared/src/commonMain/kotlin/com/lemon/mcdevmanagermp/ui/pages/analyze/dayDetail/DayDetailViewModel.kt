@@ -1,14 +1,22 @@
 package com.lemon.mcdevmanagermp.ui.pages.analyze.dayDetail
 
 import androidx.lifecycle.viewModelScope
+import com.lemon.mcdevmanagermp.data.common.AppContext
 import com.lemon.mcdevmanagermp.data.common.NetworkState
+import com.lemon.mcdevmanagermp.data.repository.AnalyzeRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
-import com.lemon.mcdevmanagermp.domain.resource.DayDetailUseCase
+import com.lemon.mcdevmanagermp.domain.analyze.DayDetailConfig
+import com.lemon.mcdevmanagermp.domain.analyze.DayDetailUseCase
+import com.lemon.mcdevmanagermp.domain.analyze.formatYmd
+import com.lemon.mcdevmanagermp.domain.analyze.spanDays
+import com.lemon.mcdevmanagermp.domain.resource.GetResourceListUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.ChartType
 import com.lemon.mcdevmanagermp.utils.Logger
 import kotlinx.coroutines.launch
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 
@@ -16,8 +24,9 @@ class DayDetailViewModel : BaseViewModel<DayDetailState, DayDetailAction, DayDet
     DayDetailState()
 ) {
     private val dayDetailUseCase = DayDetailUseCase(
-        resourceRepository = ResourceRepositoryImpl.INSTANCE
+        analyzeRepository = AnalyzeRepositoryImpl.INSTANCE
     )
+    private val getResourceListUseCase = GetResourceListUseCase(ResourceRepositoryImpl.INSTANCE)
 
     companion object {
         private const val TAG = "DayDetailVM"
@@ -60,19 +69,31 @@ class DayDetailViewModel : BaseViewModel<DayDetailState, DayDetailAction, DayDet
      */
     private fun initLoad() {
         setState { copy(isResListLoading = true) }
-        // 计算默认日期范围
         val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-        val (startDate, endDate) = dayDetailUseCase.getDefaultDateRange(today)
-
-        setState {
-            copy(
-                startDate = startDate,
-                endDate = endDate
-            )
-        }
+        val accountKey = AppContext.userInfo?.nickname
+        val platform = state.value.platform
 
         viewModelScope.launch {
-            when (val result = dayDetailUseCase.getResourceList(state.value.platform)) {
+            // 恢复上次查询配置（按账号 + 平台）：以「昨天」为终点按跨度重算区间并回选资源
+            val saved = if (accountKey != null) {
+                dayDetailUseCase.getDayDetailConfig(accountKey, platform)
+            } else null
+            if (saved != null && saved.dateSpanDays > 0) {
+                val end = today.minus(1, DateTimeUnit.DAY)
+                val start = end.minus(saved.dateSpanDays - 1, DateTimeUnit.DAY)
+                setState {
+                    copy(
+                        startDate = formatYmd(start),
+                        endDate = formatYmd(end),
+                        selectedIIDs = saved.selectedIIDs
+                    )
+                }
+            } else {
+                val (start, end) = dayDetailUseCase.getDefaultDateRange(today)
+                setState { copy(startDate = start, endDate = end) }
+            }
+
+            when (val result = getResourceListUseCase(platform)) {
                 is NetworkState.Success -> {
                     setState { copy(resList = result.data ?: emptyList(), isResListLoading = false) }
                 }
@@ -83,6 +104,10 @@ class DayDetailViewModel : BaseViewModel<DayDetailState, DayDetailAction, DayDet
                     handleDayDetailError(result)
                 }
             }
+
+            // 恢复出选中资源则自动查询展示
+            val iids = state.value.selectedIIDs
+            if (iids.isNotEmpty()) loadDetailData(iids)
         }
     }
 
@@ -115,8 +140,21 @@ class DayDetailViewModel : BaseViewModel<DayDetailState, DayDetailAction, DayDet
         }
 
         viewModelScope.launch {
-            setState { copy(isLoading = true) }
             val s = state.value
+            // 保存本次查询配置（按账号 + 平台；未登录则跳过）
+            val accountKey = AppContext.userInfo?.nickname
+            if (accountKey != null) {
+                dayDetailUseCase.saveDayDetailConfig(
+                    DayDetailConfig(
+                        accountKey = accountKey,
+                        platform = s.platform,
+                        dateSpanDays = spanDays(s.startDate, s.endDate),
+                        selectedIIDs = iids
+                    )
+                )
+            }
+
+            setState { copy(isLoading = true) }
 
             when (val result = dayDetailUseCase.getGroupedDayDetail(
                 platform = s.platform,

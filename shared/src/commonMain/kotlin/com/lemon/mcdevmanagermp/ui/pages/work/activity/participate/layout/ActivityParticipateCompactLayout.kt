@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -26,10 +28,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -38,16 +39,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.lemon.mcdevmanagermp.data.vo.netease.activity.CandidatesItemVO
+import com.lemon.mcdevmanagermp.data.vo.netease.activity.ActivityCandidatesItemVO
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.participate.ActivityParticipateAction
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.participate.ActivityParticipateState
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.participate.layout.component.ImageSelectorRow
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.participate.layout.component.VideoSelectorBox
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_add
-import org.jetbrains.compose.resources.painterResource
 
 @Composable
 internal fun ActivityParticipateCompactLayout(
@@ -247,7 +245,7 @@ internal fun ActivityParticipateCompactLayout(
                     Spacer(Modifier.width(8.dp))
                 } else {
                     Icon(
-                        painter = painterResource(Res.drawable.ic_add),
+                        imageVector = Icons.Filled.Add,
                         contentDescription = null,
                         modifier = Modifier.size(18.dp)
                     )
@@ -278,19 +276,17 @@ private fun ModuleTabRow(
 ) {
     val selectedIndex = modules.indexOfFirst { it.second == selectedModuleId }.coerceAtLeast(0)
 
-    TabRow(
+    SecondaryTabRow(
         selectedTabIndex = selectedIndex,
         modifier = Modifier.clip(RoundedCornerShape(12.dp)),
         containerColor = colors.surfaceContainerHigh,
         contentColor = colors.textColor,
-        indicator = { tabPositions ->
-            if (tabPositions.isNotEmpty() && selectedIndex < tabPositions.size) {
-                TabRowDefaults.SecondaryIndicator(
-                    modifier = Modifier.tabIndicatorOffset(tabPositions[selectedIndex]),
-                    color = colors.primary,
-                    height = 3.dp
-                )
-            }
+        indicator = {
+            TabRowDefaults.SecondaryIndicator(
+                modifier = Modifier.tabIndicatorOffset(selectedIndex),
+                color = colors.primary,
+                height = 3.dp
+            )
         }
     ) {
         modules.forEachIndexed { index, (name, id) ->
@@ -311,7 +307,7 @@ private fun ModuleTabRow(
 
 @Composable
 private fun CandidateItem(
-    candidate: CandidatesItemVO,
+    candidate: ActivityCandidatesItemVO,
     isSelected: Boolean,
     onSelect: () -> Unit,
     colors: com.lemon.mcdevmanagermp.ui.theme.AppColors

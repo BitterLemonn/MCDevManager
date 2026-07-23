@@ -2,8 +2,8 @@ package com.lemon.mcdevmanagermp.ui.pages.work.activity.detail
 
 import androidx.lifecycle.viewModelScope
 import com.lemon.mcdevmanagermp.data.repository.ActivityRepositoryImpl
-import com.lemon.mcdevmanagermp.data.vo.netease.activity.ReviewActivityItemVO
-import com.lemon.mcdevmanagermp.data.vo.netease.activity.ReviewActivityModuleVO
+import com.lemon.mcdevmanagermp.data.vo.netease.activity.ActivityReviewItemVO
+import com.lemon.mcdevmanagermp.data.vo.netease.activity.ActivityReviewModuleVO
 import com.lemon.mcdevmanagermp.domain.activity.ActivityUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
 import kotlinx.coroutines.launch
@@ -26,7 +26,7 @@ class ActivityDetailViewModel :
         }
     }
 
-    private fun loadActivity(activity: ReviewActivityItemVO) {
+    private fun loadActivity(activity: ActivityReviewItemVO) {
         setState { copy(activity = activity) }
         // 自动加载模组数据
         if (activity.modules.isNotEmpty()) {
@@ -34,7 +34,7 @@ class ActivityDetailViewModel :
         }
     }
 
-    private fun loadModules(activityId: String, modules: List<ReviewActivityModuleVO>) {
+    private fun loadModules(activityId: String, modules: List<ActivityReviewModuleVO>) {
         if (state.value.isLoadingModules) return
         viewModelScope.launch {
             setState { copy(isLoadingModules = true) }

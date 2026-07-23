@@ -1,7 +1,9 @@
 package com.lemon.mcdevmanagermp.platform
 
 import android.content.Context
+import androidx.compose.ui.draganddrop.DragAndDropEvent
 import com.lemon.mcdevmanagermp.utils.CrashHandler
+import io.github.vinceglb.filekit.PlatformFile
 import java.lang.ref.WeakReference
 
 object AndroidLogContext {
@@ -28,3 +30,8 @@ actual fun setupUncaughtExceptionHandler() {
         defaultHandler?.uncaughtException(thread, throwable)
     }
 }
+
+// 移动端无桌面拖放场景
+actual fun platformFileFromPath(path: String): PlatformFile? = null
+
+actual fun DragAndDropEvent.readFilePaths(): List<String> = emptyList()

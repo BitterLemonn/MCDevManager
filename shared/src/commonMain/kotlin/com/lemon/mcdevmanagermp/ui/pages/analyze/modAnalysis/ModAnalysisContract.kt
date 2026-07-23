@@ -2,6 +2,7 @@ package com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis
 
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResAnalyzeData
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
+import com.lemon.mcdevmanagermp.domain.analyze.SummaryMetrics
 import com.lemon.mcdevmanagermp.utils.extension.IUiAction
 import com.lemon.mcdevmanagermp.utils.extension.IUiEffect
 import com.lemon.mcdevmanagermp.utils.extension.IUiState
@@ -23,20 +24,6 @@ object MetricType {
     const val NEW_FOLLOW = 2
     const val AVG_PLAY_TIME = 3
 }
-
-/**
- * 四指标汇总数据
- */
-data class SummaryMetrics(
-    val newPurchaseCount: Int = 0,
-    val newPurchasePercent: Double = 0.0,
-    val dau: Int = 0,
-    val dauPercent: Double = 0.0,
-    val newFollowCount: Int = 0,
-    val newFollowPercent: Double = 0.0,
-    val avgPlayTime: Double = 0.0,
-    val avgPlayTimePercent: Double = 0.0,
-)
 
 data class ModAnalysisState(
     val isLoading: Boolean = false,

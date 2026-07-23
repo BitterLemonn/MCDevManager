@@ -12,9 +12,27 @@ import com.lemon.mcdevmanagermp.data.vo.netease.mailbox.UnReadMailVO
 class MailboxUseCase(
     private val mailboxRepository: MailboxRepository
 ) {
-    /** 加载消息列表，mailType 为 null/空字符串时表示全部 */
-    suspend fun loadMailList(mailType: String?): NetworkState<MailListVO> =
-        mailboxRepository.getMailList(mailType = mailType?.takeIf { it.isNotBlank() })
+    companion object {
+        /** 邮箱列表单页大小（与后端默认 span 对齐） */
+        const val MAIL_PAGE_SIZE: Int = 20
+    }
+
+    /**
+     * 加载消息列表，mailType 为 null/空字符串时表示全部。
+     * - [start] 分页起点，0 为首屏；追加加载时传入当前列表大小。
+     * - [initLoad] 是否为首屏加载（透传给后端，影响未读数等聚合字段）。
+     */
+    suspend fun loadMailList(
+        mailType: String?,
+        start: Int = 0,
+        initLoad: Boolean = true
+    ): NetworkState<MailListVO> =
+        mailboxRepository.getMailList(
+            start = start,
+            span = MAIL_PAGE_SIZE,
+            initLoad = initLoad,
+            mailType = mailType?.takeIf { it.isNotBlank() }
+        )
 
     suspend fun getMailContent(mailId: String): NetworkState<MailContentVO> =
         mailboxRepository.getMailContent(mailId)
@@ -22,7 +40,6 @@ class MailboxUseCase(
     suspend fun deleteMail(mailIdList: List<String>): NetworkState<NoNeedData> =
         mailboxRepository.deleteMail(mailIdList)
 
-    /** 全部已读 */
     suspend fun markAllRead(): NetworkState<NoNeedData> =
         mailboxRepository.readMail(mailIdList = emptyList(), readAll = true)
 

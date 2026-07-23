@@ -1,75 +1,95 @@
 package com.lemon.mcdevmanagermp.data.repository
 
-import com.lemon.mcdevmanagermp.data.api.AnalyzeApi
+import com.lemon.mcdevmanagermp.data.api.ResourceApi
 import com.lemon.mcdevmanagermp.data.common.NetworkState
-import com.lemon.mcdevmanagermp.data.dto.netease.income.OneResRealtimeIncomeVO
-import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResDetailVO
-import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResMonthDetailVO
+import com.lemon.mcdevmanagermp.data.common.NoNeedData
+import com.lemon.mcdevmanagermp.data.dto.netease.work.ApplyReviewDTO
+import com.lemon.mcdevmanagermp.data.dto.netease.work.AppointOnlineDTO
+import com.lemon.mcdevmanagermp.data.dto.netease.work.OnlineItemDTO
+import com.lemon.mcdevmanagermp.data.dto.netease.work.WorkCreateDTO
+import com.lemon.mcdevmanagermp.data.dto.netease.work.WorkUpdateDTO
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ItemTagVO
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.MCConstsVO
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.RequirementVO
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceListVO
+import com.lemon.mcdevmanagermp.data.vo.netease.work.ReviewApplyResultVO
+import com.lemon.mcdevmanagermp.data.vo.netease.work.ReviewFeedbackVO
 import com.lemon.mcdevmanagermp.domain.resource.ResourceRepository
 import com.lemon.mcdevmanagermp.utils.UnifiedExceptionHandler
 
 class ResourceRepositoryImpl : ResourceRepository {
+
     companion object {
         val INSTANCE by lazy { ResourceRepositoryImpl() }
-        private val analyzeApi = AnalyzeApi.INSTANCE
+        private val resourceApi = ResourceApi.INSTANCE
     }
 
-    override suspend fun getAllResources(platform: String): NetworkState<ResourceListVO> {
-        return UnifiedExceptionHandler.handleRequest {
-            analyzeApi.getAllResource(platform = platform)
-        }
-    }
-
-    override suspend fun getDayDetail(
+    override suspend fun getResources(
         platform: String,
-        category: String,
-        startDate: String,
-        endDate: String,
-        itemListStr: String
-    ): NetworkState<ResDetailVO> {
+        itemName: String?,
+        mcStatus: Int?
+    ): NetworkState<ResourceListVO> {
         return UnifiedExceptionHandler.handleRequest {
-            analyzeApi.getDayDetail(
+            resourceApi.getAllResource(
                 platform = platform,
-                category = category,
-                startDate = startDate,
-                endDate = endDate,
-                itemListStr = itemListStr
+                itemName = itemName,
+                mcStatus = mcStatus
             )
         }
     }
 
-    override suspend fun getMonthDetail(
-        platform: String,
-        category: String,
-        startDate: String,
-        endDate: String,
-        dayDateId: String
-    ): NetworkState<ResMonthDetailVO> {
+    override suspend fun getCompRequirements(itemName: String): NetworkState<RequirementVO> {
         return UnifiedExceptionHandler.handleRequest {
-            analyzeApi.getMonthDetail(
-                platform = platform,
-                category = category,
-                startDate = startDate,
-                endDate = endDate,
-                dayDateId = dayDateId
-            )
+            resourceApi.getRequirements(itemName)
         }
     }
 
-    override suspend fun getOneResRealtimeIncome(
-        platform: String,
-        iid: String,
-        beginTime: String,
-        endTime: String
-    ): NetworkState<OneResRealtimeIncomeVO> {
+    override suspend fun getResourceDetail(itemId: String): NetworkState<ResourceDetailVO> {
         return UnifiedExceptionHandler.handleRequest {
-            analyzeApi.getOneResRealtimeIncome(
-                platform = platform,
-                iid = iid,
-                beginTime = beginTime,
-                endTime = endTime
-            )
+            resourceApi.getResourceDetail(itemId)
         }
     }
+
+    override suspend fun getItemTag(): NetworkState<ItemTagVO> {
+        return UnifiedExceptionHandler.handleRequest {
+            resourceApi.getItemTag()
+        }
+    }
+
+    override suspend fun getMCConsts(): NetworkState<MCConstsVO> {
+        return UnifiedExceptionHandler.handleRequest {
+            resourceApi.getMCConsts()
+        }
+    }
+
+    override suspend fun updateItem(itemId: String, item: WorkUpdateDTO): NetworkState<NoNeedData> =
+        UnifiedExceptionHandler.handleRequest { resourceApi.updateItem(itemId, item) }
+
+    override suspend fun createItem(body: WorkCreateDTO): NetworkState<NoNeedData> =
+        UnifiedExceptionHandler.handleRequest { resourceApi.createItem(body) }
+
+    override suspend fun applyReview(
+        itemId: String,
+        content: ApplyReviewDTO
+    ): NetworkState<ReviewApplyResultVO> =
+        UnifiedExceptionHandler.handleRequest { resourceApi.applyReview(itemId, content) }
+
+    override suspend fun cancelReview(itemId: String): NetworkState<NoNeedData> =
+        UnifiedExceptionHandler.handleRequest { resourceApi.cancelReview(itemId) }
+
+    override suspend fun getReviewFeedback(itemId: String): NetworkState<ReviewFeedbackVO> =
+        UnifiedExceptionHandler.handleRequest { resourceApi.getReviewFeedback(itemId) }
+
+    override suspend fun onlineItem(
+        itemId: String,
+        content: OnlineItemDTO
+    ): NetworkState<NoNeedData> =
+        UnifiedExceptionHandler.handleRequest { resourceApi.onlineItem(itemId, content) }
+
+    override suspend fun appointOnlineItem(
+        itemId: String,
+        content: AppointOnlineDTO
+    ): NetworkState<NoNeedData> =
+        UnifiedExceptionHandler.handleRequest { resourceApi.appointOnlineItem(itemId, content) }
 }
