@@ -69,7 +69,6 @@ import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import com.lemon.mcdevmanagermp.utils.ProfitData
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.img_avatar
-import org.jetbrains.compose.resources.painterResource
 
 @Composable
 internal fun CompactLayout(
@@ -176,7 +175,7 @@ private fun TabNavigationBar(
                 onClick = { onTabSelect(tab) },
                 icon = {
                     Icon(
-                        painter = painterResource(tab.icon),
+                        imageVector = tab.icon,
                         contentDescription = tab.label,
                         modifier = Modifier.size(24.dp)
                     )

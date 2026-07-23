@@ -44,18 +44,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lemon.mcdevmanagermp.platform.BackHandler
+import com.lemon.mcdevmanagermp.ui.iconpack.Comment
+import com.lemon.mcdevmanagermp.ui.iconpack.Feedback
+import com.lemon.mcdevmanagermp.ui.iconpack.IconPack
 import com.lemon.mcdevmanagermp.ui.pages.community.comment.CommentPage
 import com.lemon.mcdevmanagermp.ui.pages.community.feedback.FeedbackPage
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_comment
-import mcdevmanagermpr.shared.generated.resources.ic_feedback
-import org.jetbrains.compose.resources.DrawableResource
-import org.jetbrains.compose.resources.painterResource
 
 private enum class CommunitySubPage { List, Feedback, Comment }
 
@@ -134,7 +133,7 @@ private fun CommunityListPage(
 
         ) {
             CommunityItem(
-                icon = Res.drawable.ic_feedback,
+                icon = IconPack.Feedback,
                 title = "玩家反馈",
                 subtitle = "查看和回复玩家的反馈意见",
                 onClick = onNavigateToFeedback
@@ -147,7 +146,7 @@ private fun CommunityListPage(
             )
 
             CommunityItem(
-                icon = Res.drawable.ic_comment,
+                icon = IconPack.Comment,
                 title = "组件评论",
                 subtitle = "查看和回复玩家的组件评论",
                 onClick = onNavigateToComment
@@ -158,7 +157,7 @@ private fun CommunityListPage(
 
 @Composable
 private fun CommunityItem(
-    icon: DrawableResource,
+    icon: ImageVector,
     title: String,
     subtitle: String,
     onClick: () -> Unit
@@ -189,7 +188,7 @@ private fun CommunityItem(
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                painter = painterResource(icon),
+                imageVector = icon,
                 contentDescription = title,
                 tint = colors.primary,
                 modifier = Modifier.size(20.dp)

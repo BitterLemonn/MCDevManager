@@ -20,6 +20,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.lemon.mcdevmanagermp.ui.iconpack.Feedback
+import com.lemon.mcdevmanagermp.ui.iconpack.IconPack
 import com.lemon.mcdevmanagermp.ui.pages.community.components.EmptyDetailPlaceholder
 import com.lemon.mcdevmanagermp.ui.pages.community.feedback.FeedbackAction
 import com.lemon.mcdevmanagermp.ui.pages.community.feedback.FeedbackDetailPanel
@@ -28,8 +30,6 @@ import com.lemon.mcdevmanagermp.ui.pages.community.feedback.FeedbackListContent
 import com.lemon.mcdevmanagermp.ui.pages.community.feedback.FeedbackState
 import com.lemon.mcdevmanagermp.ui.pages.community.feedback.FeedbackTopBar
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_feedback
 
 // ============================================================
 // Expanded Layout (Master-Detail)
@@ -107,7 +107,7 @@ internal fun ExpandedFeedbackLayout(
                         )
                     } else {
                         EmptyDetailPlaceholder(
-                            icon = Res.drawable.ic_feedback,
+                            icon = IconPack.Feedback,
                             hint = "选择一条反馈查看详情"
                         )
                     }

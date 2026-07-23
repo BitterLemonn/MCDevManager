@@ -53,6 +53,8 @@ import com.lemon.mcdevmanagermp.platform.BackHandler
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
 import com.lemon.mcdevmanagermp.ui.components.collectUiEffect
+import com.lemon.mcdevmanagermp.ui.iconpack.IconPack
+import com.lemon.mcdevmanagermp.ui.iconpack.Star
 import com.lemon.mcdevmanagermp.ui.pages.community.comment.layout.CompactCommentLayout
 import com.lemon.mcdevmanagermp.ui.pages.community.comment.layout.ExpandedCommentLayout
 import com.lemon.mcdevmanagermp.ui.pages.community.components.DateRangeChipGroup
@@ -62,9 +64,6 @@ import com.lemon.mcdevmanagermp.ui.pages.community.components.ReplyInputBar
 import com.lemon.mcdevmanagermp.ui.pages.community.components.StarChipGroup
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import com.lemon.mcdevmanagermp.utils.extension.toDateTimeString
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_star
-import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun CommentPage(onBack: () -> Unit) {
@@ -461,7 +460,7 @@ private fun StarRating(stars: String) {
     if (starCount <= 0) return
     Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(
-            painter = painterResource(Res.drawable.ic_star),
+            imageVector = IconPack.Star,
             contentDescription = null,
             tint = androidx.compose.ui.graphics.Color(0xFFFFA000),
             modifier = Modifier.size(12.dp)

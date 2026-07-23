@@ -16,7 +16,7 @@ import com.lemon.mcdevmanagermp.data.db.entity.PromotionTemplateEntity
 
 @Database(
     entities = [AccountEntity::class, PromotionTemplateEntity::class, DayDetailConfigEntity::class],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 @ConstructedBy(AppDatabaseConstructor::class)
@@ -84,6 +84,18 @@ val MIGRATION_4_5 = object : Migration(4, 5) {
               PRIMARY KEY (accountKey, platform)
             )
             """.trimIndent()
+        )
+    }
+}
+
+/**
+ * 数据库迁移 5→6：promotion_template 表新增 promoImageUrl 列（PE 轮播图预览图 URL）。
+ * Entity 该列声明 @ColumnInfo(defaultValue = "")，与此处 DEFAULT '' 对齐，确保 Room schema 校验通过。
+ */
+val MIGRATION_5_6 = object : Migration(5, 6) {
+    override fun migrate(connection: SQLiteConnection) {
+        connection.execSQL(
+            "ALTER TABLE promotion_template ADD COLUMN promoImageUrl TEXT NOT NULL DEFAULT ''"
         )
     }
 }

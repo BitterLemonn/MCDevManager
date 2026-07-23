@@ -10,6 +10,7 @@ import com.lemon.mcdevmanagermp.data.db.MIGRATION_1_2
 import com.lemon.mcdevmanagermp.data.db.MIGRATION_2_3
 import com.lemon.mcdevmanagermp.data.db.MIGRATION_3_4
 import com.lemon.mcdevmanagermp.data.db.MIGRATION_4_5
+import com.lemon.mcdevmanagermp.data.db.MIGRATION_5_6
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSSearchPathForDirectoriesInDomains
@@ -25,5 +26,5 @@ actual fun createAppDatabaseBuilder(): RoomDatabase.Builder<AppDatabase> {
         name = dbFilePath,
         factory = AppDatabaseConstructor::initialize
     ).setDriver(BundledSQLiteDriver())
-        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
 }

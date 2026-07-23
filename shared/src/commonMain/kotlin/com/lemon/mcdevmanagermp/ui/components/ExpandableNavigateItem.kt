@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -44,7 +45,6 @@ import com.github.panpf.sketch.request.placeholder
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.img_avatar
-import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
@@ -52,7 +52,8 @@ fun ExpandableNavigateItem(
     title: String,
     titleColor: Color = LocalAppColors.current.onSurface,
     titleWeight: FontWeight = FontWeight.Normal,
-    icon: Any?,
+    icon: ImageVector? = null,
+    avatarUrl: String? = null,
     iconModifier: Modifier = Modifier,
     isTinted: Boolean = true,
     expanded: Boolean = false,
@@ -80,9 +81,9 @@ fun ExpandableNavigateItem(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            if (icon is DrawableResource) {
+            if (icon != null) {
                 Icon(
-                    painter = painterResource(icon),
+                    imageVector = icon,
                     contentDescription = title,
                     tint = if (isTinted) {
                         if (selected) colors.primary else colors.onSurfaceVariant
@@ -91,9 +92,9 @@ fun ExpandableNavigateItem(
                         .then(Modifier.size(24.dp))
                         .clip(CircleShape)
                 )
-            } else if (icon is String) {
+            } else if (avatarUrl != null) {
                 AsyncImage(
-                    uri = icon,
+                    uri = avatarUrl,
                     state = rememberAsyncImageState(
                         ComposableImageOptions {
                             placeholder(Res.drawable.img_avatar)
@@ -157,18 +158,18 @@ fun ExpandableNavigateItem(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Start
             ) {
-                if (icon is DrawableResource) {
+                if (icon != null) {
                     Icon(
-                        painter = painterResource(icon),
+                        imageVector = icon,
                         contentDescription = title,
                         tint = if (isTinted) {
                             if (selected) colors.primary else colors.onSurfaceVariant
                         } else Color.Transparent,
                         modifier = iconModifier.then(Modifier.size(24.dp))
                     )
-                } else if (icon is String) {
+                } else if (avatarUrl != null) {
                     AsyncImage(
-                        uri = icon,
+                        uri = avatarUrl,
                         state = rememberAsyncImageState(ComposableImageOptions {
                             placeholder(Res.drawable.img_avatar)
                             fallback(Res.drawable.img_avatar)

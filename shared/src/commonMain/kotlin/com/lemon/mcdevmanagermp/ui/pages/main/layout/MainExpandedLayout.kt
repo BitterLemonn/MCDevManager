@@ -48,6 +48,8 @@ import com.lemon.mcdevmanagermp.ui.components.MailboxCard
 import com.lemon.mcdevmanagermp.ui.components.MultiLevelRankingCard
 import com.lemon.mcdevmanagermp.ui.components.ProfitCard
 import com.lemon.mcdevmanagermp.ui.components.ProfitSplitWidget
+import com.lemon.mcdevmanagermp.ui.iconpack.IconPack
+import com.lemon.mcdevmanagermp.ui.iconpack.Menu
 import com.lemon.mcdevmanagermp.ui.navigation.Route
 import com.lemon.mcdevmanagermp.ui.pages.analyze.AnalyzeTabContent
 import com.lemon.mcdevmanagermp.ui.pages.community.CommunityContent
@@ -58,8 +60,6 @@ import com.lemon.mcdevmanagermp.ui.pages.settings.SettingsContent
 import com.lemon.mcdevmanagermp.ui.pages.work.WorkContent
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import com.lemon.mcdevmanagermp.utils.ProfitData
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_menu
 
 private val CollapsedWidth = 80.dp
 private val ExpandedWidth = 240.dp
@@ -104,7 +104,7 @@ internal fun ExpandedLayout(
                     title = "MCDEV",
                     titleWeight = FontWeight.ExtraBold,
                     titleColor = colors.primary,
-                    icon = Res.drawable.ic_menu,
+                    icon = IconPack.Menu,
                     expanded = isExpanded
                 ) { isExpanded = !isExpanded }
 
@@ -142,7 +142,7 @@ internal fun ExpandedLayout(
 
                 ExpandableNavigateItem(
                     title = userNickname ?: "开发者",
-                    icon = userHeadImg,
+                    avatarUrl = userHeadImg,
                     isTinted = false,
                     expanded = isExpanded
                 ) {

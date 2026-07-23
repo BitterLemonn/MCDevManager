@@ -21,11 +21,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.data.dto.netease.income.OneResRealtimeIncomeVO
+import com.lemon.mcdevmanagermp.ui.iconpack.IconPack
+import com.lemon.mcdevmanagermp.ui.iconpack.Mod
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_diamond
 import mcdevmanagermpr.shared.generated.resources.ic_emerald
-import mcdevmanagermpr.shared.generated.resources.ic_mod
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
@@ -63,7 +64,7 @@ internal fun RealtimeProfitItemCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Image(
-                    painter = painterResource(Res.drawable.ic_mod),
+                    imageVector = IconPack.Mod,
                     contentDescription = "mod",
                     modifier = Modifier.size(24.dp),
                 )

@@ -20,6 +20,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.lemon.mcdevmanagermp.ui.iconpack.Comment
+import com.lemon.mcdevmanagermp.ui.iconpack.IconPack
 import com.lemon.mcdevmanagermp.ui.pages.community.comment.CommentAction
 import com.lemon.mcdevmanagermp.ui.pages.community.comment.CommentDetailPanel
 import com.lemon.mcdevmanagermp.ui.pages.community.comment.CommentFilterBar
@@ -28,8 +30,6 @@ import com.lemon.mcdevmanagermp.ui.pages.community.comment.CommentState
 import com.lemon.mcdevmanagermp.ui.pages.community.comment.CommentTopBar
 import com.lemon.mcdevmanagermp.ui.pages.community.components.EmptyDetailPlaceholder
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_comment
 
 @Composable
 internal fun ExpandedCommentLayout(
@@ -106,7 +106,7 @@ internal fun ExpandedCommentLayout(
                         )
                     } else {
                         EmptyDetailPlaceholder(
-                            icon = Res.drawable.ic_comment,
+                            icon = IconPack.Comment,
                             hint = "选择一条评论查看详情"
                         )
                     }
