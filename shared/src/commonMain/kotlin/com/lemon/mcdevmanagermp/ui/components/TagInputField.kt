@@ -16,6 +16,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.InputChip
@@ -41,9 +43,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_close
-import org.jetbrains.compose.resources.painterResource
 
 /**
  * 标签输入：聚焦弹出默认标签列表（可直接选择 / 输入筛选），回车 / 逗号仍可添加自定义标签；
@@ -105,7 +104,7 @@ fun TagInputField(
                         label = { Text(tag) },
                         trailingIcon = {
                             Icon(
-                                painter = painterResource(Res.drawable.ic_close),
+                                imageVector = Icons.Filled.Close,
                                 contentDescription = "删除标签",
                                 tint = colors.onSurfaceVariant,
                                 modifier = Modifier

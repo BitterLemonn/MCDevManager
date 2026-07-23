@@ -1,5 +1,6 @@
 package com.lemon.mcdevmanagermp.ui.pages.settings.account
 
+import com.lemon.mcdevmanagermp.data.vo.netease.user.LevelInfoVO
 import com.lemon.mcdevmanagermp.domain.account.Account
 import com.lemon.mcdevmanagermp.utils.extension.IUiAction
 import com.lemon.mcdevmanagermp.utils.extension.IUiEffect
@@ -11,7 +12,9 @@ data class AccountState(
     val isLoading: Boolean = false,
     val isSwitching: Long? = null,
     val showDeleteDialog: Boolean = false,
-    val accountToDelete: Account? = null
+    val accountToDelete: Account? = null,
+    val levelInfo: LevelInfoVO? = null,
+    val isLoadingLevel: Boolean = false
 ) : IUiState
 
 sealed interface AccountAction : IUiAction {

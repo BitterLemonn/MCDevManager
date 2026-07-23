@@ -13,8 +13,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -40,9 +42,6 @@ import com.lemon.mcdevmanagermp.ui.pages.analyze.monthDetail.components.MonthCar
 import com.lemon.mcdevmanagermp.ui.pages.analyze.monthDetail.components.MonthTrendChart
 import com.lemon.mcdevmanagermp.ui.pages.analyze.monthDetail.components.QuickTimeFilter
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_refresh
-import org.jetbrains.compose.resources.painterResource
 
 /**
  * Expanded 布局（桌面 > 840dp）
@@ -75,7 +74,7 @@ internal fun MonthDetailExpandedLayout(
             actions = {
                 IconButton(onClick = { onAction(MonthDetailAction.RefreshData) }) {
                     Icon(
-                        painter = painterResource(Res.drawable.ic_refresh),
+                        imageVector = Icons.Filled.Refresh,
                         contentDescription = "刷新",
                         modifier = Modifier.size(20.dp)
                     )
@@ -219,12 +218,12 @@ internal fun MonthDetailExpandedLayout(
 private fun SummaryStatCard(label: String, value: String) {
     val colors = LocalAppColors.current
 
-    ElevatedCard(
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.elevatedCardColors(containerColor = colors.surfaceContainerHigh),
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh),
         shape = RoundedCornerShape(10.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
-    ) {
+
+        ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()

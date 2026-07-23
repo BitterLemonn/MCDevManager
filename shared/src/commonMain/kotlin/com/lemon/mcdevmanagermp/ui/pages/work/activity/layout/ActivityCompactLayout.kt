@@ -13,6 +13,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,9 +36,6 @@ import com.lemon.mcdevmanagermp.ui.pages.work.activity.ActivityState
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.layout.component.ActivityCard
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import com.lemon.mcdevmanagermp.utils.extension.toDateString
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_refresh
-import org.jetbrains.compose.resources.painterResource
 
 @Composable
 internal fun ActivityCompactLayout(
@@ -78,7 +77,7 @@ internal fun ActivityCompactLayout(
             actions = {
                 IconButton(onClick = { onAction(ActivityAction.RefreshData) }) {
                     Icon(
-                        painter = painterResource(Res.drawable.ic_refresh),
+                        imageVector = Icons.Filled.Refresh,
                         contentDescription = "刷新",
                         modifier = Modifier.size(20.dp)
                     )

@@ -29,7 +29,7 @@ import com.lemon.mcdevmanagermp.ui.pages.community.comment.CommentTopBar
 import com.lemon.mcdevmanagermp.ui.pages.community.components.EmptyDetailPlaceholder
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_comment_line
+import mcdevmanagermpr.shared.generated.resources.ic_comment
 
 @Composable
 internal fun ExpandedCommentLayout(
@@ -106,7 +106,7 @@ internal fun ExpandedCommentLayout(
                         )
                     } else {
                         EmptyDetailPlaceholder(
-                            icon = Res.drawable.ic_comment_line,
+                            icon = Res.drawable.ic_comment,
                             hint = "选择一条评论查看详情"
                         )
                     }

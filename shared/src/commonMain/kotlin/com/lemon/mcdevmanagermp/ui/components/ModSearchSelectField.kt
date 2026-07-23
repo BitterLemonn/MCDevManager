@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -44,9 +46,6 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import kotlinx.coroutines.delay
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_close
-import org.jetbrains.compose.resources.painterResource
 
 /**
  * 模组搜索选择项：统一各类模组（ResourceData / RequirementItemData）为 id + name。
@@ -122,7 +121,7 @@ fun ModSearchSelectField(
                         },
                         trailingIcon = {
                             Icon(
-                                painter = painterResource(Res.drawable.ic_close),
+                                imageVector = Icons.Filled.Close,
                                 contentDescription = "移除",
                                 tint = colors.onSurfaceVariant,
                                 modifier = Modifier

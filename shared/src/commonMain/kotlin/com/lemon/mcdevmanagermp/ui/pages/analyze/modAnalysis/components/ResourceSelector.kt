@@ -18,8 +18,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -36,7 +38,6 @@ import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_down
 import mcdevmanagermpr.shared.generated.resources.ic_mod
 import org.jetbrains.compose.resources.painterResource
 
@@ -58,11 +59,10 @@ internal fun ResourceSelector(
 
     Column(modifier = modifier) {
         // 选择器触发区域
-        ElevatedCard(
+        Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.elevatedCardColors(containerColor = colors.surfaceContainerHigh),
-            shape = RoundedCornerShape(12.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh),
+            shape = RoundedCornerShape(12.dp)
         ) {
             Row(
                 modifier = Modifier
@@ -92,7 +92,7 @@ internal fun ResourceSelector(
                     overflow = TextOverflow.Ellipsis
                 )
                 Icon(
-                    painter = painterResource(Res.drawable.ic_down),
+                    imageVector = Icons.Filled.KeyboardArrowDown,
                     contentDescription = "展开",
                     modifier = Modifier.size(16.dp),
                     tint = colors.onSurfaceVariant
@@ -102,13 +102,12 @@ internal fun ResourceSelector(
 
         // 展开的资源列表
         AnimatedVisibility(visible = isExpanded) {
-            ElevatedCard(
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 4.dp),
-                colors = CardDefaults.elevatedCardColors(containerColor = colors.surfaceContainerHigh),
-                shape = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh),
+                shape = RoundedCornerShape(12.dp)
             ) {
                 LazyColumn(
                     modifier = Modifier.heightIn(max = 240.dp)

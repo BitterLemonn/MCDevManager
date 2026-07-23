@@ -23,7 +23,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -86,10 +88,6 @@ import kotlinx.datetime.minus
 import kotlinx.datetime.number
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_add
-import mcdevmanagermpr.shared.generated.resources.ic_close
-import org.jetbrains.compose.resources.painterResource
 import kotlin.time.Instant
 
 /**
@@ -445,7 +443,7 @@ private fun PromoImagePicker(
                             .clickable(onClick = onRemove), contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            painter = painterResource(Res.drawable.ic_close),
+                            imageVector = Icons.Filled.Close,
                             contentDescription = "删除",
                             modifier = Modifier.size(14.dp),
                             tint = colors.onError
@@ -459,7 +457,7 @@ private fun PromoImagePicker(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Icon(
-                        painter = painterResource(Res.drawable.ic_add),
+                        imageVector = Icons.Filled.Add,
                         contentDescription = "上传宣传图",
                         modifier = Modifier.size(24.dp),
                         tint = colors.onSurfaceVariant
@@ -586,7 +584,7 @@ private fun TemplatePickerDialog(
                             onClick = { onDelete(t.id) }, modifier = Modifier.size(36.dp)
                         ) {
                             Icon(
-                                painter = painterResource(Res.drawable.ic_close),
+                                imageVector = Icons.Filled.Close,
                                 contentDescription = "删除",
                                 tint = colors.onSurfaceVariant,
                                 modifier = Modifier.size(16.dp)

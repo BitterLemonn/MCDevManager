@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -61,9 +63,6 @@ import com.lemon.mcdevmanagermp.ui.pages.work.activity.layout.ActivityStatusTag
 import com.lemon.mcdevmanagermp.ui.theme.AppColors
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import com.lemon.mcdevmanagermp.utils.extension.toDateString
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_add
-import org.jetbrains.compose.resources.painterResource
 
 /**
  * 折扣特卖页面共享组件集合。
@@ -635,7 +634,7 @@ internal fun DiscountJoinForm(
                 Spacer(Modifier.width(8.dp))
             } else {
                 Icon(
-                    painter = painterResource(Res.drawable.ic_add),
+                    imageVector = Icons.Filled.Add,
                     contentDescription = null,
                     modifier = Modifier.size(18.dp)
                 )

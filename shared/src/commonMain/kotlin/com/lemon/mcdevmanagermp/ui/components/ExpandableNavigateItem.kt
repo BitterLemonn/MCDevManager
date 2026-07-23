@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
@@ -67,7 +66,6 @@ fun ExpandableNavigateItem(
         Column(
             modifier = Modifier
                 .padding(vertical = 2.dp, horizontal = 4.dp)
-                .clip(RoundedCornerShape(12.dp))
                 .background(
                     if (selected) colors.primary.copy(alpha = 0.12f)
                     else Color.Transparent
@@ -89,21 +87,25 @@ fun ExpandableNavigateItem(
                     tint = if (isTinted) {
                         if (selected) colors.primary else colors.onSurfaceVariant
                     } else Color.Transparent,
-                    modifier = iconModifier.then(Modifier.size(24.dp))
+                    modifier = iconModifier
+                        .then(Modifier.size(24.dp))
+                        .clip(CircleShape)
                 )
             } else if (icon is String) {
                 AsyncImage(
                     uri = icon,
-                    state = rememberAsyncImageState(ComposableImageOptions {
-                        placeholder(Res.drawable.img_avatar)
-                        fallback(Res.drawable.img_avatar)
-                        crossfade()
-                        error(Res.drawable.img_avatar)
-                        sizeMultiplier(2.0f)
-                    }),
+                    state = rememberAsyncImageState(
+                        ComposableImageOptions {
+                            placeholder(Res.drawable.img_avatar)
+                            fallback(Res.drawable.img_avatar)
+                            crossfade()
+                            error(Res.drawable.img_avatar)
+                            sizeMultiplier(2.0f)
+                        }
+                    ),
                     contentDescription = title,
                     modifier = iconModifier
-                        .then(Modifier.size(28.dp))
+                        .then(Modifier.size(24.dp))
                         .clip(CircleShape),
                     contentScale = ContentScale.Crop
                 )

@@ -26,8 +26,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -53,12 +57,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
 import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_arrow_down
-import mcdevmanagermpr.shared.generated.resources.ic_arrow_up
-import mcdevmanagermpr.shared.generated.resources.ic_close
-import mcdevmanagermpr.shared.generated.resources.ic_down
 import mcdevmanagermpr.shared.generated.resources.ic_filter
-import mcdevmanagermpr.shared.generated.resources.ic_search
 import mcdevmanagermpr.shared.generated.resources.ic_star
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
@@ -98,11 +97,11 @@ fun ModernFilterBar(
     val hasActiveFilters = groups.any { it.selectedValues.isNotEmpty() } || searchQuery.isNotBlank()
     val focusManager = LocalFocusManager.current
 
-    ElevatedCard(
+    Card(
         modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = colors.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        colors = CardDefaults.cardColors(containerColor = colors.surface),
+
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             // Search row
@@ -118,7 +117,7 @@ fun ModernFilterBar(
                 },
                 leadingIcon = {
                     Icon(
-                        painter = painterResource(Res.drawable.ic_search),
+                        imageVector = Icons.Filled.Search,
                         contentDescription = null,
                         tint = colors.onSurfaceVariant,
                         modifier = Modifier.size(18.dp)
@@ -131,7 +130,7 @@ fun ModernFilterBar(
                             modifier = Modifier.size(20.dp)
                         ) {
                             Icon(
-                                painter = painterResource(Res.drawable.ic_close),
+                                imageVector = Icons.Filled.Close,
                                 contentDescription = "清除",
                                 tint = colors.onSurfaceVariant,
                                 modifier = Modifier.size(14.dp)
@@ -228,7 +227,7 @@ fun ModernFilterBar(
                         modifier = Modifier.size(28.dp)
                     ) {
                         Icon(
-                            painter = painterResource(Res.drawable.ic_down),
+                            imageVector = Icons.Filled.KeyboardArrowDown,
                             contentDescription = if (isExpanded) "收起" else "展开更多筛选",
                             tint = colors.onSurfaceVariant,
                             modifier = Modifier.size(16.dp).rotate(
@@ -491,7 +490,7 @@ fun ActiveFilterBadge(
             )
             IconButton(onClick = onRemove, modifier = Modifier.size(18.dp)) {
                 Icon(
-                    painter = painterResource(Res.drawable.ic_close),
+                    imageVector = Icons.Filled.Close,
                     contentDescription = "移除",
                     tint = colors.primary.copy(alpha = 0.7f),
                     modifier = Modifier.size(10.dp)

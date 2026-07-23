@@ -16,6 +16,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -52,10 +55,6 @@ import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.path
 import kotlinx.coroutines.launch
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_add
-import mcdevmanagermpr.shared.generated.resources.ic_close
-import org.jetbrains.compose.resources.painterResource
 
 /**
  * PE/PC 宣传图编辑区块（通用）。每个 [ChannelImageSlot] 对应一个固定尺寸的图片位：
@@ -184,7 +183,7 @@ private fun ChannelImagePicker(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            painter = painterResource(Res.drawable.ic_close),
+                            imageVector = Icons.Filled.Close,
                             contentDescription = "删除",
                             modifier = Modifier.size(14.dp),
                             tint = colors.onError
@@ -198,7 +197,7 @@ private fun ChannelImagePicker(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Icon(
-                        painter = painterResource(Res.drawable.ic_add),
+                        imageVector = Icons.Filled.Add,
                         contentDescription = "上传图片",
                         modifier = Modifier.size(24.dp),
                         tint = colors.onSurfaceVariant

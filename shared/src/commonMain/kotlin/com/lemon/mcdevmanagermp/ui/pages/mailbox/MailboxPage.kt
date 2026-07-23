@@ -33,12 +33,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -67,9 +69,6 @@ import com.lemon.mcdevmanagermp.ui.pages.mailbox.layout.CompactMailboxLayout
 import com.lemon.mcdevmanagermp.ui.pages.mailbox.layout.ExpandedMailboxLayout
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import com.lemon.mcdevmanagermp.utils.extension.toReadableTime
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_refresh
-import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun MailboxPage(onBack: () -> Unit) {
@@ -232,7 +231,7 @@ internal fun MailboxTopBar(
             }
             IconButton(onClick = onRefresh) {
                 Icon(
-                    painter = painterResource(Res.drawable.ic_refresh),
+                    imageVector = Icons.Filled.Refresh,
                     contentDescription = "刷新",
                     modifier = Modifier.size(20.dp)
                 )
@@ -363,7 +362,7 @@ internal fun MailList(
 @Composable
 internal fun MailItemCard(mail: MailListContentVO, onOpen: (String) -> Unit) {
     val colors = LocalAppColors.current
-    ElevatedCard(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(
@@ -371,9 +370,9 @@ internal fun MailItemCard(mail: MailListContentVO, onOpen: (String) -> Unit) {
                 indication = null,
                 onClick = { onOpen(mail.id) }
             ),
-        colors = CardDefaults.elevatedCardColors(containerColor = colors.surfaceContainerHigh),
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh),
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
@@ -440,12 +439,12 @@ internal fun MailDetailCard(
     val meta = state.currentMailMeta
     val content = state.currentMailContent
 
-    ElevatedCard(
+    Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.elevatedCardColors(containerColor = colors.surfaceContainerHigh),
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh),
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
+
+        ) {
         if (meta == null) {
             // 空态占位
             Box(
@@ -458,7 +457,7 @@ internal fun MailDetailCard(
                     color = colors.onSurfaceVariant
                 )
             }
-            return@ElevatedCard
+            return@Card
         }
 
         Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {

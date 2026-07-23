@@ -12,8 +12,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -121,10 +121,10 @@ private fun SummaryBlock(
     items: List<IncomeVO>
 ) {
     val colors = LocalAppColors.current
-    ElevatedCard(
+    Card(
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = colors.surfaceContainerHigh),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh),
+
     ) {
         Column(modifier = Modifier.fillMaxWidth().padding(14.dp)) {
             Text(

@@ -19,6 +19,8 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -39,9 +41,6 @@ import com.lemon.mcdevmanagermp.ui.pages.work.activity.ActivityAction
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.ActivityState
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.layout.component.ActivityCard
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_refresh
-import org.jetbrains.compose.resources.painterResource
 
 @Composable
 internal fun ActivityExpandedLayout(
@@ -87,7 +86,7 @@ internal fun ActivityExpandedLayout(
             actions = {
                 IconButton(onClick = { onAction(ActivityAction.RefreshData) }) {
                     Icon(
-                        painter = painterResource(Res.drawable.ic_refresh),
+                        imageVector = Icons.Filled.Refresh,
                         contentDescription = "刷新",
                         modifier = Modifier.size(20.dp)
                     )

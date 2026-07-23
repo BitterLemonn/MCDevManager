@@ -1,6 +1,5 @@
 package com.lemon.mcdevmanagermp.ui.pages.settings.account
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -8,7 +7,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -25,12 +23,21 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.SwitchAccount
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -46,6 +53,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.github.panpf.sketch.AsyncImage
 import com.github.panpf.sketch.rememberAsyncImageState
@@ -53,6 +61,9 @@ import com.github.panpf.sketch.request.ComposableImageOptions
 import com.github.panpf.sketch.request.error
 import com.github.panpf.sketch.request.fallback
 import com.github.panpf.sketch.request.placeholder
+import com.lemon.mcdevmanagermp.data.consts.getContributeClassName
+import com.lemon.mcdevmanagermp.data.consts.getLevelName
+import com.lemon.mcdevmanagermp.data.vo.netease.user.LevelInfoVO
 import com.lemon.mcdevmanagermp.domain.account.Account
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
@@ -65,11 +76,9 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
 import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_add
-import mcdevmanagermpr.shared.generated.resources.ic_del
 import mcdevmanagermpr.shared.generated.resources.img_avatar
-import org.jetbrains.compose.resources.painterResource
 import kotlin.time.Clock
+import kotlin.time.Instant
 
 @Composable
 fun AccountManagementPage(
@@ -186,11 +195,11 @@ internal fun CurrentAccountSection(
     val colors = LocalAppColors.current
     val currentAccount = state.accounts.find { it.id == state.currentAccountId }
 
-    ElevatedCard(
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.elevatedCardColors(containerColor = colors.primary.copy(alpha = 0.06f)),
+        colors = CardDefaults.cardColors(containerColor = colors.primary.copy(alpha = 0.06f)),
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+
     ) {
         Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
             Text(
@@ -233,6 +242,13 @@ internal fun CurrentAccountSection(
 
                 Spacer(Modifier.height(12.dp))
 
+                AccountLevelInfoSection(
+                    levelInfo = state.levelInfo,
+                    isLoading = state.isLoadingLevel
+                )
+
+                Spacer(Modifier.height(12.dp))
+
                 OutlinedButton(
                     onClick = { onAction(AccountAction.Logout) },
                     modifier = Modifier.fillMaxWidth(),
@@ -258,6 +274,159 @@ internal fun CurrentAccountSection(
                 ) {
                     Text("登录账号")
                 }
+            }
+        }
+    }
+}
+
+// ============================================================
+// Account Level Info Section
+// ============================================================
+
+@Composable
+private fun AccountLevelInfoSection(
+    levelInfo: LevelInfoVO?,
+    isLoading: Boolean
+) {
+    val colors = LocalAppColors.current
+
+    if (levelInfo == null) {
+        if (isLoading) {
+            Text(
+                text = "加载中…",
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.onSurfaceVariant
+            )
+        }
+        return
+    }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        // 等级 + 升阶任务状态
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "${getLevelName(levelInfo.currentClass)} · Lv.${levelInfo.currentLevel}",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = colors.textColor
+            )
+            Text(
+                text = "升阶任务 ${if (levelInfo.upgradeClassAchieve) "已完成" else "未完成"}",
+                style = MaterialTheme.typography.labelSmall,
+                color = if (levelInfo.upgradeClassAchieve) colors.success else colors.onSurfaceVariant
+            )
+        }
+
+        Spacer(Modifier.height(6.dp))
+
+        LinearProgressIndicator(
+            progress = {
+                if (levelInfo.expCeiling > levelInfo.expFloor) {
+                    ((levelInfo.totalExp - levelInfo.expFloor) / (levelInfo.expCeiling - levelInfo.expFloor))
+                        .coerceIn(0.0, 1.0).toFloat()
+                } else 0f
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(6.dp)
+                .clip(RoundedCornerShape(3.dp)),
+            color = colors.primary,
+            trackColor = colors.primary.copy(alpha = 0.15f)
+        )
+
+        Spacer(Modifier.height(4.dp))
+
+        Text(
+            text = "经验 ${levelInfo.totalExp.toInt()} / ${levelInfo.expCeiling.toInt()}",
+            style = MaterialTheme.typography.labelSmall,
+            color = colors.onSurfaceVariant
+        )
+
+        Spacer(Modifier.height(12.dp))
+
+        // 月度贡献
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "月度贡献",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Medium,
+                color = colors.textColor
+            )
+            Text(
+                text = "统计 ${levelInfo.contributionMonth}",
+                style = MaterialTheme.typography.labelSmall,
+                color = colors.onSurfaceVariant
+            )
+        }
+
+        HorizontalDivider(
+            modifier = Modifier.padding(vertical = 4.dp),
+            color = colors.outlineVariant,
+            thickness = 0.5.dp
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            ContributionColumn(
+                modifier = Modifier.weight(1f),
+                title = "组件贡献",
+                score = levelInfo.contributionScore,
+                rank = levelInfo.contributionRank,
+                className = getContributeClassName(levelInfo.contributionClass)
+            )
+            ContributionColumn(
+                modifier = Modifier.weight(1f),
+                title = "网络游戏",
+                score = levelInfo.contributionNetGameScore,
+                rank = levelInfo.contributionNetGameRank,
+                className = getContributeClassName(levelInfo.contributionNetGameClass)
+            )
+        }
+    }
+}
+
+@Composable
+private fun ContributionColumn(
+    modifier: Modifier = Modifier,
+    title: String,
+    score: String,
+    rank: Int,
+    className: String
+) {
+    val colors = LocalAppColors.current
+    val rows = listOf("分数" to score, "排名" to "$rank", "等级" to className)
+    Column(modifier = modifier) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.labelMedium,
+            color = colors.onSurfaceVariant
+        )
+        Spacer(Modifier.height(4.dp))
+        rows.forEach { (label, value) ->
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.onSurfaceVariant
+                )
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Medium,
+                    color = colors.primary
+                )
             }
         }
     }
@@ -314,8 +483,8 @@ internal fun SavedAccountsSection(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            Image(
-                painter = painterResource(Res.drawable.ic_add),
+            Icon(
+                imageVector = Icons.Filled.Add,
                 contentDescription = null,
                 modifier = Modifier.size(18.dp)
             )
@@ -344,7 +513,7 @@ private fun AccountCard(
 ) {
     val colors = LocalAppColors.current
 
-    ElevatedCard(
+    Card(
         modifier = Modifier.fillMaxWidth().then(
             if (isCurrent) Modifier.border(
                 1.5.dp,
@@ -353,11 +522,11 @@ private fun AccountCard(
             )
             else Modifier
         ),
-        colors = CardDefaults.elevatedCardColors(
+        colors = CardDefaults.cardColors(
             containerColor = colors.surfaceContainerHigh
         ),
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Row(
@@ -409,38 +578,41 @@ private fun AccountCard(
                         )
                     } else {
                         // Switch button
-                        TextButton(
+                        IconButton(
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clip(CircleShape),
                             onClick = onSwitch,
-                            contentPadding = PaddingValues(
-                                horizontal = 12.dp,
-                                vertical = 4.dp
-                            )
+                            shape = CircleShape,
+                            enabled = true,
+                            interactionSource = remember { MutableInteractionSource() },
+                            colors = IconButtonDefaults.iconButtonColors(),
                         ) {
-                            Text(
-                                text = "切换",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = colors.primary
+                            Icon(
+                                imageVector = Icons.Filled.SwitchAccount,
+                                contentDescription = "切换",
+                                modifier = Modifier.size(16.dp),
+                                tint = colors.primary
                             )
                         }
 
                         Spacer(Modifier.width(4.dp))
 
-                        // Delete button
-                        Box(
+                        IconButton(
                             modifier = Modifier
                                 .size(28.dp)
-                                .clip(CircleShape)
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null,
-                                    onClick = onDelete
-                                ),
-                            contentAlignment = Alignment.Center
+                                .clip(CircleShape),
+                            onClick = onDelete,
+                            shape = CircleShape,
+                            enabled = true,
+                            interactionSource = remember { MutableInteractionSource() },
+                            colors = IconButtonDefaults.iconButtonColors(),
                         ) {
-                            Image(
-                                painter = painterResource(Res.drawable.ic_del),
+                            Icon(
+                                imageVector = Icons.Filled.Delete,
                                 contentDescription = "删除",
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(16.dp),
+                                tint = colors.danger
                             )
                         }
                     }
@@ -461,12 +633,12 @@ private fun SettingsSectionCard(
 ) {
     val colors = LocalAppColors.current
 
-    ElevatedCard(
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.elevatedCardColors(containerColor = colors.surfaceContainerHigh),
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh),
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
+
+        ) {
         Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
             Text(
                 text = title,
@@ -487,8 +659,8 @@ private fun SettingsSectionCard(
 @Composable
 private fun AccountAvatar(
     headImg: String?,
-    size: androidx.compose.ui.unit.Dp,
-    iconSize: androidx.compose.ui.unit.Dp,
+    size: Dp,
+    iconSize: Dp,
     isCurrent: Boolean = false
 ) {
     val colors = LocalAppColors.current
@@ -522,7 +694,7 @@ private fun AccountAvatar(
 // ============================================================
 
 private fun formatLoginTime(epochMillis: Long): String {
-    val instant = kotlin.time.Instant.fromEpochMilliseconds(epochMillis)
+    val instant = Instant.fromEpochMilliseconds(epochMillis)
     val localDateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
     return "上次登录: ${localDateTime.year}/${localDateTime.month.number}/${localDateTime.day} " +
             "${localDateTime.hour.toString().padStart(2, '0')}:" +

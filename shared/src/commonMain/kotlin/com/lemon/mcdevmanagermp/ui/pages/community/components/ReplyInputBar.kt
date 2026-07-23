@@ -8,7 +8,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -20,9 +21,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_correct
-import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun ReplyInputBar(
@@ -80,7 +78,7 @@ fun ReplyInputBar(
                 modifier = Modifier.padding(start = 4.dp)
             ) {
                 Icon(
-                    painter = painterResource(Res.drawable.ic_correct),
+                    imageVector = Icons.Filled.Check,
                     contentDescription = "发送",
                     tint = colors.primary,
                     modifier = Modifier.size(24.dp)

@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,10 +34,6 @@ import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.layout.component.WorkMa
 import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.layout.component.WorkManageCard
 import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.layout.component.WorkManagePendingOp
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_add
-import mcdevmanagermpr.shared.generated.resources.ic_refresh
-import org.jetbrains.compose.resources.painterResource
 
 @Composable
 internal fun WorkManageCompactLayout(
@@ -62,14 +61,14 @@ internal fun WorkManageCompactLayout(
             actions = {
                 IconButton(onClick = { onNavigateToDetail("") }) {
                     Icon(
-                        painter = painterResource(Res.drawable.ic_add),
+                        imageVector = Icons.Filled.Add,
                         contentDescription = "新增项目",
                         modifier = Modifier.size(20.dp)
                     )
                 }
                 IconButton(onClick = { onAction(WorkManageAction.RefreshData) }) {
                     Icon(
-                        painter = painterResource(Res.drawable.ic_refresh),
+                        imageVector = Icons.Filled.Refresh,
                         contentDescription = "刷新",
                         modifier = Modifier.size(20.dp)
                     )

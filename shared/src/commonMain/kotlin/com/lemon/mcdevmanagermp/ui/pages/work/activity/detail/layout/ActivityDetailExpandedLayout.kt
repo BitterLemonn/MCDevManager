@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -42,9 +44,6 @@ import com.lemon.mcdevmanagermp.ui.pages.work.activity.layout.ActivityStatusTag
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.layout.formatTimeRange
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import com.lemon.mcdevmanagermp.utils.extension.toDateString
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_add
-import org.jetbrains.compose.resources.painterResource
 
 @Composable
 internal fun ActivityDetailExpandedLayout(
@@ -305,7 +304,7 @@ internal fun ActivityDetailExpandedLayout(
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Icon(
-                        painter = painterResource(Res.drawable.ic_add),
+                        imageVector = Icons.Filled.Add,
                         contentDescription = null,
                         modifier = Modifier.size(18.dp)
                     )

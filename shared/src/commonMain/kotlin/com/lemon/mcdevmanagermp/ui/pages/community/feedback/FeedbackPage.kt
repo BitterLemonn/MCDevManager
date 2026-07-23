@@ -27,9 +27,11 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -74,7 +76,6 @@ import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import com.lemon.mcdevmanagermp.utils.extension.toDateTimeString
 import kotlinx.serialization.json.Json
 import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_refresh
 import mcdevmanagermpr.shared.generated.resources.ic_replied
 import org.jetbrains.compose.resources.painterResource
 
@@ -225,7 +226,6 @@ internal fun FeedbackFilterBar(
 
 @Composable
 internal fun FeedbackTopBar(onBack: () -> Unit, onRefresh: () -> Unit) {
-    val colors = LocalAppColors.current
     CollapsingTopBar(
         title = "玩家反馈",
         collapseFraction = 0f,
@@ -233,7 +233,7 @@ internal fun FeedbackTopBar(onBack: () -> Unit, onRefresh: () -> Unit) {
         actions = {
             IconButton(onClick = onRefresh) {
                 Icon(
-                    painter = painterResource(Res.drawable.ic_refresh),
+                    imageVector = Icons.Filled.Refresh,
                     contentDescription = "刷新",
                     modifier = Modifier.size(20.dp)
                 )
@@ -250,7 +250,6 @@ internal fun FeedbackListContent(
 ) {
     val colors = LocalAppColors.current
 
-    // Apply client-side filters
     val filteredList = remember(state.feedbackList, state.filterReplied) {
         var list = state.feedbackList
         if (state.filterReplied != null) {
@@ -347,14 +346,13 @@ private fun FeedbackSummaryCard(
         else -> colors.surfaceContainerHigh
     }
 
-    ElevatedCard(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
             .hoverable(interactionSource)
             .clickable(interactionSource = interactionSource, indication = null, onClick = onClick),
-        colors = CardDefaults.elevatedCardColors(containerColor = cardColor),
+        colors = CardDefaults.cardColors(containerColor = cardColor),
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 2.dp else 1.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
             Row(

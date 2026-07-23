@@ -23,7 +23,7 @@ class DayDetailUseCase(
     fun getDefaultDateRange(today: LocalDate): Pair<String, String> {
         val endDate = today.minus(1, DateTimeUnit.DAY)
         val startDate = endDate.minus(DEFAULT_DAYS - 1, DateTimeUnit.DAY)
-        return formatDateParam(startDate) to formatDateParam(endDate)
+        return formatYmd(startDate) to formatYmd(endDate)
     }
 
     /**
@@ -59,7 +59,22 @@ class DayDetailUseCase(
         }
     }
 
-    private fun formatDateParam(date: LocalDate): String {
-        return date.toString().replace("-", "")
-    }
+    suspend fun getDayDetailConfig(accountKey: String, platform: String): DayDetailConfig? =
+        analyzeRepository.getDayDetailConfig(accountKey, platform)
+
+    suspend fun saveDayDetailConfig(config: DayDetailConfig) =
+        analyzeRepository.saveDayDetailConfig(config)
 }
+
+/** LocalDate → "yyyyMMdd" */
+fun formatYmd(date: LocalDate): String = date.toString().replace("-", "")
+
+/** "yyyyMMdd" → LocalDate（先转 ISO 再解析，规避各版本构造签名差异） */
+fun parseYmd(ymd: String): LocalDate {
+    val iso = "${ymd.substring(0, 4)}-${ymd.substring(4, 6)}-${ymd.substring(6, 8)}"
+    return LocalDate.parse(iso)
+}
+
+/** 起止 "yyyyMMdd" 间的跨度天数（含端点）：end - start + 1 */
+fun spanDays(startYmd: String, endYmd: String): Int =
+    (parseYmd(endYmd).toEpochDays() - parseYmd(startYmd).toEpochDays() + 1).toInt()

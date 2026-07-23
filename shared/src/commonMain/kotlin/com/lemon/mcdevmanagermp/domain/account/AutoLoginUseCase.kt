@@ -2,6 +2,8 @@ package com.lemon.mcdevmanagermp.domain.account
 
 import com.lemon.mcdevmanagermp.data.common.JSONConverter
 import com.lemon.mcdevmanagermp.data.common.NetworkState
+import com.lemon.mcdevmanagermp.data.consts.CookiesExpiredException
+import com.lemon.mcdevmanagermp.data.consts.LoginException
 import com.lemon.mcdevmanagermp.domain.user.UserRepository
 import com.lemon.mcdevmanagermp.utils.Logger
 import kotlin.time.Clock
@@ -41,7 +43,12 @@ class AutoLoginUseCase(
                     Logger.d("获取账号信息成功 登录账号: ${lastAccount.nickname}")
                     return true
                 }
-                cookieRepository.clearCookies()
+                // 仅明确判定登录过期才清理；网络/服务异常乐观放行进 Main，
+                // 避免冷启动网络抖动误判过期（真过期由 Main 层 isSessionExpired 兜底）
+                val expired = result is NetworkState.Error &&
+                        (result.e is LoginException || result.e is CookiesExpiredException)
+                if (expired) cookieRepository.clearCookies()
+                return !expired
             }
             false
         } catch (e: Exception) {

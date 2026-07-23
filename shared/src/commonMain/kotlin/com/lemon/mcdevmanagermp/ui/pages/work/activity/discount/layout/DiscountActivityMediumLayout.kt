@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
@@ -30,9 +32,6 @@ import com.lemon.mcdevmanagermp.ui.pages.work.activity.discount.layout.component
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.discount.layout.component.DiscountModuleSelector
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.discount.layout.component.DiscountPartitionRulesCard
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_refresh
-import org.jetbrains.compose.resources.painterResource
 
 /**
  * 折扣特卖 - 中等布局（600~840dp，平板）。
@@ -59,7 +58,7 @@ internal fun DiscountActivityMediumLayout(
             actions = {
                 IconButton(onClick = { onAction(DiscountActivityAction.Refresh) }) {
                     Icon(
-                        painter = painterResource(Res.drawable.ic_refresh),
+                        imageVector = Icons.Filled.Refresh,
                         contentDescription = "刷新",
                         modifier = Modifier.size(20.dp)
                     )

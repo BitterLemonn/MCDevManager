@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -23,9 +25,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_correct
-import org.jetbrains.compose.resources.painterResource
 
 /**
  * 单个选项胶囊：选中时主色填充 + 勾图标 + 加粗；未选中时描边轮廓，hover 有轻量背景反馈。
@@ -79,7 +78,7 @@ internal fun OptionChip(
     ) {
         if (selected) {
             Icon(
-                painter = painterResource(Res.drawable.ic_correct),
+                imageVector = Icons.Filled.Check,
                 contentDescription = null,
                 tint = content,
                 modifier = Modifier.size(14.dp)

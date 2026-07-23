@@ -32,8 +32,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.sp
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.repository.OtherRepositoryImpl
 import com.lemon.mcdevmanagermp.platform.BackHandler
+import com.lemon.mcdevmanagermp.platform.FeaturePreferences
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.ActivityPage
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.discount.DiscountActivityPage
 import com.lemon.mcdevmanagermp.ui.pages.work.promotion.PromotionPage
@@ -161,6 +162,7 @@ private fun WorkListPage(
     onNavigateToWorkManage: () -> Unit
 ) {
     val colors = LocalAppColors.current
+    val promotionUnlocked = remember { FeaturePreferences().isPromotionUnlocked() }
     val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
     // 入口"进行中"角标：进入列表时拉取一次红点接口
@@ -187,11 +189,11 @@ private fun WorkListPage(
 
         Spacer(Modifier.height(4.dp))
 
-        ElevatedCard(
+        Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.elevatedCardColors(containerColor = colors.surfaceContainerHigh),
+            colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh),
             shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+
         ) {
             WorkItem(
                 icon = Res.drawable.ic_mod,
@@ -228,18 +230,20 @@ private fun WorkListPage(
                 showBadge = b.hasOngoingDiscount
             )
 
-            HorizontalDivider(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                color = colors.outlineVariant,
-                thickness = 0.5.dp
-            )
+            if (promotionUnlocked) {
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    color = colors.outlineVariant,
+                    thickness = 0.5.dp
+                )
 
-            WorkItem(
-                icon = Res.drawable.ic_star,
-                title = "PE 轮播图申请",
-                subtitle = "申请首页 banner 推广位",
-                onClick = onNavigateToPromotion
-            )
+                WorkItem(
+                    icon = Res.drawable.ic_star,
+                    title = "PE 轮播图申请",
+                    subtitle = "申请首页 banner 推广位",
+                    onClick = onNavigateToPromotion
+                )
+            }
         }
     }
 }

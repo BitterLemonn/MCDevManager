@@ -31,12 +31,13 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -61,9 +62,6 @@ import com.lemon.mcdevmanagermp.ui.pages.income.layout.CompactIncomeLayout
 import com.lemon.mcdevmanagermp.ui.pages.income.layout.ExpandedIncomeLayout
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import com.lemon.mcdevmanagermp.utils.extension.formatDecimal
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_refresh
-import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun IncomePage(onBack: () -> Unit) {
@@ -173,7 +171,7 @@ internal fun IncomeTopBar(onBack: () -> Unit, onRefresh: () -> Unit) {
         actions = {
             IconButton(onClick = onRefresh) {
                 Icon(
-                    painter = painterResource(Res.drawable.ic_refresh),
+                    imageVector = Icons.Filled.Refresh,
                     contentDescription = "刷新",
                     modifier = Modifier.size(20.dp)
                 )
@@ -197,9 +195,9 @@ internal fun PlatformToggle(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Center
     ) {
-        ElevatedCard(
+        Card(
             shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.elevatedCardColors(containerColor = colors.surfaceContainerHigh)
+            colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh)
         ) {
             Row(
                 modifier = Modifier.padding(4.dp),
@@ -252,11 +250,11 @@ private fun PlatformChip(
 internal fun UnExtractedIncomeCard(unExtractedIncome: String) {
     val colors = LocalAppColors.current
 
-    ElevatedCard(
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.elevatedCardColors(containerColor = colors.surfaceContainerHigh),
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh),
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
@@ -364,11 +362,11 @@ internal fun IncomeItemCard(data: com.lemon.mcdevmanagermp.data.vo.netease.incom
     val colors = LocalAppColors.current
     val isUnsettled = data.status == "未结算"
 
-    ElevatedCard(
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.elevatedCardColors(containerColor = colors.surfaceContainerHigh),
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh),
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+
     ) {
         Column(modifier = Modifier.fillMaxWidth().padding(14.dp)) {
             IncomeItemHeader(data, isUnsettled, colors)
@@ -472,12 +470,12 @@ internal fun ApplyIncomeDetailDialog(
     val ids = detailList.map { it.id }
     val availableIncome = first.availableIncome
 
-    ElevatedCard(
+    Card(
         modifier = Modifier.widthIn(min = 260.dp, max = 360.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = colors.surfaceContainerHigh),
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh),
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
+
+        ) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally

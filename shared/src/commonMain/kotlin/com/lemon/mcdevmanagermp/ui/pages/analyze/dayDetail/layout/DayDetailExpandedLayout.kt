@@ -18,9 +18,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,9 +44,6 @@ import com.lemon.mcdevmanagermp.ui.pages.analyze.dayDetail.components.DateRangeP
 import com.lemon.mcdevmanagermp.ui.pages.analyze.dayDetail.components.DayDetailChart
 import com.lemon.mcdevmanagermp.ui.pages.analyze.dayDetail.components.ResourceMultiSelector
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_refresh
-import org.jetbrains.compose.resources.painterResource
 
 /**
  * Expanded 布局（桌面 > 840dp）
@@ -77,7 +76,7 @@ internal fun DayDetailExpandedLayout(
                 if (state.selectedIIDs.isNotEmpty()) {
                     IconButton(onClick = { onAction(DayDetailAction.RefreshData) }) {
                         Icon(
-                            painter = painterResource(Res.drawable.ic_refresh),
+                            imageVector = Icons.Filled.Refresh,
                             contentDescription = "刷新",
                             modifier = Modifier.size(20.dp),
                             tint = colors.textColor
@@ -232,7 +231,7 @@ private fun MetricChipRow(
 ) {
     val colors = LocalAppColors.current
 
-    ElevatedCard(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(
@@ -240,12 +239,11 @@ private fun MetricChipRow(
                 indication = null,
                 onClick = onClick
             ),
-        colors = CardDefaults.elevatedCardColors(
+        colors = CardDefaults.cardColors(
             containerColor = if (selected) colors.primary.copy(alpha = 0.12f)
             else colors.surfaceContainerLow
         ),
-        shape = RoundedCornerShape(8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        shape = RoundedCornerShape(8.dp)
     ) {
         Box(
             modifier = Modifier

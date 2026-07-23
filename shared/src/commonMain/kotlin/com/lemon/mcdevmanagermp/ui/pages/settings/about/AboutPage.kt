@@ -25,14 +25,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -45,11 +46,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.lemon.mcdevmanagermp.platform.AppUpdateManager
+import com.lemon.mcdevmanagermp.platform.FeaturePreferences
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_icon
+import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
+
+// ============================================================
+// 隐藏功能解锁
+// ============================================================
+
+/** 关于页应用图标连点次数达到此阈值，解锁「作品管理 - PE 轮播图申请」入口。 */
+private const val UNLOCK_THRESHOLD = 5
 
 // ============================================================
 // 开源许可数据
@@ -133,6 +143,8 @@ internal fun AboutPage(
 
     var showAppLicense by remember { mutableStateOf(false) }
     var selectedLib by remember { mutableStateOf<OpenSourceLib?>(null) }
+    var iconClickCount by remember { mutableStateOf(0) }
+    var unlockHint by remember { mutableStateOf<String?>(null) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -150,14 +162,48 @@ internal fun AboutPage(
                     .padding(bottom = navBarBottom),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                // 应用图标
+                // 应用图标（连点 5 次解锁「作品管理 - PE 轮播图申请」隐藏入口）
                 Image(
                     painter = painterResource(Res.drawable.ic_icon),
                     contentDescription = "应用图标",
                     modifier = Modifier
                         .size(96.dp)
-                        .clip(CircleShape),
+                        .clip(CircleShape)
+                        .clickable(
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() },
+                        ) {
+                            if (FeaturePreferences().isPromotionUnlocked()) {
+                                unlockHint = null
+                                return@clickable
+                            }
+                            iconClickCount++
+                            unlockHint = when {
+                                iconClickCount >= UNLOCK_THRESHOLD -> {
+                                    FeaturePreferences().setPromotionUnlocked(true)
+                                    "已解锁：作品管理 · PE 轮播图申请"
+                                }
+
+                                iconClickCount >= UNLOCK_THRESHOLD - 2 ->
+                                    "再点 ${UNLOCK_THRESHOLD - iconClickCount} 次解锁隐藏功能"
+
+                                else -> null
+                            }
+                        },
                 )
+
+                unlockHint?.let { hint ->
+                    LaunchedEffect(hint) {
+                        delay(1500)
+                        unlockHint = null
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = hint,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.primary,
+                    )
+                }
 
                 Spacer(Modifier.height(16.dp))
 
@@ -226,13 +272,13 @@ internal fun AboutPage(
                 Spacer(Modifier.height(8.dp))
 
                 // 开源协议列表
-                ElevatedCard(
+                Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.elevatedCardColors(
+                    colors = CardDefaults.cardColors(
                         containerColor = colors.surfaceContainerHigh
                     ),
                     shape = RoundedCornerShape(16.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+
                 ) {
                     OPEN_SOURCE_LIBS.forEachIndexed { index, lib ->
                         LicenseItem(
@@ -346,15 +392,15 @@ private fun LicenseDetailDialog(
     val licenseInfo = LICENSE_MAP[lib.license]
 
     Dialog(onDismissRequest = onDismiss) {
-        ElevatedCard(
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp),
-            colors = CardDefaults.elevatedCardColors(
+            colors = CardDefaults.cardColors(
                 containerColor = colors.surfaceContainerHigh
             ),
             shape = RoundedCornerShape(20.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+
         ) {
             Column(
                 modifier = Modifier
@@ -432,16 +478,16 @@ private fun AppLicenseDialog(
     val gplv3 = LICENSE_MAP["GPLv3"]!!
 
     Dialog(onDismissRequest = onDismiss) {
-        ElevatedCard(
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp),
-            colors = CardDefaults.elevatedCardColors(
+            colors = CardDefaults.cardColors(
                 containerColor = colors.surfaceContainerHigh
             ),
             shape = RoundedCornerShape(20.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        ) {
+
+            ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()

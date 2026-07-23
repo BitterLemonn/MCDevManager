@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
@@ -16,9 +18,6 @@ import com.lemon.mcdevmanagermp.ui.pages.work.promotion.PromotionAction
 import com.lemon.mcdevmanagermp.ui.pages.work.promotion.PromotionState
 import com.lemon.mcdevmanagermp.ui.pages.work.promotion.layout.component.PromotionTabbedContent
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_refresh
-import org.jetbrains.compose.resources.painterResource
 
 /**
  * PE 轮播图申请 - 中等布局（600~840dp）。与 Compact 共用 Tab 分发内容。
@@ -43,7 +42,7 @@ internal fun PromotionMediumLayout(
             actions = {
                 IconButton(onClick = { onAction(PromotionAction.Refresh) }) {
                     Icon(
-                        painter = painterResource(Res.drawable.ic_refresh),
+                        imageVector = Icons.Filled.Refresh,
                         contentDescription = "刷新",
                         modifier = Modifier.size(20.dp)
                     )

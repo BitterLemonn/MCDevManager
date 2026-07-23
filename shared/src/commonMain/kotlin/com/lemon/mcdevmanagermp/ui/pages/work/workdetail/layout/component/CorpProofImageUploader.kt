@@ -13,6 +13,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -38,10 +41,6 @@ import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.path
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_add
-import mcdevmanagermpr.shared.generated.resources.ic_close
-import org.jetbrains.compose.resources.painterResource
 
 /**
  * 授权信息图片上传（单张）。非原创模组必填。
@@ -115,7 +114,7 @@ internal fun CorpProofImageUploader(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        painter = painterResource(Res.drawable.ic_close),
+                        imageVector = Icons.Filled.Close,
                         contentDescription = "删除授权图片",
                         modifier = Modifier.size(12.dp),
                         tint = colors.onError
@@ -138,7 +137,7 @@ internal fun CorpProofImageUploader(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    painter = painterResource(Res.drawable.ic_add),
+                    imageVector = Icons.Filled.Add,
                     contentDescription = "添加授权图片",
                     modifier = Modifier.size(24.dp),
                     tint = colors.onSurfaceVariant

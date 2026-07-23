@@ -3,10 +3,10 @@ package com.lemon.mcdevmanagermp.data.dto.netease.login
 import com.lemon.mcdevmanagermp.utils.encrpy.getRandomTid
 import kotlinx.serialization.Serializable
 import kotlin.time.Clock
-import com.lemon.mcdevmanagermp.data.consts.pd as PD
-import com.lemon.mcdevmanagermp.data.consts.pkid as PKID
-import com.lemon.mcdevmanagermp.data.consts.pkht as PKHT
 import com.lemon.mcdevmanagermp.data.consts.channel as CHANNEL
+import com.lemon.mcdevmanagermp.data.consts.pd as PD
+import com.lemon.mcdevmanagermp.data.consts.pkht as PKHT
+import com.lemon.mcdevmanagermp.data.consts.pkid as PKID
 
 @Serializable
 data class EncParamsDTO(

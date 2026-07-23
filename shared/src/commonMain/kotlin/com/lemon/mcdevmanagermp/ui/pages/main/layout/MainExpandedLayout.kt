@@ -33,6 +33,7 @@ import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -75,6 +76,7 @@ internal fun ExpandedLayout(
 ) {
     val colors = LocalAppColors.current
     var isExpanded by remember { mutableStateOf(false) }
+    var accountNavTrigger by remember { mutableStateOf(0) }
     val userNickname = state.userInfo?.nickname
     val userHeadImg = state.userInfo?.headImg
 
@@ -143,7 +145,10 @@ internal fun ExpandedLayout(
                     icon = userHeadImg,
                     isTinted = false,
                     expanded = isExpanded
-                ) {}
+                ) {
+                    accountNavTrigger++
+                    onAction(MainAction.SelectTab(MainTab.Settings))
+                }
 
                 Spacer(Modifier.height(4.dp))
             }
@@ -188,12 +193,15 @@ internal fun ExpandedLayout(
                     MainTab.Analyze -> AnalyzeTabContent(onNavigateToSubPage = onNavigateToSubPage)
                     MainTab.Community -> CommunityContent()
                     MainTab.Work -> WorkContent()
-                    MainTab.Settings -> SettingsContent(
-                        onNavigateToLogin = onNavigateToLogin,
-                        onNavigateToAddAccount = onNavigateToAddAccount,
-                        onAccountSwitched = onAccountSwitched,
-                        onCheckUpdate = onCheckUpdate
-                    )
+                    MainTab.Settings -> key(accountNavTrigger) {
+                        SettingsContent(
+                            startAtAccount = accountNavTrigger > 0,
+                            onNavigateToLogin = onNavigateToLogin,
+                            onNavigateToAddAccount = onNavigateToAddAccount,
+                            onAccountSwitched = onAccountSwitched,
+                            onCheckUpdate = onCheckUpdate
+                        )
+                    }
                 }
             }
         }

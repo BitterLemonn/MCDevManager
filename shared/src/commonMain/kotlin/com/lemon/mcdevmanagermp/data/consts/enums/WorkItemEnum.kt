@@ -21,18 +21,19 @@ enum class WorkItemActionEnum(val label: String) {
  * @param label 状态展示文案
  */
 @Serializable
-enum class WorkItemStatusEnum(val label: String) {
-    ONLINE("已上架"),
-    INIT("待提交审核"),
-    PREPARE("系统准备中"),
-    REVIEWING("审核中"),
-    SELF_TEST("自测中"),
-    SELF_TEST_PREPARE("自测准备中"),
-    REJECTED("审核未通过"),
-    ACCEPT("待上架"),
-    OFFLINE("已下架"),
-    SYSTEM_OFFLINE("系统下架"),
-    UNKNOWN("未知");
+enum class WorkItemStatusEnum(val label: String, val des: String) {
+    ONLINE("已上架", "online"),
+    INIT("待提交审核", "init"),
+    PREPARE("系统准备中", "prepare"),
+    REVIEWING("审核中", "reviewing"),
+    SELF_TEST("自测中", "self_test"),
+    SELF_TEST_PREPARE("自测准备中", "self_test_prepare"),
+    REJECTED("审核未通过", "rejected"),
+    ACCEPT("待上架", "accept"),
+    ONLINE_PREPARING("系统准备中", "online_preparing"),
+    OFFLINE("已下架", "offline"),
+    SYSTEM_OFFLINE("系统下架", "system_offline"),
+    UNKNOWN("未知", "unknown");
 
     /**
      * 该状态下可执行的操作列表。
@@ -58,22 +59,14 @@ enum class WorkItemStatusEnum(val label: String) {
         ACCEPT -> listOf(WorkItemActionEnum.PUBLISH, WorkItemActionEnum.APPOINT_ONLINE)
         // 自测中, 自测准备中 -> [取消自测]
         SELF_TEST, SELF_TEST_PREPARE -> listOf(WorkItemActionEnum.CANCEL_TEST)
+        // 上架准备中
+        ONLINE_PREPARING -> emptyList()
         UNKNOWN -> emptyList()
     }
 
     companion object {
-        fun fromStatusString(status: String): WorkItemStatusEnum = when (status) {
-            "online" -> ONLINE
-            "init" -> INIT
-            "reviewing" -> REVIEWING
-            "rejected" -> REJECTED
-            "accept" -> ACCEPT
-            "offline" -> OFFLINE
-            "self_test" -> SELF_TEST
-            "preparing" -> PREPARE
-            "self_test_prepare" -> SELF_TEST_PREPARE
-            "system_offline" -> SYSTEM_OFFLINE
-            else -> UNKNOWN
+        fun fromStatusString(status: String): WorkItemStatusEnum {
+            return entries.firstOrNull { it.des == status } ?: UNKNOWN
         }
     }
 }

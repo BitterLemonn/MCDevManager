@@ -21,8 +21,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -54,7 +56,6 @@ import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_calendar
 import mcdevmanagermpr.shared.generated.resources.ic_diamond
 import mcdevmanagermpr.shared.generated.resources.ic_emerald
-import mcdevmanagermpr.shared.generated.resources.ic_refresh
 import org.jetbrains.compose.resources.painterResource
 import kotlin.time.Clock
 
@@ -101,7 +102,7 @@ internal fun RealtimeProfitExpandedLayout(
                 }
                 IconButton(onClick = { onAction(RealtimeProfitAction.RefreshData) }) {
                     Icon(
-                        painter = painterResource(Res.drawable.ic_refresh),
+                        imageVector = Icons.Filled.Refresh,
                         contentDescription = "刷新",
                         modifier = Modifier.size(20.dp)
                     )
@@ -258,11 +259,11 @@ private fun ExpandedOrderDetail(
     ) {
         // 资源信息卡片
         item(key = "header") {
-            ElevatedCard(
+            Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.elevatedCardColors(containerColor = colors.surfaceContainerHigh),
+                colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh),
                 shape = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
@@ -344,12 +345,12 @@ private fun ExpandedOrderDetail(
 private fun OrderItemCard(order: OneResRealtimeIncomeOrder) {
     val colors = LocalAppColors.current
 
-    ElevatedCard(
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.elevatedCardColors(containerColor = colors.surfaceContainerHigh),
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh),
         shape = RoundedCornerShape(10.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
+
+        ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Text(
                 text = order.productName,

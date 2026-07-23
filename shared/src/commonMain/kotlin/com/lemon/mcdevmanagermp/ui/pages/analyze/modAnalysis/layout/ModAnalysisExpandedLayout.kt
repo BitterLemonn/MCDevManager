@@ -20,8 +20,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -50,7 +52,6 @@ import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_bar_chart
 import mcdevmanagermpr.shared.generated.resources.ic_line_chart
-import mcdevmanagermpr.shared.generated.resources.ic_refresh
 import mcdevmanagermpr.shared.generated.resources.ic_star
 import org.jetbrains.compose.resources.painterResource
 
@@ -81,7 +82,7 @@ internal fun ModAnalysisExpandedLayout(
                 if (state.selectedIid.isNotEmpty()) {
                     IconButton(onClick = { onAction(ModAnalysisAction.RefreshData) }) {
                         Icon(
-                            painter = painterResource(Res.drawable.ic_refresh),
+                            imageVector = Icons.Filled.Refresh,
                             contentDescription = "刷新",
                             modifier = Modifier.size(20.dp)
                         )
@@ -241,11 +242,10 @@ private fun ExpandedModTitleCard(
 ) {
     val colors = LocalAppColors.current
 
-    ElevatedCard(
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.elevatedCardColors(containerColor = colors.surfaceContainerHigh),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh),
+        shape = RoundedCornerShape(12.dp)
     ) {
         Row(
             modifier = Modifier

@@ -123,8 +123,8 @@ private fun ProfitSingleWidget(
             ),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = colors.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
+
+        ) {
         if (!isLoading) {
             Column(
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)

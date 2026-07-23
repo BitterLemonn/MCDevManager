@@ -19,6 +19,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -48,7 +52,6 @@ import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_bar_chart
 import mcdevmanagermpr.shared.generated.resources.ic_line_chart
-import mcdevmanagermpr.shared.generated.resources.ic_refresh
 import mcdevmanagermpr.shared.generated.resources.ic_star
 import org.jetbrains.compose.resources.painterResource
 
@@ -71,34 +74,25 @@ internal fun ModAnalysisCompactLayout(
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(bottom = navBarBottom)
+        modifier = Modifier.fillMaxSize().padding(bottom = navBarBottom)
     ) {
         // TopBar
         CollapsingTopBar(
-            title = "模组分析",
-            collapseFraction = collapseFraction,
-            onBack = onBack,
-            actions = {
+            title = "模组分析", collapseFraction = collapseFraction, onBack = onBack, actions = {
                 if (state.selectedIid.isNotEmpty()) {
                     IconButton(onClick = { onAction(ModAnalysisAction.RefreshData) }) {
                         Icon(
-                            painter = painterResource(Res.drawable.ic_refresh),
+                            imageVector = Icons.Filled.Refresh,
                             contentDescription = "刷新",
                             modifier = Modifier.size(20.dp)
                         )
                     }
                 }
-            }
-        )
+            })
 
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(horizontal = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            modifier = Modifier.fillMaxSize().verticalScroll(scrollState)
+                .padding(horizontal = 12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Spacer(Modifier.height(4.dp))
 
@@ -108,23 +102,19 @@ internal fun ModAnalysisCompactLayout(
                 selectedIid = state.selectedIid,
                 isExpanded = state.isResourceSelectorExpanded,
                 onToggle = { onAction(ModAnalysisAction.ToggleResourceSelector) },
-                onSelect = { onAction(ModAnalysisAction.SelectResource(it)) }
-            )
+                onSelect = { onAction(ModAnalysisAction.SelectResource(it)) })
 
             // 标题卡片（选中资源后显示）
             if (state.selectedIid.isNotEmpty() && state.modName.isNotEmpty()) {
                 ModTitleCard(
-                    modName = state.modName,
-                    iid = state.selectedIid,
-                    score = state.modScore
+                    modName = state.modName, iid = state.selectedIid, score = state.modScore
                 )
             }
 
             // 四指标网格（2x2）
             if (state.selectedIid.isNotEmpty()) {
                 MetricsGrid(
-                    metrics = state.summaryMetrics,
-                    columns = 2
+                    metrics = state.summaryMetrics, columns = 2
                 )
             }
 
@@ -138,23 +128,19 @@ internal fun ModAnalysisCompactLayout(
                     MetricFilterChip(
                         label = "新增购买",
                         selected = state.metricType == MetricType.NEW_PURCHASE,
-                        onClick = { onAction(ModAnalysisAction.SelectMetric(MetricType.NEW_PURCHASE)) }
-                    )
+                        onClick = { onAction(ModAnalysisAction.SelectMetric(MetricType.NEW_PURCHASE)) })
                     MetricFilterChip(
                         label = "日活",
                         selected = state.metricType == MetricType.DAU,
-                        onClick = { onAction(ModAnalysisAction.SelectMetric(MetricType.DAU)) }
-                    )
+                        onClick = { onAction(ModAnalysisAction.SelectMetric(MetricType.DAU)) })
                     MetricFilterChip(
                         label = "新增粉丝",
                         selected = state.metricType == MetricType.NEW_FOLLOW,
-                        onClick = { onAction(ModAnalysisAction.SelectMetric(MetricType.NEW_FOLLOW)) }
-                    )
+                        onClick = { onAction(ModAnalysisAction.SelectMetric(MetricType.NEW_FOLLOW)) })
                     MetricFilterChip(
                         label = "人均游玩时间",
                         selected = state.metricType == MetricType.AVG_PLAY_TIME,
-                        onClick = { onAction(ModAnalysisAction.SelectMetric(MetricType.AVG_PLAY_TIME)) }
-                    )
+                        onClick = { onAction(ModAnalysisAction.SelectMetric(MetricType.AVG_PLAY_TIME)) })
                 }
 
                 // 图表类型切换 + 图例
@@ -172,9 +158,7 @@ internal fun ModAnalysisCompactLayout(
                 )
             } else if (state.selectedIid.isNotEmpty() && !state.isLoading) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp),
+                    modifier = Modifier.fillMaxWidth().height(200.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -201,18 +185,13 @@ private fun ModTitleCard(
 ) {
     val colors = LocalAppColors.current
 
-    androidx.compose.material3.ElevatedCard(
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = androidx.compose.material3.CardDefaults.elevatedCardColors(
-            containerColor = colors.surfaceContainerHigh
-        ),
-        shape = RoundedCornerShape(12.dp),
-        elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 1.dp)
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh),
+        shape = RoundedCornerShape(12.dp)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
@@ -308,8 +287,7 @@ private fun MetricsGrid(
         }
     } else {
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+            modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             items.forEach { item ->
                 MetricCard(
@@ -343,27 +321,21 @@ private fun MetricFilterChip(
     val colors = LocalAppColors.current
 
     FilterChip(
-        selected = selected,
-        onClick = onClick,
-        label = {
+        selected = selected, onClick = onClick, label = {
             Text(
-                text = label,
-                style = MaterialTheme.typography.labelMedium
+                text = label, style = MaterialTheme.typography.labelMedium
             )
-        },
-        colors = FilterChipDefaults.filterChipColors(
+        }, colors = FilterChipDefaults.filterChipColors(
             selectedContainerColor = colors.primary.copy(alpha = 0.12f),
             selectedLabelColor = colors.primary,
             containerColor = colors.surfaceContainerLow,
             labelColor = colors.onSurfaceVariant
-        ),
-        border = FilterChipDefaults.filterChipBorder(
+        ), border = FilterChipDefaults.filterChipBorder(
             borderColor = colors.outlineVariant,
             selectedBorderColor = colors.primary,
             enabled = true,
             selected = selected
-        ),
-        shape = RoundedCornerShape(8.dp)
+        ), shape = RoundedCornerShape(8.dp)
     )
 }
 
@@ -379,14 +351,11 @@ private fun ChartTypeRow(
     val colors = LocalAppColors.current
 
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+        modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
     ) {
         // 图例
         Box(
-            modifier = Modifier
-                .size(10.dp)
-                .clip(RoundedCornerShape(2.dp))
+            modifier = Modifier.size(10.dp).clip(RoundedCornerShape(2.dp))
                 .background(colors.primary)
         )
         Spacer(Modifier.width(4.dp))
@@ -397,9 +366,7 @@ private fun ChartTypeRow(
         )
         Spacer(Modifier.width(12.dp))
         Box(
-            modifier = Modifier
-                .size(10.dp)
-                .clip(RoundedCornerShape(2.dp))
+            modifier = Modifier.size(10.dp).clip(RoundedCornerShape(2.dp))
                 .background(colors.onSurfaceVariant.copy(alpha = 0.5f))
         )
         Spacer(Modifier.width(4.dp))
@@ -413,21 +380,17 @@ private fun ChartTypeRow(
 
         // 图表类型切换按钮
         Row(
-            modifier = Modifier
-                .clip(RoundedCornerShape(8.dp))
-                .background(colors.surfaceContainerLow)
-                .padding(2.dp)
+            modifier = Modifier.clip(RoundedCornerShape(8.dp))
+                .background(colors.surfaceContainerLow).padding(2.dp)
         ) {
             ChartTypeButton(
                 icon = Res.drawable.ic_line_chart,
                 isSelected = chartType == ChartType.LINE,
-                onClick = { if (chartType != ChartType.LINE) onToggle() }
-            )
+                onClick = { if (chartType != ChartType.LINE) onToggle() })
             ChartTypeButton(
                 icon = Res.drawable.ic_bar_chart,
                 isSelected = chartType == ChartType.COLUMN,
-                onClick = { if (chartType != ChartType.COLUMN) onToggle() }
-            )
+                onClick = { if (chartType != ChartType.COLUMN) onToggle() })
         }
     }
 }
@@ -441,16 +404,13 @@ private fun ChartTypeButton(
     val colors = LocalAppColors.current
 
     Box(
-        modifier = Modifier
-            .size(32.dp)
-            .clip(RoundedCornerShape(6.dp))
+        modifier = Modifier.size(32.dp).clip(RoundedCornerShape(6.dp))
             .background(if (isSelected) colors.primary.copy(alpha = 0.12f) else androidx.compose.ui.graphics.Color.Transparent)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
                 onClick = onClick
-            ),
-        contentAlignment = Alignment.Center
+            ), contentAlignment = Alignment.Center
     ) {
         Icon(
             painter = painterResource(icon),

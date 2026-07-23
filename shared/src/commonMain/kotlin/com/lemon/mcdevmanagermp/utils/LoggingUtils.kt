@@ -2,6 +2,9 @@ package com.lemon.mcdevmanagermp.utils
 
 import com.lemon.mcdevmanagermp.platform.getLogDirectory
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -14,6 +17,13 @@ import okio.SYSTEM
 import okio.buffer
 import okio.use
 import kotlin.time.Clock
+
+data class LogFileInfo(
+    val name: String,
+    val path: Path,
+    val size: Long,
+    val lastModifiedMillis: Long,
+)
 
 object Logger {
     const val LOG_LEVEL = "DEBUG"
@@ -169,5 +179,72 @@ object Logger {
         } catch (e: Exception) {
             println("无法删除旧日志文件: ${e.message}")
         }
+    }
+
+    private val logFileRegex = Regex("""app-\d{4}-\d{2}-\d{2}(-\d+)?\.log""")
+
+    /** 列出全部日志文件，按修改时间倒序（最新在前） */
+    fun listLogFiles(): List<LogFileInfo> = try {
+        if (!FileSystem.SYSTEM.exists(logDir)) {
+            emptyList()
+        } else {
+            FileSystem.SYSTEM.list(logDir)
+                .filter { logFileRegex.matches(it.name) }
+                .map {
+                    val meta = runCatching { FileSystem.SYSTEM.metadata(it) }.getOrNull()
+                    LogFileInfo(
+                        name = it.name,
+                        path = it,
+                        size = meta?.size ?: 0L,
+                        lastModifiedMillis = meta?.lastModifiedAtMillis ?: 0L
+                    )
+                }
+                .sortedByDescending { it.lastModifiedMillis }
+        }
+    } catch (e: Exception) {
+        println("无法列出日志文件: ${e.message}")
+        emptyList()
+    }
+
+    /**
+     * 流式分批读取日志行，避免大文件一次性加载卡顿。
+     * 每批 [batchSize] 行发射一次，collect 端可增量渲染。
+     */
+    fun readLogLines(
+        path: Path,
+        batchSize: Int = 2000
+    ): Flow<List<String>> = flow {
+        try {
+            FileSystem.SYSTEM.source(path).buffer().use { src ->
+                val batch = ArrayList<String>(batchSize)
+                while (!src.exhausted()) {
+                    batch.add(src.readUtf8Line() ?: "")
+                    if (batch.size >= batchSize) {
+                        emit(ArrayList(batch))
+                        batch.clear()
+                    }
+                }
+                if (batch.isNotEmpty()) emit(ArrayList(batch))
+            }
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            println("无法读取日志文件: ${e.message}")
+        }
+    }
+
+    fun deleteLogFile(path: Path) {
+        runCatching { FileSystem.SYSTEM.delete(path) }
+            .onFailure { println("无法删除日志文件: ${it.message}") }
+    }
+
+    /** 清空全部日志文件（保留目录） */
+    fun deleteAllLogs() {
+        runCatching {
+            if (FileSystem.SYSTEM.exists(logDir)) {
+                FileSystem.SYSTEM.list(logDir)
+                    .filter { logFileRegex.matches(it.name) }
+                    .forEach { FileSystem.SYSTEM.delete(it) }
+            }
+        }.onFailure { println("无法清空日志: ${it.message}") }
     }
 }

@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -28,9 +30,6 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_back
-import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun CollapsingTopBar(
@@ -71,7 +70,7 @@ fun CollapsingTopBar(
                 contentAlignment = Alignment.Center
             ) {
                 Image(
-                    painter = painterResource(Res.drawable.ic_back),
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                     contentDescription = "返回",
                     colorFilter = ColorFilter.tint(contentColor),
                     modifier = Modifier.size(24.dp)

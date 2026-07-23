@@ -8,19 +8,22 @@ import androidx.room.migration.Migration
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.execSQL
 import com.lemon.mcdevmanagermp.data.db.dao.AccountDao
+import com.lemon.mcdevmanagermp.data.db.dao.DayDetailConfigDao
 import com.lemon.mcdevmanagermp.data.db.dao.PromotionTemplateDao
 import com.lemon.mcdevmanagermp.data.db.entity.AccountEntity
+import com.lemon.mcdevmanagermp.data.db.entity.DayDetailConfigEntity
 import com.lemon.mcdevmanagermp.data.db.entity.PromotionTemplateEntity
 
 @Database(
-    entities = [AccountEntity::class, PromotionTemplateEntity::class],
-    version = 4,
+    entities = [AccountEntity::class, PromotionTemplateEntity::class, DayDetailConfigEntity::class],
+    version = 5,
     exportSchema = false
 )
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun accountDao(): AccountDao
     abstract fun promotionTemplateDao(): PromotionTemplateDao
+    abstract fun dayDetailConfigDao(): DayDetailConfigDao
 }
 
 expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
@@ -59,6 +62,26 @@ val MIGRATION_3_4 = object : Migration(3, 4) {
               feature TEXT NOT NULL,
               updateContent TEXT NOT NULL,
               createdAt INTEGER NOT NULL
+            )
+            """.trimIndent()
+        )
+    }
+}
+
+/**
+ * 数据库迁移 4→5：新增数据追踪页「上次查询配置」表（按账号 + 平台隔离）。
+ */
+val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(connection: SQLiteConnection) {
+        connection.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS day_detail_config (
+              accountKey TEXT NOT NULL,
+              platform TEXT NOT NULL,
+              dateSpanDays INTEGER NOT NULL,
+              selectedIIDs TEXT NOT NULL,
+              updatedAt INTEGER NOT NULL,
+              PRIMARY KEY (accountKey, platform)
             )
             """.trimIndent()
         )

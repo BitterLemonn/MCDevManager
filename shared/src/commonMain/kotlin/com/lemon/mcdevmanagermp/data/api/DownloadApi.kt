@@ -5,7 +5,6 @@ import de.jensklingenberg.ktorfit.http.GET
 import de.jensklingenberg.ktorfit.http.Streaming
 import de.jensklingenberg.ktorfit.http.Url
 import io.ktor.client.statement.HttpStatement
-import kotlin.getValue
 
 interface DownloadApi {
 

@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -44,9 +46,6 @@ import com.lemon.mcdevmanagermp.ui.pages.work.activity.participate.ActivityParti
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.participate.layout.component.ImageSelectorRow
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.participate.layout.component.VideoSelectorBox
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_add
-import org.jetbrains.compose.resources.painterResource
 
 @Composable
 internal fun ActivityParticipateCompactLayout(
@@ -246,7 +245,7 @@ internal fun ActivityParticipateCompactLayout(
                     Spacer(Modifier.width(8.dp))
                 } else {
                     Icon(
-                        painter = painterResource(Res.drawable.ic_add),
+                        imageVector = Icons.Filled.Add,
                         contentDescription = null,
                         modifier = Modifier.size(18.dp)
                     )
