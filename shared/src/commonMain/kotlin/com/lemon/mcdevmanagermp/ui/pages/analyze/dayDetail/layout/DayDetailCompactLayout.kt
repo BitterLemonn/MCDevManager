@@ -179,16 +179,10 @@ internal fun DayDetailCompactLayout(
                     MetricChip("愿单赠送", state.metricType == DayDetailMetricType.WISHLIST_GIFTS) {
                         onAction(DayDetailAction.SelectMetric(DayDetailMetricType.WISHLIST_GIFTS))
                     }
-                    MetricChip(
-                        "愿单购买",
-                        state.metricType == DayDetailMetricType.WISHLIST_PURCHASES
-                    ) {
+                    MetricChip("愿单购买", state.metricType == DayDetailMetricType.WISHLIST_PURCHASES) {
                         onAction(DayDetailAction.SelectMetric(DayDetailMetricType.WISHLIST_PURCHASES))
                     }
-                    MetricChip(
-                        "愿单移除",
-                        state.metricType == DayDetailMetricType.WISHLIST_REMOVES
-                    ) {
+                    MetricChip("愿单移除", state.metricType == DayDetailMetricType.WISHLIST_REMOVES) {
                         onAction(DayDetailAction.SelectMetric(DayDetailMetricType.WISHLIST_REMOVES))
                     }
                 }

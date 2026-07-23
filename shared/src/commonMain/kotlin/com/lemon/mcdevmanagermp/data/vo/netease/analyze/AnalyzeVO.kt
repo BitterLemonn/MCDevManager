@@ -11,6 +11,7 @@ data class ResDetailVO(
     val data: List<ResAnalyzeData>
 )
 
+
 /**
  * 资源月详情（数据分析）
  */
