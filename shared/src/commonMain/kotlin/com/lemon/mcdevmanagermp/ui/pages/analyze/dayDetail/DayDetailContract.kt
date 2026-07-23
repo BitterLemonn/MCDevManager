@@ -10,6 +10,7 @@ import com.lemon.mcdevmanagermp.utils.extension.IUiState
 
 /**
  * 指标类型：0=新增购买, 1=下载量, 2=钻石收益, 3=绿宝石收益, 4=日活, 5=退款率
+ * 6=愿望单新增, 7=愿望单赠送, 8=愿望单购买, 9=愿望单移除
  */
 object DayDetailMetricType {
     const val NEW_PURCHASE = 0
@@ -18,6 +19,10 @@ object DayDetailMetricType {
     const val POINTS = 3
     const val DAU = 4
     const val REFUND_RATE = 5
+    const val WISHLIST_ADDS = 6
+    const val WISHLIST_GIFTS = 7
+    const val WISHLIST_PURCHASES = 8
+    const val WISHLIST_REMOVES = 9
 }
 
 /**

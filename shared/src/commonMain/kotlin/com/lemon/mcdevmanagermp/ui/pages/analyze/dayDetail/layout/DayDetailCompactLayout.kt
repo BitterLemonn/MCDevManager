@@ -173,6 +173,18 @@ internal fun DayDetailCompactLayout(
                     MetricChip("退款率", state.metricType == DayDetailMetricType.REFUND_RATE) {
                         onAction(DayDetailAction.SelectMetric(DayDetailMetricType.REFUND_RATE))
                     }
+                    MetricChip("愿单新增", state.metricType == DayDetailMetricType.WISHLIST_ADDS) {
+                        onAction(DayDetailAction.SelectMetric(DayDetailMetricType.WISHLIST_ADDS))
+                    }
+                    MetricChip("愿单赠送", state.metricType == DayDetailMetricType.WISHLIST_GIFTS) {
+                        onAction(DayDetailAction.SelectMetric(DayDetailMetricType.WISHLIST_GIFTS))
+                    }
+                    MetricChip("愿单购买", state.metricType == DayDetailMetricType.WISHLIST_PURCHASES) {
+                        onAction(DayDetailAction.SelectMetric(DayDetailMetricType.WISHLIST_PURCHASES))
+                    }
+                    MetricChip("愿单移除", state.metricType == DayDetailMetricType.WISHLIST_REMOVES) {
+                        onAction(DayDetailAction.SelectMetric(DayDetailMetricType.WISHLIST_REMOVES))
+                    }
                 }
 
                 // 图例 + 图表类型切换
@@ -186,7 +198,6 @@ internal fun DayDetailCompactLayout(
                 // 多资源图表
                 DayDetailChart(
                     detailData = state.detailData,
-                    resNameMap = buildResNameMap(state),
                     metricType = state.metricType,
                     chartType = state.chartType
                 )
@@ -432,7 +443,7 @@ private fun DateGroupCard(
             )
             Spacer(Modifier.height(6.dp))
 
-            detailData.entries.forEachIndexed { index, (iid, dataList) ->
+            detailData.entries.forEachIndexed { index, (_, dataList) ->
                 val item = dataList.find { it.dateId == dateId }
                 if (item != null) {
                     val color = CHART_COLORS[index.coerceAtMost(CHART_COLORS.size - 1)]
@@ -492,6 +503,10 @@ private fun formatMetricValue(
         DayDetailMetricType.POINTS -> data.points.toString()
         DayDetailMetricType.DAU -> data.dau.toString()
         DayDetailMetricType.REFUND_RATE -> "${(data.refundRate * 1000).toInt() / 10.0}%"
+        DayDetailMetricType.WISHLIST_ADDS -> data.wishlistAddsUv.toString()
+        DayDetailMetricType.WISHLIST_GIFTS -> data.wishlistGifts.toString()
+        DayDetailMetricType.WISHLIST_PURCHASES -> data.wishlistPurchases.toString()
+        DayDetailMetricType.WISHLIST_REMOVES -> data.wishlistRemovesUv.toString()
         else -> "-"
     }
 }
