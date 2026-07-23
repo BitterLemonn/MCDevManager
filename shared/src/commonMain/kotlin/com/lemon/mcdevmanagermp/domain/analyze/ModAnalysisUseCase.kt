@@ -1,7 +1,7 @@
 package com.lemon.mcdevmanagermp.domain.analyze
 
 import com.lemon.mcdevmanagermp.data.common.NetworkState
-import com.lemon.mcdevmanagermp.data.vo.netease.analyze.NewResAnalyzeData
+import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResAnalyzeData
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
@@ -42,7 +42,7 @@ class ModAnalysisUseCase(
     ): NetworkState<ModAnalysisResult> {
         val apiPlatform = if (platform == "pe") "pe" else "comp"
 
-        return when (val result = analyzeRepository.getNewDayDetail(
+        return when (val result = analyzeRepository.getDayDetail(
             platform = apiPlatform,
             category = apiPlatform,
             startDate = startDate,
@@ -62,7 +62,7 @@ class ModAnalysisUseCase(
     /**
      * 从原始数据计算四指标汇总（取日均值 + 百分位均值）
      */
-    private fun computeSummaryMetrics(data: List<NewResAnalyzeData>): SummaryMetrics {
+    private fun computeSummaryMetrics(data: List<ResAnalyzeData>): SummaryMetrics {
         if (data.isEmpty()) return SummaryMetrics()
         return SummaryMetrics(
             newPurchaseCount = data.sumOf { it.cntBuy } / data.size,
@@ -99,6 +99,6 @@ data class SummaryMetrics(
  * 模组分析结果
  */
 data class ModAnalysisResult(
-    val analysisData: List<NewResAnalyzeData>,
+    val analysisData: List<ResAnalyzeData>,
     val summaryMetrics: SummaryMetrics
 )

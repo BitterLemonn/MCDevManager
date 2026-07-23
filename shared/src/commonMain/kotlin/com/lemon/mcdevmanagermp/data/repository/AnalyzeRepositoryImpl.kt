@@ -5,7 +5,6 @@ import com.lemon.mcdevmanagermp.data.common.AppContext
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.db.entity.DayDetailConfigEntity
 import com.lemon.mcdevmanagermp.data.dto.netease.income.OneResRealtimeIncomeVO
-import com.lemon.mcdevmanagermp.data.vo.netease.analyze.NewResDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResMonthDetailVO
 import com.lemon.mcdevmanagermp.domain.analyze.AnalyzeRepository
@@ -28,24 +27,6 @@ class AnalyzeRepositoryImpl : AnalyzeRepository {
     ): NetworkState<ResDetailVO> {
         return UnifiedExceptionHandler.handleRequest {
             analyzeApi.getDayDetail(
-                platform = platform,
-                category = category,
-                startDate = startDate,
-                endDate = endDate,
-                itemListStr = itemListStr
-            )
-        }
-    }
-
-    override suspend fun getNewDayDetail(
-        platform: String,
-        category: String,
-        startDate: String,
-        endDate: String,
-        itemListStr: String
-    ): NetworkState<NewResDetailVO> {
-        return UnifiedExceptionHandler.handleRequest {
-            analyzeApi.getNewDayDetail(
                 platform = platform,
                 category = category,
                 startDate = startDate,
