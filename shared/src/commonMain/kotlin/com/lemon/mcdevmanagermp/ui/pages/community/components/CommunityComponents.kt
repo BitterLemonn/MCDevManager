@@ -46,21 +46,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.lemon.mcdevmanagermp.ui.iconpack.Filter
+import com.lemon.mcdevmanagermp.ui.iconpack.IconPack
+import com.lemon.mcdevmanagermp.ui.iconpack.Star
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_filter
-import mcdevmanagermpr.shared.generated.resources.ic_star
-import org.jetbrains.compose.resources.DrawableResource
-import org.jetbrains.compose.resources.painterResource
 import kotlin.time.Clock
 
 // ============================================================
@@ -163,7 +162,7 @@ fun ModernFilterBar(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    painter = painterResource(Res.drawable.ic_filter),
+                    imageVector = IconPack.Filter,
                     contentDescription = null,
                     tint = if (hasActiveFilters) colors.primary else colors.onSurfaceVariant,
                     modifier = Modifier.size(16.dp)
@@ -392,7 +391,7 @@ fun StarChipGroup(
                     ) {
                         repeat(star) {
                             Icon(
-                                painter = painterResource(Res.drawable.ic_star),
+                                imageVector = IconPack.Star,
                                 contentDescription = null,
                                 tint = if (isSelected) starColor else starColor.copy(alpha = 0.5f),
                                 modifier = Modifier.size(12.dp)
@@ -506,7 +505,7 @@ fun ActiveFilterBadge(
 
 @Composable
 fun EmptyDetailPlaceholder(
-    icon: DrawableResource,
+    icon: ImageVector,
     hint: String
 ) {
     val colors = LocalAppColors.current
@@ -527,7 +526,7 @@ fun EmptyDetailPlaceholder(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    painter = painterResource(icon),
+                    imageVector = icon,
                     contentDescription = null,
                     tint = colors.onSurfaceVariant.copy(alpha = 0.5f),
                     modifier = Modifier.size(28.dp)

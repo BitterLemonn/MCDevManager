@@ -48,6 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -55,19 +56,17 @@ import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.repository.OtherRepositoryImpl
 import com.lemon.mcdevmanagermp.platform.BackHandler
 import com.lemon.mcdevmanagermp.platform.FeaturePreferences
+import com.lemon.mcdevmanagermp.ui.iconpack.IconPack
+import com.lemon.mcdevmanagermp.ui.iconpack.Mod
+import com.lemon.mcdevmanagermp.ui.iconpack.Profit
+import com.lemon.mcdevmanagermp.ui.iconpack.Sale
+import com.lemon.mcdevmanagermp.ui.iconpack.Star
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.ActivityPage
 import com.lemon.mcdevmanagermp.ui.pages.work.activity.discount.DiscountActivityPage
 import com.lemon.mcdevmanagermp.ui.pages.work.promotion.PromotionPage
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailPage
 import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.WorkManagePage
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_mod
-import mcdevmanagermpr.shared.generated.resources.ic_profit
-import mcdevmanagermpr.shared.generated.resources.ic_sale
-import mcdevmanagermpr.shared.generated.resources.ic_star
-import org.jetbrains.compose.resources.DrawableResource
-import org.jetbrains.compose.resources.painterResource
 
 private enum class WorkSubPage { List, Activity, Discount, Promotion, WorkManage, WorkDetail }
 
@@ -196,7 +195,7 @@ private fun WorkListPage(
 
         ) {
             WorkItem(
-                icon = Res.drawable.ic_mod,
+                icon = IconPack.Mod,
                 title = "上架管理",
                 subtitle = "管理作品上架与审核状态",
                 onClick = onNavigateToWorkManage
@@ -209,7 +208,7 @@ private fun WorkListPage(
             )
 
             WorkItem(
-                icon = Res.drawable.ic_sale,
+                icon = IconPack.Sale,
                 title = "作品活动",
                 subtitle = "查看和参与平台作品活动",
                 onClick = onNavigateToActivity,
@@ -223,7 +222,7 @@ private fun WorkListPage(
             )
 
             WorkItem(
-                icon = Res.drawable.ic_profit,
+                icon = IconPack.Profit,
                 title = "折扣特卖",
                 subtitle = "参与平台折扣特卖，提升作品销量",
                 onClick = onNavigateToDiscount,
@@ -238,7 +237,7 @@ private fun WorkListPage(
                 )
 
                 WorkItem(
-                    icon = Res.drawable.ic_star,
+                    icon = IconPack.Star,
                     title = "PE 轮播图申请",
                     subtitle = "申请首页 banner 推广位",
                     onClick = onNavigateToPromotion
@@ -250,7 +249,7 @@ private fun WorkListPage(
 
 @Composable
 private fun WorkItem(
-    icon: DrawableResource,
+    icon: ImageVector,
     title: String,
     subtitle: String,
     onClick: () -> Unit,
@@ -283,7 +282,7 @@ private fun WorkItem(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    painter = painterResource(icon),
+                    imageVector = icon,
                     contentDescription = title,
                     tint = colors.primary,
                     modifier = Modifier.size(20.dp)

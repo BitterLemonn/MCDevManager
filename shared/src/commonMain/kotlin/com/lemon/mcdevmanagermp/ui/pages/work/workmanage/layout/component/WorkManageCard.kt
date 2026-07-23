@@ -38,15 +38,13 @@ import com.lemon.mcdevmanagermp.data.consts.enums.WorkItemActionEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.WorkItemStatusEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.priceTypeLabel
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
+import com.lemon.mcdevmanagermp.ui.iconpack.Calendar
+import com.lemon.mcdevmanagermp.ui.iconpack.Feedback
+import com.lemon.mcdevmanagermp.ui.iconpack.IconPack
+import com.lemon.mcdevmanagermp.ui.iconpack.Modified
+import com.lemon.mcdevmanagermp.ui.iconpack.Sale
 import com.lemon.mcdevmanagermp.ui.theme.AppColors
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_calendar
-import mcdevmanagermpr.shared.generated.resources.ic_feedback
-import mcdevmanagermpr.shared.generated.resources.ic_modified
-import mcdevmanagermpr.shared.generated.resources.ic_sale
-import org.jetbrains.compose.resources.DrawableResource
-import org.jetbrains.compose.resources.painterResource
 
 /**
  * 作品上架卡片：展示名称 / 状态 / 价格 / 时间 / 状态对应的操作按钮
@@ -144,15 +142,10 @@ private fun ActionButton(
         WorkItemActionEnum.UPDATE,
         WorkItemActionEnum.CANCEL_TEST,
         WorkItemActionEnum.CANCEL_REVIEW -> Icons.Default.Refresh
-
-        else -> null
-    }
-    val iconRes: DrawableResource? = when (action) {
-        WorkItemActionEnum.PUBLISH -> Res.drawable.ic_sale
-        WorkItemActionEnum.ADJUST_PRICE -> Res.drawable.ic_modified
-        WorkItemActionEnum.VIEW_FEEDBACK -> Res.drawable.ic_feedback
-        WorkItemActionEnum.APPOINT_ONLINE -> Res.drawable.ic_calendar
-        else -> null
+        WorkItemActionEnum.PUBLISH -> IconPack.Sale
+        WorkItemActionEnum.ADJUST_PRICE -> IconPack.Modified
+        WorkItemActionEnum.VIEW_FEEDBACK -> IconPack.Feedback
+        WorkItemActionEnum.APPOINT_ONLINE -> IconPack.Calendar
     }
     val interaction = remember { MutableInteractionSource() }
     val isHovered by interaction.collectIsHoveredAsState()
@@ -172,21 +165,12 @@ private fun ActionButton(
         horizontalArrangement = Arrangement.spacedBy(5.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        when {
-            iconVector != null -> Icon(
-                imageVector = iconVector,
-                contentDescription = null,
-                tint = accent,
-                modifier = Modifier.size(14.dp)
-            )
-
-            iconRes != null -> Icon(
-                painter = painterResource(iconRes),
-                contentDescription = null,
-                tint = accent,
-                modifier = Modifier.size(14.dp)
-            )
-        }
+        if (iconVector != null) Icon(
+            imageVector = iconVector,
+            contentDescription = null,
+            tint = accent,
+            modifier = Modifier.size(14.dp)
+        )
         Text(
             text = action.label,
             style = MaterialTheme.typography.labelMedium,

@@ -45,6 +45,8 @@ import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.data.dto.netease.income.OneResRealtimeIncomeOrder
 import com.lemon.mcdevmanagermp.data.dto.netease.income.OneResRealtimeIncomeVO
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
+import com.lemon.mcdevmanagermp.ui.iconpack.Calendar
+import com.lemon.mcdevmanagermp.ui.iconpack.IconPack
 import com.lemon.mcdevmanagermp.ui.pages.analyze.realtimeProfit.RealtimeProfitAction
 import com.lemon.mcdevmanagermp.ui.pages.analyze.realtimeProfit.RealtimeProfitItemCard
 import com.lemon.mcdevmanagermp.ui.pages.analyze.realtimeProfit.RealtimeProfitState
@@ -53,7 +55,6 @@ import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_calendar
 import mcdevmanagermpr.shared.generated.resources.ic_diamond
 import mcdevmanagermpr.shared.generated.resources.ic_emerald
 import org.jetbrains.compose.resources.painterResource
@@ -95,7 +96,7 @@ internal fun RealtimeProfitExpandedLayout(
             actions = {
                 IconButton(onClick = { onAction(RealtimeProfitAction.ToggleDateSelector) }) {
                     Icon(
-                        painter = painterResource(Res.drawable.ic_calendar),
+                        imageVector = IconPack.Calendar,
                         contentDescription = "选择日期",
                         modifier = Modifier.size(20.dp)
                     )

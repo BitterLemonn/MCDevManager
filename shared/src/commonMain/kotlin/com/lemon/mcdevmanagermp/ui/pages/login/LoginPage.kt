@@ -53,12 +53,13 @@ import androidx.compose.ui.unit.sp
 import com.lemon.mcdevmanagermp.ui.components.AppScaffold
 import com.lemon.mcdevmanagermp.ui.components.LoginOutlineTextField
 import com.lemon.mcdevmanagermp.ui.components.collectUiEffect
+import com.lemon.mcdevmanagermp.ui.iconpack.IconPack
+import com.lemon.mcdevmanagermp.ui.iconpack.NoShow
+import com.lemon.mcdevmanagermp.ui.iconpack.Setting
+import com.lemon.mcdevmanagermp.ui.iconpack.Show
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_mc
-import mcdevmanagermpr.shared.generated.resources.ic_no_show
-import mcdevmanagermpr.shared.generated.resources.ic_setting
-import mcdevmanagermpr.shared.generated.resources.ic_show
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
@@ -149,7 +150,7 @@ private fun LoginContent(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    painter = painterResource(Res.drawable.ic_setting),
+                    imageVector = IconPack.Setting,
                     contentDescription = "设置",
                     tint = colors.onSurface,
                     modifier = Modifier.size(24.dp)
@@ -321,9 +322,7 @@ private fun EmailPasswordForm(
             trailingIcon = {
                 IconButton(onClick = { onAction(LoginAction.TogglePasswordVisibility) }) {
                     Icon(
-                        painter = painterResource(
-                            if (state.isPasswordVisible) Res.drawable.ic_no_show else Res.drawable.ic_show
-                        ),
+                        imageVector = if (state.isPasswordVisible) IconPack.NoShow else IconPack.Show,
                         contentDescription = if (state.isPasswordVisible) "隐藏密码" else "显示密码",
                         tint = colors.primary,
                         modifier = Modifier.size(20.dp)

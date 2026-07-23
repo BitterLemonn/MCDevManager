@@ -1,5 +1,6 @@
 package com.lemon.mcdevmanagermp.data.db.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -15,6 +16,7 @@ data class PromotionTemplateEntity(
     val activity: String,
     val feature: String,
     val updateContent: String,
+    @ColumnInfo(defaultValue = "")
     val promoImageUrl: String = "",
     val createdAt: Long
 )

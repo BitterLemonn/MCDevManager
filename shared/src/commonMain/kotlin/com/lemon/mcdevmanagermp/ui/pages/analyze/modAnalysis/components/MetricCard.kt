@@ -17,11 +17,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import org.jetbrains.compose.resources.DrawableResource
-import org.jetbrains.compose.resources.painterResource
 
 /**
  * 指标卡片组件
@@ -29,7 +28,7 @@ import org.jetbrains.compose.resources.painterResource
  */
 @Composable
 internal fun MetricCard(
-    icon: DrawableResource,
+    icon: ImageVector,
     title: String,
     value: String,
     percent: String,
@@ -52,7 +51,7 @@ internal fun MetricCard(
             // 图标 + 标题
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    painter = painterResource(icon),
+                    imageVector = icon,
                     contentDescription = title,
                     modifier = Modifier.size(16.dp),
                     tint = colors.primary

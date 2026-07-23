@@ -114,7 +114,7 @@ internal fun MediumLayout(
 
                 ExpandableNavigateItem(
                     title = userNickname ?: "开发者",
-                    icon = userHeadImg,
+                    avatarUrl = userHeadImg,
                     isTinted = false,
                     expanded = false
                 ) {}

@@ -38,10 +38,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResAnalyzeData
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
+import com.lemon.mcdevmanagermp.ui.iconpack.BarChart
+import com.lemon.mcdevmanagermp.ui.iconpack.IconPack
+import com.lemon.mcdevmanagermp.ui.iconpack.LineChart
 import com.lemon.mcdevmanagermp.ui.pages.analyze.dayDetail.CHART_COLORS
 import com.lemon.mcdevmanagermp.ui.pages.analyze.dayDetail.DayDetailAction
 import com.lemon.mcdevmanagermp.ui.pages.analyze.dayDetail.DayDetailMetricType
@@ -51,10 +55,6 @@ import com.lemon.mcdevmanagermp.ui.pages.analyze.dayDetail.components.DayDetailC
 import com.lemon.mcdevmanagermp.ui.pages.analyze.dayDetail.components.ResourceMultiSelector
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.ChartType
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_bar_chart
-import mcdevmanagermpr.shared.generated.resources.ic_line_chart
-import org.jetbrains.compose.resources.painterResource
 
 /**
  * Compact 布局（手机 < 600dp）
@@ -346,12 +346,12 @@ internal fun ChartHeaderRow(
                     .padding(2.dp)
             ) {
                 ChartTypeButton(
-                    icon = Res.drawable.ic_line_chart,
+                    icon = IconPack.LineChart,
                     isSelected = chartType == ChartType.LINE,
                     onClick = { if (chartType != ChartType.LINE) onToggle() }
                 )
                 ChartTypeButton(
-                    icon = Res.drawable.ic_bar_chart,
+                    icon = IconPack.BarChart,
                     isSelected = chartType == ChartType.COLUMN,
                     onClick = { if (chartType != ChartType.COLUMN) onToggle() }
                 )
@@ -362,7 +362,7 @@ internal fun ChartHeaderRow(
 
 @Composable
 internal fun ChartTypeButton(
-    icon: org.jetbrains.compose.resources.DrawableResource,
+    icon: ImageVector,
     isSelected: Boolean,
     onClick: () -> Unit,
 ) {
@@ -381,7 +381,7 @@ internal fun ChartTypeButton(
         contentAlignment = Alignment.Center
     ) {
         Icon(
-            painter = painterResource(icon),
+            imageVector = icon,
             contentDescription = null,
             modifier = Modifier.size(16.dp),
             tint = if (isSelected) colors.primary else colors.onSurfaceVariant

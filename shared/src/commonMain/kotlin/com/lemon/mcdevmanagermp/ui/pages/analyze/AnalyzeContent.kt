@@ -35,16 +35,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lemon.mcdevmanagermp.ui.iconpack.Analyze
+import com.lemon.mcdevmanagermp.ui.iconpack.Calendar
+import com.lemon.mcdevmanagermp.ui.iconpack.IconPack
+import com.lemon.mcdevmanagermp.ui.iconpack.Profit
+import com.lemon.mcdevmanagermp.ui.iconpack.Total
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_analyze
-import mcdevmanagermpr.shared.generated.resources.ic_calendar
-import mcdevmanagermpr.shared.generated.resources.ic_profit
-import mcdevmanagermpr.shared.generated.resources.ic_total
-import org.jetbrains.compose.resources.painterResource
 
 /**
  * 数据分析 Tab 内容
@@ -77,7 +77,7 @@ fun AnalyzeContent(
 
         AnalyzeGroupCard {
             AnalyzeItem(
-                icon = Res.drawable.ic_analyze,
+                icon = IconPack.Analyze,
                 title = "数据追踪",
                 subtitle = "多资源每日数据对比分析",
                 onClick = { onNavigateToSubPage(AnalyzeSubPage.DayDetail) }
@@ -90,7 +90,7 @@ fun AnalyzeContent(
             )
 
             AnalyzeItem(
-                icon = Res.drawable.ic_total,
+                icon = IconPack.Total,
                 title = "数据汇总",
                 subtitle = "按月查看资源汇总统计",
                 onClick = { onNavigateToSubPage(AnalyzeSubPage.MonthDetail) }
@@ -103,7 +103,7 @@ fun AnalyzeContent(
             )
 
             AnalyzeItem(
-                icon = Res.drawable.ic_calendar,
+                icon = IconPack.Calendar,
                 title = "模组分析",
                 subtitle = "查看模组的购买、日活、粉丝等趋势分析",
                 onClick = { onNavigateToSubPage(AnalyzeSubPage.ModAnalysis()) }
@@ -116,7 +116,7 @@ fun AnalyzeContent(
             )
 
             AnalyzeItem(
-                icon = Res.drawable.ic_profit,
+                icon = IconPack.Profit,
                 title = "实时收益",
                 subtitle = "查看今日各资源的实时收益数据",
                 onClick = { onNavigateToSubPage(AnalyzeSubPage.RealtimeProfit) }
@@ -142,7 +142,7 @@ private fun AnalyzeGroupCard(
 
 @Composable
 private fun AnalyzeItem(
-    icon: org.jetbrains.compose.resources.DrawableResource,
+    icon: ImageVector,
     title: String,
     subtitle: String,
     showArrow: Boolean = true,
@@ -175,7 +175,7 @@ private fun AnalyzeItem(
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                painter = painterResource(icon),
+                imageVector = icon,
                 contentDescription = title,
                 tint = colors.primary,
                 modifier = Modifier.size(20.dp)

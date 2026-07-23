@@ -88,6 +88,12 @@ import com.lemon.mcdevmanagermp.platform.openUrl
 import com.lemon.mcdevmanagermp.platform.supportsDynamicColor
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
+import com.lemon.mcdevmanagermp.ui.iconpack.Feedback
+import com.lemon.mcdevmanagermp.ui.iconpack.IconPack
+import com.lemon.mcdevmanagermp.ui.iconpack.License
+import com.lemon.mcdevmanagermp.ui.iconpack.Setting
+import com.lemon.mcdevmanagermp.ui.iconpack.Star
+import com.lemon.mcdevmanagermp.ui.iconpack.User
 import com.lemon.mcdevmanagermp.ui.pages.settings.about.AboutPage
 import com.lemon.mcdevmanagermp.ui.pages.settings.account.AccountManagementPage
 import com.lemon.mcdevmanagermp.ui.pages.settings.layout.CompactThemeLayout
@@ -120,11 +126,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_download
-import mcdevmanagermpr.shared.generated.resources.ic_feedback
-import mcdevmanagermpr.shared.generated.resources.ic_license
-import mcdevmanagermpr.shared.generated.resources.ic_setting
-import mcdevmanagermpr.shared.generated.resources.ic_star
-import mcdevmanagermpr.shared.generated.resources.ic_user
 import org.jetbrains.compose.resources.painterResource
 
 private enum class SettingsSubPage { List, Theme, Account, Log, About }
@@ -276,7 +277,7 @@ private fun SettingsListPage(
         SettingsGroupCard {
             if (showAccountManagement) {
                 SettingsItem(
-                    icon = Res.drawable.ic_user,
+                    iconVector = IconPack.User,
                     title = "账号管理",
                     subtitle = "切换、添加或退出账号",
                     onClick = onNavigateToAccount
@@ -290,7 +291,7 @@ private fun SettingsListPage(
             }
 
             SettingsItem(
-                icon = Res.drawable.ic_setting,
+                iconVector = IconPack.Setting,
                 title = "主题与色彩",
                 subtitle = when (themeMode) {
                     ThemeMode.LIGHT -> "浅色"
@@ -320,7 +321,7 @@ private fun SettingsListPage(
             )
 
             SettingsItem(
-                icon = Res.drawable.ic_feedback,
+                iconVector = IconPack.Feedback,
                 title = "反馈",
                 subtitle = "提交 Bug 或功能建议",
                 onClick = { openUrl("https://github.com/BitterLemonn/McDevManagerMP/issues") }
@@ -333,7 +334,7 @@ private fun SettingsListPage(
             )
 
             SettingsItem(
-                icon = Res.drawable.ic_star,
+                iconVector = IconPack.Star,
                 title = "给个星星",
                 subtitle = "在 GitHub 上为项目点个 Star",
                 onClick = { openUrl("https://github.com/BitterLemonn/McDevManager") }
@@ -359,7 +360,7 @@ private fun SettingsListPage(
             )
 
             SettingsItem(
-                icon = Res.drawable.ic_license,
+                iconVector = IconPack.License,
                 title = "关于",
                 subtitle = "版本信息与开源协议",
                 onClick = onNavigateToAbout

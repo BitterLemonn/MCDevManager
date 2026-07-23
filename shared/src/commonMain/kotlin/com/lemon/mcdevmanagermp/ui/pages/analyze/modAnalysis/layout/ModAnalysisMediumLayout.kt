@@ -37,10 +37,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.domain.analyze.SummaryMetrics
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
+import com.lemon.mcdevmanagermp.ui.iconpack.BarChart
+import com.lemon.mcdevmanagermp.ui.iconpack.IconPack
+import com.lemon.mcdevmanagermp.ui.iconpack.LineChart
+import com.lemon.mcdevmanagermp.ui.iconpack.Star
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.ChartType
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.MetricType
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.ModAnalysisAction
@@ -48,11 +53,6 @@ import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.ModAnalysisState
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.components.ChartSection
 import com.lemon.mcdevmanagermp.ui.pages.analyze.modAnalysis.components.ResourceSelector
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_bar_chart
-import mcdevmanagermpr.shared.generated.resources.ic_line_chart
-import mcdevmanagermpr.shared.generated.resources.ic_star
-import org.jetbrains.compose.resources.painterResource
 
 /**
  * Medium 布局（平板 600-840dp）
@@ -222,7 +222,7 @@ private fun MediumModTitleCard(
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    painter = painterResource(Res.drawable.ic_star),
+                    imageVector = IconPack.Star,
                     contentDescription = "评分",
                     modifier = Modifier.size(16.dp),
                     tint = colors.primary
@@ -392,12 +392,12 @@ private fun MediumChartTypeRow(
                 .padding(2.dp)
         ) {
             MediumChartTypeButton(
-                icon = Res.drawable.ic_line_chart,
+                icon = IconPack.LineChart,
                 isSelected = chartType == ChartType.LINE,
                 onClick = { if (chartType != ChartType.LINE) onToggle() }
             )
             MediumChartTypeButton(
-                icon = Res.drawable.ic_bar_chart,
+                icon = IconPack.BarChart,
                 isSelected = chartType == ChartType.COLUMN,
                 onClick = { if (chartType != ChartType.COLUMN) onToggle() }
             )
@@ -407,7 +407,7 @@ private fun MediumChartTypeRow(
 
 @Composable
 private fun MediumChartTypeButton(
-    icon: org.jetbrains.compose.resources.DrawableResource,
+    icon: ImageVector,
     isSelected: Boolean,
     onClick: () -> Unit,
 ) {
@@ -426,7 +426,7 @@ private fun MediumChartTypeButton(
         contentAlignment = Alignment.Center
     ) {
         Icon(
-            painter = painterResource(icon),
+            imageVector = icon,
             contentDescription = null,
             modifier = Modifier.size(18.dp),
             tint = if (isSelected) colors.primary else colors.onSurfaceVariant

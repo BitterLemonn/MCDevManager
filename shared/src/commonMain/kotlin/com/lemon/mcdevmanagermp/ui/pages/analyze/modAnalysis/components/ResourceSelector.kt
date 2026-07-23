@@ -36,10 +36,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
+import com.lemon.mcdevmanagermp.ui.iconpack.IconPack
+import com.lemon.mcdevmanagermp.ui.iconpack.Mod
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_mod
-import org.jetbrains.compose.resources.painterResource
 
 /**
  * 资源选择器组件
@@ -76,7 +75,7 @@ internal fun ResourceSelector(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    painter = painterResource(Res.drawable.ic_mod),
+                    imageVector = IconPack.Mod,
                     contentDescription = "模组",
                     modifier = Modifier.size(20.dp),
                     tint = colors.primary

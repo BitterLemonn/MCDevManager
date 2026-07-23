@@ -66,6 +66,8 @@ import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.components.ImagePreviewOverlay
 import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
 import com.lemon.mcdevmanagermp.ui.components.collectUiEffect
+import com.lemon.mcdevmanagermp.ui.iconpack.IconPack
+import com.lemon.mcdevmanagermp.ui.iconpack.Replied
 import com.lemon.mcdevmanagermp.ui.pages.community.components.FilterChipItem
 import com.lemon.mcdevmanagermp.ui.pages.community.components.FilterGroupDef
 import com.lemon.mcdevmanagermp.ui.pages.community.components.ModernFilterBar
@@ -75,9 +77,6 @@ import com.lemon.mcdevmanagermp.ui.pages.community.feedback.layout.ExpandedFeedb
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import com.lemon.mcdevmanagermp.utils.extension.toDateTimeString
 import kotlinx.serialization.json.Json
-import mcdevmanagermpr.shared.generated.resources.Res
-import mcdevmanagermpr.shared.generated.resources.ic_replied
-import org.jetbrains.compose.resources.painterResource
 
 // ============================================================
 // FeedbackType enum
@@ -399,7 +398,7 @@ private fun FeedbackSummaryCard(
                 if (feedback.reply != null) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            painter = painterResource(Res.drawable.ic_replied),
+                            imageVector = IconPack.Replied,
                             contentDescription = "已回复",
                             tint = colors.primary,
                             modifier = Modifier.size(12.dp)
