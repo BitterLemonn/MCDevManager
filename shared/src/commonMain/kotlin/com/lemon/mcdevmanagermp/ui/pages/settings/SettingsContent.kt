@@ -105,6 +105,7 @@ import com.lemon.mcdevmanagermp.ui.theme.seedDarkColorScheme
 import com.lemon.mcdevmanagermp.ui.theme.seedLightColorScheme
 import com.lemon.mcdevmanagermp.utils.LogFileInfo
 import com.lemon.mcdevmanagermp.utils.Logger
+import com.lemon.mcdevmanagermp.utils.extension.formatDecimal
 import com.mohamedrejeb.calf.permissions.ExperimentalPermissionsApi
 import com.mohamedrejeb.calf.permissions.Notification
 import com.mohamedrejeb.calf.permissions.Permission
@@ -113,6 +114,7 @@ import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher
 import io.github.vinceglb.filekit.writeString
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -376,7 +378,7 @@ private fun SettingsGroupCard(
         colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh),
         shape = RoundedCornerShape(16.dp),
 
-    ) {
+        ) {
         content()
     }
 }
@@ -1159,7 +1161,7 @@ private fun logLineAnnotated(
     }
 
 private fun formatSize(bytes: Long): String = when {
-    bytes >= 1024 * 1024 -> "%.1f MB".format(bytes / (1024.0 * 1024.0))
-    bytes >= 1024 -> "%.1f KB".format(bytes / 1024.0)
+    bytes >= 1024 * 1024 -> "${(bytes / (1024.0 * 1024.0)).formatDecimal(1)} MB"
+    bytes >= 1024 -> "${(bytes / 1024.0).formatDecimal(1)} KB"
     else -> "$bytes B"
 }
