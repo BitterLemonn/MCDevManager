@@ -85,9 +85,9 @@
 
 <a href="https://www.star-history.com/?repos=BitterLemonn%2FMCDevManager&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=BitterLemonn/MCDevManager&type=date&theme=dark&legend=top-left&sealed_token=sN8zBbX2T0wpiKP4DG-q45rupaMxyZT_7HWl8so3vyYScACBc22osJku9Cx8pLwhWrGRzqD5pFYMS4ohaYIXsQL0mogx4VrUEz3qFufxiVaXxH8ubrCskA" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=BitterLemonn/MCDevManager&type=date&legend=top-left&sealed_token=sN8zBbX2T0wpiKP4DG-q45rupaMxyZT_7HWl8so3vyYScACBc22osJku9Cx8pLwhWrGRzqD5pFYMS4ohaYIXsQL0mogx4VrUEz3qFufxiVaXxH8ubrCskA" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=BitterLemonn/MCDevManager&type=date&legend=top-left&sealed_token=sN8zBbX2T0wpiKP4DG-q45rupaMxyZT_7HWl8so3vyYScACBc22osJku9Cx8pLwhWrGRzqD5pFYMS4ohaYIXsQL0mogx4VrUEz3qFufxiVaXxH8ubrCskA" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=BitterLemonn/MCDevManager&type=date&theme=dark&legend=top-left&sealed_token=jWbk9R9CeGjm75OG2K1R8XjnHa2VZjYEGjLqGH0Jl2Mut67jlvGYo3-pQzKTqAhNAkMxVZ0cSPsH5EgXzYlFd4iudePe2MmcqAfrL8qbaiguFuzEngePqg" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=BitterLemonn/MCDevManager&type=date&legend=top-left&sealed_token=jWbk9R9CeGjm75OG2K1R8XjnHa2VZjYEGjLqGH0Jl2Mut67jlvGYo3-pQzKTqAhNAkMxVZ0cSPsH5EgXzYlFd4iudePe2MmcqAfrL8qbaiguFuzEngePqg" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=BitterLemonn/MCDevManager&type=date&legend=top-left&sealed_token=jWbk9R9CeGjm75OG2K1R8XjnHa2VZjYEGjLqGH0Jl2Mut67jlvGYo3-pQzKTqAhNAkMxVZ0cSPsH5EgXzYlFd4iudePe2MmcqAfrL8qbaiguFuzEngePqg" />
  </picture>
 </a>
 
