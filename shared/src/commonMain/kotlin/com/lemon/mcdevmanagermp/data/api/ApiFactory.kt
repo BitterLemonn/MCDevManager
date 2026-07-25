@@ -16,6 +16,7 @@ import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.http.ContentType
 import io.ktor.http.Cookie
+import io.ktor.http.HttpHeaders
 import io.ktor.http.Url
 import io.ktor.http.contentType
 import io.ktor.http.encodedPath
@@ -71,6 +72,8 @@ object ApiFactory {
                 val elapsed = it.elapsedNow().inWholeMilliseconds
                 Logger.d("拦截器:\n请求 ${response.call.request.url} 耗时: ${elapsed}ms")
             }
+            // ponytail: 兜底同步 Set-Cookie，避免 HttpCookies 在 onResponse 异常时漏存
+            response.headers.getAll(HttpHeaders.SetCookie)?.let { CookiesStore.addCookies(it) }
         }
     }
 

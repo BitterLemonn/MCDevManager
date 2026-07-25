@@ -44,7 +44,7 @@ object UnifiedExceptionHandler {
     private fun <T> NetworkState<T>.isLoginExpiredError(): Boolean {
         if (this !is NetworkState.Error) return false
         val cause = e ?: return false
-        return cause is LoginException || cause is CookiesExpiredException
+        return cause is CookiesExpiredException
     }
 
     suspend fun handleGithubRequest(
@@ -109,7 +109,7 @@ object UnifiedExceptionHandler {
         }
     }
 
-    private suspend fun <T> parseData(
+    private fun <T> parseData(
         result: ResponseData<T>,
         noNeedRefreshCookies: Boolean = false
     ): NetworkState<T> {
@@ -121,12 +121,18 @@ object UnifiedExceptionHandler {
             "200", "201", "ok", "OK", "Ok" -> result.data?.let { NetworkState.Success(it) }
                 ?: NetworkState.Success(msg = result.msg ?: result.status)
 
-            "401", "no_login" -> NetworkState.Error(
-                "登录过期了，请重新登录",
-                CookiesExpiredException()
-            )
+            "401", "no_login" -> {
+                Logger.e("$TAG: ${result.msg}")
+                NetworkState.Error(
+                    "登录过期了，请重新登录",
+                    CookiesExpiredException()
+                )
+            }
 
-            else -> NetworkState.Error(result.msg ?: result.status)
+            else -> {
+                Logger.e("$TAG: ${result.msg}")
+                NetworkState.Error(result.msg ?: result.status)
+            }
         }
     }
 

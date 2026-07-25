@@ -31,9 +31,9 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -49,9 +49,9 @@ import com.lemon.mcdevmanagermp.platform.AppUpdateManager
 import com.lemon.mcdevmanagermp.platform.FeaturePreferences
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
+import kotlinx.coroutines.delay
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_icon
-import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
 
 // ============================================================
@@ -106,9 +106,9 @@ private data class LicenseInfo(
 )
 
 private val LICENSE_MAP = mapOf(
-    "GPLv3" to LicenseInfo(
-        name = "GNU General Public License v3.0（附加条款：禁止商用）",
-        summary = "基于 GPLv3 许可证，允许使用、修改和分发，修改后的作品必须以相同许可证开源。附加条款：本软件及基于本软件的衍生作品禁止用于任何商业用途。",
+    "BNCL-1.0" to LicenseInfo(
+        name = "BitterLemon Noncommercial Copyleft License 1.0（源码可见许可证）",
+        summary = "源码可见许可证。允许查看、下载、学习、修改、编译、运行和分发（含修改版本），但分发时必须提供完整对应源代码与构建脚本，修改版本须以相同许可证分发。禁止任何商业使用，商业使用需另行取得版权所有者授权。",
     ),
     "Apache 2.0" to LicenseInfo(
         name = "Apache License 2.0",
@@ -242,7 +242,7 @@ internal fun AboutPage(
                         color = colors.onSurfaceVariant,
                     )
                     Text(
-                        text = "GPLv3（禁止商用）",
+                        text = "BNCL-1.0（禁止商用）",
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.SemiBold,
                         color = colors.primary,
@@ -475,7 +475,7 @@ private fun AppLicenseDialog(
     onDismiss: () -> Unit,
 ) {
     val colors = LocalAppColors.current
-    val gplv3 = LICENSE_MAP["GPLv3"]!!
+    val license = LICENSE_MAP["BNCL-1.0"]!!
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -510,7 +510,7 @@ private fun AppLicenseDialog(
                 Spacer(Modifier.height(16.dp))
 
                 Text(
-                    text = gplv3.name,
+                    text = license.name,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = colors.primary,
@@ -519,7 +519,7 @@ private fun AppLicenseDialog(
                 Spacer(Modifier.height(8.dp))
 
                 Text(
-                    text = gplv3.summary,
+                    text = license.summary,
                     style = MaterialTheme.typography.bodyMedium,
                     color = colors.onSurfaceVariant,
                     lineHeight = 20.sp,
