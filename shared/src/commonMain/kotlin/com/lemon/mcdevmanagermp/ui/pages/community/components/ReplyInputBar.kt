@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -68,21 +69,32 @@ fun ReplyInputBar(
             textStyle = MaterialTheme.typography.bodyMedium
         )
 
-        AnimatedVisibility(
-            visible = value.isNotBlank() && isEnabled,
-            enter = fadeIn(),
-            exit = fadeOut()
-        ) {
-            IconButton(
-                onClick = onSubmit,
-                modifier = Modifier.padding(start = 4.dp)
+        // ponytail: isEnabled 由调用方传入 !isReplying，false 时显示旋转等待条
+        if (!isEnabled) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .padding(start = 12.dp)
+                    .size(24.dp),
+                strokeWidth = 2.dp,
+                color = colors.primary
+            )
+        } else {
+            AnimatedVisibility(
+                visible = value.isNotBlank(),
+                enter = fadeIn(),
+                exit = fadeOut()
             ) {
-                Icon(
-                    imageVector = Icons.Filled.Check,
-                    contentDescription = "发送",
-                    tint = colors.primary,
-                    modifier = Modifier.size(24.dp)
-                )
+                IconButton(
+                    onClick = onSubmit,
+                    modifier = Modifier.padding(start = 4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Check,
+                        contentDescription = "发送",
+                        tint = colors.primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
         }
     }
