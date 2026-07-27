@@ -2,7 +2,7 @@
 
 一站式网易 MC 开发者平台管理工具：作品、数据、收益、互动，多端支持。
 
-持续迭代中，问题反馈请至 [GitHub Issues](https://github.com/BitterLemonn/McDevManagerMP/issues)。
+持续迭代中，问题反馈请至 [GitHub Issues](https://github.com/BitterLemonn/McDevManager/issues)。
 
 ---
 
@@ -52,7 +52,7 @@
 
 ## 下载安装
 
-最新版本见 [GitHub Releases](https://github.com/BitterLemonn/McDevManagerMP/releases)。
+最新版本见 [GitHub Releases](https://github.com/BitterLemonn/McDevManager/releases)。
 
 | 平台      | 状态  | 安装包               |
 |---------|-----|-------------------|
@@ -76,8 +76,8 @@
 
 ## 反馈
 
-- Bug 与功能建议：[GitHub Issues](https://github.com/BitterLemonn/McDevManagerMP/issues)
-- 欢迎在 [GitHub](https://github.com/BitterLemonn/McDevManagerMP) 点 Star
+- Bug 与功能建议：[GitHub Issues](https://github.com/BitterLemonn/McDevManager/issues)
+- 欢迎在 [GitHub](https://github.com/BitterLemonn/McDevManager) 点 Star
 
 ---
 
@@ -96,4 +96,4 @@
 ## 声明
 
 - 本软件为第三方开发工具，与网易官方无关
-- 基于 **GPLv3（禁止商用）** 开源
+- 基于 [**BNCL-1.0**](LICENSE) 源码公开
