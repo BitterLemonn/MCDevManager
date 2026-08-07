@@ -620,19 +620,39 @@ class WorkDetailViewModel :
                 is NetworkState.Success -> {
                     val info = result.data
                     val url = parseUploadUrl(info?.body.orEmpty())
-                    setState {
-                        copy(
-                            isUploadingPeZip = false,
-                            peResource = PeResourceFile(
-                                name = file.name,
-                                url = url,
-                                addVersion = peAddVersion,
-                                fileInfo = info
-                            )
-                        )
-                    }
+                    val resource = PeResourceFile(
+                        name = file.name,
+                        url = url,
+                        addVersion = state.value.peAddVersion,
+                        fileInfo = info
+                    )
+                    setState { copy(peResource = resource) }
                     if (url.isEmpty()) {
+                        setState { copy(isUploadingPeZip = false) }
                         sendEffect(WorkDetailEffect.ShowToast("上传成功但未能解析资源地址"))
+                        return@launch
+                    }
+
+                    val detail = state.value.detail
+                    if (detail == null) {
+                        setState { copy(isUploadingPeZip = false) }
+                        return@launch
+                    }
+                    val updatedDetail = withUpdatedPeResource(detail, resource, resource.addVersion)
+                    when (val update =
+                        workDetailUseCase.updateWork(updatedDetail, isCheckApply = false)) {
+                        is NetworkState.Success -> setState {
+                            copy(detail = updatedDetail, isUploadingPeZip = false)
+                        }
+
+                        is NetworkState.Error -> {
+                            setState { copy(isUploadingPeZip = false) }
+                            handleError(
+                                update,
+                                onNeedReLogin = { WorkDetailEffect.NeedReLogin },
+                                onShowToast = { WorkDetailEffect.ShowToast(it) }
+                            )
+                        }
                     }
                 }
 
@@ -877,6 +897,10 @@ class WorkDetailViewModel :
     private fun submit(alsoReview: Boolean) {
         val s = state.value
         if (s.isSubmitting) return
+        if (s.isUploadingPeZip) {
+            sendEffect(WorkDetailEffect.ShowToast("资源文件上传中"))
+            return
+        }
         val detail = s.detail
         if (detail == null) {
             // 新建模式：走 pe/upload 创建接口
@@ -944,6 +968,22 @@ class WorkDetailViewModel :
     }
 
 }
+
+/** 立即持久化新资源时仅替换 res，避免提交表单中其他未保存字段。 */
+internal fun withUpdatedPeResource(
+    detail: ResourceDetailVO,
+    resource: PeResourceFile,
+    addVersion: Boolean
+): ResourceDetailVO = detail.copy(
+    res = listOf(
+        ResourceDetailRes(
+            addVersion = addVersion,
+            resName = resource.name,
+            resUrl = resource.url,
+            mcVersion = resource.mcVersion
+        )
+    )
+)
 
 /** 由编辑态构造新建请求体（pe/upload）。res/channel 仅含已上传（有 fileInfo）的项。 */
 internal fun buildWorkCreatePayload(s: WorkDetailState, isCheckApply: Boolean): WorkCreateDTO =

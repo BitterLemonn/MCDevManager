@@ -1,7 +1,25 @@
 package com.lemon.mcdevmanagermp.data.vo.netease.feedback
 
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.nullable
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+
+object NullableStringListSerializer : KSerializer<List<String>> {
+    private val delegate = ListSerializer(String.serializer().nullable)
+
+    override val descriptor = delegate.descriptor
+
+    override fun deserialize(decoder: Decoder): List<String> =
+        delegate.deserialize(decoder).filterNotNull()
+
+    override fun serialize(encoder: Encoder, value: List<String>) =
+        delegate.serialize(encoder, value)
+}
 
 @Serializable
 data class FeedbackData(
@@ -22,6 +40,7 @@ data class FeedbackData(
     val haveLogFile: Boolean = false,
     val iid: String = "",
     @SerialName("pic_list")
+    @Serializable(with = NullableStringListSerializer::class)
     val picList: List<String> = emptyList(),
     val reply: String? = null,
     @SerialName("res_name")
