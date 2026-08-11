@@ -4,6 +4,8 @@ import com.lemon.mcdevmanagermp.data.common.JSONConverter
 import com.lemon.mcdevmanagermp.data.consts.CookiesNotValidException
 import com.lemon.mcdevmanagermp.data.consts.NETEASE_TOP_URL
 import com.lemon.mcdevmanagermp.data.consts.NETEASE_USER_COOKIE
+import com.lemon.mcdevmanagermp.data.consts.NeteaseLoginException
+import com.lemon.mcdevmanagermp.data.consts.isRecoverablePowerValidationCode
 import com.lemon.mcdevmanagermp.data.vo.netease.login.PVInfoVO
 import com.lemon.mcdevmanagermp.domain.account.CookieRepository
 import com.lemon.mcdevmanagermp.domain.user.UserRepository
@@ -12,6 +14,7 @@ import com.lemon.mcdevmanagermp.utils.UnifiedExceptionHandler.unwrapNetworkState
 import com.lemon.mcdevmanagermp.utils.encrpy.vdfAsync
 import com.lemon.mcdevmanagermp.utils.extension.dumpAndGetCookiesValue
 import com.lemon.mcdevmanagermp.utils.extension.isValidCookiesStr
+import kotlinx.coroutines.CancellationException
 
 class LoginUseCase(
     private val loginRepository: LoginRepository,
@@ -52,8 +55,16 @@ class LoginUseCase(
                 Logger.d("登录成功")
                 return
             } catch (e: Exception) {
-                if (attempt == 2) throw e
-                Logger.d("登录失败, 重试中...")
+                if (e is CancellationException) throw e
+                val loginError = generateSequence<Throwable>(e) { it.cause }
+                    .filterIsInstance<NeteaseLoginException>()
+                    .firstOrNull()
+                if (attempt == 2 || loginError == null ||
+                    !isRecoverablePowerValidationCode(loginError.ret)
+                ) {
+                    throw e
+                }
+                Logger.d("安全验证失败 ret=${loginError.ret}，第 ${attempt + 1} 次重试")
             }
         }
     }

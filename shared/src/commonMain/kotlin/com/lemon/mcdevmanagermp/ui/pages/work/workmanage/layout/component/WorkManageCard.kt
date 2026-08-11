@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -138,7 +139,8 @@ private fun ActionButton(
     val colors = LocalAppColors.current
     val accent = colors.primary
     val iconVector: ImageVector? = when (action) {
-        WorkItemActionEnum.SUBMIT_REVIEW -> Icons.Default.Check
+        WorkItemActionEnum.SUBMIT_REVIEW,
+        WorkItemActionEnum.SUBMIT_SELF_TEST -> Icons.Default.Check
         WorkItemActionEnum.UPDATE,
         WorkItemActionEnum.CANCEL_TEST,
         WorkItemActionEnum.CANCEL_REVIEW -> Icons.Default.Refresh
@@ -146,6 +148,7 @@ private fun ActionButton(
         WorkItemActionEnum.ADJUST_PRICE -> IconPack.Modified
         WorkItemActionEnum.VIEW_FEEDBACK -> IconPack.Feedback
         WorkItemActionEnum.APPOINT_ONLINE -> IconPack.Calendar
+        WorkItemActionEnum.DELETE -> Icons.Default.Delete
     }
     val interaction = remember { MutableInteractionSource() }
     val isHovered by interaction.collectIsHoveredAsState()
@@ -196,7 +199,7 @@ private fun WorkStatusTag(status: WorkItemStatusEnum, colors: AppColors) {
         WorkItemStatusEnum.SYSTEM_OFFLINE -> colors.offline
         WorkItemStatusEnum.ONLINE_PREPARING -> colors.onSurfaceVariant
         WorkItemStatusEnum.SELF_TEST_PREPARE -> colors.onSurfaceVariant
-        WorkItemStatusEnum.PREPARE -> colors.onSurfaceVariant
+        WorkItemStatusEnum.PREPARING -> colors.onSurfaceVariant
         WorkItemStatusEnum.UNKNOWN -> colors.onSurfaceVariant
     }
     Text(

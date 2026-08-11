@@ -4,7 +4,9 @@ import com.lemon.mcdevmanagermp.data.common.NoNeedData
 import com.lemon.mcdevmanagermp.data.common.ResponseData
 import com.lemon.mcdevmanagermp.data.consts.NETEASE_MC_DEV_LINK
 import com.lemon.mcdevmanagermp.data.dto.netease.work.ApplyReviewDTO
+import com.lemon.mcdevmanagermp.data.dto.netease.work.ApplySelfTestDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.work.AppointOnlineDTO
+import com.lemon.mcdevmanagermp.data.dto.netease.work.ChangePriceDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.work.OnlineItemDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.work.WorkCreateDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.work.WorkUpdateDTO
@@ -16,6 +18,7 @@ import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceListVO
 import com.lemon.mcdevmanagermp.data.vo.netease.work.ReviewApplyResultVO
 import com.lemon.mcdevmanagermp.data.vo.netease.work.ReviewFeedbackVO
 import de.jensklingenberg.ktorfit.http.Body
+import de.jensklingenberg.ktorfit.http.DELETE
 import de.jensklingenberg.ktorfit.http.GET
 import de.jensklingenberg.ktorfit.http.POST
 import de.jensklingenberg.ktorfit.http.PUT
@@ -38,6 +41,9 @@ interface ResourceApi {
     @GET("items/categories/pe/{itemId}")
     suspend fun getResourceDetail(@Path("itemId") itemId: String): ResponseData<ResourceDetailVO>
 
+    @DELETE("items/categories/pe/{itemId}")
+    suspend fun deleteItem(@Path("itemId") itemId: String): ResponseData<NoNeedData>
+
     @POST("items/categories/pe/{itemId}/update")
     suspend fun updateItem(
         @Path("itemId") itemId: String,
@@ -56,6 +62,15 @@ interface ResourceApi {
     @PUT("items/categories/pe/{itemId}/cancel_review")
     suspend fun cancelReview(@Path("itemId") itemId: String): ResponseData<NoNeedData>
 
+    @PUT("items/categories/pe/{itemId}/self-test-apply")
+    suspend fun applySelfTest(
+        @Path("itemId") itemId: String,
+        @Body content: ApplySelfTestDTO
+    ): ResponseData<NoNeedData>
+
+    @PUT("items/categories/pe/{itemId}/cancel_self_test")
+    suspend fun cancelSelfTest(@Path("itemId") itemId: String): ResponseData<NoNeedData>
+
     @GET("items/categories/pe/{itemId}/feedback")
     suspend fun getReviewFeedback(@Path("itemId") itemId: String): ResponseData<ReviewFeedbackVO>
 
@@ -69,6 +84,12 @@ interface ResourceApi {
     suspend fun appointOnlineItem(
         @Path("itemId") itemId: String,
         @Body content: AppointOnlineDTO
+    ): ResponseData<NoNeedData>
+
+    @POST("items/categories/pe/{itemId}/change_price")
+    suspend fun changePrice(
+        @Path("itemId") itemId: String,
+        @Body content: ChangePriceDTO
     ): ResponseData<NoNeedData>
 
     @GET("item-tag")

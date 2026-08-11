@@ -118,6 +118,8 @@ internal fun WorkManageMediumLayout(
                     WorkManageCard(item) { action ->
                         when (action) {
                             WorkItemActionEnum.UPDATE -> onNavigateToDetail(item.itemId)
+                            WorkItemActionEnum.SUBMIT_SELF_TEST ->
+                                pending = WorkManagePendingOp.SubmitSelfTest(item)
                             WorkItemActionEnum.ADJUST_PRICE ->
                                 pending = WorkManagePendingOp.AdjustPrice(item)
                             WorkItemActionEnum.APPOINT_ONLINE ->
@@ -137,6 +139,10 @@ internal fun WorkManageMediumLayout(
         pending = pending,
         onConfirmAction = { item, action ->
             onAction(WorkManageAction.PerformAction(item, action))
+            pending = null
+        },
+        onSubmitSelfTest = { item, passCheck ->
+            onAction(WorkManageAction.SubmitSelfTest(item, passCheck))
             pending = null
         },
         onAdjustPrice = { item, newPrice ->

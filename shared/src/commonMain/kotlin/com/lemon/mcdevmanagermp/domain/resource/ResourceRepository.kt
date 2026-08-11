@@ -3,7 +3,9 @@ package com.lemon.mcdevmanagermp.domain.resource
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.common.NoNeedData
 import com.lemon.mcdevmanagermp.data.dto.netease.work.ApplyReviewDTO
+import com.lemon.mcdevmanagermp.data.dto.netease.work.ApplySelfTestDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.work.AppointOnlineDTO
+import com.lemon.mcdevmanagermp.data.dto.netease.work.ChangePriceDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.work.OnlineItemDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.work.WorkCreateDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.work.WorkUpdateDTO
@@ -30,7 +32,7 @@ interface ResourceRepository {
 
     suspend fun getMCConsts(): NetworkState<MCConstsVO>
 
-    // ===== 开平写操作（第1-7节）=====
+    suspend fun deleteItem(itemId: String): NetworkState<NoNeedData>
 
     suspend fun updateItem(itemId: String, item: WorkUpdateDTO): NetworkState<NoNeedData>
 
@@ -44,9 +46,15 @@ interface ResourceRepository {
 
     suspend fun cancelReview(itemId: String): NetworkState<NoNeedData>
 
+    suspend fun applySelfTest(itemId: String, content: ApplySelfTestDTO): NetworkState<NoNeedData>
+
+    suspend fun cancelSelfTest(itemId: String): NetworkState<NoNeedData>
+
     suspend fun getReviewFeedback(itemId: String): NetworkState<ReviewFeedbackVO>
 
     suspend fun onlineItem(itemId: String, content: OnlineItemDTO): NetworkState<NoNeedData>
+
+    suspend fun changePrice(itemId: String, content: ChangePriceDTO): NetworkState<NoNeedData>
 
     suspend fun appointOnlineItem(
         itemId: String,

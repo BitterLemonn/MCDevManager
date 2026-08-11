@@ -21,11 +21,14 @@ sealed interface WorkManageAction : IUiAction {
     data object LoadData : WorkManageAction
     data object RefreshData : WorkManageAction
 
-    /** 执行开平写操作：提交审核(3)/撤销审核(4)/上架(6)（itemId-only） */
+    /** 执行仅需 itemId 的写操作 */
     data class PerformAction(val item: ResourceData, val action: WorkItemActionEnum) :
         WorkManageAction
 
-    /** 调整定价（当前占位，无对应文档接口） */
+    /** 提交自测，passCheck=true 表示免机审 */
+    data class SubmitSelfTest(val item: ResourceData, val passCheck: Boolean) : WorkManageAction
+
+    /** 调整定价 */
     data class AdjustPrice(val item: ResourceData, val newPrice: Int) : WorkManageAction
 
     /** 定时上架(7)：time 格式 "YYYY-MM-DD HH:mm:ss" */

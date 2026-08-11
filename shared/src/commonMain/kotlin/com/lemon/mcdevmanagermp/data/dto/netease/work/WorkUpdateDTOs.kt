@@ -156,7 +156,7 @@ data class WorkUpdateDTO(
     @SerialName("video_info_list") val videoInfoList: List<ResourceDetailVideoInfo> = emptyList(),
     @SerialName("dlc_info") val dlcInfo: WorkUpdateDlcInfoDTO = WorkUpdateDlcInfoDTO(),
     @SerialName("guide_list") val guideList: List<JsonElement> = emptyList(),
-    @SerialName("sync_item_info") val syncItemInfo: WorkUpdateSyncItemInfoDTO = WorkUpdateSyncItemInfoDTO()
+    @SerialName("sync_item_info") val syncItemInfo: WorkUpdateSyncItemInfoDTO? = null
 )
 
 @Serializable
@@ -330,25 +330,32 @@ fun ResourceDetailVO.toWorkUpdateDTO(isCheckApply: Boolean): WorkUpdateDTO = Wor
         slaveList = dlcInfo.slaveList.toJsonArray()
     ),
     guideList = guideList,
-    syncItemInfo = WorkUpdateSyncItemInfoDTO(
-        weakOffline = syncItemInfo.weakOffline,
-        weakOfflineReason = syncItemInfo.weakOfflineReason,
-        itemId = syncItemInfo.itemId,
-        itemName = syncItemInfo.itemName,
-        category = syncItemInfo.category,
-        includeMap = syncItemInfo.includeMap,
-        tag = syncItemInfo.tag,
-        requirement = syncItemInfo.requirement,
-        brief = syncItemInfo.brief,
-        gameHost = syncItemInfo.gameHost.orEmpty(),
-        info = syncItemInfo.info,
-        availableScope = syncItemInfo.availableScope,
-        priType = syncItemInfo.priType,
-        subType = syncItemInfo.subType,
-        channel = syncItemInfo.channel.map {
-            WorkUpdateSyncChannelDTO(it.channelId, it.channelUrl, false, it.version ?: 0)
-        }
-    )
+    syncItemInfo = syncItemInfo.takeIf { syncPcFlag }?.let {
+        WorkUpdateSyncItemInfoDTO(
+            weakOffline = it.weakOffline,
+            weakOfflineReason = it.weakOfflineReason,
+            itemId = it.itemId,
+            itemName = it.itemName,
+            category = it.category,
+            includeMap = it.includeMap,
+            tag = it.tag,
+            requirement = it.requirement,
+            brief = it.brief,
+            gameHost = it.gameHost.orEmpty(),
+            info = it.info,
+            availableScope = it.availableScope,
+            priType = it.priType,
+            subType = it.subType,
+            channel = it.channel.map { channel ->
+                WorkUpdateSyncChannelDTO(
+                    channel.channelId,
+                    channel.channelUrl,
+                    false,
+                    channel.version ?: 0
+                )
+            }
+        )
+    }
 )
 
 private fun String?.toJsonObject(): JsonObject = runCatching {

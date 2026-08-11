@@ -236,6 +236,7 @@ data class ChannelImageSlot(
     val width: Int,
     val height: Int,
     val channelUrl: String,
+    val version: Int? = null,
     val isUploading: Boolean = false,
     val fileInfo: FileInfoDTO? = null
 )

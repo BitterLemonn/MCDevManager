@@ -6,7 +6,9 @@ import com.lemon.mcdevmanagermp.data.common.ResponseData
 import com.lemon.mcdevmanagermp.data.consts.CookiesExpiredException
 import com.lemon.mcdevmanagermp.data.consts.LoginException
 import com.lemon.mcdevmanagermp.data.consts.NETEASE_USER_COOKIE
+import com.lemon.mcdevmanagermp.data.consts.NeteaseLoginException
 import com.lemon.mcdevmanagermp.data.consts.NetworkException
+import com.lemon.mcdevmanagermp.data.consts.neteaseLoginErrorMessage
 import com.lemon.mcdevmanagermp.data.dto.netease.login.NeteaseLoginResult
 import com.lemon.mcdevmanagermp.data.vo.github.LatestReleaseVO
 import io.ktor.client.network.sockets.ConnectTimeoutException
@@ -62,8 +64,16 @@ object UnifiedExceptionHandler {
     ): NetworkState<String> {
         return try {
             val result = block()
-            val uniData = ResponseData(result.ret.toString(), result.extractData())
-            parseData(uniData, noNeedRefreshCookies = true)
+            if (result.ret == 200 || result.ret == 201) {
+                NetworkState.Success(result.extractData())
+            } else {
+                val message = neteaseLoginErrorMessage(result.ret, result.dt, result.msg)
+                Logger.e("$TAG: 网易登录失败 ret=${result.ret}, dt=${result.dt}")
+                NetworkState.Error(
+                    message,
+                    NeteaseLoginException(result.ret, result.dt, message)
+                )
+            }
         } catch (e: Exception) {
             handleException(e)
         }

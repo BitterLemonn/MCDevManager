@@ -7,13 +7,15 @@ import kotlinx.serialization.Serializable
  */
 enum class WorkItemActionEnum(val label: String) {
     SUBMIT_REVIEW("提交审核"),
+    SUBMIT_SELF_TEST("提交自测"),
     CANCEL_REVIEW("取消审核"),
     PUBLISH("上架"),
     UPDATE("更新"),
     ADJUST_PRICE("调整定价"),
     CANCEL_TEST("取消自测"),
     VIEW_FEEDBACK("查看反馈"),
-    APPOINT_ONLINE("定时上架")
+    APPOINT_ONLINE("定时上架"),
+    DELETE("删除")
 }
 
 /**
@@ -24,7 +26,7 @@ enum class WorkItemActionEnum(val label: String) {
 enum class WorkItemStatusEnum(val label: String, val des: String) {
     ONLINE("已上架", "online"),
     INIT("待提交审核", "init"),
-    PREPARE("系统准备中", "prepare"),
+    PREPARING("系统准备中", "preparing"),
     REVIEWING("审核中", "reviewing"),
     SELF_TEST("自测中", "self_test"),
     SELF_TEST_PREPARE("自测准备中", "self_test_prepare"),
@@ -47,9 +49,14 @@ enum class WorkItemStatusEnum(val label: String, val des: String) {
             add(WorkItemActionEnum.VIEW_FEEDBACK)
         }
 
-        INIT -> listOf(WorkItemActionEnum.SUBMIT_REVIEW, WorkItemActionEnum.UPDATE)
+        INIT -> listOf(
+            WorkItemActionEnum.SUBMIT_REVIEW,
+            WorkItemActionEnum.SUBMIT_SELF_TEST,
+            WorkItemActionEnum.UPDATE,
+            WorkItemActionEnum.DELETE
+        )
         // 系统准备中, 审核中 -> [取消审核]
-        PREPARE, REVIEWING -> listOf(WorkItemActionEnum.CANCEL_REVIEW)
+        PREPARING, REVIEWING -> listOf(WorkItemActionEnum.CANCEL_REVIEW)
         // 审核未通过, 系统下架, 弱下架 -> [更新, 查看反馈]
         REJECTED, SYSTEM_OFFLINE, OFFLINE -> listOf(
             WorkItemActionEnum.UPDATE,
