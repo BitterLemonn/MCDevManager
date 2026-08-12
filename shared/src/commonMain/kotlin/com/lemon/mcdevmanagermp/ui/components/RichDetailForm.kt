@@ -111,7 +111,8 @@ fun RichDetailForm(
     onHtmlChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     syncFromPeHtml: (() -> String?)? = null,
-    showPreviewButton: Boolean = true
+    showPreviewButton: Boolean = true,
+    required: Boolean = false
 ) {
     val colors = LocalAppColors.current
     val richState = rememberRichTextState()
@@ -157,7 +158,8 @@ fun RichDetailForm(
 
     FormSection(
         title = title,
-        modifier = modifier
+        modifier = modifier,
+        required = required
     ) {
         RichTextToolbar(
             richState = richState,

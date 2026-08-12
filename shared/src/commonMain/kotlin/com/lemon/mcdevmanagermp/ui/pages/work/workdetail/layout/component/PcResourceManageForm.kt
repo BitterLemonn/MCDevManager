@@ -1,6 +1,7 @@
 package com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -8,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.ui.components.FormSection
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailAction
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailState
@@ -41,7 +43,8 @@ internal fun PcResourceManageForm(
             )
             DropdownMenu(
                 expanded = typeExpanded,
-                onDismissRequest = { typeExpanded = false }
+                onDismissRequest = { typeExpanded = false },
+                modifier = Modifier.heightIn(max = 320.dp)
             ) {
                 state.pcResourceTypeOptions.forEach { opt ->
                     TagCheckItem(
@@ -70,7 +73,8 @@ internal fun PcResourceManageForm(
             )
             DropdownMenu(
                 expanded = scopeExpanded,
-                onDismissRequest = { scopeExpanded = false }
+                onDismissRequest = { scopeExpanded = false },
+                modifier = Modifier.heightIn(max = 320.dp)
             ) {
                 state.pcAvailableScopeOptions.forEach { opt ->
                     TagCheckItem(
@@ -101,7 +105,8 @@ internal fun PcResourceManageForm(
                 )
                 DropdownMenu(
                     expanded = subTypeExpanded,
-                    onDismissRequest = { subTypeExpanded = false }
+                    onDismissRequest = { subTypeExpanded = false },
+                    modifier = Modifier.heightIn(max = 320.dp)
                 ) {
                     subTypeOptions.forEach { opt ->
                         TagCheckItem(

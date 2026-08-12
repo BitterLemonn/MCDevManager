@@ -1,0 +1,13 @@
+{
+    "mcpServers": {
+        "mcdev": {
+            "type": "stdio",
+            "command": "cmd.exe",
+            "args": [
+                "/d",
+                "/c",
+                "mcpServer\\run-mcp.bat"
+            ]
+        }
+    }
+}

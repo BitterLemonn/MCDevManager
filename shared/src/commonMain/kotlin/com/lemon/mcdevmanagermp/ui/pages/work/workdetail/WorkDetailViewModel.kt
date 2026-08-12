@@ -21,10 +21,12 @@ import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailVideoInfo
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceRequirementData
 import com.lemon.mcdevmanagermp.domain.upload.FileUploadRepository
+import com.lemon.mcdevmanagermp.domain.upload.parseUploadUrl
 import com.lemon.mcdevmanagermp.domain.work.WorkDetailUseCase
 import com.lemon.mcdevmanagermp.platform.validateVideoFile
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
 import com.lemon.mcdevmanagermp.ui.components.ModSelectOption
+import com.lemon.mcdevmanagermp.utils.HtmlParser
 import com.lemon.mcdevmanagermp.utils.Logger
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.mimeType
@@ -51,6 +53,8 @@ import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.put
 import kotlin.time.Clock
 import kotlin.time.Instant
+
+private const val VIDEO_COVER_CHANNEL_ID = 7
 
 class WorkDetailViewModel :
     BaseViewModel<WorkDetailState, WorkDetailAction, WorkDetailEffect>(WorkDetailState()) {
@@ -133,6 +137,7 @@ class WorkDetailViewModel :
             is WorkDetailAction.TogglePePlayPlan -> setState { copy(peAddPlayPlan = action.value) }
             is WorkDetailAction.TogglePeMountCall -> setState { copy(peMountCallEnabled = action.value) }
             is WorkDetailAction.TogglePeAddVersion -> setState { copy(peAddVersion = action.value) }
+            is WorkDetailAction.UpdatePeModVersion -> setState { copy(peModVersion = action.value) }
             is WorkDetailAction.UploadPeZip -> uploadPeZip(action.file)
             WorkDetailAction.RemovePeResource -> clearPeResource()
 
@@ -268,6 +273,7 @@ class WorkDetailViewModel :
                                 peResourceType = d.priType,
                                 peResourceSubType = d.subType,
                                 peResourceModSecondType = d.modSecondType,
+                                peModVersion = d.modVersion,
                                 peRecommendTags = d.labelTypeList,
                                 peAddPlayPlan = d.peIsAddPlayPlan,
                                 peMountCallEnabled = d.mountCallEnabled,
@@ -284,7 +290,11 @@ class WorkDetailViewModel :
                                 // —— 视频 ——
                                 videos = d.videoInfoList.map {
                                     VideoItem(
-                                        cover = it.cover,
+                                        cover = it.cover.ifEmpty {
+                                            d.channel.firstOrNull { channel ->
+                                                channel.channelId == VIDEO_COVER_CHANNEL_ID
+                                            }?.channelUrl.orEmpty()
+                                        },
                                         size = it.size.toLong(),
                                         url = it.url
                                     )
@@ -382,10 +392,12 @@ class WorkDetailViewModel :
                             pePriTypeFileTypes = parsePriTypeFileTypes(consts.subType.pe),
                             peResourceSubTypeOptions = peSubTypes,
                             peModSecondTypeOptions = consts.modSecondType.subTag,
-                            // PE/PC 宣传图位：detail 的 channel 列表 × mc_consts.channel 定义（pe+peMulti / comp+multi）
+                            peModVersionOptions = consts.modVersion,
+                            // PE/PC 宣传图位：按 mc_consts.channel 定义生成全部槽位并回填已有图片
                             peImageSlots = buildChannelSlots(
                                 raw = detail?.channel.orEmpty(),
-                                defs = consts.channel.pe + consts.channel.peMulti,
+                                defs = (consts.channel.pe + consts.channel.peMulti)
+                                    .filterNot { it.id == VIDEO_COVER_CHANNEL_ID },
                                 channelIdOf = { it.channelId },
                                 urlOf = { it.channelUrl }
                             ),
@@ -866,33 +878,22 @@ class WorkDetailViewModel :
         }
     }
 
-    /** detail.channel(× mc_consts.channel 定义) → ChannelImageSlot 列表；defs 找不到 id 的项跳过。 */
+    /** 按 mc_consts.channel 定义生成全部槽位，并回填详情中已有图片。 */
     private fun <T> buildChannelSlots(
         raw: List<T>,
         defs: List<MCConstsChannelData>,
         channelIdOf: (T) -> Int,
         urlOf: (T) -> String
-    ): List<ChannelImageSlot> {
-        if (raw.isEmpty() || defs.isEmpty()) return emptyList()
-        return raw.mapNotNull { item ->
-            val id = channelIdOf(item)
-            val def = defs.firstOrNull { it.id == id } ?: return@mapNotNull null
-            ChannelImageSlot(
-                channelId = id,
-                title = def.title,
-                width = def.width,
-                height = def.height,
-                channelUrl = urlOf(item)
-            )
-        }
-    }
-
-    /** best-effort 解析网易 FP 上传响应（textarea 内 JSON）中的资源地址；结构需实测，用正则取常见字段。 */
-    private fun parseUploadUrl(body: String): String {
-        if (body.isEmpty()) return ""
-        return Regex(""""url"\s*:\s*"([^"]+)"""").find(body)?.groupValues?.get(1)
-            ?: Regex(""""filename"\s*:\s*"([^"]+)"""").find(body)?.groupValues?.get(1)
-            ?: ""
+    ): List<ChannelImageSlot> = defs.distinctBy { it.id }.map { def ->
+        val channel = raw.firstOrNull { channelIdOf(it) == def.id }
+        ChannelImageSlot(
+            channelId = def.id,
+            title = def.title,
+            width = def.width,
+            height = def.height,
+            channelUrl = channel?.let(urlOf).orEmpty(),
+            version = def.version
+        )
     }
 
     // ===== 提交保存（更新） =====
@@ -947,6 +948,18 @@ class WorkDetailViewModel :
             sendEffect(WorkDetailEffect.ShowToast("资源文件上传中"))
             return
         }
+        if (s.peImageSlots.any { it.isUploading }) {
+            sendEffect(WorkDetailEffect.ShowToast("PE 图片上传中"))
+            return
+        }
+        if (s.isUploadingVideo || s.videos.any { it.isUploadingCover }) {
+            sendEffect(WorkDetailEffect.ShowToast("视频上传中"))
+            return
+        }
+        validateWorkDetail(s)?.let {
+            sendEffect(WorkDetailEffect.ShowToast(it))
+            return
+        }
         val detail = s.detail
         if (detail == null) {
             // 新建模式：走 pe/upload 创建接口
@@ -955,10 +968,6 @@ class WorkDetailViewModel :
         }
         if (detail.itemId.isEmpty()) {
             sendEffect(WorkDetailEffect.ShowToast("作品详情未加载"))
-            return
-        }
-        validatePcSyncSelection(s)?.let {
-            sendEffect(WorkDetailEffect.ShowToast(it))
             return
         }
         viewModelScope.launch {
@@ -1098,6 +1107,47 @@ internal fun resolvePcResourceSubType(
     return targetOptions.singleOrNull { it.title == peTitle }?.id ?: 0
 }
 
+internal fun validateWorkDetail(state: WorkDetailState): String? {
+    if (state.itemName.isBlank()) return "请输入资源名称"
+    if (state.tags.none { it.isNotBlank() }) return "请至少添加一个模组标签"
+    if (state.priceType == PriceTypeEnum.UNKNOWN) return "请选择定价类型"
+    when (state.priceType) {
+        PriceTypeEnum.DIAMOND -> if (state.priceRank.type !in 0..6) {
+            return "请选择有效的钻石定价档位"
+        }
+
+        PriceTypeEnum.EMERALD -> if (state.emeraldPrice <= 0) {
+            return "请输入大于 0 的绿宝石价格"
+        }
+
+        else -> Unit
+    }
+    if (HtmlParser.parse(state.peDetail).text.isBlank()) {
+        return "PE 详情至少需要 1 个字符"
+    }
+    if (state.peResourceType <= 0) return "请选择 PE 资源类别"
+
+    val gameplayIds = state.peRecommendTagOptions.gameplayTag.mapTo(mutableSetOf()) { it.id }
+    if (state.peRecommendTags.none { it in gameplayIds }) {
+        return "请至少选择 1 个玩法推荐标签"
+    }
+    val themeIds = state.peRecommendTagOptions.themeTag.mapTo(mutableSetOf()) { it.id }
+    if (state.peRecommendTags.none { it in themeIds }) {
+        return "请至少选择 1 个主题推荐标签"
+    }
+    if (state.peModVersion.isBlank()) return "请选择 modAPI 版本"
+    if (state.peResource == null) return "请上传 PE 资源文件"
+    if (state.peImageSlots.isEmpty()) return "PE 图片位配置尚未加载，请稍后重试"
+    if (state.peImageSlots.any { it.channelUrl.isBlank() }) return "请上传全部 PE 图片"
+    if (
+        state.priceType in setOf(PriceTypeEnum.DIAMOND, PriceTypeEnum.EMERALD) &&
+        state.videos.none { it.url.isNotBlank() }
+    ) {
+        return "付费资源必须上传视频"
+    }
+    return validatePcSyncSelection(state)
+}
+
 internal fun validatePcSyncSelection(state: WorkDetailState): String? {
     if (!state.syncPc) return null
     if (state.pcResourceType <= 0) {
@@ -1123,6 +1173,7 @@ internal fun buildWorkCreatePayload(s: WorkDetailState, isCheckApply: Boolean): 
         priType = s.peResourceType,
         subType = s.peResourceSubType,
         modSecondType = s.peResourceModSecondType,
+        modVersion = s.peModVersion,
         info = s.peDetail,
         updateSummary = s.peUpdateSummary,
         tag = s.tags.map { ResourceDetailTag(name = it) },
@@ -1136,11 +1187,25 @@ internal fun buildWorkCreatePayload(s: WorkDetailState, isCheckApply: Boolean): 
             else -> 0
         },
         res = s.peResource?.fileInfo?.let { info ->
-            listOf(WorkCreateRes(resUrl = info, resName = s.peResource.name))
+            listOf(
+                WorkCreateRes(
+                    resUrl = info,
+                    resName = s.peResource.name,
+                    addVersion = s.peAddVersion
+                )
+            )
         } ?: emptyList(),
         channel = s.peImageSlots.mapNotNull { slot ->
             slot.fileInfo?.let { WorkCreateChannel(channelId = slot.channelId, channelUrl = it) }
         },
+        videoInfoList = s.videos.map { video ->
+            buildJsonObject {
+                put("cover", video.cover)
+                put("size", video.size)
+                put("url", video.url)
+            }
+        },
+        syncPcFlag = s.syncPc,
         dlcInfo = WorkUpdateDlcInfoDTO(
             dlcSwitch = s.isRelatedMod,
             dlcType = when {
@@ -1172,6 +1237,7 @@ internal fun buildUpdatePayload(
     priType = s.peResourceType,
     subType = s.peResourceSubType,
     modSecondType = s.peResourceModSecondType,
+    modVersion = s.peModVersion,
     labelTypeList = s.peRecommendTags,
     peIsAddPlayPlan = s.peAddPlayPlan,
     mountCallEnabled = s.peMountCallEnabled,
@@ -1268,7 +1334,9 @@ private fun buildResList(
 ): List<ResourceDetailRes> {
     if (pe == null) return origin
     origin.firstOrNull()?.let {
-        if (pe.name == it.resName && pe.url == it.resUrl) return origin
+        if (pe.name == it.resName && pe.url == it.resUrl) {
+            return listOf(it.copy(addVersion = addVersion)) + origin.drop(1)
+        }
     }
     return listOf(
         ResourceDetailRes(

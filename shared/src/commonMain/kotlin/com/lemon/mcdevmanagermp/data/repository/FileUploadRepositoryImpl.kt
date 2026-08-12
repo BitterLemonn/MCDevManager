@@ -35,7 +35,7 @@ class FileUploadRepositoryImpl : FileUploadRepository {
 
                 is NetworkState.Error -> return NetworkState.Error(tokenResult.msg, tokenResult.e)
             }
-            Logger.d("$TAG: 获取 token 成功, 准备上传文件: $fileName")
+            Logger.d("$TAG: 获取 token 成功, 准备上传文件")
 
             // 直接通过 Ktor HttpClient 上传，不经过 Ktorfit
             val uploadResponse = UploadApi.uploadFile(
@@ -48,11 +48,11 @@ class FileUploadRepositoryImpl : FileUploadRepository {
             val jsonText = Regex("<textarea>(.*?)</textarea>")
                 .find(responseText)?.groupValues?.get(1)?.trim()
                 ?: run {
-                    Logger.e("$TAG: 解析上传响应失败: $uploadResponse")
+                    Logger.e("$TAG: 解析上传响应失败")
                     return NetworkState.Error("解析上传响应失败")
                 }
             val sign = uploadResponse.sign ?: return NetworkState.Error("上传失败，文件签名为空")
-            Logger.d("$TAG: 上传响应: $responseText, sign: $sign")
+            Logger.d("$TAG: 文件上传成功")
 
             NetworkState.Success(
                 FileInfoDTO(

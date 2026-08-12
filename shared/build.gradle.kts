@@ -61,9 +61,11 @@ kotlin {
             isStatic = true
         }
     }
-    
-    jvm()
-    
+
+    jvm {
+        compilerOptions.jvmTarget = JvmTarget.JVM_11
+    }
+
     android {
        namespace = "com.lemon.mcdevmanagermp.shared"
        compileSdk = libs.versions.android.compileSdk.get().toInt()
