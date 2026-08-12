@@ -90,7 +90,8 @@ internal fun WorkDetailInfoSections(
             html = state.detail?.info ?: "",
             echoKey = state.detail?.itemId,
             onHtmlChange = { onAction(WorkDetailAction.UpdatePeDetail(it)) },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            required = true
         )
         PeUpdateSummaryForm(
             state = state,
@@ -152,7 +153,8 @@ internal fun WorkDetailMediaSections(
                 onAction(WorkDetailAction.SelectPeChannelImage(channel, file, metadata))
             },
             onRemove = { onAction(WorkDetailAction.RemovePeChannelImage(it)) },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            required = true
         )
         VideoUploadForm(
             state = state,
