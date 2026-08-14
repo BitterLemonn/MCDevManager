@@ -73,9 +73,10 @@ internal fun ChannelImageForm(
     slots: List<ChannelImageSlot>,
     onSelect: (channelId: Int, file: PlatformFile, mimeType: String) -> Unit,
     onRemove: (channelId: Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    required: Boolean = false
 ) {
-    FormSection(title = title, modifier = modifier) {
+    FormSection(title = title, modifier = modifier, required = required) {
         if (slots.isEmpty()) {
             Text(
                 text = "暂无图片位",
@@ -84,7 +85,12 @@ internal fun ChannelImageForm(
             )
         } else {
             slots.forEach { slot ->
-                ChannelImagePicker(slot = slot, onSelect = onSelect, onRemove = onRemove)
+                ChannelImagePicker(
+                    slot = slot,
+                    onSelect = onSelect,
+                    onRemove = onRemove,
+                    required = required
+                )
             }
         }
     }
@@ -94,7 +100,8 @@ internal fun ChannelImageForm(
 private fun ChannelImagePicker(
     slot: ChannelImageSlot,
     onSelect: (channelId: Int, file: PlatformFile, mimeType: String) -> Unit,
-    onRemove: (channelId: Int) -> Unit
+    onRemove: (channelId: Int) -> Unit,
+    required: Boolean
 ) {
     val colors = LocalAppColors.current
     val scope = rememberCoroutineScope()
@@ -130,7 +137,10 @@ private fun ChannelImagePicker(
 
     val hasImage = slot.channelUrl.isNotEmpty()
     Column(modifier = Modifier.fillMaxWidth()) {
-        FieldLabel(text = slot.title.ifEmpty { "图片 ${slot.channelId}" })
+        FieldLabel(
+            text = slot.title.ifEmpty { "图片 ${slot.channelId}" },
+            required = required
+        )
         Spacer(Modifier.height(6.dp))
         Box(
             modifier = Modifier

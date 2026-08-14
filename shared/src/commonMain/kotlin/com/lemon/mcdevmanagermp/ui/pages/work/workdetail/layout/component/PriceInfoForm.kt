@@ -32,9 +32,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceRankEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceTypeEnum
@@ -112,7 +115,8 @@ internal fun PriceInfoForm(
                 label = "定价档位",
                 options = DIAMOND_RANK_OPTIONS,
                 selected = state.priceRank.takeIf { it.type in 0..6 },
-                onSelect = { onAction(WorkDetailAction.ChangePriceRank(it)) }
+                onSelect = { onAction(WorkDetailAction.ChangePriceRank(it)) },
+                required = true
             )
         }
 
@@ -120,7 +124,8 @@ internal fun PriceInfoForm(
         when {
             isDiamond -> ReadOnlyField(
                 label = "定价",
-                value = "${state.priceRank.diamondPrice} 钻石"
+                value = "${state.priceRank.diamondPrice} 钻石",
+                required = true
             )
 
             isEmerald -> OutlinedTextField(
@@ -131,14 +136,19 @@ internal fun PriceInfoForm(
                 },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                label = { Text("定价") },
+                label = {
+                    Text(buildAnnotatedString {
+                        withStyle(SpanStyle(color = colors.error)) { append("* ") }
+                        append("定价")
+                    })
+                },
                 suffix = { Text("绿宝石") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
 
-            isFree -> ReadOnlyField(label = "定价", value = "免费")
+            isFree -> ReadOnlyField(label = "定价", value = "免费", required = true)
 
-            else -> ReadOnlyField(label = "定价", value = "—")
+            else -> ReadOnlyField(label = "定价", value = "—", required = true)
         }
 
         // 折扣（仅钻石二档及以上）

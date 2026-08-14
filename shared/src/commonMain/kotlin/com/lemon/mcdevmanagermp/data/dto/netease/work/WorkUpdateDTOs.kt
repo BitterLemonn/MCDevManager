@@ -3,6 +3,7 @@ package com.lemon.mcdevmanagermp.data.dto.netease.work
 import com.lemon.mcdevmanagermp.data.common.JSONConverter
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailChannel
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailRes
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailSyncChannel
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailTag
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailVideoInfo
@@ -14,8 +15,11 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.put
 
 @Serializable
 data class WorkUpdateDTO(
@@ -102,6 +106,7 @@ data class WorkUpdateDTO(
     @SerialName("activity_only") val activityOnly: Boolean = false,
     val searchable: Boolean = false,
     @SerialName("is_original") val isOriginal: Boolean = true,
+    @SerialName("corp_proof_image") val corpProofImage: String? = null,
     @SerialName("anti_cheat_enable") val antiCheatEnable: Int = 0,
     @SerialName("version_compatible_enable") val versionCompatibleEnable: Boolean = false,
     @SerialName("mount_call_enabled") val mountCallEnabled: Boolean = false,
@@ -151,8 +156,8 @@ data class WorkUpdateDTO(
     @SerialName("is_official_item") val isOfficialItem: Boolean = false,
     @SerialName("openbeta_time") val openbetaTime: JsonElement = JsonNull,
     @SerialName("commercial_time") val commercialTime: JsonElement = JsonNull,
-    val res: List<ResourceDetailRes> = emptyList(),
-    val channel: List<ResourceDetailChannel> = emptyList(),
+    val res: List<JsonObject> = emptyList(),
+    val channel: List<JsonObject> = emptyList(),
     @SerialName("video_info_list") val videoInfoList: List<ResourceDetailVideoInfo> = emptyList(),
     @SerialName("dlc_info") val dlcInfo: WorkUpdateDlcInfoDTO = WorkUpdateDlcInfoDTO(),
     @SerialName("guide_list") val guideList: List<JsonElement> = emptyList(),
@@ -190,7 +195,7 @@ data class WorkUpdateSyncItemInfoDTO(
 @Serializable
 data class WorkUpdateSyncChannelDTO(
     @SerialName("channel_id") val channelId: Int = 0,
-    @SerialName("channel_url") val channelUrl: String = "",
+    @SerialName("channel_url") val channelUrl: JsonElement = JsonPrimitive(""),
     @SerialName("channel_required") val channelRequired: Boolean = false,
     val version: Int = 0
 )
@@ -274,6 +279,7 @@ fun ResourceDetailVO.toWorkUpdateDTO(isCheckApply: Boolean): WorkUpdateDTO = Wor
     activityOnly = activityOnly,
     searchable = searchable,
     isOriginal = isOriginal,
+    corpProofImage = corpProofImage.takeIf { it.isNotBlank() },
     antiCheatEnable = antiCheatEnable,
     versionCompatibleEnable = versionCompatibleEnable,
     mountCallEnabled = mountCallEnabled,
@@ -320,8 +326,8 @@ fun ResourceDetailVO.toWorkUpdateDTO(isCheckApply: Boolean): WorkUpdateDTO = Wor
     collectionId = collectionId.ifEmpty { "0" },
     collectionName = collectionName,
     isOfficialItem = isOfficialItem,
-    res = res,
-    channel = channel,
+    res = res.map { it.toUpdateResJson() },
+    channel = channel.map { it.toUpdateChannelJson() },
     videoInfoList = videoInfoList,
     dlcInfo = WorkUpdateDlcInfoDTO(
         dlcSwitch = dlcInfo.dlcSwitch,
@@ -349,7 +355,7 @@ fun ResourceDetailVO.toWorkUpdateDTO(isCheckApply: Boolean): WorkUpdateDTO = Wor
             channel = it.channel.map { channel ->
                 WorkUpdateSyncChannelDTO(
                     channel.channelId,
-                    channel.channelUrl,
+                    channel.toUpdateChannelUrlJson(),
                     false,
                     channel.version ?: 0
                 )
@@ -367,3 +373,27 @@ private fun String?.toJsonArray(): JsonArray = runCatching {
 }.getOrElse {
     if (this.isNullOrEmpty()) JsonArray(emptyList()) else JsonArray(listOf(JsonPrimitive(this)))
 }
+
+/**
+ * res 项 → update 请求体 JSON：
+ * - fileInfo 非空（新上传）：res_url 为 FileInfoDTO 回执对象（与 create 的 WorkCreateRes 对齐，后端据此识别资源）。
+ * - fileInfo 为空（保持原资源）：原样输出完整 ResourceDetailRes（含 cdn_info，后端据其保持原资源）。
+ * ponytail: res_url 读(占位符)/写(回执)不对称，用 fileInfo 标记区分，避免引入两套 res 模型。
+ */
+private fun ResourceDetailRes.toUpdateResJson(): JsonObject =
+    if (fileInfo != null) buildJsonObject {
+        put("res_url", JSONConverter.encodeToJsonElement(fileInfo))
+        put("res_name", resName)
+        put("add_version", addVersion)
+        put("mc_version", JSONConverter.encodeToJsonElement(mcVersion))
+    } else JSONConverter.encodeToJsonElement(this).jsonObject
+
+private fun ResourceDetailChannel.toUpdateChannelJson(): JsonObject =
+    if (fileInfo != null) buildJsonObject {
+        put("channel_id", channelId)
+        put("channel_url", JSONConverter.encodeToJsonElement(fileInfo))
+        put("version", version)
+    } else JSONConverter.encodeToJsonElement(this).jsonObject
+
+private fun ResourceDetailSyncChannel.toUpdateChannelUrlJson(): JsonElement =
+    fileInfo?.let { JSONConverter.encodeToJsonElement(it) } ?: JsonPrimitive(channelUrl)

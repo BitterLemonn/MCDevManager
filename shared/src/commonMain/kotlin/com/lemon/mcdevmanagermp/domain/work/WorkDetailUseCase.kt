@@ -58,10 +58,26 @@ class WorkDetailUseCase(
      */
     suspend fun updateWork(
         item: ResourceDetailVO,
-        isCheckApply: Boolean
+        isCheckApply: Boolean,
+        mcConsts: MCConstsVO? = null,
     ): NetworkState<NoNeedData> {
         if (item.itemId.isEmpty()) return NetworkState.Error("作品 ID 为空")
-        return resourceRepository.updateItem(item.itemId, item.toWorkUpdateDTO(isCheckApply))
+        val normalized = if (item.hasPcImages()) {
+            val consts = mcConsts ?: when (val result = resourceRepository.getMCConsts()) {
+                is NetworkState.Success -> result.data
+                    ?: return NetworkState.Error("PC 图片位配置为空")
+
+                is NetworkState.Error -> return NetworkState.Error(result.msg, result.e)
+            }
+            if (consts.channel.comp.isEmpty()) return NetworkState.Error("PC 图片位配置为空")
+            item.withCurrentPcImageChannels(consts)
+        } else {
+            item
+        }
+        if (normalized.hasUnversionedPcImages()) {
+            return NetworkState.Error("无法匹配 PC 图片位版本")
+        }
+        return resourceRepository.updateItem(item.itemId, normalized.toWorkUpdateDTO(isCheckApply))
     }
 
     /**
@@ -76,4 +92,22 @@ class WorkDetailUseCase(
     suspend fun createWork(body: WorkCreateDTO): NetworkState<NoNeedData> {
         return resourceRepository.createItem(body)
     }
+}
+
+internal fun ResourceDetailVO.hasUnversionedPcImages(): Boolean =
+    syncPcFlag && syncItemInfo.channel.any { (it.version ?: 0) <= 0 }
+
+private fun ResourceDetailVO.hasPcImages(): Boolean =
+    syncPcFlag && syncItemInfo.channel.isNotEmpty()
+
+internal fun ResourceDetailVO.withCurrentPcImageChannels(consts: MCConstsVO): ResourceDetailVO {
+    val versions = consts.channel.comp.associate { it.id to it.version }
+    return copy(
+        syncItemInfo = syncItemInfo.copy(
+            channel = syncItemInfo.channel.mapNotNull { image ->
+                if (image.fileInfo == null && image.channelUrl.isBlank()) return@mapNotNull null
+                versions[image.channelId]?.let { image.copy(version = it) }
+            }
+        )
+    )
 }
