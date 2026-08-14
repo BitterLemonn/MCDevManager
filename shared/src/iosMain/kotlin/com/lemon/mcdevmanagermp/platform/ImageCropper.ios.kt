@@ -9,10 +9,8 @@ import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.convert
+import kotlinx.cinterop.useContents
 import kotlinx.cinterop.usePinned
-import platform.CoreGraphics.CGImageCreateWithImageInRect
-import platform.CoreGraphics.CGImageGetHeight
-import platform.CoreGraphics.CGImageGetWidth
 import platform.CoreGraphics.CGRectMake
 import platform.CoreGraphics.CGSizeMake
 import platform.Foundation.NSData
@@ -28,17 +26,15 @@ import platform.UIKit.UIGraphicsGetImageFromCurrentImageContext
 import platform.UIKit.UIImage
 import platform.UIKit.UIImageJPEGRepresentation
 import platform.UIKit.UIImagePNGRepresentation
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 actual suspend fun imageSize(file: PlatformFile): IntSize? {
     val bytes = runCatching { file.readBytes() }.getOrNull() ?: return null
     return bytes.usePinned { pinned ->
         val data = NSData.create(pinned.addressOf(0), bytes.size.convert())
-        val image = UIImage(data = data) ?: return@usePinned null
-        val cg = image.CGImage ?: return@usePinned null
-        val w = CGImageGetWidth(cg)
-        val h = CGImageGetHeight(cg)
-        if (w > 0u && h > 0u) IntSize(w.toInt(), h.toInt()) else null
+        val image = UIImage(data = data)
+        image.pixelSize()
     }
 }
 
@@ -53,41 +49,35 @@ actual suspend fun cropImageToRect(
     val isPng = file.name.substringAfterLast('.', "").lowercase() == "png"
     return bytes.usePinned { pinned ->
         val data = NSData.create(pinned.addressOf(0), bytes.size.convert())
-        val srcImage = UIImage(data = data) ?: return@usePinned null
-        val cg = srcImage.CGImage ?: return@usePinned null
-        val origW = CGImageGetWidth(cg)
-        val origH = CGImageGetHeight(cg)
-        if (origW <= 0u || origH <= 0u) return@usePinned null
+        val srcImage = UIImage(data = data)
+        val originalSize = srcImage.pixelSize() ?: return@usePinned null
+        val origW = originalSize.width
+        val origH = originalSize.height
+        if (targetWidth <= 0 || targetHeight <= 0) return@usePinned null
 
         // 钳制 srcRect 到原图边界
-        val l = srcRect.left.coerceIn(0, (origW - 1.toUInt()).toInt()).toUInt()
-        val t = srcRect.top.coerceIn(0, (origH - 1.toUInt()).toInt())
-        val r = srcRect.right.coerceIn((l + 1.toUInt()).toInt(), origW.toInt())
-        val b = srcRect.bottom.coerceIn(t + 1, origH.toInt())
-        // CG 坐标系原点在左下，srcRect 是左上原点 → Y 需翻转
-        val croppedCG = CGImageCreateWithImageInRect(
-            image = cg,
-            rect = CGRectMake(
-                l.toDouble(),
-                (origH - b.toUInt()).toDouble(),
-                (r.toUInt() - l).toDouble(),
-                (b - t).toDouble()
-            )
-        ) ?: return@usePinned null
+        val l = srcRect.left.coerceIn(0, origW - 1)
+        val t = srcRect.top.coerceIn(0, origH - 1)
+        val r = srcRect.right.coerceIn(l + 1, origW)
+        val b = srcRect.bottom.coerceIn(t + 1, origH)
+        val cropWidth = r - l
+        val cropHeight = b - t
+        val scaleX = targetWidth.toDouble() / cropWidth
+        val scaleY = targetHeight.toDouble() / cropHeight
 
-        // 缩放到精确 target×target（单参数 imageWithCGImage 默认 scale=1、orientation=up）
-        val croppedImage = UIImage.imageWithCGImage(croppedCG)
+        // UIKit 使用左上原点。把整张图平移、缩放后绘制到输出上下文，
+        // 上下文边界自然裁掉 srcRect 之外的区域，同时避免暴露 opaque CGImage 类型。
         UIGraphicsBeginImageContextWithOptions(
             size = CGSizeMake(targetWidth.toDouble(), targetHeight.toDouble()),
             opaque = !isPng,
             scale = 1.0
         )
-        croppedImage.drawInRect(
+        srcImage.drawInRect(
             CGRectMake(
-                0.0,
-                0.0,
-                targetWidth.toDouble(),
-                targetHeight.toDouble()
+                -l * scaleX,
+                -t * scaleY,
+                origW * scaleX,
+                origH * scaleY
             )
         )
         val scaled = UIGraphicsGetImageFromCurrentImageContext()
@@ -108,5 +98,23 @@ actual suspend fun cropImageToRect(
             fileName = tmpName,
             mimeType = if (isPng) "image/png" else "image/jpeg"
         )
+    }
+}
+
+@OptIn(ExperimentalForeignApi::class)
+private fun UIImage.pixelSize(): IntSize? {
+    val imageScale = scale
+    return size.useContents {
+        val pixelWidth = width * imageScale
+        val pixelHeight = height * imageScale
+        if (
+            !pixelWidth.isFinite() || !pixelHeight.isFinite() ||
+            pixelWidth <= 0.0 || pixelHeight <= 0.0 ||
+            pixelWidth > Int.MAX_VALUE || pixelHeight > Int.MAX_VALUE
+        ) {
+            null
+        } else {
+            IntSize(pixelWidth.roundToInt(), pixelHeight.roundToInt())
+        }
     }
 }

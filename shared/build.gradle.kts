@@ -15,10 +15,6 @@ room {
     schemaDirectory("$projectDir/schemas")
 }
 
-ktorfit {
-    compilerPluginVersion.set("2.3.3")
-}
-
 val generateVersionFile by tasks.registering {
     val version = libs.versions.versions.name.get()
     val outputDir = layout.buildDirectory.dir("generated/version/kotlin")
@@ -92,7 +88,7 @@ kotlin {
             implementation(libs.compose.ui)
             implementation(libs.compose.components.resources)
             implementation(libs.compose.uiToolingPreview)
-            implementation(libs.androidx.lifecycle.viewmodelCompose)
+            api(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
             // material icons
             implementation(libs.compose.material.icons.extended)
