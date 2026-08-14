@@ -1214,7 +1214,7 @@ internal fun buildUpdatePayload(
     modSecondType = s.peResourceModSecondType,
     modVersion = s.peModVersion,
     labelTypeList = s.peRecommendTags,
-    peIsAddPlayPlan = s.peAddPlayPlan,
+    peIsAddPlayPlan = false,
     mountCallEnabled = s.peMountCallEnabled,
     weakOffline = s.peWeakOffline,
     weakOfflineReason = s.peWeakOfflineReason,

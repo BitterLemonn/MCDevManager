@@ -134,6 +134,7 @@ data class WorkCreateDTO(
     @SerialName("openbeta_time") val openbetaTime: JsonElement = JsonNull,
     @SerialName("commercial_time") val commercialTime: JsonElement = JsonNull,
     @SerialName("pe_is_add_play_plan") val peIsAddPlayPlan: Boolean = false,
+    @SerialName("play_plan_expire_month") val playPlanExpireMonth: Int? = null,
     @SerialName("mod_second_type") val modSecondType: Int = 0,
     val res: List<WorkCreateRes> = emptyList(),
     val channel: List<WorkCreateChannel> = emptyList(),
