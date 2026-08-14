@@ -25,7 +25,11 @@ internal fun ConfirmActionDialog(
         text = {
             val name = item.itemName.ifEmpty { "未命名" }
             Text(
-                text = "即将对作品《$name》执行「${action.label}」操作，是否继续？",
+                text = if (action == WorkItemActionEnum.DELETE) {
+                    "删除后不可撤销，确认删除作品《$name》？"
+                } else {
+                    "即将对作品《$name》执行「${action.label}」操作，是否继续？"
+                },
                 style = MaterialTheme.typography.bodyMedium
             )
         },

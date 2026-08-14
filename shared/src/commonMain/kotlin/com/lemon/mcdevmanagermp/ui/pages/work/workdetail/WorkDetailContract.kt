@@ -65,11 +65,13 @@ data class WorkDetailState(
     val peAddPlayPlan: Boolean = false,               // 是否加入模组畅玩计划（peIsAddPlayPlan）
     val peMountCallEnabled: Boolean = false,          // 是否启用坐骑召唤功能（mountCallEnabled）
     val peAddVersion: Boolean = false,                // 本次上传是否提升版本（res.addVersion）
+    val peModVersion: String = "",                    // modAPI 版本（modVersion）
     val peResource: PeResourceFile? = null,              // PE 资源文件（单文件，res 首项或上传结果）
     val peResourceTypeOptions: List<MCConstsCommonTitleData> = emptyList(), // 资源类别选项（mc_consts.pri_type.pe）
     val pePriTypeFileTypes: Map<Int, Set<String>> = emptyMap(), // pri_type id → 接受的 file_type 集合（mc_consts.sub_type.pe；空集=该类别未声明 file_type，视为不限）
     val peResourceSubTypeOptions: Map<Int, List<MCConstsCommonTitleData>> = emptyMap(), // pri_type id → 具体类别选项（mc_consts.sub_type.pe）
     val peModSecondTypeOptions: List<MCConstsModSecondTypeData> = emptyList(), // 次级分类选项（mc_consts.mod_second_type；仅玩法组件 add_ons 用）
+    val peModVersionOptions: List<String> = emptyList(), // modAPI 版本选项（mc_consts.mod_version）
     val peRecommendTagOptions: MCConstsRecommendTagData = MCConstsRecommendTagData(), // 推荐标签选项（玩法 + 主题两组）
     val peRecommendTagLimit: Int = 0,                   // 推荐标签合计上限（mc_consts.item_tag_limit；0=未加载/不限制）
     val isUploadingPeZip: Boolean = false,            // zip 上传中
@@ -142,6 +144,7 @@ sealed interface WorkDetailAction : IUiAction {
     data class TogglePePlayPlan(val value: Boolean) : WorkDetailAction
     data class TogglePeMountCall(val value: Boolean) : WorkDetailAction
     data class TogglePeAddVersion(val value: Boolean) : WorkDetailAction
+    data class UpdatePeModVersion(val value: String) : WorkDetailAction
     data class UploadPeZip(val file: PlatformFile) : WorkDetailAction
     data object RemovePeResource : WorkDetailAction
 
@@ -236,6 +239,7 @@ data class ChannelImageSlot(
     val width: Int,
     val height: Int,
     val channelUrl: String,
+    val version: Int? = null,
     val isUploading: Boolean = false,
     val fileInfo: FileInfoDTO? = null
 )

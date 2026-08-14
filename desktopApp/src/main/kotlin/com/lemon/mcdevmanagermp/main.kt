@@ -62,6 +62,7 @@ private fun loadAppIcon(): ImageBitmap? {
 }
 
 fun main() {
+    System.setProperty("java.net.useSystemProxies", "true")
     CrashHandler.init()
 
     application {

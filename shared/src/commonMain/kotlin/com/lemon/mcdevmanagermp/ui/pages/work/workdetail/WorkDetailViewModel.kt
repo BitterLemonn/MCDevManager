@@ -20,8 +20,13 @@ import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailTag
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailVideoInfo
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceRequirementData
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.VIDEO_COVER_CHANNEL_ID
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.requiredPeImageChannels
 import com.lemon.mcdevmanagermp.domain.upload.FileUploadRepository
+import com.lemon.mcdevmanagermp.domain.upload.parseUploadUrl
 import com.lemon.mcdevmanagermp.domain.work.WorkDetailUseCase
+import com.lemon.mcdevmanagermp.domain.work.WorkSaveValidationInput
+import com.lemon.mcdevmanagermp.domain.work.validateWorkSave
 import com.lemon.mcdevmanagermp.platform.validateVideoFile
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
 import com.lemon.mcdevmanagermp.ui.components.ModSelectOption
@@ -75,7 +80,31 @@ class WorkDetailViewModel :
             is WorkDetailAction.ToggleRelatedMod -> setState { copy(isRelatedMod = action.value) }
             is WorkDetailAction.ToggleRelatedPackType -> setState { copy(relatedIsMaster = action.value) }
             is WorkDetailAction.UpdateRelatedSearch -> setState { copy(relatedSearchKey = action.value) }
-            is WorkDetailAction.ToggleSyncPc -> setState { copy(syncPc = action.value) }
+            is WorkDetailAction.ToggleSyncPc -> setState {
+                val originallySynced = detail?.syncPcFlag == true
+                val resolvedType = resolvePcResourceType(
+                    syncPc = action.value,
+                    originallySynced = originallySynced,
+                    currentPcResourceType = pcResourceType,
+                    peResourceType = peResourceType,
+                    peOptions = peResourceTypeOptions,
+                    pcOptions = pcResourceTypeOptions
+                )
+                copy(
+                    syncPc = action.value,
+                    pcResourceType = resolvedType,
+                    pcResourceSubType = resolvePcResourceSubType(
+                        syncPc = action.value,
+                        originallySynced = originallySynced,
+                        pcResourceType = resolvedType,
+                        currentPcResourceSubType = pcResourceSubType,
+                        peResourceType = peResourceType,
+                        peResourceSubType = peResourceSubType,
+                        peOptions = peResourceSubTypeOptions,
+                        pcOptions = pcResourceSubTypeOptions
+                    )
+                )
+            }
 
             // —— 授权信息 ——
             is WorkDetailAction.SelectCorpProof -> setState { copy(corpProofFile = action.file) }
@@ -109,6 +138,7 @@ class WorkDetailViewModel :
             is WorkDetailAction.TogglePePlayPlan -> setState { copy(peAddPlayPlan = action.value) }
             is WorkDetailAction.TogglePeMountCall -> setState { copy(peMountCallEnabled = action.value) }
             is WorkDetailAction.TogglePeAddVersion -> setState { copy(peAddVersion = action.value) }
+            is WorkDetailAction.UpdatePeModVersion -> setState { copy(peModVersion = action.value) }
             is WorkDetailAction.UploadPeZip -> uploadPeZip(action.file)
             WorkDetailAction.RemovePeResource -> clearPeResource()
 
@@ -237,13 +267,14 @@ class WorkDetailViewModel :
                                 // —— PC 详细信息 ——
                                 pcDetail = d.syncItemInfo.info,
                                 // —— PC 资源管理 ——
-                                pcResourceType = d.syncItemInfo.priType,
+                                pcResourceType = if (d.syncPcFlag) d.syncItemInfo.priType else 0,
                                 pcAvailableScope = d.syncItemInfo.availableScope,
-                                pcResourceSubType = d.syncItemInfo.subType,
+                                pcResourceSubType = if (d.syncPcFlag) d.syncItemInfo.subType else 0,
                                 // —— PE 资源管理 ——
                                 peResourceType = d.priType,
                                 peResourceSubType = d.subType,
                                 peResourceModSecondType = d.modSecondType,
+                                peModVersion = d.modVersion,
                                 peRecommendTags = d.labelTypeList,
                                 peAddPlayPlan = d.peIsAddPlayPlan,
                                 peMountCallEnabled = d.mountCallEnabled,
@@ -260,7 +291,11 @@ class WorkDetailViewModel :
                                 // —— 视频 ——
                                 videos = d.videoInfoList.map {
                                     VideoItem(
-                                        cover = it.cover,
+                                        cover = it.cover.ifEmpty {
+                                            d.channel.firstOrNull { channel ->
+                                                channel.channelId == VIDEO_COVER_CHANNEL_ID
+                                            }?.channelUrl.orEmpty()
+                                        },
                                         size = it.size.toLong(),
                                         url = it.url
                                     )
@@ -318,34 +353,57 @@ class WorkDetailViewModel :
             when (val result = workDetailUseCase.getMCConsts()) {
                 is NetworkState.Success -> result.data?.let { consts ->
                     val options = consts.tag.comp
+                    val pcTypes = consts.priType.comp
+                    val peTypes = consts.priType.pe
+                    val pcSubTypes = parsePriTypeSubTypeOptions(consts.subType.pc)
+                    val peSubTypes = parsePriTypeSubTypeOptions(consts.subType.pe)
                     // 回显 PC 模组标签：syncItemInfo.tag(List<Int> id) 用 options 映射为 title
                     val tagTitles = (state.value.detail?.syncItemInfo?.tag ?: emptyList())
                         .mapNotNull { id -> options.firstOrNull { it.id == id }?.title }
                     setState {
+                        val originallySynced = detail?.syncPcFlag == true
+                        val resolvedType = resolvePcResourceType(
+                            syncPc = syncPc,
+                            originallySynced = originallySynced,
+                            currentPcResourceType = pcResourceType,
+                            peResourceType = peResourceType,
+                            peOptions = peTypes,
+                            pcOptions = pcTypes
+                        )
                         copy(
                             pcTagOptions = options,
                             pcTags = tagTitles,
-                            pcResourceTypeOptions = consts.priType.comp,
+                            pcResourceTypeOptions = pcTypes,
                             pcAvailableScopeOptions = consts.availableScope,
-                            pcResourceSubTypeOptions = parsePriTypeSubTypeOptions(consts.subType.pc),
-                            peResourceTypeOptions = consts.priType.pe,
+                            pcResourceSubTypeOptions = pcSubTypes,
+                            pcResourceType = resolvedType,
+                            pcResourceSubType = resolvePcResourceSubType(
+                                syncPc = syncPc,
+                                originallySynced = originallySynced,
+                                pcResourceType = resolvedType,
+                                currentPcResourceSubType = pcResourceSubType,
+                                peResourceType = peResourceType,
+                                peResourceSubType = peResourceSubType,
+                                peOptions = peSubTypes,
+                                pcOptions = pcSubTypes
+                            ),
+                            peResourceTypeOptions = peTypes,
                             peRecommendTagOptions = consts.labelType,
                             peRecommendTagLimit = consts.itemTagLimit,
                             pePriTypeFileTypes = parsePriTypeFileTypes(consts.subType.pe),
-                            peResourceSubTypeOptions = parsePriTypeSubTypeOptions(consts.subType.pe),
+                            peResourceSubTypeOptions = peSubTypes,
                             peModSecondTypeOptions = consts.modSecondType.subTag,
-                            // PE/PC 宣传图位：detail 的 channel 列表 × mc_consts.channel 定义（pe+peMulti / comp+multi）
+                            peModVersionOptions = consts.modVersion,
+                            // PE/PC 宣传图位：按 mc_consts.channel 定义生成全部槽位并回填已有图片
                             peImageSlots = buildChannelSlots(
                                 raw = detail?.channel.orEmpty(),
-                                defs = consts.channel.pe + consts.channel.peMulti,
+                                defs = consts.channel.requiredPeImageChannels(),
                                 channelIdOf = { it.channelId },
                                 urlOf = { it.channelUrl }
                             ),
-                            pcImageSlots = buildChannelSlots(
+                            pcImageSlots = buildPcChannelSlots(
                                 raw = detail?.syncItemInfo?.channel.orEmpty(),
-                                defs = consts.channel.comp + consts.channel.multi,
-                                channelIdOf = { it.channelId },
-                                urlOf = { it.channelUrl }
+                                defs = consts.channel.comp
                             )
                         )
                     }
@@ -620,19 +678,39 @@ class WorkDetailViewModel :
                 is NetworkState.Success -> {
                     val info = result.data
                     val url = parseUploadUrl(info?.body.orEmpty())
-                    setState {
-                        copy(
-                            isUploadingPeZip = false,
-                            peResource = PeResourceFile(
-                                name = file.name,
-                                url = url,
-                                addVersion = peAddVersion,
-                                fileInfo = info
-                            )
-                        )
-                    }
+                    val resource = PeResourceFile(
+                        name = file.name,
+                        url = url,
+                        addVersion = state.value.peAddVersion,
+                        fileInfo = info
+                    )
+                    setState { copy(peResource = resource) }
                     if (url.isEmpty()) {
+                        setState { copy(isUploadingPeZip = false) }
                         sendEffect(WorkDetailEffect.ShowToast("上传成功但未能解析资源地址"))
+                        return@launch
+                    }
+
+                    val detail = state.value.detail
+                    if (detail == null) {
+                        setState { copy(isUploadingPeZip = false) }
+                        return@launch
+                    }
+                    val updatedDetail = withUpdatedPeResource(detail, resource, resource.addVersion)
+                    when (val update =
+                        workDetailUseCase.updateWork(updatedDetail, isCheckApply = false)) {
+                        is NetworkState.Success -> setState {
+                            copy(detail = updatedDetail, isUploadingPeZip = false)
+                        }
+
+                        is NetworkState.Error -> {
+                            setState { copy(isUploadingPeZip = false) }
+                            handleError(
+                                update,
+                                onNeedReLogin = { WorkDetailEffect.NeedReLogin },
+                                onShowToast = { WorkDetailEffect.ShowToast(it) }
+                            )
+                        }
                     }
                 }
 
@@ -800,33 +878,22 @@ class WorkDetailViewModel :
         }
     }
 
-    /** detail.channel(× mc_consts.channel 定义) → ChannelImageSlot 列表；defs 找不到 id 的项跳过。 */
+    /** 按 mc_consts.channel 定义生成全部槽位，并回填详情中已有图片。 */
     private fun <T> buildChannelSlots(
         raw: List<T>,
         defs: List<MCConstsChannelData>,
         channelIdOf: (T) -> Int,
         urlOf: (T) -> String
-    ): List<ChannelImageSlot> {
-        if (raw.isEmpty() || defs.isEmpty()) return emptyList()
-        return raw.mapNotNull { item ->
-            val id = channelIdOf(item)
-            val def = defs.firstOrNull { it.id == id } ?: return@mapNotNull null
-            ChannelImageSlot(
-                channelId = id,
-                title = def.title,
-                width = def.width,
-                height = def.height,
-                channelUrl = urlOf(item)
-            )
-        }
-    }
-
-    /** best-effort 解析网易 FP 上传响应（textarea 内 JSON）中的资源地址；结构需实测，用正则取常见字段。 */
-    private fun parseUploadUrl(body: String): String {
-        if (body.isEmpty()) return ""
-        return Regex(""""url"\s*:\s*"([^"]+)"""").find(body)?.groupValues?.get(1)
-            ?: Regex(""""filename"\s*:\s*"([^"]+)"""").find(body)?.groupValues?.get(1)
-            ?: ""
+    ): List<ChannelImageSlot> = defs.distinctBy { it.id }.map { def ->
+        val channel = raw.firstOrNull { channelIdOf(it) == def.id }
+        ChannelImageSlot(
+            channelId = def.id,
+            title = def.title,
+            width = def.width,
+            height = def.height,
+            channelUrl = channel?.let(urlOf).orEmpty(),
+            version = def.version
+        )
     }
 
     // ===== 提交保存（更新） =====
@@ -877,6 +944,22 @@ class WorkDetailViewModel :
     private fun submit(alsoReview: Boolean) {
         val s = state.value
         if (s.isSubmitting) return
+        if (s.isUploadingPeZip) {
+            sendEffect(WorkDetailEffect.ShowToast("资源文件上传中"))
+            return
+        }
+        if (s.peImageSlots.any { it.isUploading }) {
+            sendEffect(WorkDetailEffect.ShowToast("PE 图片上传中"))
+            return
+        }
+        if (s.isUploadingVideo || s.videos.any { it.isUploadingCover }) {
+            sendEffect(WorkDetailEffect.ShowToast("视频上传中"))
+            return
+        }
+        validateWorkDetail(s)?.let {
+            sendEffect(WorkDetailEffect.ShowToast(it))
+            return
+        }
         val detail = s.detail
         if (detail == null) {
             // 新建模式：走 pe/upload 创建接口
@@ -914,7 +997,7 @@ class WorkDetailViewModel :
             } else {
                 s.corpProofImage
             }
-            val payload = buildUpdatePayload(state.value, detail, corpProofUrl)
+            val payload = buildUpdatePayload(s, detail, corpProofUrl)
             when (val result = workDetailUseCase.updateWork(payload, isCheckApply = false)) {
                 is NetworkState.Success -> if (alsoReview) {
                     // 保存成功 → 第3节发起提审
@@ -945,6 +1028,117 @@ class WorkDetailViewModel :
 
 }
 
+/** PC 图片按 mc_consts.channel.comp 生成全部槽位，而不是只展示已有 channel。 */
+internal fun buildPcChannelSlots(
+    raw: List<ResourceDetailSyncChannel>,
+    defs: List<MCConstsChannelData>
+): List<ChannelImageSlot> = defs.distinctBy { it.id }.map { def ->
+    val channel = raw.firstOrNull { it.channelId == def.id }
+    ChannelImageSlot(
+        channelId = def.id,
+        title = def.title,
+        width = def.width,
+        height = def.height,
+        channelUrl = channel?.channelUrl.orEmpty(),
+        version = def.version
+    )
+}
+
+/** 立即持久化新资源时仅替换 res，避免提交表单中其他未保存字段。 */
+internal fun withUpdatedPeResource(
+    detail: ResourceDetailVO,
+    resource: PeResourceFile,
+    addVersion: Boolean
+): ResourceDetailVO = detail.copy(
+    res = listOf(
+        ResourceDetailRes(
+            addVersion = addVersion,
+            resName = resource.name,
+            resUrl = resource.url,
+            mcVersion = resource.mcVersion,
+            fileInfo = resource.fileInfo
+        )
+    )
+)
+
+// ponytail: PE/PC ID 空间不同，只接受已确认的标题关系，最终 ID 始终取运行时 mc_consts。
+private val PE_TO_PC_RESOURCE_TYPE_TITLES = mapOf(
+    "地图" to setOf("地图组件", "地图模组"),
+    "add_ons" to setOf("功能组件", "功能模组"),
+    "材质光影" to setOf("视觉组件", "视觉模组"),
+    "皮肤" to setOf("形象组件", "形象模组"),
+    "联机大厅" to setOf("联机大厅"),
+    "礼包" to setOf("礼包")
+)
+
+internal fun resolvePcResourceType(
+    syncPc: Boolean,
+    originallySynced: Boolean,
+    currentPcResourceType: Int,
+    peResourceType: Int,
+    peOptions: List<MCConstsCommonTitleData>,
+    pcOptions: List<MCConstsCommonTitleData>
+): Int {
+    if (!syncPc || originallySynced) return currentPcResourceType
+    if (pcOptions.count { it.id == currentPcResourceType } == 1) return currentPcResourceType
+    val peTitle = peOptions.singleOrNull { it.id == peResourceType }?.title ?: return 0
+    val targetTitles = PE_TO_PC_RESOURCE_TYPE_TITLES[peTitle] ?: return 0
+    return pcOptions.singleOrNull { it.title in targetTitles }?.id ?: 0
+}
+
+internal fun resolvePcResourceSubType(
+    syncPc: Boolean,
+    originallySynced: Boolean,
+    pcResourceType: Int,
+    currentPcResourceSubType: Int,
+    peResourceType: Int,
+    peResourceSubType: Int,
+    peOptions: Map<Int, List<MCConstsCommonTitleData>>,
+    pcOptions: Map<Int, List<MCConstsCommonTitleData>>
+): Int {
+    if (!syncPc || originallySynced) return currentPcResourceSubType
+    val targetOptions = pcOptions[pcResourceType].orEmpty()
+    if (targetOptions.count { it.id == currentPcResourceSubType } == 1) {
+        return currentPcResourceSubType
+    }
+    val peTitle = peOptions[peResourceType]
+        ?.singleOrNull { it.id == peResourceSubType }
+        ?.title
+        ?: return 0
+    return targetOptions.singleOrNull { it.title == peTitle }?.id ?: 0
+}
+
+internal fun validateWorkDetail(state: WorkDetailState): String? = validateWorkSave(
+    WorkSaveValidationInput(
+        itemName = state.itemName,
+        tags = state.tags,
+        priceType = state.priceType,
+        priceRank = state.priceRank.type,
+        price = state.emeraldPrice,
+        detailHtml = state.peDetail,
+        peResourceType = state.peResourceType,
+        recommendTagIds = state.peRecommendTags,
+        gameplayTagIds = state.peRecommendTagOptions.gameplayTag.mapTo(mutableSetOf()) { it.id },
+        themeTagIds = state.peRecommendTagOptions.themeTag.mapTo(mutableSetOf()) { it.id },
+        modVersion = state.peModVersion,
+        hasResource = state.peResource != null,
+        channelsLoaded = state.peImageSlots.isNotEmpty(),
+        requiredChannelIds = state.peImageSlots.mapTo(mutableSetOf()) { it.channelId },
+        availableChannelIds = state.peImageSlots
+            .filter { it.channelUrl.isNotBlank() }
+            .mapTo(mutableSetOf()) { it.channelId },
+        hasVideo = state.videos.any { it.url.isNotBlank() },
+        syncPc = state.syncPc,
+        originallySyncedToPc = state.detail?.syncPcFlag == true,
+        pcResourceType = state.pcResourceType,
+        validPcResourceTypeIds = state.pcResourceTypeOptions.mapTo(mutableSetOf()) { it.id },
+        pcResourceSubType = state.pcResourceSubType,
+        validPcResourceSubTypeIds = state.pcResourceSubTypeOptions[state.pcResourceType]
+            .orEmpty()
+            .mapTo(mutableSetOf()) { it.id },
+    )
+)
+
 /** 由编辑态构造新建请求体（pe/upload）。res/channel 仅含已上传（有 fileInfo）的项。 */
 internal fun buildWorkCreatePayload(s: WorkDetailState, isCheckApply: Boolean): WorkCreateDTO =
     WorkCreateDTO(
@@ -954,6 +1148,7 @@ internal fun buildWorkCreatePayload(s: WorkDetailState, isCheckApply: Boolean): 
         priType = s.peResourceType,
         subType = s.peResourceSubType,
         modSecondType = s.peResourceModSecondType,
+        modVersion = s.peModVersion,
         info = s.peDetail,
         updateSummary = s.peUpdateSummary,
         tag = s.tags.map { ResourceDetailTag(name = it) },
@@ -967,11 +1162,25 @@ internal fun buildWorkCreatePayload(s: WorkDetailState, isCheckApply: Boolean): 
             else -> 0
         },
         res = s.peResource?.fileInfo?.let { info ->
-            listOf(WorkCreateRes(resUrl = info, resName = s.peResource.name))
+            listOf(
+                WorkCreateRes(
+                    resUrl = info,
+                    resName = s.peResource.name,
+                    addVersion = s.peAddVersion
+                )
+            )
         } ?: emptyList(),
         channel = s.peImageSlots.mapNotNull { slot ->
             slot.fileInfo?.let { WorkCreateChannel(channelId = slot.channelId, channelUrl = it) }
         },
+        videoInfoList = s.videos.map { video ->
+            buildJsonObject {
+                put("cover", video.cover)
+                put("size", video.size)
+                put("url", video.url)
+            }
+        },
+        syncPcFlag = s.syncPc,
         dlcInfo = WorkUpdateDlcInfoDTO(
             dlcSwitch = s.isRelatedMod,
             dlcType = when {
@@ -1003,8 +1212,9 @@ internal fun buildUpdatePayload(
     priType = s.peResourceType,
     subType = s.peResourceSubType,
     modSecondType = s.peResourceModSecondType,
+    modVersion = s.peModVersion,
     labelTypeList = s.peRecommendTags,
-    peIsAddPlayPlan = s.peAddPlayPlan,
+    peIsAddPlayPlan = false,
     mountCallEnabled = s.peMountCallEnabled,
     weakOffline = s.peWeakOffline,
     weakOfflineReason = s.peWeakOfflineReason,
@@ -1026,7 +1236,8 @@ internal fun buildUpdatePayload(
         ResourceDetailChannel(
             channelId = slot.channelId,
             channelUrl = slot.channelUrl,
-            version = d.channel.firstOrNull { it.channelId == slot.channelId }?.version ?: 0
+            version = d.channel.firstOrNull { it.channelId == slot.channelId }?.version ?: 0,
+            fileInfo = slot.fileInfo
         )
     },
     syncItemInfo = d.syncItemInfo.copy(
@@ -1041,13 +1252,19 @@ internal fun buildUpdatePayload(
         tag = if (s.pcTagOptions.isEmpty()) d.syncItemInfo.tag else {
             s.pcTags.mapNotNull { t -> s.pcTagOptions.firstOrNull { it.title == t }?.id }
         },
-        channel = if (s.pcImageSlots.isEmpty()) d.syncItemInfo.channel else s.pcImageSlots.map { slot ->
-            val origin = d.syncItemInfo.channel.firstOrNull { it.channelId == slot.channelId }
-            ResourceDetailSyncChannel(
-                channelId = slot.channelId,
-                channelUrl = slot.channelUrl,
-                version = origin?.version
-            )
+        channel = if (s.pcImageSlots.isEmpty()) {
+            d.syncItemInfo.channel
+        } else {
+            val editableIds = s.pcImageSlots.mapTo(mutableSetOf()) { it.channelId }
+            d.syncItemInfo.channel.filter { it.channelId !in editableIds } +
+                    s.pcImageSlots.filter { it.channelUrl.isNotEmpty() }.map { slot ->
+                        ResourceDetailSyncChannel(
+                            channelId = slot.channelId,
+                            channelUrl = slot.channelUrl,
+                            version = slot.version,
+                            fileInfo = slot.fileInfo
+                        )
+                    }
         },
         requirement = if (s.pcHasPrerequisite) {
             s.pcPrerequisites.map { ResourceRequirementData(itemId = it.id, itemName = it.name) }
@@ -1094,14 +1311,17 @@ private fun buildResList(
 ): List<ResourceDetailRes> {
     if (pe == null) return origin
     origin.firstOrNull()?.let {
-        if (pe.name == it.resName && pe.url == it.resUrl) return origin
+        if (pe.name == it.resName && pe.url == it.resUrl) {
+            return listOf(it.copy(addVersion = addVersion)) + origin.drop(1)
+        }
     }
     return listOf(
         ResourceDetailRes(
             addVersion = addVersion,
             resName = pe.name,
             resUrl = pe.url,
-            mcVersion = pe.mcVersion
+            mcVersion = pe.mcVersion,
+            fileInfo = pe.fileInfo
         )
     )
 }

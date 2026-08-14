@@ -63,7 +63,7 @@ class MainUseCase(
 
     private suspend fun getOneMonthComponentDiamonds(year: Int, month: Int): Map<String, Double> =
         coroutineScope {
-            val resList = when (val resources = getResourceListUseCase("pe")) {
+            val resList = when (val resources = getResourceListUseCase("pe", onlineOnly = true)) {
                 is NetworkState.Success -> resources.data ?: emptyList()
                 is NetworkState.Error -> emptyList()
             }

@@ -34,6 +34,8 @@ import androidx.compose.ui.unit.dp
 import com.github.panpf.sketch.AsyncImage
 import com.github.panpf.sketch.rememberAsyncImageState
 import com.github.panpf.sketch.request.ComposableImageOptions
+import com.lemon.mcdevmanagermp.data.consts.enums.PriceTypeEnum
+import com.lemon.mcdevmanagermp.ui.components.FieldLabel
 import com.lemon.mcdevmanagermp.ui.components.FormSection
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.VideoItem
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailAction
@@ -59,7 +61,12 @@ internal fun VideoUploadForm(
         if (file != null) onAction(WorkDetailAction.UploadVideo(file))
     }
 
-    FormSection(title = "上传视频", modifier = modifier) {
+    FormSection(
+        title = "上传视频",
+        modifier = modifier,
+        required = state.priceType == PriceTypeEnum.DIAMOND ||
+                state.priceType == PriceTypeEnum.EMERALD
+    ) {
         Text(
             text = "要求: 16:9 比例，时长 1:30 以内，50MB 以内，H264 编码",
             style = MaterialTheme.typography.bodySmall,
@@ -72,8 +79,13 @@ internal fun VideoUploadForm(
                 VideoCard(
                     video = video,
                     isUploadingVideo = state.isUploadingVideo,
-                    onRemove = { onAction(WorkDetailAction.RemoveVideo(index)) },
-                    onUploadCover = { file, mt ->
+                    onRemove = { onAction(WorkDetailAction.RemoveVideo(index)) }
+                )
+                FieldLabel(text = "视频封面")
+                VideoCoverPicker(
+                    video = video,
+                    enabled = !state.isUploadingVideo,
+                    onUpload = { file, mt ->
                         onAction(WorkDetailAction.UploadVideoCover(index, file, mt))
                     }
                 )
@@ -124,26 +136,15 @@ internal fun VideoUploadForm(
     }
 }
 
-/** 视频卡片：封面区（点击上传/替换）+ 大小 + 删除/上传中指示。 */
+/** 视频文件卡片：大小 + 删除/上传中指示。 */
 @Composable
 private fun VideoCard(
     video: VideoItem,
     isUploadingVideo: Boolean,
     onRemove: () -> Unit,
-    onUploadCover: (PlatformFile, String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val colors = LocalAppColors.current
-    val coverPicker = rememberFilePickerLauncher(type = FileKitType.Image) { file: PlatformFile? ->
-        if (file != null) {
-            val mt = try {
-                file.mimeType()?.toString()
-            } catch (_: Exception) {
-                null
-            } ?: "image/jpeg"
-            onUploadCover(file, mt)
-        }
-    }
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -153,49 +154,12 @@ private fun VideoCard(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // 封面（16:9，点击上传/替换；上传中显示进度）
-        Box(
-            modifier = Modifier
-                .width(96.dp)
-                .aspectRatio(16f / 9f)
-                .clip(RoundedCornerShape(8.dp))
-                .background(colors.surfaceContainerLow)
-                .clickable(enabled = !video.isUploadingCover && !isUploadingVideo) { coverPicker.launch() },
-            contentAlignment = Alignment.Center
-        ) {
-            when {
-                video.isUploadingCover -> CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    color = colors.primary,
-                    strokeWidth = 2.dp
-                )
-
-                video.cover.isNotEmpty() -> AsyncImage(
-                    uri = video.cover,
-                    state = rememberAsyncImageState(ComposableImageOptions { crossfade() }),
-                    contentDescription = "视频封面",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-
-                else -> Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.VideoFile,
-                        contentDescription = null,
-                        tint = colors.onSurfaceVariant,
-                        modifier = Modifier.size(22.dp)
-                    )
-                    Text(
-                        text = "上传封面",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = colors.onSurfaceVariant
-                    )
-                }
-            }
-        }
+        Icon(
+            imageVector = Icons.Filled.VideoFile,
+            contentDescription = null,
+            tint = colors.primary,
+            modifier = Modifier.size(24.dp)
+        )
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = "宣传视频",
@@ -230,6 +194,65 @@ private fun VideoCard(
                     contentDescription = "删除视频",
                     modifier = Modifier.size(16.dp),
                     tint = colors.error
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun VideoCoverPicker(
+    video: VideoItem,
+    enabled: Boolean,
+    onUpload: (PlatformFile, String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = LocalAppColors.current
+    val picker = rememberFilePickerLauncher(type = FileKitType.Image) { file: PlatformFile? ->
+        if (file != null) {
+            val mimeType = runCatching { file.mimeType()?.toString() }.getOrNull() ?: "image/jpeg"
+            onUpload(file, mimeType)
+        }
+    }
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .aspectRatio(16f / 9f)
+            .clip(RoundedCornerShape(12.dp))
+            .border(1.dp, colors.outlineVariant, RoundedCornerShape(12.dp))
+            .background(colors.surfaceContainerLow)
+            .clickable(enabled = enabled && !video.isUploadingCover) { picker.launch() },
+        contentAlignment = Alignment.Center
+    ) {
+        when {
+            video.isUploadingCover -> CircularProgressIndicator(
+                modifier = Modifier.size(28.dp),
+                color = colors.primary,
+                strokeWidth = 2.dp
+            )
+
+            video.cover.isNotEmpty() -> AsyncImage(
+                uri = video.cover,
+                state = rememberAsyncImageState(ComposableImageOptions { crossfade() }),
+                contentDescription = "视频封面，点击替换",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+
+            else -> Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.VideoFile,
+                    contentDescription = null,
+                    tint = colors.onSurfaceVariant,
+                    modifier = Modifier.size(32.dp)
+                )
+                Text(
+                    text = "点击上传视频封面",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.onSurfaceVariant
                 )
             }
         }

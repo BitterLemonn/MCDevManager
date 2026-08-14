@@ -100,7 +100,8 @@ internal fun PeResourceManageForm(
             )
             DropdownMenu(
                 expanded = typeExpanded,
-                onDismissRequest = { typeExpanded = false }
+                onDismissRequest = { typeExpanded = false },
+                modifier = Modifier.heightIn(max = 320.dp)
             ) {
                 typeOptions.forEach { opt ->
                     TagCheckItem(
@@ -131,7 +132,8 @@ internal fun PeResourceManageForm(
                 )
                 DropdownMenu(
                     expanded = subTypeExpanded,
-                    onDismissRequest = { subTypeExpanded = false }
+                    onDismissRequest = { subTypeExpanded = false },
+                    modifier = Modifier.heightIn(max = 320.dp)
                 ) {
                     subTypeOptions.forEach { opt ->
                         TagCheckItem(
@@ -165,7 +167,8 @@ internal fun PeResourceManageForm(
                 )
                 DropdownMenu(
                     expanded = modSecondExpanded,
-                    onDismissRequest = { modSecondExpanded = false }
+                    onDismissRequest = { modSecondExpanded = false },
+                    modifier = Modifier.heightIn(max = 320.dp)
                 ) {
                     modSecondOptions.forEach { opt ->
                         TagCheckItem(
@@ -196,7 +199,8 @@ internal fun PeResourceManageForm(
             )
             DropdownMenu(
                 expanded = gameplayExpanded,
-                onDismissRequest = { gameplayExpanded = false }
+                onDismissRequest = { gameplayExpanded = false },
+                modifier = Modifier.heightIn(max = 320.dp)
             ) {
                 state.peRecommendTagOptions.gameplayTag.forEach { tag ->
                     TagCheckItem(
@@ -224,7 +228,8 @@ internal fun PeResourceManageForm(
             )
             DropdownMenu(
                 expanded = themeExpanded,
-                onDismissRequest = { themeExpanded = false }
+                onDismissRequest = { themeExpanded = false },
+                modifier = Modifier.heightIn(max = 320.dp)
             ) {
                 state.peRecommendTagOptions.themeTag.forEach { tag ->
                     TagCheckItem(
@@ -232,6 +237,34 @@ internal fun PeResourceManageForm(
                         selected = state.peRecommendTags.contains(tag.id),
                         enabled = state.peRecommendTags.contains(tag.id) || !tagAtLimit,
                         onClick = { onAction(WorkDetailAction.TogglePeRecommendTag(tag.id)) }
+                    )
+                }
+            }
+        }
+
+        // modAPI 版本
+        var modVersionExpanded by remember { mutableStateOf(false) }
+        Box {
+            DropdownField(
+                label = "modAPI 版本",
+                valueText = state.peModVersion.ifEmpty { "选择 modAPI 版本" },
+                expanded = modVersionExpanded,
+                onClick = { modVersionExpanded = !modVersionExpanded },
+                required = true
+            )
+            DropdownMenu(
+                expanded = modVersionExpanded,
+                onDismissRequest = { modVersionExpanded = false },
+                modifier = Modifier.heightIn(max = 320.dp)
+            ) {
+                state.peModVersionOptions.asReversed().forEach { version ->
+                    TagCheckItem(
+                        title = version,
+                        selected = version == state.peModVersion,
+                        onClick = {
+                            onAction(WorkDetailAction.UpdatePeModVersion(version))
+                            modVersionExpanded = false
+                        }
                     )
                 }
             }
@@ -258,11 +291,12 @@ internal fun PeResourceManageForm(
             label = "提升版本",
             value = state.peAddVersion,
             onValueChange = { onAction(WorkDetailAction.TogglePeAddVersion(it)) },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            required = true
         )
 
         // 资源文件（单文件占位框：未上传点击/拖入，已上传显示名称 + 删除）
-        FieldLabel(text = "资源文件")
+        FieldLabel(text = "资源文件", required = true)
         val res = state.peResource
         if (res != null) {
             ResourceFileRow(

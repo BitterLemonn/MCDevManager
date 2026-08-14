@@ -4,7 +4,9 @@ import com.lemon.mcdevmanagermp.data.api.ResourceApi
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.common.NoNeedData
 import com.lemon.mcdevmanagermp.data.dto.netease.work.ApplyReviewDTO
+import com.lemon.mcdevmanagermp.data.dto.netease.work.ApplySelfTestDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.work.AppointOnlineDTO
+import com.lemon.mcdevmanagermp.data.dto.netease.work.ChangePriceDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.work.OnlineItemDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.work.WorkCreateDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.work.WorkUpdateDTO
@@ -29,39 +31,29 @@ class ResourceRepositoryImpl : ResourceRepository {
         platform: String,
         itemName: String?,
         mcStatus: Int?
-    ): NetworkState<ResourceListVO> {
-        return UnifiedExceptionHandler.handleRequest {
+    ): NetworkState<ResourceListVO> =
+        UnifiedExceptionHandler.handleRequest {
             resourceApi.getAllResource(
                 platform = platform,
                 itemName = itemName,
                 mcStatus = mcStatus
             )
         }
-    }
 
-    override suspend fun getCompRequirements(itemName: String): NetworkState<RequirementVO> {
-        return UnifiedExceptionHandler.handleRequest {
-            resourceApi.getRequirements(itemName)
-        }
-    }
+    override suspend fun getCompRequirements(itemName: String): NetworkState<RequirementVO> =
+        UnifiedExceptionHandler.handleRequest { resourceApi.getRequirements(itemName) }
 
-    override suspend fun getResourceDetail(itemId: String): NetworkState<ResourceDetailVO> {
-        return UnifiedExceptionHandler.handleRequest {
-            resourceApi.getResourceDetail(itemId)
-        }
-    }
+    override suspend fun getResourceDetail(itemId: String): NetworkState<ResourceDetailVO> =
+        UnifiedExceptionHandler.handleRequest { resourceApi.getResourceDetail(itemId) }
 
-    override suspend fun getItemTag(): NetworkState<ItemTagVO> {
-        return UnifiedExceptionHandler.handleRequest {
-            resourceApi.getItemTag()
-        }
-    }
+    override suspend fun deleteItem(itemId: String): NetworkState<NoNeedData> =
+        UnifiedExceptionHandler.handleRequest { resourceApi.deleteItem(itemId) }
 
-    override suspend fun getMCConsts(): NetworkState<MCConstsVO> {
-        return UnifiedExceptionHandler.handleRequest {
-            resourceApi.getMCConsts()
-        }
-    }
+    override suspend fun getItemTag(): NetworkState<ItemTagVO> =
+        UnifiedExceptionHandler.handleRequest { resourceApi.getItemTag() }
+
+    override suspend fun getMCConsts(): NetworkState<MCConstsVO> =
+        UnifiedExceptionHandler.handleRequest { resourceApi.getMCConsts() }
 
     override suspend fun updateItem(itemId: String, item: WorkUpdateDTO): NetworkState<NoNeedData> =
         UnifiedExceptionHandler.handleRequest { resourceApi.updateItem(itemId, item) }
@@ -80,6 +72,21 @@ class ResourceRepositoryImpl : ResourceRepository {
 
     override suspend fun getReviewFeedback(itemId: String): NetworkState<ReviewFeedbackVO> =
         UnifiedExceptionHandler.handleRequest { resourceApi.getReviewFeedback(itemId) }
+
+    override suspend fun applySelfTest(
+        itemId: String,
+        content: ApplySelfTestDTO
+    ): NetworkState<NoNeedData> =
+        UnifiedExceptionHandler.handleRequest { resourceApi.applySelfTest(itemId, content) }
+
+    override suspend fun cancelSelfTest(itemId: String): NetworkState<NoNeedData> =
+        UnifiedExceptionHandler.handleRequest { resourceApi.cancelSelfTest(itemId) }
+
+    override suspend fun changePrice(
+        itemId: String,
+        content: ChangePriceDTO
+    ): NetworkState<NoNeedData> =
+        UnifiedExceptionHandler.handleRequest { resourceApi.changePrice(itemId, content) }
 
     override suspend fun onlineItem(
         itemId: String,

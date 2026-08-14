@@ -16,13 +16,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.lemon.mcdevmanagermp.data.consts.enums.PriceRankEnum
+import com.lemon.mcdevmanagermp.data.consts.enums.PriceTypeEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.priceTypeLabel
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
+import com.lemon.mcdevmanagermp.ui.components.OptionChips
 
 /**
  * 调整定价对话框：输入新价格。
- *
- * 注意：当前为占位实现，确认后仅通过 [onConfirm] 触发提示，不真实联网。
  */
 @Composable
 internal fun PriceAdjustDialog(
@@ -30,11 +31,20 @@ internal fun PriceAdjustDialog(
     onConfirm: (Int) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var priceInput by remember { mutableStateOf(item.price.coerceAtLeast(0).toString()) }
+    val isDiamond = PriceTypeEnum.fromStringType(item.priceType) == PriceTypeEnum.DIAMOND
+    var selectedRank by remember(item.itemId) {
+        mutableStateOf(
+            PriceRankEnum.fromIntType(item.priceRank).takeIf { it.type in 0..6 }
+                ?: PriceRankEnum.fromDiamondPrice(item.price)
+        )
+    }
+    var priceInput by remember(item.itemId) {
+        mutableStateOf(item.price.coerceAtLeast(0).toString())
+    }
     val name = item.itemName.ifEmpty { "未命名" }
     val unit = priceTypeLabel(item.priceType)
     val currentLabel = if (item.price <= 0) "免费" else "${item.price} $unit".trim()
-    val newPrice = priceInput.toIntOrNull()
+    val newPrice = if (isDiamond) selectedRank.diamondPrice else priceInput.toIntOrNull()
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -51,24 +61,31 @@ internal fun PriceAdjustDialog(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                OutlinedTextField(
-                    value = priceInput,
-                    onValueChange = { s -> priceInput = s.filter { it.isDigit() }.take(9) },
-                    label = { Text(if (unit.isNotEmpty()) "新价格（$unit）" else "新价格") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                )
-                Text(
-                    text = "（操作接口占位，当前不会真实提交）",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
-                )
+                if (isDiamond) {
+                    OptionChips(
+                        label = "新定价档位",
+                        options = PriceRankEnum.entries
+                            .filter { it.type in 0..6 }
+                            .map { it.diamondPrice.toString() to it },
+                        selected = selectedRank.takeIf { it.type in 0..6 },
+                        onSelect = { selectedRank = it },
+                        required = true
+                    )
+                } else {
+                    OutlinedTextField(
+                        value = priceInput,
+                        onValueChange = { s -> priceInput = s.filter { it.isDigit() }.take(9) },
+                        label = { Text(if (unit.isNotEmpty()) "新价格（$unit）" else "新价格") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+                }
             }
         },
         confirmButton = {
             Button(
                 onClick = { onConfirm(newPrice ?: 0) },
-                enabled = newPrice != null && newPrice > 0
+                enabled = newPrice != null && newPrice > 0 && newPrice != item.price
             ) { Text("确认") }
         },
         dismissButton = {

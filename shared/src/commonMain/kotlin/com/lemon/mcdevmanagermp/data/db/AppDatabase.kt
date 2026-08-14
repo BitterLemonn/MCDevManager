@@ -94,8 +94,16 @@ val MIGRATION_4_5 = object : Migration(4, 5) {
  */
 val MIGRATION_5_6 = object : Migration(5, 6) {
     override fun migrate(connection: SQLiteConnection) {
-        connection.execSQL(
-            "ALTER TABLE promotion_template ADD COLUMN promoImageUrl TEXT NOT NULL DEFAULT ''"
-        )
+        val columnExists = connection.prepare(
+            "SELECT COUNT(*) FROM pragma_table_info('promotion_template') WHERE name = 'promoImageUrl'"
+        ).use { stmt ->
+            stmt.step()
+            stmt.getLong(0) > 0
+        }
+        if (!columnExists) {
+            connection.execSQL(
+                "ALTER TABLE promotion_template ADD COLUMN promoImageUrl TEXT NOT NULL DEFAULT ''"
+            )
+        }
     }
 }

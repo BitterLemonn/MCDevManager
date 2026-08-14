@@ -28,12 +28,21 @@ import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 fun FormSection(
     title: String,
     modifier: Modifier = Modifier,
+    required: Boolean = false,
     actions: @Composable RowScope.() -> Unit = {},
     content: @Composable ColumnScope.() -> Unit
 ) {
     val colors = LocalAppColors.current
     Column(modifier = modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
+            if (required) {
+                Text(
+                    text = "* ",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = colors.error
+                )
+            }
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleSmall,

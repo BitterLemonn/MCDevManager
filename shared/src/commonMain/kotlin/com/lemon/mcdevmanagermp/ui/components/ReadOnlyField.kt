@@ -24,6 +24,7 @@ fun ReadOnlyField(
     label: String,
     value: String,
     modifier: Modifier = Modifier,
+    required: Boolean = false,
     trailing: @Composable (() -> Unit)? = null
 ) {
     val colors = LocalAppColors.current
@@ -33,7 +34,7 @@ fun ReadOnlyField(
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Column(modifier = Modifier.weight(1f, fill = false)) {
-            FieldLabel(text = label)
+            FieldLabel(text = label, required = required)
             Spacer(Modifier.height(4.dp))
             Text(
                 text = value.ifEmpty { "—" },

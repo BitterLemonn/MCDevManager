@@ -134,13 +134,15 @@ internal fun BasicInfoForm(
                 label = "是否为关联模组",
                 value = state.isRelatedMod,
                 onValueChange = { onAction(WorkDetailAction.ToggleRelatedMod(it)) },
-                modifier = Modifier.weight(1f).widthIn(min = minFieldWidth)
+                modifier = Modifier.weight(1f).widthIn(min = minFieldWidth),
+                required = true
             )
             YesNoSelector(
                 label = "是否同步生成 PC 模组",
                 value = state.syncPc,
                 onValueChange = { onAction(WorkDetailAction.ToggleSyncPc(it)) },
-                modifier = Modifier.weight(1f).widthIn(min = minFieldWidth)
+                modifier = Modifier.weight(1f).widthIn(min = minFieldWidth),
+                required = true
             )
         }
 
@@ -189,6 +191,7 @@ internal fun BasicInfoForm(
             onRemove = { onAction(WorkDetailAction.RemoveTag(it)) },
             modifier = Modifier.fillMaxWidth(),
             placeholder = "搜索标签 / 输入自定义标签",
+            required = true,
             suggestions = state.availableTags
         )
 

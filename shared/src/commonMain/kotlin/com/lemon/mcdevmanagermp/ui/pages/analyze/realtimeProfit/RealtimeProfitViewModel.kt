@@ -73,7 +73,7 @@ class RealtimeProfitViewModel :
 
             // 1. 获取资源列表
             when (val resourceResult =
-                getResourceListUseCase(state.value.platform)) {
+                getResourceListUseCase(state.value.platform, onlineOnly = true)) {
                 is NetworkState.Success -> {
                     setState { copy(resList = resourceResult.data ?: emptyList()) }
                 }

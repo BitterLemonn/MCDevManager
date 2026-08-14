@@ -20,7 +20,8 @@ captures
 node_modules/
 
 CLAUDE.md
+AGENTS.md
 .claude/
+.agents/
 .codegraph/
 androidApp/release/
-

@@ -60,7 +60,7 @@ class ModAnalysisViewModel : BaseViewModel<ModAnalysisState, ModAnalysisAction, 
     private fun initLoad(iid: String, platform: String) {
         setState { copy(selectedPlatform = platform, isResListLoading = true) }
         viewModelScope.launch {
-            when (val result = getResourceListUseCase(platform)) {
+            when (val result = getResourceListUseCase(platform, onlineOnly = true)) {
                 is NetworkState.Success -> {
                     setState { copy(resList = result.data ?: emptyList(), isResListLoading = false) }
                     // 若预设了 iid，直接加载分析数据

@@ -58,6 +58,10 @@ enum class PriceRankEnum(val type: Int, val label: String, val diamondPrice: Int
                 else -> UNKNOWN
             }
         }
+
+        fun fromDiamondPrice(price: Int): PriceRankEnum {
+            return entries.firstOrNull { it.type in 0..6 && it.diamondPrice == price } ?: UNKNOWN
+        }
     }
 }
 

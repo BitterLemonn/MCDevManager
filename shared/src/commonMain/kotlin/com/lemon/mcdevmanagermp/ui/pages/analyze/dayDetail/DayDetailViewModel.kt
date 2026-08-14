@@ -93,7 +93,7 @@ class DayDetailViewModel : BaseViewModel<DayDetailState, DayDetailAction, DayDet
                 setState { copy(startDate = start, endDate = end) }
             }
 
-            when (val result = getResourceListUseCase(platform)) {
+            when (val result = getResourceListUseCase(platform, onlineOnly = true)) {
                 is NetworkState.Success -> {
                     setState { copy(resList = result.data ?: emptyList(), isResListLoading = false) }
                 }

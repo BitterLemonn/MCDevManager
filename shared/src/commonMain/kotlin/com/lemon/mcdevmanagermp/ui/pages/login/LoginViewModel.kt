@@ -69,10 +69,7 @@ class LoginViewModel : BaseViewModel<LoginState, LoginAction, LoginEffect>(Login
                 sendEffect(LoginEffect.ShowToast("登录成功"))
                 sendEffect(LoginEffect.NavigateTo(Route.Main, Route.Splash))
             } catch (e: Exception) {
-                when (e.message) {
-                    "413" -> sendEffect(LoginEffect.ShowToast("邮箱或密码错误"))
-                    else -> sendEffect(LoginEffect.ShowToast(e.message ?: "登录失败请重试"))
-                }
+                sendEffect(LoginEffect.ShowToast(e.message ?: "登录失败请重试"))
             } finally {
                 setState { copy(isLoading = false) }
             }
