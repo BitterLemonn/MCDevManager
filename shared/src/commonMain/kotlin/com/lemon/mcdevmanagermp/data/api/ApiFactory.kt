@@ -87,9 +87,9 @@ object ApiFactory {
             install(TrailingSlashPlugin)
             install(TimeMonitorPlugin)
             install(HttpTimeout) {
-                connectTimeoutMillis = 15_000
-                requestTimeoutMillis = 15_000
-                socketTimeoutMillis = 15_000
+                connectTimeoutMillis = 60_000
+                requestTimeoutMillis = 60_000
+                socketTimeoutMillis = 60_000
             }
             install(HttpCookies) {
                 storage = cookiesStorage
@@ -105,9 +105,9 @@ object ApiFactory {
             install(ContentNegotiation) { json(JSONConverter) }
             install(TimeMonitorPlugin)
             install(HttpTimeout) {
-                connectTimeoutMillis = 15_000
-                requestTimeoutMillis = 30_000
-                socketTimeoutMillis = 30_000
+                connectTimeoutMillis = 60_000
+                requestTimeoutMillis = 120_000
+                socketTimeoutMillis = 60_000
             }
             install(HttpCookies) {
                 storage = cookiesStorage
