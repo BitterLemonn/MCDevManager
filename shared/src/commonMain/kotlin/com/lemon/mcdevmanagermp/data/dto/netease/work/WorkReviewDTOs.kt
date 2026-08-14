@@ -7,8 +7,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ApplyReviewDTO(
     @SerialName("apply_review_text") val applyReviewText: String = "",
-    @SerialName("conflict_notify") val conflictNotify: Int = 1,
-    @SerialName("conflict_notify_type") val conflictNotifyType: List<Int> = listOf(1),
+    @SerialName("conflict_notify") val conflictNotify: Int = 0,
+    @SerialName("conflict_notify_type") val conflictNotifyType: List<Int>? = null,
     @SerialName("is_check_apply") val isCheckApply: Boolean = false
 )
 
