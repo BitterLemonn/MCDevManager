@@ -85,6 +85,9 @@ data class ResourceData(
     fun getStatus(): WorkItemStatusEnum {
         return WorkItemStatusEnum.fromStatusString(status)
     }
+
+    /** 是否上架过（含已下架）；从未上架时 online_time 为空或 "UNKNOWN" */
+    fun hasEverBeenOnline(): Boolean = onlineTime.isNotEmpty() && onlineTime != "UNKNOWN"
 }
 
 /**

@@ -88,7 +88,7 @@ class PromotionViewModel :
         viewModelScope.launch {
             setState { copy(isLoading = true) }
             val canApply = promotionUseCase.loadCanApply()
-            val items = when (val r = resourceListUseCase("pe")) {
+            val items = when (val r = resourceListUseCase("pe", onlineOnly = true)) {
                 is NetworkState.Success -> r.data ?: emptyList()
                 is NetworkState.Error -> emptyList()
             }
