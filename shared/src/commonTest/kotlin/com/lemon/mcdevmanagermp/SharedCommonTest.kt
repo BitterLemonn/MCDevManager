@@ -17,7 +17,10 @@ import com.lemon.mcdevmanagermp.domain.work.WorkSaveValidationInput
 import com.lemon.mcdevmanagermp.domain.work.hasUnversionedPcImages
 import com.lemon.mcdevmanagermp.domain.work.validateWorkSave
 import com.lemon.mcdevmanagermp.domain.work.withCurrentPcImageChannels
+import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailState
+import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.buildUpdatePayload
 import com.lemon.mcdevmanagermp.utils.extension.dumpAndGetCookiesValue
+import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -70,6 +73,26 @@ class SharedCommonTest {
         ).jsonObject
 
         assertEquals(url, json["corp_proof_image"]?.jsonPrimitive?.content)
+    }
+
+    @Test
+    fun pePlayPlanIsAlwaysFalseInUpdateJson() {
+        val json = JSONConverter.encodeToJsonElement(
+            ResourceDetailVO(peIsAddPlayPlan = true).toWorkUpdateDTO(false)
+        ).jsonObject
+
+        assertFalse(json["pe_is_add_play_plan"]!!.jsonPrimitive.boolean)
+    }
+
+    @Test
+    fun workManagementUpdateDoesNotInheritPePlayPlan() {
+        val payload = buildUpdatePayload(
+            s = WorkDetailState(peAddPlayPlan = true),
+            d = ResourceDetailVO(peIsAddPlayPlan = true),
+            corpProofUrl = ""
+        )
+
+        assertFalse(payload.peIsAddPlayPlan)
     }
 
     @Test
