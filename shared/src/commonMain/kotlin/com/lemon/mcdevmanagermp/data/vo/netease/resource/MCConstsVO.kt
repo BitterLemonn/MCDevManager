@@ -143,6 +143,11 @@ data class MCConstsChannelData(
     val vipOnly: Boolean = false
 )
 
+const val VIDEO_COVER_CHANNEL_ID = 7
+
+fun MCConstsChannelDataList.requiredPeImageChannels(): List<MCConstsChannelData> =
+    (pe + peMulti).filterNot { it.id == VIDEO_COVER_CHANNEL_ID }
+
 /**
  * 商品类型
  */

@@ -3,10 +3,20 @@ package com.lemon.mcdevmanagermp.data.vo.netease.resource
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceRankEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceTypeEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.WorkItemStatusEnum
+import com.lemon.mcdevmanagermp.data.dto.netease.activity.FileInfoDTO
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
+import kotlinx.serialization.builtins.nullable
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * 资源列表
@@ -267,15 +277,35 @@ data class ResourceDetailVO(
 data class ResourceDetailChannel(
     @SerialName("channel_id") val channelId: Int = 0,
     @SerialName("channel_url") val channelUrl: String = "",
-    val version: Int = 0
+    val version: Int = 0,
+    @Transient val fileInfo: FileInfoDTO? = null
 )
+
+object JsonValueAsStringSerializer : KSerializer<String?> {
+    private val delegate = String.serializer().nullable
+
+    override val descriptor = delegate.descriptor
+
+    override fun deserialize(decoder: Decoder): String? {
+        return when (val element = (decoder as JsonDecoder).decodeJsonElement()) {
+            JsonNull -> null
+            is JsonPrimitive -> element.content
+            else -> element.toString()
+        }
+    }
+
+    override fun serialize(encoder: Encoder, value: String?) = delegate.serialize(encoder, value)
+}
 
 @Serializable
 data class ResourceDetailDlcInfo(
     @SerialName("dlc_switch") val dlcSwitch: Boolean = false,
     @SerialName("dlc_type") val dlcType: String = "",
+    @Serializable(with = JsonValueAsStringSerializer::class)
     val master: String? = null,
-    @SerialName("slave_list") val slaveList: String? = null
+    @SerialName("slave_list")
+    @Serializable(with = JsonValueAsStringSerializer::class)
+    val slaveList: String? = null
 ) {
     @Serializable
     enum class DlcType(val type: String) { MASTER("master"), SLAVE("slave") }
@@ -305,7 +335,13 @@ data class ResourceDetailRes(
     @SerialName("res_id") val resId: Int = 0,
     @SerialName("res_info") val resInfo: ResourceDetailResFileInfo = ResourceDetailResFileInfo(),
     @SerialName("res_name") val resName: String = "",
-    @SerialName("res_url") val resUrl: String = ""
+    @SerialName("res_url") val resUrl: String = "",
+    /**
+     * 新上传资源回执。get 解析时无此字段（null）；update 提交新资源时由客户端注入，
+     * toWorkUpdateDTO 据此把 res_url 序列化为 FileInfoDTO 对象（与 create 对齐）。
+     * ponytail: 复用 ResourceDetailRes 作 get/update 双用模型，避免再建一套 res DTO。
+     */
+    @Transient val fileInfo: FileInfoDTO? = null
 )
 
 @Serializable
@@ -341,7 +377,8 @@ data class ResourceDetailSyncItemInfo(
 data class ResourceDetailSyncChannel(
     @SerialName("channel_id") val channelId: Int = 0,
     @SerialName("channel_url") val channelUrl: String = "",
-    val version: Int? = null
+    val version: Int? = null,
+    @Transient val fileInfo: FileInfoDTO? = null
 )
 
 @Serializable

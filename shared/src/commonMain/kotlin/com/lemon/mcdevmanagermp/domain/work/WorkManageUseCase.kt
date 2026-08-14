@@ -7,9 +7,7 @@ import com.lemon.mcdevmanagermp.data.dto.netease.work.ApplySelfTestDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.work.AppointOnlineDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.work.ChangePriceDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.work.OnlineItemDTO
-import com.lemon.mcdevmanagermp.data.dto.netease.work.toWorkUpdateDTO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
-import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.work.ReviewApplyResultVO
 import com.lemon.mcdevmanagermp.data.vo.netease.work.ReviewFeedbackVO
 import com.lemon.mcdevmanagermp.domain.resource.GetResourceListUseCase
@@ -29,19 +27,6 @@ class WorkManageUseCase(
      */
     suspend fun getWorkList(platform: String = "pe"): NetworkState<List<ResourceData>> {
         return getResourceListUseCase(platform)
-    }
-
-    /**
-     * 保存作品信息。isCheckApply=true 保存并发起审核，false 仅保存。
-     * ponytail: 请求体复用 ResourceDetailVO（详情即编辑表单数据源），后端忽略只读字段；
-     *           若后端对 update 字段严格校验，再独立建 WorkUpdateDTO。
-     */
-    suspend fun updateWork(
-        item: ResourceDetailVO,
-        isCheckApply: Boolean
-    ): NetworkState<NoNeedData> {
-        if (item.itemId.isEmpty()) return NetworkState.Error("作品 ID 为空")
-        return resourceRepository.updateItem(item.itemId, item.toWorkUpdateDTO(isCheckApply))
     }
 
     /**

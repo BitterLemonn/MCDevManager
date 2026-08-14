@@ -41,9 +41,9 @@ fun Typography.applyDefaultFont(fontFamily: FontFamily): Typography {
 fun String.dumpAndGetCookiesValue(key: String): String? {
     val cookies = this.split(";")
     for (cookie in cookies) {
-        val pair = cookie.split("=")
-        if (pair.size == 2 && pair[0].trim() == key) {
-            return pair[1].trim()
+        val separator = cookie.indexOf('=')
+        if (separator > 0 && cookie.substring(0, separator).trim() == key) {
+            return cookie.substring(separator + 1).trim()
         }
     }
     return null

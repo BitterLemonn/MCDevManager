@@ -20,13 +20,16 @@ import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailTag
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailVideoInfo
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceRequirementData
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.VIDEO_COVER_CHANNEL_ID
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.requiredPeImageChannels
 import com.lemon.mcdevmanagermp.domain.upload.FileUploadRepository
 import com.lemon.mcdevmanagermp.domain.upload.parseUploadUrl
 import com.lemon.mcdevmanagermp.domain.work.WorkDetailUseCase
+import com.lemon.mcdevmanagermp.domain.work.WorkSaveValidationInput
+import com.lemon.mcdevmanagermp.domain.work.validateWorkSave
 import com.lemon.mcdevmanagermp.platform.validateVideoFile
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
 import com.lemon.mcdevmanagermp.ui.components.ModSelectOption
-import com.lemon.mcdevmanagermp.utils.HtmlParser
 import com.lemon.mcdevmanagermp.utils.Logger
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.mimeType
@@ -53,8 +56,6 @@ import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.put
 import kotlin.time.Clock
 import kotlin.time.Instant
-
-private const val VIDEO_COVER_CHANNEL_ID = 7
 
 class WorkDetailViewModel :
     BaseViewModel<WorkDetailState, WorkDetailAction, WorkDetailEffect>(WorkDetailState()) {
@@ -396,8 +397,7 @@ class WorkDetailViewModel :
                             // PE/PC 宣传图位：按 mc_consts.channel 定义生成全部槽位并回填已有图片
                             peImageSlots = buildChannelSlots(
                                 raw = detail?.channel.orEmpty(),
-                                defs = (consts.channel.pe + consts.channel.peMulti)
-                                    .filterNot { it.id == VIDEO_COVER_CHANNEL_ID },
+                                defs = consts.channel.requiredPeImageChannels(),
                                 channelIdOf = { it.channelId },
                                 urlOf = { it.channelUrl }
                             ),
@@ -1040,7 +1040,7 @@ internal fun buildPcChannelSlots(
         width = def.width,
         height = def.height,
         channelUrl = channel?.channelUrl.orEmpty(),
-        version = channel?.version ?: def.version
+        version = def.version
     )
 }
 
@@ -1055,7 +1055,8 @@ internal fun withUpdatedPeResource(
             addVersion = addVersion,
             resName = resource.name,
             resUrl = resource.url,
-            mcVersion = resource.mcVersion
+            mcVersion = resource.mcVersion,
+            fileInfo = resource.fileInfo
         )
     )
 )
@@ -1107,62 +1108,36 @@ internal fun resolvePcResourceSubType(
     return targetOptions.singleOrNull { it.title == peTitle }?.id ?: 0
 }
 
-internal fun validateWorkDetail(state: WorkDetailState): String? {
-    if (state.itemName.isBlank()) return "请输入资源名称"
-    if (state.tags.none { it.isNotBlank() }) return "请至少添加一个模组标签"
-    if (state.priceType == PriceTypeEnum.UNKNOWN) return "请选择定价类型"
-    when (state.priceType) {
-        PriceTypeEnum.DIAMOND -> if (state.priceRank.type !in 0..6) {
-            return "请选择有效的钻石定价档位"
-        }
-
-        PriceTypeEnum.EMERALD -> if (state.emeraldPrice <= 0) {
-            return "请输入大于 0 的绿宝石价格"
-        }
-
-        else -> Unit
-    }
-    if (HtmlParser.parse(state.peDetail).text.isBlank()) {
-        return "PE 详情至少需要 1 个字符"
-    }
-    if (state.peResourceType <= 0) return "请选择 PE 资源类别"
-
-    val gameplayIds = state.peRecommendTagOptions.gameplayTag.mapTo(mutableSetOf()) { it.id }
-    if (state.peRecommendTags.none { it in gameplayIds }) {
-        return "请至少选择 1 个玩法推荐标签"
-    }
-    val themeIds = state.peRecommendTagOptions.themeTag.mapTo(mutableSetOf()) { it.id }
-    if (state.peRecommendTags.none { it in themeIds }) {
-        return "请至少选择 1 个主题推荐标签"
-    }
-    if (state.peModVersion.isBlank()) return "请选择 modAPI 版本"
-    if (state.peResource == null) return "请上传 PE 资源文件"
-    if (state.peImageSlots.isEmpty()) return "PE 图片位配置尚未加载，请稍后重试"
-    if (state.peImageSlots.any { it.channelUrl.isBlank() }) return "请上传全部 PE 图片"
-    if (
-        state.priceType in setOf(PriceTypeEnum.DIAMOND, PriceTypeEnum.EMERALD) &&
-        state.videos.none { it.url.isNotBlank() }
-    ) {
-        return "付费资源必须上传视频"
-    }
-    return validatePcSyncSelection(state)
-}
-
-internal fun validatePcSyncSelection(state: WorkDetailState): String? {
-    if (!state.syncPc) return null
-    if (state.pcResourceType <= 0) {
-        return "无法匹配 PC 模组类别，请确认 PE 资源类别后重试"
-    }
-    if (state.detail?.syncPcFlag == true) return null
-    if (state.pcResourceTypeOptions.none { it.id == state.pcResourceType }) {
-        return "无法匹配 PC 模组类别，请确认 PE 资源类别后重试"
-    }
-    val subTypeOptions = state.pcResourceSubTypeOptions[state.pcResourceType].orEmpty()
-    if (subTypeOptions.isNotEmpty() && subTypeOptions.none { it.id == state.pcResourceSubType }) {
-        return "请选择 PC 具体类别"
-    }
-    return null
-}
+internal fun validateWorkDetail(state: WorkDetailState): String? = validateWorkSave(
+    WorkSaveValidationInput(
+        itemName = state.itemName,
+        tags = state.tags,
+        priceType = state.priceType,
+        priceRank = state.priceRank.type,
+        price = state.emeraldPrice,
+        detailHtml = state.peDetail,
+        peResourceType = state.peResourceType,
+        recommendTagIds = state.peRecommendTags,
+        gameplayTagIds = state.peRecommendTagOptions.gameplayTag.mapTo(mutableSetOf()) { it.id },
+        themeTagIds = state.peRecommendTagOptions.themeTag.mapTo(mutableSetOf()) { it.id },
+        modVersion = state.peModVersion,
+        hasResource = state.peResource != null,
+        channelsLoaded = state.peImageSlots.isNotEmpty(),
+        requiredChannelIds = state.peImageSlots.mapTo(mutableSetOf()) { it.channelId },
+        availableChannelIds = state.peImageSlots
+            .filter { it.channelUrl.isNotBlank() }
+            .mapTo(mutableSetOf()) { it.channelId },
+        hasVideo = state.videos.any { it.url.isNotBlank() },
+        syncPc = state.syncPc,
+        originallySyncedToPc = state.detail?.syncPcFlag == true,
+        pcResourceType = state.pcResourceType,
+        validPcResourceTypeIds = state.pcResourceTypeOptions.mapTo(mutableSetOf()) { it.id },
+        pcResourceSubType = state.pcResourceSubType,
+        validPcResourceSubTypeIds = state.pcResourceSubTypeOptions[state.pcResourceType]
+            .orEmpty()
+            .mapTo(mutableSetOf()) { it.id },
+    )
+)
 
 /** 由编辑态构造新建请求体（pe/upload）。res/channel 仅含已上传（有 fileInfo）的项。 */
 internal fun buildWorkCreatePayload(s: WorkDetailState, isCheckApply: Boolean): WorkCreateDTO =
@@ -1261,7 +1236,8 @@ internal fun buildUpdatePayload(
         ResourceDetailChannel(
             channelId = slot.channelId,
             channelUrl = slot.channelUrl,
-            version = d.channel.firstOrNull { it.channelId == slot.channelId }?.version ?: 0
+            version = d.channel.firstOrNull { it.channelId == slot.channelId }?.version ?: 0,
+            fileInfo = slot.fileInfo
         )
     },
     syncItemInfo = d.syncItemInfo.copy(
@@ -1285,7 +1261,8 @@ internal fun buildUpdatePayload(
                         ResourceDetailSyncChannel(
                             channelId = slot.channelId,
                             channelUrl = slot.channelUrl,
-                            version = slot.version
+                            version = slot.version,
+                            fileInfo = slot.fileInfo
                         )
                     }
         },
@@ -1343,7 +1320,8 @@ private fun buildResList(
             addVersion = addVersion,
             resName = pe.name,
             resUrl = pe.url,
-            mcVersion = pe.mcVersion
+            mcVersion = pe.mcVersion,
+            fileInfo = pe.fileInfo
         )
     )
 }
