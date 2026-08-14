@@ -54,13 +54,17 @@
 
 最新版本见 [GitHub Releases](https://github.com/BitterLemonn/McDevManagerMP/releases)。
 
-| 平台      | 状态  | 安装包               |
-|---------|-----|-------------------|
-| Windows | 已支持 | MSI 安装版 / 便携版 zip |
-| macOS   | 已支持 | DMG               |
-| Linux   | 已支持 | DEB               |
-| Android | 已支持 | APK               |
-| iOS     | 开发中 | IPA（需自行签名）        |
+| 平台         | 状态  | 安装包               |
+|------------|-----|-------------------|
+| Windows    | 已支持 | MSI 安装版 / 便携版 zip |
+| macOS      | 已支持 | DMG               |
+| Linux      | 已支持 | DEB               |
+| Android    | 已支持 | APK               |
+| iOS        | 开发中 | IPA（需自行签名）        |
+| MCP Server | 已支持 | 跨平台 stdio ZIP     |
+
+MCP Server 可由 agent
+客户端自动启动，用于查询、编辑、新建、审核和上架作品。安装及凭据配置见 [MCP Server 文档](mcpServer/README.md)。
 
 ---
 
