@@ -64,7 +64,7 @@ fun validateWorkSave(
         if (!input.channelsLoaded) return "PE 图片位配置尚未加载，请稍后重试"
         if (!input.availableChannelIds.containsAll(input.requiredChannelIds)) return "请上传全部 PE 图片"
     }
-    if (input.priceType in setOf(PriceTypeEnum.DIAMOND, PriceTypeEnum.EMERALD) && !input.hasVideo) {
+    if (input.priceType == PriceTypeEnum.DIAMOND && !input.hasVideo) {
         return "付费资源必须上传视频"
     }
     if (!input.syncPc) return null

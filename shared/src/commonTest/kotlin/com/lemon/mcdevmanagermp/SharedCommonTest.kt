@@ -221,13 +221,13 @@ class SharedCommonTest {
     }
 
     @Test
-    fun paidResourceRequiresPriceAndVideo() {
+    fun onlyDiamondResourceRequiresVideo() {
         val diamond = validInput.copy(priceType = PriceTypeEnum.DIAMOND, priceRank = 0)
         assertEquals("付费资源必须上传视频", validateWorkSave(diamond))
         assertNull(validateWorkSave(diamond.copy(hasVideo = true)))
 
-        val emerald = validInput.copy(priceType = PriceTypeEnum.EMERALD, priceRank = -5)
-        assertEquals("请输入大于 0 的绿宝石价格", validateWorkSave(emerald))
+        val emerald = validInput.copy(priceType = PriceTypeEnum.EMERALD, priceRank = -5, price = 1)
+        assertNull(validateWorkSave(emerald))
     }
 
     @Test
