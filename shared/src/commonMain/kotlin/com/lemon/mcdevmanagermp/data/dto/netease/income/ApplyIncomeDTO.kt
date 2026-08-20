@@ -9,6 +9,20 @@ data class ApplyIncomeDTO(
     val incomeIds: List<String>
 )
 
+@Serializable
+data class LobbyIncomeResourceListVO(
+    val count: Int = 0,
+    val items: List<LobbyIncomeResourceVO> = emptyList()
+)
+
+@Serializable
+data class LobbyIncomeResourceVO(
+    @SerialName("item_id")
+    val itemId: String = "",
+    @SerialName("item_name")
+    val itemName: String = ""
+)
+
 // 实时收益
 @Serializable
 data class OneResRealtimeIncomeVO(

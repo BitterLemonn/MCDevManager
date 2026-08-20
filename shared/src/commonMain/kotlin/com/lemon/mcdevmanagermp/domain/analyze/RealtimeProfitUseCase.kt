@@ -1,6 +1,7 @@
 package com.lemon.mcdevmanagermp.domain.analyze
 
 import com.lemon.mcdevmanagermp.data.common.NetworkState
+import com.lemon.mcdevmanagermp.data.dto.netease.income.LobbyIncomeResourceListVO
 import com.lemon.mcdevmanagermp.data.dto.netease.income.OneResRealtimeIncomeVO
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
@@ -30,6 +31,19 @@ class RealtimeProfitUseCase(
         )
     }
 
+    suspend fun getLobbyIncomeResources(): NetworkState<LobbyIncomeResourceListVO> =
+        analyzeRepository.getLobbyIncomeResources()
+
+    suspend fun getLobbyRealtimeIncome(
+        iid: String,
+        beginTime: String,
+        endTime: String
+    ): NetworkState<OneResRealtimeIncomeVO> = analyzeRepository.getLobbyRealtimeIncome(
+        iid = iid,
+        beginTime = beginTime,
+        endTime = endTime
+    )
+
     /**
      * 计算实时收益查询的时间范围：前一天 16:00 ~ 当天 15:59
      * @param checkDay 格式 "yyyy-MM-dd"
@@ -50,3 +64,13 @@ class RealtimeProfitUseCase(
         return date.minus(1, DateTimeUnit.DAY).toString()
     }
 }
+
+internal fun mergeRealtimeIncome(
+    current: OneResRealtimeIncomeVO?,
+    incoming: OneResRealtimeIncomeVO
+): OneResRealtimeIncomeVO = OneResRealtimeIncomeVO(
+    count = (current?.count ?: 0) + incoming.count,
+    totalDiamonds = (current?.totalDiamonds ?: 0) + incoming.totalDiamonds,
+    totalPoints = (current?.totalPoints ?: 0) + incoming.totalPoints,
+    orders = current?.orders.orEmpty() + incoming.orders
+)

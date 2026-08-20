@@ -32,7 +32,13 @@ class MonthDetailViewModel : BaseViewModel<MonthDetailState, MonthDetailAction, 
             }
 
             is MonthDetailAction.SetPlatform -> {
-                setState { copy(platform = action.platform, monthData = emptyList()) }
+                setState {
+                    copy(
+                        platform = action.platform,
+                        monthData = emptyList(),
+                        selectedMetric = MonthMetricType.TOTAL_DIAMOND
+                    )
+                }
                 loadWithCurrentRange()
             }
 

@@ -139,32 +139,36 @@ internal fun DayDetailExpandedLayout(
                         MetricChipRow("新增购买", state.metricType == DayDetailMetricType.NEW_PURCHASE) {
                             onAction(DayDetailAction.SelectMetric(DayDetailMetricType.NEW_PURCHASE))
                         }
-                        MetricChipRow("下载量", state.metricType == DayDetailMetricType.DOWNLOAD) {
-                            onAction(DayDetailAction.SelectMetric(DayDetailMetricType.DOWNLOAD))
+                        if (state.platform != "lobby") {
+                            MetricChipRow("下载量", state.metricType == DayDetailMetricType.DOWNLOAD) {
+                                onAction(DayDetailAction.SelectMetric(DayDetailMetricType.DOWNLOAD))
+                            }
                         }
                         MetricChipRow("钻石收益", state.metricType == DayDetailMetricType.DIAMOND) {
                             onAction(DayDetailAction.SelectMetric(DayDetailMetricType.DIAMOND))
                         }
-                        MetricChipRow("绿宝石", state.metricType == DayDetailMetricType.POINTS) {
-                            onAction(DayDetailAction.SelectMetric(DayDetailMetricType.POINTS))
-                        }
-                        MetricChipRow("日活", state.metricType == DayDetailMetricType.DAU) {
-                            onAction(DayDetailAction.SelectMetric(DayDetailMetricType.DAU))
-                        }
-                        MetricChipRow("退款率", state.metricType == DayDetailMetricType.REFUND_RATE) {
-                            onAction(DayDetailAction.SelectMetric(DayDetailMetricType.REFUND_RATE))
-                        }
-                        MetricChipRow("愿望单新增", state.metricType == DayDetailMetricType.WISHLIST_ADDS) {
-                            onAction(DayDetailAction.SelectMetric(DayDetailMetricType.WISHLIST_ADDS))
-                        }
-                        MetricChipRow("愿望单赠送", state.metricType == DayDetailMetricType.WISHLIST_GIFTS) {
-                            onAction(DayDetailAction.SelectMetric(DayDetailMetricType.WISHLIST_GIFTS))
-                        }
-                        MetricChipRow("愿望单购买", state.metricType == DayDetailMetricType.WISHLIST_PURCHASES) {
-                            onAction(DayDetailAction.SelectMetric(DayDetailMetricType.WISHLIST_PURCHASES))
-                        }
-                        MetricChipRow("愿望单移除", state.metricType == DayDetailMetricType.WISHLIST_REMOVES) {
-                            onAction(DayDetailAction.SelectMetric(DayDetailMetricType.WISHLIST_REMOVES))
+                        if (state.platform != "lobby") {
+                            MetricChipRow("绿宝石", state.metricType == DayDetailMetricType.POINTS) {
+                                onAction(DayDetailAction.SelectMetric(DayDetailMetricType.POINTS))
+                            }
+                            MetricChipRow("日活", state.metricType == DayDetailMetricType.DAU) {
+                                onAction(DayDetailAction.SelectMetric(DayDetailMetricType.DAU))
+                            }
+                            MetricChipRow("退款率", state.metricType == DayDetailMetricType.REFUND_RATE) {
+                                onAction(DayDetailAction.SelectMetric(DayDetailMetricType.REFUND_RATE))
+                            }
+                            MetricChipRow("愿望单新增", state.metricType == DayDetailMetricType.WISHLIST_ADDS) {
+                                onAction(DayDetailAction.SelectMetric(DayDetailMetricType.WISHLIST_ADDS))
+                            }
+                            MetricChipRow("愿望单赠送", state.metricType == DayDetailMetricType.WISHLIST_GIFTS) {
+                                onAction(DayDetailAction.SelectMetric(DayDetailMetricType.WISHLIST_GIFTS))
+                            }
+                            MetricChipRow("愿望单购买", state.metricType == DayDetailMetricType.WISHLIST_PURCHASES) {
+                                onAction(DayDetailAction.SelectMetric(DayDetailMetricType.WISHLIST_PURCHASES))
+                            }
+                            MetricChipRow("愿望单移除", state.metricType == DayDetailMetricType.WISHLIST_REMOVES) {
+                                onAction(DayDetailAction.SelectMetric(DayDetailMetricType.WISHLIST_REMOVES))
+                            }
                         }
                     }
 

@@ -41,14 +41,16 @@ class DayDetailUseCase(
         iids: List<String>
     ): NetworkState<Map<String, List<ResAnalyzeData>>> {
         val itemListStr = iids.joinToString(",")
-        val apiPlatform = if (platform == "pe") "pe" else "comp"
+        val isLobby = platform == "lobby"
+        val apiPlatform = if (platform == "comp") "comp" else "pe"
 
         return when (val result = analyzeRepository.getDayDetail(
             platform = apiPlatform,
             category = apiPlatform,
             startDate = startDate,
             endDate = endDate,
-            itemListStr = itemListStr
+            itemListStr = itemListStr,
+            isLobby = isLobby
         )) {
             is NetworkState.Success -> {
                 val grouped = result.data?.data?.groupBy { it.iid } ?: emptyMap()

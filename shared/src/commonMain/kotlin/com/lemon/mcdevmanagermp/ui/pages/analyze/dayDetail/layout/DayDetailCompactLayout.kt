@@ -158,32 +158,36 @@ internal fun DayDetailCompactLayout(
                     MetricChip("新增购买", state.metricType == DayDetailMetricType.NEW_PURCHASE) {
                         onAction(DayDetailAction.SelectMetric(DayDetailMetricType.NEW_PURCHASE))
                     }
-                    MetricChip("下载量", state.metricType == DayDetailMetricType.DOWNLOAD) {
-                        onAction(DayDetailAction.SelectMetric(DayDetailMetricType.DOWNLOAD))
+                    if (state.platform != "lobby") {
+                        MetricChip("下载量", state.metricType == DayDetailMetricType.DOWNLOAD) {
+                            onAction(DayDetailAction.SelectMetric(DayDetailMetricType.DOWNLOAD))
+                        }
                     }
                     MetricChip("钻石收益", state.metricType == DayDetailMetricType.DIAMOND) {
                         onAction(DayDetailAction.SelectMetric(DayDetailMetricType.DIAMOND))
                     }
-                    MetricChip("绿宝石", state.metricType == DayDetailMetricType.POINTS) {
-                        onAction(DayDetailAction.SelectMetric(DayDetailMetricType.POINTS))
-                    }
-                    MetricChip("日活", state.metricType == DayDetailMetricType.DAU) {
-                        onAction(DayDetailAction.SelectMetric(DayDetailMetricType.DAU))
-                    }
-                    MetricChip("退款率", state.metricType == DayDetailMetricType.REFUND_RATE) {
-                        onAction(DayDetailAction.SelectMetric(DayDetailMetricType.REFUND_RATE))
-                    }
-                    MetricChip("愿单新增", state.metricType == DayDetailMetricType.WISHLIST_ADDS) {
-                        onAction(DayDetailAction.SelectMetric(DayDetailMetricType.WISHLIST_ADDS))
-                    }
-                    MetricChip("愿单赠送", state.metricType == DayDetailMetricType.WISHLIST_GIFTS) {
-                        onAction(DayDetailAction.SelectMetric(DayDetailMetricType.WISHLIST_GIFTS))
-                    }
-                    MetricChip("愿单购买", state.metricType == DayDetailMetricType.WISHLIST_PURCHASES) {
-                        onAction(DayDetailAction.SelectMetric(DayDetailMetricType.WISHLIST_PURCHASES))
-                    }
-                    MetricChip("愿单移除", state.metricType == DayDetailMetricType.WISHLIST_REMOVES) {
-                        onAction(DayDetailAction.SelectMetric(DayDetailMetricType.WISHLIST_REMOVES))
+                    if (state.platform != "lobby") {
+                        MetricChip("绿宝石", state.metricType == DayDetailMetricType.POINTS) {
+                            onAction(DayDetailAction.SelectMetric(DayDetailMetricType.POINTS))
+                        }
+                        MetricChip("日活", state.metricType == DayDetailMetricType.DAU) {
+                            onAction(DayDetailAction.SelectMetric(DayDetailMetricType.DAU))
+                        }
+                        MetricChip("退款率", state.metricType == DayDetailMetricType.REFUND_RATE) {
+                            onAction(DayDetailAction.SelectMetric(DayDetailMetricType.REFUND_RATE))
+                        }
+                        MetricChip("愿单新增", state.metricType == DayDetailMetricType.WISHLIST_ADDS) {
+                            onAction(DayDetailAction.SelectMetric(DayDetailMetricType.WISHLIST_ADDS))
+                        }
+                        MetricChip("愿单赠送", state.metricType == DayDetailMetricType.WISHLIST_GIFTS) {
+                            onAction(DayDetailAction.SelectMetric(DayDetailMetricType.WISHLIST_GIFTS))
+                        }
+                        MetricChip("愿单购买", state.metricType == DayDetailMetricType.WISHLIST_PURCHASES) {
+                            onAction(DayDetailAction.SelectMetric(DayDetailMetricType.WISHLIST_PURCHASES))
+                        }
+                        MetricChip("愿单移除", state.metricType == DayDetailMetricType.WISHLIST_REMOVES) {
+                            onAction(DayDetailAction.SelectMetric(DayDetailMetricType.WISHLIST_REMOVES))
+                        }
                     }
                 }
 
@@ -214,7 +218,7 @@ internal fun DayDetailCompactLayout(
 }
 
 /**
- * 平台切换 PE/PC
+ * 平台切换 PE/PC/联机大厅
  */
 @Composable
 internal fun PlatformToggle(
@@ -231,6 +235,7 @@ internal fun PlatformToggle(
     ) {
         PlatformButton("PE", platform == "pe") { onPlatformChange("pe") }
         PlatformButton("PC", platform == "comp") { onPlatformChange("comp") }
+        PlatformButton("联机大厅", platform == "lobby") { onPlatformChange("lobby") }
     }
 }
 
@@ -244,7 +249,7 @@ internal fun PlatformButton(
 
     Box(
         modifier = Modifier
-            .size(width = 48.dp, height = 30.dp)
+            .size(width = if (label == "联机大厅") 72.dp else 48.dp, height = 30.dp)
             .clip(RoundedCornerShape(6.dp))
             .background(if (isSelected) colors.primary.copy(alpha = 0.12f) else Color.Transparent)
             .clickable(

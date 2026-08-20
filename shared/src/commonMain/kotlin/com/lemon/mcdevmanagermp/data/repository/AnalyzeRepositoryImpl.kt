@@ -4,6 +4,7 @@ import com.lemon.mcdevmanagermp.data.api.AnalyzeApi
 import com.lemon.mcdevmanagermp.data.common.AppContext
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.db.entity.DayDetailConfigEntity
+import com.lemon.mcdevmanagermp.data.dto.netease.income.LobbyIncomeResourceListVO
 import com.lemon.mcdevmanagermp.data.dto.netease.income.OneResRealtimeIncomeVO
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResMonthDetailVO
@@ -23,16 +24,25 @@ class AnalyzeRepositoryImpl : AnalyzeRepository {
         category: String,
         startDate: String,
         endDate: String,
-        itemListStr: String
+        itemListStr: String,
+        isLobby: Boolean
     ): NetworkState<ResDetailVO> {
         return UnifiedExceptionHandler.handleRequest {
-            analyzeApi.getDayDetail(
-                platform = platform,
-                category = category,
-                startDate = startDate,
-                endDate = endDate,
-                itemListStr = itemListStr
-            )
+            if (isLobby) {
+                analyzeApi.getLobbyDayDetail(
+                    startDate = startDate,
+                    endDate = endDate,
+                    itemListStr = itemListStr
+                )
+            } else {
+                analyzeApi.getDayDetail(
+                    platform = platform,
+                    category = category,
+                    startDate = startDate,
+                    endDate = endDate,
+                    itemListStr = itemListStr
+                )
+            }
         }
     }
 
@@ -41,16 +51,25 @@ class AnalyzeRepositoryImpl : AnalyzeRepository {
         category: String,
         startDate: String,
         endDate: String,
-        dayDateId: String
+        dayDateId: String,
+        isLobby: Boolean
     ): NetworkState<ResMonthDetailVO> {
         return UnifiedExceptionHandler.handleRequest {
-            analyzeApi.getMonthDetail(
-                platform = platform,
-                category = category,
-                startDate = startDate,
-                endDate = endDate,
-                dayDateId = dayDateId
-            )
+            if (isLobby) {
+                analyzeApi.getLobbyMonthDetail(
+                    startDate = startDate,
+                    endDate = endDate,
+                    dayDateId = dayDateId
+                )
+            } else {
+                analyzeApi.getMonthDetail(
+                    platform = platform,
+                    category = category,
+                    startDate = startDate,
+                    endDate = endDate,
+                    dayDateId = dayDateId
+                )
+            }
         }
     }
 
@@ -63,6 +82,26 @@ class AnalyzeRepositoryImpl : AnalyzeRepository {
         return UnifiedExceptionHandler.handleRequest {
             analyzeApi.getOneResRealtimeIncome(
                 platform = platform,
+                iid = iid,
+                beginTime = beginTime,
+                endTime = endTime
+            )
+        }
+    }
+
+    override suspend fun getLobbyIncomeResources(): NetworkState<LobbyIncomeResourceListVO> {
+        return UnifiedExceptionHandler.handleRequest {
+            analyzeApi.getLobbyIncomeResources()
+        }
+    }
+
+    override suspend fun getLobbyRealtimeIncome(
+        iid: String,
+        beginTime: String,
+        endTime: String
+    ): NetworkState<OneResRealtimeIncomeVO> {
+        return UnifiedExceptionHandler.handleRequest {
+            analyzeApi.getLobbyRealtimeIncome(
                 iid = iid,
                 beginTime = beginTime,
                 endTime = endTime

@@ -76,6 +76,21 @@ data class WorkDetailState(
     val peRecommendTagLimit: Int = 0,                   // 推荐标签合计上限（mc_consts.item_tag_limit；0=未加载/不限制）
     val isUploadingPeZip: Boolean = false,            // zip 上传中
 
+    // —— 联机大厅（peResourceType=联机大厅时编辑） ——
+    val lobbyMinNum: Int = 0,                         // 建议游戏人数下限；0 表示关闭建议人数
+    val lobbyMaxNum: Int = 0,                         // 建议游戏人数上限；0 表示关闭建议人数
+    val lobbyForceMaxNum: Int = 10,                   // 房间限制人数（2..10）
+    val lobbyTags: List<Int> = emptyList(),           // 联机大厅专区分类
+    val lobbyTagOptions: List<MCConstsCommonTitleData> = emptyList(),
+    val lobbyTagLimit: Int = 0,
+    val lobbyCompetitiveTagId: Int = -1,
+    val isLobbyCompetitive: Boolean = false,
+    val lobbyIsAsymmetric: Boolean = false,
+    val lobbyCamps: List<String> = emptyList(),
+    val lobbyPlayerNum: Int = 0,
+    val lobbyNormalMode: Boolean = false,
+    val lobbyReconnectTime: Int = 0,
+
     // —— PC 资源管理（syncPc=true 时编辑） ——
     val pcResourceType: Int = 0,                      // PC 模组类别（priType id；选项来自 mc_consts.pri_type.comp）
     val pcAvailableScope: String = "",                // PC 适用范围（available_scope id；选项来自 mc_consts.available_scope）
@@ -147,6 +162,17 @@ sealed interface WorkDetailAction : IUiAction {
     data class UpdatePeModVersion(val value: String) : WorkDetailAction
     data class UploadPeZip(val file: PlatformFile) : WorkDetailAction
     data object RemovePeResource : WorkDetailAction
+
+    // —— 联机大厅 ——
+    data class UpdateLobbyMinNum(val value: Int) : WorkDetailAction
+    data class UpdateLobbyMaxNum(val value: Int) : WorkDetailAction
+    data class UpdateLobbyForceMaxNum(val value: Int) : WorkDetailAction
+    data class ToggleLobbyTag(val id: Int) : WorkDetailAction
+    data class ToggleLobbyAsymmetric(val value: Boolean) : WorkDetailAction
+    data class UpdateLobbyCamp(val index: Int, val value: String) : WorkDetailAction
+    data class UpdateLobbyPlayerNum(val value: Int) : WorkDetailAction
+    data class ToggleLobbyNormalMode(val value: Boolean) : WorkDetailAction
+    data class UpdateLobbyReconnectTime(val value: Int) : WorkDetailAction
 
     // —— PC 资源管理 ——
     data class UpdatePcResourceType(val id: Int) : WorkDetailAction   // 模组类别（pri_type.comp）

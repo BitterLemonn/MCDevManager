@@ -63,14 +63,20 @@ class MainUseCase(
 
     private suspend fun getOneMonthComponentDiamonds(year: Int, month: Int): Map<String, Double> =
         coroutineScope {
-            val resList = when (val resources = getResourceListUseCase("pe", onlineOnly = true)) {
+            val normalResources = async { getResourceListUseCase("pe", onlineOnly = true) }
+            val lobbyResources = async { analyzeRepository.getLobbyIncomeResources() }
+            val resList = when (val resources = normalResources.await()) {
                 is NetworkState.Success -> resources.data ?: emptyList()
+                is NetworkState.Error -> emptyList()
+            }
+            val lobbyResList = when (val resources = lobbyResources.await()) {
+                is NetworkState.Success -> resources.data?.items ?: emptyList()
                 is NetworkState.Error -> emptyList()
             }
 
             val dateRange = monthDateRange(year, month)
 
-            resList.map { res ->
+            val normalDiamonds = resList.map { res ->
                 async {
                     val result = analyzeRepository.getDayDetail(
                         platform = "pe",
@@ -87,6 +93,25 @@ class MainUseCase(
                     }
                 }
             }.associate { it.await() }
+            val lobbyDiamonds = lobbyResList.map { res ->
+                async {
+                    val result = analyzeRepository.getDayDetail(
+                        platform = "pe",
+                        category = "pe",
+                        startDate = dateRange.first,
+                        endDate = dateRange.second,
+                        itemListStr = res.itemId,
+                        isLobby = true
+                    )
+                    if (result is NetworkState.Success) {
+                        res.itemName to (result.data?.data?.sumOf { it.diamond.toDouble() } ?: 0.0)
+                    } else {
+                        res.itemName to 0.0
+                    }
+                }
+            }.associate { it.await() }
+
+            mergeProfitDiamonds(normalDiamonds, lobbyDiamonds)
         }
 
     private fun monthDateRange(year: Int, month: Int): Pair<String, String> {
@@ -102,4 +127,12 @@ class MainUseCase(
                     (state.e is CookiesExpiredException || state.e is LoginException)
         }
     }
+}
+
+internal fun mergeProfitDiamonds(
+    normal: Map<String, Double>,
+    lobby: Map<String, Double>
+): Map<String, Double> = buildMap {
+    putAll(normal)
+    lobby.forEach { (name, diamonds) -> put(name, (get(name) ?: 0.0) + diamonds) }
 }
