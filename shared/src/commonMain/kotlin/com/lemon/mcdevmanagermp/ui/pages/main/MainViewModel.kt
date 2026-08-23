@@ -16,6 +16,7 @@ import com.lemon.mcdevmanagermp.data.vo.netease.user.LevelInfoVO
 import com.lemon.mcdevmanagermp.data.vo.netease.user.OverviewVO
 import com.lemon.mcdevmanagermp.data.vo.netease.user.UserInfoVO
 import com.lemon.mcdevmanagermp.domain.main.MainUseCase
+import com.lemon.mcdevmanagermp.domain.main.profitMonthWindow
 import com.lemon.mcdevmanagermp.domain.rankList.RankListUseCase
 import com.lemon.mcdevmanagermp.domain.resource.GetResourceListUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
@@ -25,6 +26,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
@@ -51,17 +53,17 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
 
         var cachedProfitData: ProfitData? = null
             private set
-        var cachedMonthLabel: String? = null
-            private set
         var cachedLastMonthProfitData: ProfitData? = null
             private set
-        var cachedLastMonthLabel: String? = null
+        var cachedNextMonthProfitData: ProfitData? = null
             private set
 
         var cachedRankListData: List<RankCategoryData> = emptyList()
             private set
 
         var cachedShowLastMonthProfit: Boolean = false
+            private set
+        var cachedShowNextMonthProfit: Boolean = false
             private set
 
         // 消息未读数缓存（按天）
@@ -86,6 +88,7 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
             cachedLevelInfo = null
             cachedProfitData = null
             cachedLastMonthProfitData = null
+            cachedNextMonthProfitData = null
             cachedRankListData = emptyList()
         }
     }
@@ -131,8 +134,10 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
                 copy(
                     profitData = cachedProfitData,
                     lastProfitData = cachedLastMonthProfitData,
+                    nextProfitData = cachedNextMonthProfitData,
                     isProfitLoading = false,
-                    showLastMonthProfit = cachedShowLastMonthProfit
+                    showLastMonthProfit = cachedShowLastMonthProfit,
+                    showNextMonthProfit = cachedShowNextMonthProfit
                 )
             }
         } else {
@@ -179,6 +184,7 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
             is MainAction.GetRankData -> loadRankCategory(action.category, action.subCategory)
             MainAction.ToggleProfitExpand -> setState { copy(profitExpanded = !profitExpanded) }
             MainAction.ToggleLastProfitExpand -> setState { copy(lastProfitExpanded = !lastProfitExpanded) }
+            MainAction.ToggleNextProfitExpand -> setState { copy(nextProfitExpanded = !nextProfitExpanded) }
         }
     }
 
@@ -252,28 +258,35 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
             copy(
                 isProfitLoading = true,
                 profitExpanded = false,
-                lastProfitExpanded = false
+                lastProfitExpanded = false,
+                nextProfitExpanded = false
             )
         }
         viewModelScope.launch {
             try {
                 val timeZone = TimeZone.of("Asia/Shanghai")
                 val now = Clock.System.now().toLocalDateTime(timeZone)
-                val result = mainUseCase.computeProfit(now.year, now.month.number)
+                val window = profitMonthWindow(LocalDate(now.year, now.month.number, now.day))
+                val result = mainUseCase.computeProfit(
+                    year = now.year,
+                    month = now.month.number,
+                    includeLastMonth = window.showLastMonth,
+                    includeNextMonth = window.showNextMonth
+                )
                 cachedProfitData = result.thisMonth
-                cachedMonthLabel = "${now.year}年${now.month.number}月"
                 cachedLastMonthProfitData = result.lastMonth
-                val lastMonthNumber = if (now.month.number == 1) 12 else now.month.number - 1
-                val lastMonthYear = if (now.month.number == 1) now.year - 1 else now.year
-                cachedLastMonthLabel = "${lastMonthYear}年${lastMonthNumber}月"
-                cachedShowLastMonthProfit = now.day <= 10
+                cachedNextMonthProfitData = result.nextMonth
+                cachedShowLastMonthProfit = window.showLastMonth
+                cachedShowNextMonthProfit = window.showNextMonth
                 cachedProfitDate = todayString()
                 setState {
                     copy(
                         profitData = result.thisMonth,
                         lastProfitData = result.lastMonth,
+                        nextProfitData = result.nextMonth,
                         isProfitLoading = false,
-                        showLastMonthProfit = cachedShowLastMonthProfit
+                        showLastMonthProfit = cachedShowLastMonthProfit,
+                        showNextMonthProfit = cachedShowNextMonthProfit
                     )
                 }
             } catch (_: Exception) {

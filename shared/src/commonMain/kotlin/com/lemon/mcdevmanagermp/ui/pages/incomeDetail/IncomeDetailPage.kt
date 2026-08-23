@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -20,20 +21,37 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.lemon.mcdevmanagermp.domain.main.ProfitMonth
+import com.lemon.mcdevmanagermp.domain.main.profitMonthWindow
 import com.lemon.mcdevmanagermp.ui.components.AppScaffold
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
@@ -44,26 +62,46 @@ import com.lemon.mcdevmanagermp.utils.ProfitData
 import com.lemon.mcdevmanagermp.utils.extension.formatDecimal
 import com.lemon.mcdevmanagermp.utils.getTaxMoney
 import com.lemon.mcdevmanagermp.utils.toModuleIncomeDetails
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.number
+import kotlinx.datetime.toLocalDateTime
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_money
 import org.jetbrains.compose.resources.painterResource
+import kotlin.time.Clock
 
 @Composable
-fun IncomeDetailPage(isLastMonth: Boolean = false, onBack: () -> Unit) {
+fun IncomeDetailPage(initialMonthOffset: Int = 0, onBack: () -> Unit) {
     val colors = LocalAppColors.current
-    val profitData = if (isLastMonth) {
-        MainViewModel.cachedLastMonthProfitData ?: ProfitData()
-    } else {
-        MainViewModel.cachedProfitData ?: ProfitData()
+    val today = remember {
+        val now = Clock.System.now().toLocalDateTime(TimeZone.of("Asia/Shanghai"))
+        LocalDate(now.year, now.month.number, now.day)
     }
-    val monthLabel = if (isLastMonth) {
-        MainViewModel.cachedLastMonthLabel ?: ""
-    } else {
-        MainViewModel.cachedMonthLabel ?: ""
+    val monthWindow = remember(today) { profitMonthWindow(today) }
+    val initialMonth = remember(initialMonthOffset, monthWindow) {
+        monthWindow.current.shift(initialMonthOffset)
     }
+    val initialData = remember(initialMonthOffset) {
+        when (initialMonthOffset) {
+            -1 -> MainViewModel.cachedLastMonthProfitData
+            1 -> MainViewModel.cachedNextMonthProfitData
+            else -> MainViewModel.cachedProfitData
+        }
+    }
+    val viewModel = remember(initialMonth) { IncomeDetailViewModel(initialMonth, initialData) }
+    val state by viewModel.state.collectAsState()
+    val profitData = state.profitData
+    val monthLabel = "${state.selectedMonth.year}年${state.selectedMonth.month}月"
     val modules = profitData.toModuleIncomeDetails()
+    val maxSelectableMonth = if (monthWindow.showNextMonth) {
+        monthWindow.current.shift(1)
+    } else {
+        monthWindow.current
+    }
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    var showMonthPicker by remember { mutableStateOf(false) }
 
     val scrollState = rememberScrollState()
     val topBarAlpha by remember {
@@ -97,6 +135,9 @@ fun IncomeDetailPage(isLastMonth: Boolean = false, onBack: () -> Unit) {
                     }
 
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        state.errorMessage?.let { message ->
+                            LoadErrorCard(message = message, onRetry = viewModel::retry)
+                        }
                         SummaryCard(profitData, modules)
                         ModuleList(modules, columns)
                     }
@@ -106,10 +147,126 @@ fun IncomeDetailPage(isLastMonth: Boolean = false, onBack: () -> Unit) {
             CollapsingTopBar(
                 title = "收益详情 - $monthLabel",
                 collapseFraction = topBarAlpha,
-                onBack = onBack
+                onBack = onBack,
+                actions = {
+                    IconButton(onClick = { showMonthPicker = true }) {
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = "选择月份"
+                        )
+                    }
+                }
             )
+
+            if (state.isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center).size(36.dp),
+                    color = colors.primary,
+                    strokeWidth = 3.dp
+                )
+            }
         }
     }
+
+    if (showMonthPicker) {
+        ProfitMonthPickerDialog(
+            selectedMonth = state.selectedMonth,
+            maxMonth = maxSelectableMonth,
+            onSelect = {
+                viewModel.selectMonth(it)
+                showMonthPicker = false
+            },
+            onDismiss = { showMonthPicker = false }
+        )
+    }
+}
+
+@Composable
+private fun LoadErrorCard(message: String, onRetry: () -> Unit) {
+    val colors = LocalAppColors.current
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = message,
+                color = colors.onSurfaceVariant,
+                modifier = Modifier.weight(1f)
+            )
+            TextButton(onClick = onRetry) { Text("重试") }
+        }
+    }
+}
+
+@Composable
+private fun ProfitMonthPickerDialog(
+    selectedMonth: ProfitMonth,
+    maxMonth: ProfitMonth,
+    onSelect: (ProfitMonth) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var displayedYear by remember(selectedMonth) { mutableIntStateOf(selectedMonth.year) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = { displayedYear-- }) {
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "上一年")
+                }
+                Text("${displayedYear}年", style = MaterialTheme.typography.titleMedium)
+                IconButton(
+                    onClick = { displayedYear++ },
+                    enabled = displayedYear < maxMonth.year
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = "下一年"
+                    )
+                }
+            }
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                (1..12).chunked(3).forEach { rowMonths ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        rowMonths.forEach { month ->
+                            val value = ProfitMonth(displayedYear, month)
+                            FilterChip(
+                                selected = value == selectedMonth,
+                                onClick = { onSelect(value) },
+                                label = { Text("${month}月") },
+                                enabled = value <= maxMonth,
+                                modifier = Modifier.weight(1f)
+                                    .heightIn(min = 40.dp),
+                                elevation = FilterChipDefaults.elevatedFilterChipElevation(
+                                    elevation = 0.dp,
+                                    hoveredElevation = 0.dp,
+                                    pressedElevation = 0.dp
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("取消") }
+        }
+    )
 }
 
 // ============================================================
@@ -125,7 +282,7 @@ private fun SummaryCard(profitData: ProfitData, modules: List<ModuleIncomeDetail
         colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh),
         shape = RoundedCornerShape(12.dp),
 
-    ) {
+        ) {
         Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -195,7 +352,7 @@ private fun SummaryCard(profitData: ProfitData, modules: List<ModuleIncomeDetail
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
-                ){
+                ) {
                     Text(
                         text = "税后收益(元)",
                         style = MaterialTheme.typography.bodyMedium,
@@ -203,7 +360,9 @@ private fun SummaryCard(profitData: ProfitData, modules: List<ModuleIncomeDetail
                         color = colors.textColor
                     )
                     Text(
-                        text = (profitData.totalProfit - getTaxMoney(profitData.totalProfit)).formatDecimal(2),
+                        text = (profitData.totalProfit - getTaxMoney(profitData.totalProfit)).formatDecimal(
+                            2
+                        ),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = colors.primary

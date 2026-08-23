@@ -1,10 +1,64 @@
 package com.lemon.mcdevmanagermp.platform
 
 import java.io.File
+import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class DatabaseBuilderJvmTest {
+
+    @Test
+    fun `hot reload stores data below the stable Gradle build root`() {
+        val buildRoot = File("/project")
+
+        assertEquals(
+            buildRoot.absoluteFile,
+            resolveHotReloadApplicationDirectory(
+                isActive = "true",
+                buildRoot = buildRoot.path
+            )
+        )
+    }
+
+    @Test
+    fun `normal launch ignores the Gradle build root`() {
+        assertNull(
+            resolveHotReloadApplicationDirectory(
+                isActive = "false",
+                buildRoot = "/project"
+            )
+        )
+    }
+
+    @Test
+    fun `hot reload restores the newest database from the generated classpath`() {
+        val tempDirectory = Files.createTempDirectory("hot-run-").toFile()
+        val runDirectory = tempDirectory.resolve("run")
+        val targetDirectory = tempDirectory.resolve("stable-data")
+        val oldDataDirectory = runDirectory.resolve("classpath/libs/shared/old/.data")
+        val newDataDirectory = runDirectory.resolve("classpath/libs/shared/new/.data")
+        oldDataDirectory.mkdirs()
+        newDataDirectory.mkdirs()
+        oldDataDirectory.resolve("mc_dev_manager.db").apply {
+            writeText("old")
+            setLastModified(1L)
+        }
+        newDataDirectory.resolve("mc_dev_manager.db").apply {
+            writeText("new")
+            setLastModified(2L)
+        }
+        newDataDirectory.resolve("mc_dev_manager.db-wal").writeText("wal")
+
+        try {
+            migrateLegacyHotReloadDatabase(targetDirectory, runDirectory)
+
+            assertEquals("new", targetDirectory.resolve("mc_dev_manager.db").readText())
+            assertEquals("wal", targetDirectory.resolve("mc_dev_manager.db-wal").readText())
+        } finally {
+            tempDirectory.deleteRecursively()
+        }
+    }
 
     @Test
     fun `portable distribution keeps data next to the application when writable`() {

@@ -27,8 +27,41 @@ data class MainDashboardData(
 
 data class ProfitResult(
     val thisMonth: ProfitData,
-    val lastMonth: ProfitData
+    val lastMonth: ProfitData? = null,
+    val nextMonth: ProfitData? = null
 )
+
+internal data class ProfitMonth(val year: Int, val month: Int) : Comparable<ProfitMonth> {
+    override fun compareTo(other: ProfitMonth): Int =
+        compareValuesBy(this, other, ProfitMonth::year, ProfitMonth::month)
+
+    fun shift(months: Int): ProfitMonth {
+        val firstDay = LocalDate(year, month, 1)
+        val shifted = if (months >= 0) {
+            firstDay.plus(months, DateTimeUnit.MONTH)
+        } else {
+            firstDay.minus(-months, DateTimeUnit.MONTH)
+        }
+        return ProfitMonth(shifted.year, shifted.month.number)
+    }
+}
+
+internal data class ProfitMonthWindow(
+    val current: ProfitMonth,
+    val showLastMonth: Boolean,
+    val showNextMonth: Boolean
+)
+
+internal fun profitMonthWindow(today: LocalDate): ProfitMonthWindow {
+    val current = ProfitMonth(today.year, today.month.number)
+    val nextMonth = current.shift(1)
+    val nextMonthStart = LocalDate(nextMonth.year, nextMonth.month, 1)
+    return ProfitMonthWindow(
+        current = current,
+        showLastMonth = today.day <= 15,
+        showNextMonth = today >= nextMonthStart.minus(9, DateTimeUnit.DAY)
+    )
+}
 
 class MainUseCase(
     private val userRepository: UserRepository,
@@ -47,19 +80,32 @@ class MainUseCase(
         )
     }
 
-    suspend fun computeProfit(year: Int, month: Int): ProfitResult = coroutineScope {
-        val thisMonthDiamonds = getOneMonthComponentDiamonds(year, month)
-        val lastMonthDate = LocalDate(year, month, 1).minus(1, DateTimeUnit.MONTH)
-        val lastMonthDiamonds = getOneMonthComponentDiamonds(
-            lastMonthDate.year,
-            lastMonthDate.month.number
-        )
+    suspend fun computeProfit(
+        year: Int,
+        month: Int,
+        includeLastMonth: Boolean,
+        includeNextMonth: Boolean
+    ): ProfitResult = coroutineScope {
+        val currentMonth = ProfitMonth(year, month)
+        val thisMonth = async { computeMonthProfit(currentMonth.year, currentMonth.month) }
+        val lastMonth = if (includeLastMonth) {
+            val target = currentMonth.shift(-1)
+            async { computeMonthProfit(target.year, target.month) }
+        } else null
+        val nextMonth = if (includeNextMonth) {
+            val target = currentMonth.shift(1)
+            async { computeMonthProfit(target.year, target.month) }
+        } else null
 
         ProfitResult(
-            thisMonth = calculateProfit(thisMonthDiamonds),
-            lastMonth = calculateProfit(lastMonthDiamonds)
+            thisMonth = thisMonth.await(),
+            lastMonth = lastMonth?.await(),
+            nextMonth = nextMonth?.await()
         )
     }
+
+    suspend fun computeMonthProfit(year: Int, month: Int): ProfitData =
+        calculateProfit(getOneMonthComponentDiamonds(year, month))
 
     private suspend fun getOneMonthComponentDiamonds(year: Int, month: Int): Map<String, Double> =
         coroutineScope {

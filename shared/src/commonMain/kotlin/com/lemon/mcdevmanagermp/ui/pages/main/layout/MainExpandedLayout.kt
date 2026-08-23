@@ -180,7 +180,10 @@ internal fun ExpandedLayout(
                             onNavigateToSubPage(Route.IncomeDetail())
                         },
                         onNavigateToLastMonthDetail = {
-                            onNavigateToSubPage(Route.IncomeDetail(isLastMonth = true))
+                            onNavigateToSubPage(Route.IncomeDetail(monthOffset = -1))
+                        },
+                        onNavigateToNextMonthDetail = {
+                            onNavigateToSubPage(Route.IncomeDetail(monthOffset = 1))
                         },
                         onNavigateToIncome = {
                             onNavigateToSubPage(Route.Income)
@@ -214,6 +217,7 @@ internal fun ExpandedHomeTabContent(
     onAction: (MainAction) -> Unit,
     onNavigateToIncomeDetail: () -> Unit = {},
     onNavigateToLastMonthDetail: () -> Unit = {},
+    onNavigateToNextMonthDetail: () -> Unit = {},
     onNavigateToIncome: () -> Unit = {},
     onNavigateToMailbox: () -> Unit = {}
 ) {
@@ -286,6 +290,16 @@ internal fun ExpandedHomeTabContent(
                             expanded = state.lastProfitExpanded,
                             onToggleExpand = { onAction(MainAction.ToggleLastProfitExpand) },
                             onNavigateToDetail = onNavigateToLastMonthDetail
+                        )
+                    }
+                    if (state.showNextMonthProfit) {
+                        ProfitCard(
+                            title = "下月收益速算",
+                            profitData = state.nextProfitData ?: ProfitData(),
+                            isLoading = state.isProfitLoading,
+                            expanded = state.nextProfitExpanded,
+                            onToggleExpand = { onAction(MainAction.ToggleNextProfitExpand) },
+                            onNavigateToDetail = onNavigateToNextMonthDetail
                         )
                     }
                     IncomeManagementCard(onClick = onNavigateToIncome)
