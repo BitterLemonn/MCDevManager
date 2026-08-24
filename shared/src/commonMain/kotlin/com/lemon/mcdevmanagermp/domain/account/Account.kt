@@ -9,4 +9,7 @@ data class Account(
     val cookiesJson: String,
     val lastLoginTime: Long,
     val headImg: String? = null,
+    val email: String = "",
+    val password: String = "",
+    val rememberPassword: Boolean = false,
 )

@@ -39,6 +39,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -54,6 +55,8 @@ import com.lemon.mcdevmanagermp.domain.main.ProfitMonth
 import com.lemon.mcdevmanagermp.domain.main.profitMonthWindow
 import com.lemon.mcdevmanagermp.ui.components.AppScaffold
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
+import com.lemon.mcdevmanagermp.ui.components.LocalSnackbarHostState
+import com.lemon.mcdevmanagermp.ui.components.LocalToastScope
 import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
 import com.lemon.mcdevmanagermp.ui.pages.main.MainViewModel
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
@@ -62,6 +65,7 @@ import com.lemon.mcdevmanagermp.utils.ProfitData
 import com.lemon.mcdevmanagermp.utils.extension.formatDecimal
 import com.lemon.mcdevmanagermp.utils.getTaxMoney
 import com.lemon.mcdevmanagermp.utils.toModuleIncomeDetails
+import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.number
@@ -107,6 +111,16 @@ fun IncomeDetailPage(initialMonthOffset: Int = 0, onBack: () -> Unit) {
     val topBarAlpha by remember {
         derivedStateOf {
             (scrollState.value.toFloat() / 100f).coerceIn(0f, 1f)
+        }
+    }
+
+    val snackbarHostState = LocalSnackbarHostState.current
+    val toastScope = LocalToastScope.current
+    LaunchedEffect(state.selectedMonth) {
+        if (state.selectedMonth < ProfitMonth(2026, 1)) {
+            toastScope.launch {
+                snackbarHostState.showSnackbar("2026.1以前的收益算法与现在不一致，数据可能产生偏差")
+            }
         }
     }
 

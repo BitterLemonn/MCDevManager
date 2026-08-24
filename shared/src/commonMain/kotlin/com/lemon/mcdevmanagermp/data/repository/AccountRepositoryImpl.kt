@@ -35,7 +35,10 @@ class AccountRepositoryImpl : AccountRepository {
         nickname = nickname,
         cookiesJson = cookiesJson,
         lastLoginTime = lastLoginTime,
-        headImg = headImg
+        headImg = headImg,
+        email = email,
+        password = password,
+        rememberPassword = rememberPassword
     )
 
     private fun Account.toEntity() = AccountEntity(
@@ -43,6 +46,9 @@ class AccountRepositoryImpl : AccountRepository {
         nickname = nickname,
         cookiesJson = cookiesJson,
         lastLoginTime = lastLoginTime,
-        headImg = headImg
+        headImg = headImg,
+        email = email,
+        password = password,
+        rememberPassword = rememberPassword
     )
 }

@@ -145,4 +145,78 @@ class DatabaseBuilderJvmTest {
 
         assertEquals(File("/home/test/.local/share/MCDevManager").absoluteFile, directory)
     }
+
+    @Test
+    fun saveAccountWithRememberPasswordStoresCredentials() {
+        val fakeAccountRepo = object : com.lemon.mcdevmanagermp.domain.account.AccountRepository {
+            val accounts = mutableListOf<com.lemon.mcdevmanagermp.domain.account.Account>()
+            override suspend fun getAllAccounts() = accounts
+            override suspend fun getLastUsedAccount() = accounts.lastOrNull()
+            override suspend fun getAccountByNickname(nickname: String) = accounts.firstOrNull { it.nickname == nickname }
+            override suspend fun upsertAccount(account: com.lemon.mcdevmanagermp.domain.account.Account) {
+                val idx = accounts.indexOfFirst { it.nickname == account.nickname }
+                if (idx >= 0) accounts[idx] = account else accounts.add(account)
+            }
+            override suspend fun deleteAccount(id: Long) { accounts.removeAll { it.id == id } }
+            override suspend fun updateNicknameById(id: Long, nickname: String) {}
+        }
+        val fakeUserRepo = object : com.lemon.mcdevmanagermp.domain.user.UserRepository {
+            override suspend fun getUserInfo(): com.lemon.mcdevmanagermp.data.common.NetworkState<com.lemon.mcdevmanagermp.data.vo.netease.user.UserInfoVO> {
+                return com.lemon.mcdevmanagermp.data.common.NetworkState.Success(
+                    com.lemon.mcdevmanagermp.data.vo.netease.user.UserInfoVO(
+                        exp = 0,
+                        level = 1,
+                        nickname = "TestUser",
+                        headImg = "http://example.com/head.png",
+                        income = "0",
+                        onSaleItemCount = 0,
+                        curMonthIncentiveFund = 0.0,
+                        unExtractIncome = "0",
+                        prerequisiteSwitch = false
+                    )
+                )
+            }
+            override suspend fun getOverview(): com.lemon.mcdevmanagermp.data.common.NetworkState<com.lemon.mcdevmanagermp.data.vo.netease.user.OverviewVO> = error("unused")
+            override suspend fun getLevelInfo(): com.lemon.mcdevmanagermp.data.common.NetworkState<com.lemon.mcdevmanagermp.data.vo.netease.user.LevelInfoVO> = error("unused")
+        }
+        val fakeCookieRepo = object : com.lemon.mcdevmanagermp.domain.account.CookieRepository {
+            override fun getAllCookiesMap(): Map<String, String> = mapOf("token" to "abc")
+            override fun addCookie(key: String, value: String) {}
+            override fun clearCookies() {}
+        }
+
+        val useCase = com.lemon.mcdevmanagermp.domain.account.SaveAccountUseCase(
+            accountRepository = fakeAccountRepo,
+            userRepository = fakeUserRepo,
+            cookieRepository = fakeCookieRepo
+        )
+
+        kotlinx.coroutines.runBlocking {
+            // Remember password = true
+            useCase(email = "test@example.com", password = "secretPassword", rememberPassword = true)
+            val saved1 = fakeAccountRepo.getAccountByNickname("TestUser")
+            kotlin.test.assertNotNull(saved1)
+            kotlin.test.assertEquals("test@example.com", saved1.email)
+            kotlin.test.assertEquals("secretPassword", saved1.password)
+            kotlin.test.assertTrue(saved1.rememberPassword)
+
+            // Remember password = false
+            useCase(email = "test@example.com", password = "secretPassword", rememberPassword = false)
+            val saved2 = fakeAccountRepo.getAccountByNickname("TestUser")
+            kotlin.test.assertNotNull(saved2)
+            kotlin.test.assertEquals("", saved2.password)
+            kotlin.test.assertFalse(saved2.rememberPassword)
+        }
+    }
+
+    @Test
+    fun profitMonthComparison() {
+        val Jan2026 = com.lemon.mcdevmanagermp.domain.main.ProfitMonth(2026, 1)
+        val Dec2025 = com.lemon.mcdevmanagermp.domain.main.ProfitMonth(2025, 12)
+        val Feb2026 = com.lemon.mcdevmanagermp.domain.main.ProfitMonth(2026, 2)
+
+        kotlin.test.assertTrue(Dec2025 < Jan2026)
+        kotlin.test.assertFalse(Feb2026 < Jan2026)
+        kotlin.test.assertFalse(Jan2026 < Jan2026)
+    }
 }

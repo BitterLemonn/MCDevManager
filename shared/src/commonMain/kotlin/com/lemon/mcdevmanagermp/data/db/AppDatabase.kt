@@ -16,7 +16,7 @@ import com.lemon.mcdevmanagermp.data.db.entity.PromotionTemplateEntity
 
 @Database(
     entities = [AccountEntity::class, PromotionTemplateEntity::class, DayDetailConfigEntity::class],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
 @ConstructedBy(AppDatabaseConstructor::class)
@@ -103,6 +103,47 @@ val MIGRATION_5_6 = object : Migration(5, 6) {
         if (!columnExists) {
             connection.execSQL(
                 "ALTER TABLE promotion_template ADD COLUMN promoImageUrl TEXT NOT NULL DEFAULT ''"
+            )
+        }
+    }
+}
+
+/**
+ * 数据库迁移 6→7：account 表新增 email、password、rememberPassword 列（用于记住密码与多账号切换填充）。
+ */
+val MIGRATION_6_7 = object : Migration(6, 7) {
+    override fun migrate(connection: SQLiteConnection) {
+        val emailExists = connection.prepare(
+            "SELECT COUNT(*) FROM pragma_table_info('account') WHERE name = 'email'"
+        ).use { stmt ->
+            stmt.step()
+            stmt.getLong(0) > 0
+        }
+        if (!emailExists) {
+            connection.execSQL(
+                "ALTER TABLE account ADD COLUMN email TEXT NOT NULL DEFAULT ''"
+            )
+        }
+        val passwordExists = connection.prepare(
+            "SELECT COUNT(*) FROM pragma_table_info('account') WHERE name = 'password'"
+        ).use { stmt ->
+            stmt.step()
+            stmt.getLong(0) > 0
+        }
+        if (!passwordExists) {
+            connection.execSQL(
+                "ALTER TABLE account ADD COLUMN password TEXT NOT NULL DEFAULT ''"
+            )
+        }
+        val rememberPasswordExists = connection.prepare(
+            "SELECT COUNT(*) FROM pragma_table_info('account') WHERE name = 'rememberPassword'"
+        ).use { stmt ->
+            stmt.step()
+            stmt.getLong(0) > 0
+        }
+        if (!rememberPasswordExists) {
+            connection.execSQL(
+                "ALTER TABLE account ADD COLUMN rememberPassword INTEGER NOT NULL DEFAULT 0"
             )
         }
     }
