@@ -2,6 +2,7 @@ package com.lemon.mcdevmanagermp.ui.pages.work.workdetail
 
 import androidx.lifecycle.viewModelScope
 import com.lemon.mcdevmanagermp.data.common.NetworkState
+import com.lemon.mcdevmanagermp.data.consts.enums.PePriTypeEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceRankEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceTypeEnum
 import com.lemon.mcdevmanagermp.data.dto.netease.work.WorkCreateChannel
@@ -47,7 +48,9 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -141,6 +144,37 @@ class WorkDetailViewModel :
             is WorkDetailAction.UpdatePeModVersion -> setState { copy(peModVersion = action.value) }
             is WorkDetailAction.UploadPeZip -> uploadPeZip(action.file)
             WorkDetailAction.RemovePeResource -> clearPeResource()
+
+            // —— 联机大厅 ——
+            is WorkDetailAction.UpdateLobbyMinNum -> updateLobbyMinNum(action.value)
+            is WorkDetailAction.UpdateLobbyMaxNum -> updateLobbyMaxNum(action.value)
+            is WorkDetailAction.UpdateLobbyForceMaxNum -> updateLobbyForceMaxNum(action.value)
+            is WorkDetailAction.ToggleLobbyTag -> toggleLobbyTag(action.id)
+            is WorkDetailAction.ToggleLobbyAsymmetric -> setState {
+                copy(
+                    lobbyIsAsymmetric = action.value,
+                    lobbyCamps = when {
+                        !action.value -> emptyList()
+                        lobbyCamps.size >= 2 -> lobbyCamps
+                        else -> listOf("", "")
+                    }
+                )
+            }
+            is WorkDetailAction.UpdateLobbyCamp -> setState {
+                if (action.index !in lobbyCamps.indices) this
+                else copy(lobbyCamps = lobbyCamps.toMutableList().apply {
+                    this[action.index] = action.value
+                })
+            }
+            is WorkDetailAction.UpdateLobbyPlayerNum -> setState {
+                copy(lobbyPlayerNum = action.value.coerceIn(1, 15))
+            }
+            is WorkDetailAction.ToggleLobbyNormalMode -> setState {
+                copy(lobbyNormalMode = action.value)
+            }
+            is WorkDetailAction.UpdateLobbyReconnectTime -> setState {
+                copy(lobbyReconnectTime = action.value.coerceIn(1, 99))
+            }
 
             // —— PC 资源管理 ——
             is WorkDetailAction.UpdatePcResourceType -> setState {
@@ -288,6 +322,21 @@ class WorkDetailViewModel :
                                     )
                                 },
                                 peAddVersion = d.res.firstOrNull()?.addVersion ?: false,
+                                // —— 联机大厅 ——
+                                lobbyMinNum = d.lobbyMinNum,
+                                lobbyMaxNum = d.lobbyMaxNum,
+                                lobbyForceMaxNum = d.lobbyForceMaxNum.takeIf { it > 0 } ?: 10,
+                                lobbyTags = d.lobbyTags.mapNotNull {
+                                    (it as? JsonPrimitive)?.intOrNull
+                                },
+                                isLobbyCompetitive = d.isLobbyCompetitive,
+                                lobbyIsAsymmetric = d.lobbyCamps.isNotEmpty(),
+                                lobbyCamps = d.lobbyCamps.mapNotNull {
+                                    (it as? JsonPrimitive)?.contentOrNull
+                                },
+                                lobbyPlayerNum = d.lobbyPlayerNum,
+                                lobbyNormalMode = d.lobbyNormalMode,
+                                lobbyReconnectTime = d.lobbyReconnectTime,
                                 // —— 视频 ——
                                 videos = d.videoInfoList.map {
                                     VideoItem(
@@ -390,6 +439,10 @@ class WorkDetailViewModel :
                             peResourceTypeOptions = peTypes,
                             peRecommendTagOptions = consts.labelType,
                             peRecommendTagLimit = consts.itemTagLimit,
+                            lobbyTagOptions = consts.lobbyTags,
+                            lobbyTagLimit = consts.itemTagLimit,
+                            lobbyCompetitiveTagId = consts.lobbyTags
+                                .firstOrNull { it.title == "竞技模式" }?.id ?: -1,
                             pePriTypeFileTypes = parsePriTypeFileTypes(consts.subType.pe),
                             peResourceSubTypeOptions = peSubTypes,
                             peModSecondTypeOptions = consts.modSecondType.subTag,
@@ -611,6 +664,66 @@ class WorkDetailViewModel :
         setState {
             if (index !in tags.indices) this
             else copy(tags = tags.toMutableList().apply { removeAt(index) })
+        }
+    }
+
+    private fun updateLobbyMinNum(value: Int) {
+        setState {
+            if (value == 0) copy(lobbyMinNum = 0, lobbyMaxNum = 0)
+            else {
+                val normalized = value.coerceIn(2, lobbyForceMaxNum.coerceAtLeast(2))
+                copy(
+                    lobbyMinNum = normalized,
+                    lobbyMaxNum = lobbyMaxNum.coerceAtLeast(normalized)
+                )
+            }
+        }
+    }
+
+    private fun updateLobbyMaxNum(value: Int) {
+        setState {
+            if (value == 0) copy(lobbyMinNum = 0, lobbyMaxNum = 0)
+            else {
+                val normalized = value.coerceIn(2, lobbyForceMaxNum.coerceAtLeast(2))
+                copy(
+                    lobbyMinNum = if (lobbyMinNum == 0) 2 else lobbyMinNum.coerceAtMost(normalized),
+                    lobbyMaxNum = normalized
+                )
+            }
+        }
+    }
+
+    private fun updateLobbyForceMaxNum(value: Int) {
+        setState {
+            val normalized = value.coerceIn(2, 10)
+            val maxNum = if (lobbyMaxNum == 0) 0 else lobbyMaxNum.coerceAtMost(normalized)
+            copy(
+                lobbyForceMaxNum = normalized,
+                lobbyMaxNum = maxNum,
+                lobbyMinNum = if (maxNum == 0) 0 else lobbyMinNum.coerceAtMost(maxNum)
+            )
+        }
+    }
+
+    private fun toggleLobbyTag(id: Int) {
+        setState {
+            val selected = id in lobbyTags
+            when {
+                id == lobbyCompetitiveTagId && selected -> copy(
+                    lobbyTags = lobbyTags - id,
+                    isLobbyCompetitive = false
+                )
+                id == lobbyCompetitiveTagId -> copy(
+                    lobbyTags = listOf(id),
+                    isLobbyCompetitive = true,
+                    lobbyPlayerNum = lobbyPlayerNum.coerceIn(1, 15),
+                    lobbyReconnectTime = lobbyReconnectTime.coerceIn(1, 99)
+                )
+                isLobbyCompetitive -> this
+                selected -> copy(lobbyTags = lobbyTags - id)
+                lobbyTagLimit > 0 && lobbyTags.size >= lobbyTagLimit -> this
+                else -> copy(lobbyTags = lobbyTags + id)
+            }
         }
     }
 
@@ -1108,36 +1221,63 @@ internal fun resolvePcResourceSubType(
     return targetOptions.singleOrNull { it.title == peTitle }?.id ?: 0
 }
 
-internal fun validateWorkDetail(state: WorkDetailState): String? = validateWorkSave(
-    WorkSaveValidationInput(
-        itemName = state.itemName,
-        tags = state.tags,
-        priceType = state.priceType,
-        priceRank = state.priceRank.type,
-        price = state.emeraldPrice,
-        detailHtml = state.peDetail,
-        peResourceType = state.peResourceType,
-        recommendTagIds = state.peRecommendTags,
-        gameplayTagIds = state.peRecommendTagOptions.gameplayTag.mapTo(mutableSetOf()) { it.id },
-        themeTagIds = state.peRecommendTagOptions.themeTag.mapTo(mutableSetOf()) { it.id },
-        modVersion = state.peModVersion,
-        hasResource = state.peResource != null,
-        channelsLoaded = state.peImageSlots.isNotEmpty(),
-        requiredChannelIds = state.peImageSlots.mapTo(mutableSetOf()) { it.channelId },
-        availableChannelIds = state.peImageSlots
-            .filter { it.channelUrl.isNotBlank() }
-            .mapTo(mutableSetOf()) { it.channelId },
-        hasVideo = state.videos.any { it.url.isNotBlank() },
-        syncPc = state.syncPc,
-        originallySyncedToPc = state.detail?.syncPcFlag == true,
-        pcResourceType = state.pcResourceType,
-        validPcResourceTypeIds = state.pcResourceTypeOptions.mapTo(mutableSetOf()) { it.id },
-        pcResourceSubType = state.pcResourceSubType,
-        validPcResourceSubTypeIds = state.pcResourceSubTypeOptions[state.pcResourceType]
-            .orEmpty()
-            .mapTo(mutableSetOf()) { it.id },
-    )
-)
+internal fun validateWorkDetail(state: WorkDetailState): String? {
+    validateWorkSave(
+        WorkSaveValidationInput(
+            itemName = state.itemName,
+            tags = state.tags,
+            priceType = state.priceType,
+            priceRank = state.priceRank.type,
+            price = state.emeraldPrice,
+            detailHtml = state.peDetail,
+            peResourceType = state.peResourceType,
+            recommendTagIds = state.peRecommendTags,
+            gameplayTagIds = state.peRecommendTagOptions.gameplayTag.mapTo(mutableSetOf()) { it.id },
+            themeTagIds = state.peRecommendTagOptions.themeTag.mapTo(mutableSetOf()) { it.id },
+            modVersion = state.peModVersion,
+            hasResource = state.peResource != null,
+            channelsLoaded = state.peImageSlots.isNotEmpty(),
+            requiredChannelIds = state.peImageSlots.mapTo(mutableSetOf()) { it.channelId },
+            availableChannelIds = state.peImageSlots
+                .filter { it.channelUrl.isNotBlank() }
+                .mapTo(mutableSetOf()) { it.channelId },
+            hasVideo = state.videos.any { it.url.isNotBlank() },
+            syncPc = state.syncPc,
+            originallySyncedToPc = state.detail?.syncPcFlag == true,
+            pcResourceType = state.pcResourceType,
+            validPcResourceTypeIds = state.pcResourceTypeOptions.mapTo(mutableSetOf()) { it.id },
+            pcResourceSubType = state.pcResourceSubType,
+            validPcResourceSubTypeIds = state.pcResourceSubTypeOptions[state.pcResourceType]
+                .orEmpty()
+                .mapTo(mutableSetOf()) { it.id },
+        )
+    )?.let { return it }
+    return validateLobbySettings(state)
+}
+
+internal fun validateLobbySettings(state: WorkDetailState): String? {
+    if (state.peResourceType != PePriTypeEnum.LOBBY.value.toInt()) return null
+    if (state.lobbyTags.isEmpty()) return "请至少选择一个联机大厅专区分类"
+    if (state.lobbyTagLimit > 0 && state.lobbyTags.size > state.lobbyTagLimit) {
+        return "联机大厅专区分类最多选择 ${state.lobbyTagLimit} 个"
+    }
+    if (state.lobbyForceMaxNum !in 2..10) return "房间限制人数应为 2–10"
+    val suggestedNumValid =
+        state.lobbyMinNum == 0 && state.lobbyMaxNum == 0 ||
+                state.lobbyMinNum in 2..state.lobbyForceMaxNum &&
+                state.lobbyMaxNum in 2..state.lobbyForceMaxNum &&
+                state.lobbyMinNum <= state.lobbyMaxNum
+    if (!suggestedNumValid) return "建议游戏人数应同时为 0，或保持 2 ≤ 最小人数 ≤ 最大人数 ≤ 房间限制人数"
+    if (!state.isLobbyCompetitive) return null
+    if (state.lobbyPlayerNum !in 1..15) return "游戏开始人数应为 1–15"
+    if (state.lobbyReconnectTime !in 1..99) return "逃跑时间应为 1–99 分钟"
+    if (state.lobbyIsAsymmetric &&
+        (state.lobbyCamps.size < 2 || state.lobbyCamps.any { it.isBlank() })
+    ) {
+        return "请填写至少两个阵营名称"
+    }
+    return null
+}
 
 /** 由编辑态构造新建请求体（pe/upload）。res/channel 仅含已上传（有 fileInfo）的项。 */
 internal fun buildWorkCreatePayload(s: WorkDetailState, isCheckApply: Boolean): WorkCreateDTO =
@@ -1150,6 +1290,26 @@ internal fun buildWorkCreatePayload(s: WorkDetailState, isCheckApply: Boolean): 
         modSecondType = s.peResourceModSecondType,
         modVersion = s.peModVersion,
         info = s.peDetail,
+        lobbyMinNum = if (s.peResourceType == PePriTypeEnum.LOBBY.value.toInt()) s.lobbyMinNum else 0,
+        lobbyMaxNum = if (s.peResourceType == PePriTypeEnum.LOBBY.value.toInt()) s.lobbyMaxNum else 0,
+        lobbyForceMaxNum = if (s.peResourceType == PePriTypeEnum.LOBBY.value.toInt()) s.lobbyForceMaxNum else 10,
+        lobbyTags = if (s.peResourceType == PePriTypeEnum.LOBBY.value.toInt()) {
+            s.lobbyTags.map(::JsonPrimitive)
+        } else emptyList(),
+        isLobbyCompetitive = s.peResourceType == PePriTypeEnum.LOBBY.value.toInt() && s.isLobbyCompetitive,
+        isAsymmetric = s.peResourceType == PePriTypeEnum.LOBBY.value.toInt() &&
+                s.isLobbyCompetitive && s.lobbyIsAsymmetric,
+        lobbyCamps = if (s.peResourceType == PePriTypeEnum.LOBBY.value.toInt() &&
+            s.isLobbyCompetitive && s.lobbyIsAsymmetric
+        ) s.lobbyCamps.map { JsonPrimitive(it.trim()) } else emptyList(),
+        lobbyPlayerNum = if (s.peResourceType == PePriTypeEnum.LOBBY.value.toInt() && s.isLobbyCompetitive) {
+            s.lobbyPlayerNum
+        } else 0,
+        lobbyNormalMode = s.peResourceType == PePriTypeEnum.LOBBY.value.toInt() &&
+                s.isLobbyCompetitive && s.lobbyNormalMode,
+        lobbyReconnectTime = if (s.peResourceType == PePriTypeEnum.LOBBY.value.toInt() &&
+            s.isLobbyCompetitive
+        ) s.lobbyReconnectTime else 0,
         updateSummary = s.peUpdateSummary,
         tag = s.tags.map { ResourceDetailTag(name = it) },
         isOriginal = s.isOriginal,
@@ -1197,8 +1357,10 @@ internal fun buildUpdatePayload(
     s: WorkDetailState,
     d: ResourceDetailVO,
     corpProofUrl: String
-): ResourceDetailVO = d.copy(
-    itemName = s.itemName,
+): ResourceDetailVO {
+    val updateLobby = s.peResourceType == PePriTypeEnum.LOBBY.value.toInt()
+    return d.copy(
+        itemName = s.itemName,
     itemVersion = bumpVersion(d.itemVersion),
     isDomainServerItem = if (s.joinShantou) 1 else 0,
     isOriginal = s.isOriginal,
@@ -1208,6 +1370,25 @@ internal fun buildUpdatePayload(
     corpProofImage = corpProofUrl,
     activityDesc = s.activityDesc,
     info = s.peDetail,
+    lobbyMinNum = if (updateLobby) s.lobbyMinNum else d.lobbyMinNum,
+    lobbyMaxNum = if (updateLobby) s.lobbyMaxNum else d.lobbyMaxNum,
+    lobbyForceMaxNum = if (updateLobby) s.lobbyForceMaxNum else d.lobbyForceMaxNum,
+    lobbyTags = if (updateLobby) s.lobbyTags.map(::JsonPrimitive) else d.lobbyTags,
+    isLobbyCompetitive = if (updateLobby) s.isLobbyCompetitive else d.isLobbyCompetitive,
+    isAsymmetric = if (updateLobby) {
+        s.isLobbyCompetitive && s.lobbyIsAsymmetric
+    } else d.isAsymmetric,
+    lobbyCamps = if (updateLobby) {
+        if (s.isLobbyCompetitive && s.lobbyIsAsymmetric) {
+            s.lobbyCamps.map { JsonPrimitive(it.trim()) }
+        } else emptyList()
+    } else d.lobbyCamps,
+    lobbyPlayerNum = if (updateLobby && s.isLobbyCompetitive) s.lobbyPlayerNum
+        else if (updateLobby) 0 else d.lobbyPlayerNum,
+    lobbyNormalMode = if (updateLobby) s.isLobbyCompetitive && s.lobbyNormalMode
+        else d.lobbyNormalMode,
+    lobbyReconnectTime = if (updateLobby && s.isLobbyCompetitive) s.lobbyReconnectTime
+        else if (updateLobby) 0 else d.lobbyReconnectTime,
     updateSummary = s.peUpdateSummary,
     priType = s.peResourceType,
     subType = s.peResourceSubType,
@@ -1280,8 +1461,9 @@ internal fun buildUpdatePayload(
             else -> ResourceDetailDlcInfo.DlcType.SLAVE.type
         }
     ),
-    relateItemId = if (s.isRelatedMod) s.relatedItemId else ""
-)
+        relateItemId = if (s.isRelatedMod) s.relatedItemId else ""
+    )
+}
 
 /** 折扣：用户未配置时保留原值，避免误清空；已配置则按 Unix 秒重建（vip_discount 暂同 discount）。 */
 private fun buildDiscountJson(

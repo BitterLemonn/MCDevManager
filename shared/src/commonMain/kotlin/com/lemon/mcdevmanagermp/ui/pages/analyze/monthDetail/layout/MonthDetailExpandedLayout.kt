@@ -124,20 +124,26 @@ internal fun MonthDetailExpandedLayout(
                             TrendMetricChip("钻石", state.selectedMetric == MonthMetricType.TOTAL_DIAMOND) {
                                 onAction(MonthDetailAction.SelectMetric(MonthMetricType.TOTAL_DIAMOND))
                             }
-                            TrendMetricChip("绿宝石", state.selectedMetric == MonthMetricType.TOTAL_POINTS) {
-                                onAction(MonthDetailAction.SelectMetric(MonthMetricType.TOTAL_POINTS))
-                            }
-                            TrendMetricChip("日活", state.selectedMetric == MonthMetricType.AVG_DAU) {
-                                onAction(MonthDetailAction.SelectMetric(MonthMetricType.AVG_DAU))
-                            }
-                            TrendMetricChip("购买", state.selectedMetric == MonthMetricType.AVG_DAY_BUY) {
-                                onAction(MonthDetailAction.SelectMetric(MonthMetricType.AVG_DAY_BUY))
-                            }
-                            TrendMetricChip("下载", state.selectedMetric == MonthMetricType.DOWNLOAD) {
-                                onAction(MonthDetailAction.SelectMetric(MonthMetricType.DOWNLOAD))
-                            }
-                            TrendMetricChip("月活", state.selectedMetric == MonthMetricType.MAU) {
-                                onAction(MonthDetailAction.SelectMetric(MonthMetricType.MAU))
+                            if (state.platform == "lobby") {
+                                TrendMetricChip("购买", state.selectedMetric == MonthMetricType.AVG_DAY_BUY) {
+                                    onAction(MonthDetailAction.SelectMetric(MonthMetricType.AVG_DAY_BUY))
+                                }
+                            } else {
+                                TrendMetricChip("绿宝石", state.selectedMetric == MonthMetricType.TOTAL_POINTS) {
+                                    onAction(MonthDetailAction.SelectMetric(MonthMetricType.TOTAL_POINTS))
+                                }
+                                TrendMetricChip("日活", state.selectedMetric == MonthMetricType.AVG_DAU) {
+                                    onAction(MonthDetailAction.SelectMetric(MonthMetricType.AVG_DAU))
+                                }
+                                TrendMetricChip("购买", state.selectedMetric == MonthMetricType.AVG_DAY_BUY) {
+                                    onAction(MonthDetailAction.SelectMetric(MonthMetricType.AVG_DAY_BUY))
+                                }
+                                TrendMetricChip("下载", state.selectedMetric == MonthMetricType.DOWNLOAD) {
+                                    onAction(MonthDetailAction.SelectMetric(MonthMetricType.DOWNLOAD))
+                                }
+                                TrendMetricChip("月活", state.selectedMetric == MonthMetricType.MAU) {
+                                    onAction(MonthDetailAction.SelectMetric(MonthMetricType.MAU))
+                                }
                             }
                         }
 
@@ -158,9 +164,11 @@ internal fun MonthDetailExpandedLayout(
                         val totalMau = state.monthData.maxOfOrNull { it.mau } ?: 0
 
                         SummaryStatCard("总钻石收益", formatNum(totalDiamond))
-                        SummaryStatCard("总绿宝石收益", formatNum(totalPoints))
-                        SummaryStatCard("总下载量", formatNum(totalDownloads))
-                        SummaryStatCard("最高月活", formatNum(totalMau))
+                        if (state.platform != "lobby") {
+                            SummaryStatCard("总绿宝石收益", formatNum(totalPoints))
+                            SummaryStatCard("总下载量", formatNum(totalDownloads))
+                            SummaryStatCard("最高月活", formatNum(totalMau))
+                        }
                     }
                 }
 
@@ -184,6 +192,7 @@ internal fun MonthDetailExpandedLayout(
                             rowItems.forEach { data ->
                                 MonthCard(
                                     data = data,
+                                    isLobby = state.platform == "lobby",
                                     modifier = Modifier.weight(1f)
                                 )
                             }

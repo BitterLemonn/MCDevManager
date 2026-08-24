@@ -64,8 +64,7 @@ internal fun VideoUploadForm(
     FormSection(
         title = "上传视频",
         modifier = modifier,
-        required = state.priceType == PriceTypeEnum.DIAMOND ||
-                state.priceType == PriceTypeEnum.EMERALD
+        required = state.priceType == PriceTypeEnum.DIAMOND
     ) {
         Text(
             text = "要求: 16:9 比例，时长 1:30 以内，50MB 以内，H264 编码",

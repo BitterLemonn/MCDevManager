@@ -17,6 +17,7 @@ import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailAction
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailState
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.BasicInfoForm
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.ChannelImageForm
+import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.LobbySettingsForm
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PcBasicInfoForm
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PcResourceManageForm
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.PeResourceManageForm
@@ -72,6 +73,11 @@ internal fun WorkDetailInfoSections(
             modifier = Modifier.fillMaxWidth(),
             columns = columns,
             showMetaRow = showMetaRow
+        )
+        LobbySettingsForm(
+            state = state,
+            onAction = onAction,
+            modifier = Modifier.fillMaxWidth()
         )
         if (state.syncPc) {
             PcBasicInfoForm(

@@ -27,6 +27,7 @@ import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 @Composable
 internal fun MonthCard(
     data: ResMonthAnalyzeData,
+    isLobby: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalAppColors.current
@@ -71,25 +72,32 @@ internal fun MonthCard(
 
             Spacer(Modifier.height(10.dp))
 
-            // 指标网格 3x2
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                MetricItem("日均购买", formatNumber(data.avgDayBuy), modifier = Modifier.weight(1f))
-                MetricItem("月均日活", formatNumber(data.avgDau), modifier = Modifier.weight(1f))
-                MetricItem("月活", formatNumber(data.mau), modifier = Modifier.weight(1f))
-            }
-
-            Spacer(Modifier.height(6.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                MetricItem("钻石收益", formatNumber(data.totalDiamond), modifier = Modifier.weight(1f))
-                MetricItem("绿宝石收益", formatNumber(data.totalPoints), modifier = Modifier.weight(1f))
-                MetricItem("下载量", formatNumber(data.downloadNum), modifier = Modifier.weight(1f))
+            if (isLobby) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    MetricItem("日均购买", formatNumber(data.avgDayBuy), modifier = Modifier.weight(1f))
+                    MetricItem("钻石收益", formatNumber(data.totalDiamond), modifier = Modifier.weight(1f))
+                }
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    MetricItem("日均购买", formatNumber(data.avgDayBuy), modifier = Modifier.weight(1f))
+                    MetricItem("月均日活", formatNumber(data.avgDau), modifier = Modifier.weight(1f))
+                    MetricItem("月活", formatNumber(data.mau), modifier = Modifier.weight(1f))
+                }
+                Spacer(Modifier.height(6.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    MetricItem("钻石收益", formatNumber(data.totalDiamond), modifier = Modifier.weight(1f))
+                    MetricItem("绿宝石收益", formatNumber(data.totalPoints), modifier = Modifier.weight(1f))
+                    MetricItem("下载量", formatNumber(data.downloadNum), modifier = Modifier.weight(1f))
+                }
             }
         }
     }

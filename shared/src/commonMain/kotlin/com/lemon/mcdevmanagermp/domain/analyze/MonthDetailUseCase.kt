@@ -35,14 +35,16 @@ class MonthDetailUseCase(
         startDate: String,
         endDate: String
     ): NetworkState<List<ResMonthAnalyzeData>> {
-        val apiPlatform = if (platform == "pe") "pe" else "comp"
+        val isLobby = platform == "lobby"
+        val apiPlatform = if (platform == "comp") "comp" else "pe"
 
         return when (val result = analyzeRepository.getMonthDetail(
             platform = apiPlatform,
             category = apiPlatform,
             startDate = startDate,
             endDate = endDate,
-            dayDateId = endDate
+            dayDateId = endDate,
+            isLobby = isLobby
         )) {
             is NetworkState.Success -> {
                 val sorted = result.data?.data?.sortedByDescending { it.monthId } ?: emptyList()

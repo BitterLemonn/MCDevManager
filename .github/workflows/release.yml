@@ -255,14 +255,14 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build iOS framework
-        run: ./gradlew :shared:linkReleaseFrameworkIosArm64 --no-daemon
-
-      - name: Build unsigned app
+      # Xcode 的 Compile Kotlin Framework 阶段会调用
+      # :shared:embedAndSignAppleFrameworkForXcode，无需提前重复启动 Gradle。
+      - name: Build device framework and unsigned app
         run: |
           xcodebuild -project iosApp/iosApp.xcodeproj \
             -scheme iosApp \
             -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
             -configuration Release \
             -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO \

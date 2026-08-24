@@ -30,7 +30,7 @@ enum class WorkItemStatusEnum(val label: String, val des: String) {
     REVIEWING("审核中", "reviewing"),
     SELF_TEST("自测中", "self_test"),
     SELF_TEST_PREPARE("自测准备中", "self_test_prepare"),
-    REJECTED("审核未通过", "rejected"),
+    REJECTED("审核未通过", "reject"),
     ACCEPT("待上架", "accept"),
     ONLINE_PREPARING("系统准备中", "online_preparing"),
     OFFLINE("已下架", "offline"),

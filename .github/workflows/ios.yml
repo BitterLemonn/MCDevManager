@@ -55,16 +55,14 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      # Kotlin/Native Release 链接 (DevirtualizationAnalysis) 较吃堆内存，
-      # 上限由 gradle.properties 的 kotlin.daemon.jvmargs 控制，此处无需额外设置。
-      - name: Build iOS framework
-        run: ./gradlew :shared:linkReleaseFrameworkIosArm64 --no-daemon
-
-      - name: Build unsigned app
+      # Xcode 的 Compile Kotlin Framework 阶段会调用
+      # :shared:embedAndSignAppleFrameworkForXcode，无需提前重复启动 Gradle。
+      - name: Build device framework and unsigned app
         run: |
           xcodebuild -project iosApp/iosApp.xcodeproj \
             -scheme iosApp \
             -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
             -configuration Release \
             -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO \

@@ -119,20 +119,26 @@ internal fun MonthDetailCompactLayout(
                     TrendMetricChip("钻石收益", state.selectedMetric == MonthMetricType.TOTAL_DIAMOND) {
                         onAction(MonthDetailAction.SelectMetric(MonthMetricType.TOTAL_DIAMOND))
                     }
-                    TrendMetricChip("绿宝石", state.selectedMetric == MonthMetricType.TOTAL_POINTS) {
-                        onAction(MonthDetailAction.SelectMetric(MonthMetricType.TOTAL_POINTS))
-                    }
-                    TrendMetricChip("日活", state.selectedMetric == MonthMetricType.AVG_DAU) {
-                        onAction(MonthDetailAction.SelectMetric(MonthMetricType.AVG_DAU))
-                    }
-                    TrendMetricChip("购买", state.selectedMetric == MonthMetricType.AVG_DAY_BUY) {
-                        onAction(MonthDetailAction.SelectMetric(MonthMetricType.AVG_DAY_BUY))
-                    }
-                    TrendMetricChip("下载", state.selectedMetric == MonthMetricType.DOWNLOAD) {
-                        onAction(MonthDetailAction.SelectMetric(MonthMetricType.DOWNLOAD))
-                    }
-                    TrendMetricChip("月活", state.selectedMetric == MonthMetricType.MAU) {
-                        onAction(MonthDetailAction.SelectMetric(MonthMetricType.MAU))
+                    if (state.platform == "lobby") {
+                        TrendMetricChip("购买", state.selectedMetric == MonthMetricType.AVG_DAY_BUY) {
+                            onAction(MonthDetailAction.SelectMetric(MonthMetricType.AVG_DAY_BUY))
+                        }
+                    } else {
+                        TrendMetricChip("绿宝石", state.selectedMetric == MonthMetricType.TOTAL_POINTS) {
+                            onAction(MonthDetailAction.SelectMetric(MonthMetricType.TOTAL_POINTS))
+                        }
+                        TrendMetricChip("日活", state.selectedMetric == MonthMetricType.AVG_DAU) {
+                            onAction(MonthDetailAction.SelectMetric(MonthMetricType.AVG_DAU))
+                        }
+                        TrendMetricChip("购买", state.selectedMetric == MonthMetricType.AVG_DAY_BUY) {
+                            onAction(MonthDetailAction.SelectMetric(MonthMetricType.AVG_DAY_BUY))
+                        }
+                        TrendMetricChip("下载", state.selectedMetric == MonthMetricType.DOWNLOAD) {
+                            onAction(MonthDetailAction.SelectMetric(MonthMetricType.DOWNLOAD))
+                        }
+                        TrendMetricChip("月活", state.selectedMetric == MonthMetricType.MAU) {
+                            onAction(MonthDetailAction.SelectMetric(MonthMetricType.MAU))
+                        }
                     }
                 }
 
@@ -145,7 +151,7 @@ internal fun MonthDetailCompactLayout(
 
             // 月度卡片列表
             state.monthData.forEach { data ->
-                MonthCard(data = data)
+                MonthCard(data = data, isLobby = state.platform == "lobby")
             }
 
             if (state.monthData.isEmpty() && !state.isLoading) {
@@ -183,8 +189,10 @@ private fun SummaryRow(state: MonthDetailState) {
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         SummaryItem("总钻石", formatNum(totalDiamond), Modifier.weight(1f))
-        SummaryItem("总绿宝石", formatNum(totalPoints), Modifier.weight(1f))
-        SummaryItem("总下载", formatNum(totalDownloads), Modifier.weight(1f))
+        if (state.platform != "lobby") {
+            SummaryItem("总绿宝石", formatNum(totalPoints), Modifier.weight(1f))
+            SummaryItem("总下载", formatNum(totalDownloads), Modifier.weight(1f))
+        }
     }
 }
 

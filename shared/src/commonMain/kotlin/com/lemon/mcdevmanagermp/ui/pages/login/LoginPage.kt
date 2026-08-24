@@ -1,6 +1,7 @@
 package com.lemon.mcdevmanagermp.ui.pages.login
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,31 +16,48 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -47,10 +65,20 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
+import com.github.panpf.sketch.AsyncImage
+import com.github.panpf.sketch.rememberAsyncImageState
+import com.github.panpf.sketch.request.ComposableImageOptions
+import com.github.panpf.sketch.request.error
+import com.github.panpf.sketch.request.fallback
+import com.github.panpf.sketch.request.placeholder
 import com.lemon.mcdevmanagermp.ui.components.AppScaffold
+import com.lemon.mcdevmanagermp.ui.components.BelowAnchorPositionProvider
 import com.lemon.mcdevmanagermp.ui.components.LoginOutlineTextField
 import com.lemon.mcdevmanagermp.ui.components.collectUiEffect
 import com.lemon.mcdevmanagermp.ui.iconpack.IconPack
@@ -60,6 +88,7 @@ import com.lemon.mcdevmanagermp.ui.iconpack.Show
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 import mcdevmanagermpr.shared.generated.resources.Res
 import mcdevmanagermpr.shared.generated.resources.ic_mc
+import mcdevmanagermpr.shared.generated.resources.img_avatar
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
@@ -292,23 +321,106 @@ private fun EmailPasswordForm(
     onAction: (LoginAction) -> Unit
 ) {
     val colors = LocalAppColors.current
+    val density = LocalDensity.current
+    val focusManager = LocalFocusManager.current
+    var expanded by remember { mutableStateOf(false) }
+    var fieldWidthPx by remember { mutableIntStateOf(0) }
 
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        LoginOutlineTextField(
-            value = state.email,
-            onValueChange = { onAction(LoginAction.UpdateEmail(it)) },
-            label = {
-                Text(
-                    "邮箱",
-                    color = colors.textColor
+        Box(modifier = Modifier.fillMaxWidth().onSizeChanged { fieldWidthPx = it.width }) {
+            LoginOutlineTextField(
+                value = state.email,
+                onValueChange = { onAction(LoginAction.UpdateEmail(it)) },
+                label = {
+                    Text(
+                        "邮箱",
+                        color = colors.textColor
+                    )
+                },
+                trailingIcon = if (state.savedAccounts.isNotEmpty()) {
+                    {
+                        IconButton(onClick = { expanded = !expanded }) {
+                            Icon(
+                                imageVector = if (expanded) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown,
+                                contentDescription = "切换账号",
+                                tint = colors.primary
+                            )
+                        }
+                    }
+                } else null,
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Next
                 )
-            },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Email,
-                imeAction = ImeAction.Next
             )
-        )
+
+            if (expanded && state.savedAccounts.isNotEmpty()) {
+                val menuWidth = with(density) { fieldWidthPx.toDp() }
+                Popup(
+                    popupPositionProvider = BelowAnchorPositionProvider,
+                    onDismissRequest = {
+                        expanded = false
+                        focusManager.clearFocus()
+                    },
+                    properties = PopupProperties(
+                        focusable = false,
+                        dismissOnBackPress = true,
+                        dismissOnClickOutside = true
+                    )
+                ) {
+                    Surface(
+                        modifier = Modifier
+                            .width(menuWidth)
+                            .heightIn(max = 240.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        color = colors.surfaceContainerHigh,
+                        shadowElevation = 8.dp,
+                        border = BorderStroke(1.dp, colors.outlineVariant)
+                    ) {
+                        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                            state.savedAccounts.forEach { account ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            AccountAvatarItem(headImg = account.headImg)
+                                            Spacer(Modifier.width(10.dp))
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = account.email,
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    fontWeight = FontWeight.Medium,
+                                                    color = colors.textColor,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                                if (account.nickname.isNotBlank() && account.nickname != account.email) {
+                                                    Text(
+                                                        text = account.nickname,
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color = colors.onSurfaceVariant,
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    },
+                                    onClick = {
+                                        onAction(LoginAction.SelectSavedAccount(account))
+                                        expanded = false
+                                        focusManager.clearFocus()
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         LoginOutlineTextField(
             value = state.password,
@@ -338,6 +450,58 @@ private fun EmailPasswordForm(
             keyboardActions = KeyboardActions(
                 onDone = { onAction(LoginAction.Login) }
             )
+        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = { onAction(LoginAction.ToggleRememberPassword(!state.rememberPassword)) }
+                ),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(
+                checked = state.rememberPassword,
+                onCheckedChange = { onAction(LoginAction.ToggleRememberPassword(it)) },
+                colors = CheckboxDefaults.colors(
+                    checkedColor = colors.primary,
+                    checkmarkColor = colors.onPrimary
+                )
+            )
+            Spacer(Modifier.width(4.dp))
+            Text(
+                text = "记住密码",
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.textColor
+            )
+        }
+    }
+}
+
+@Composable
+private fun AccountAvatarItem(headImg: String?) {
+    val colors = LocalAppColors.current
+    Box(
+        modifier = Modifier
+            .size(28.dp)
+            .clip(CircleShape)
+            .background(colors.primary.copy(alpha = 0.12f)),
+        contentAlignment = Alignment.Center
+    ) {
+        AsyncImage(
+            uri = headImg,
+            state = rememberAsyncImageState(ComposableImageOptions {
+                placeholder(Res.drawable.img_avatar)
+                fallback(Res.drawable.img_avatar)
+                crossfade()
+                error(Res.drawable.img_avatar)
+                sizeMultiplier(2.0f)
+            }),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
         )
     }
 }

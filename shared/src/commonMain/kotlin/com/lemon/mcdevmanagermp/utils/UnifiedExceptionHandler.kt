@@ -126,13 +126,14 @@ object UnifiedExceptionHandler {
         if (!noNeedRefreshCookies) {
             refreshCookiesIfChanged()
         }
+        val errorMessage = result.errorMessage()
 
         return when (result.status) {
             "200", "201", "ok", "OK", "Ok" -> result.data?.let { NetworkState.Success(it) }
                 ?: NetworkState.Success(msg = result.msg ?: result.status)
 
             "401", "no_login" -> {
-                Logger.e("$TAG: ${result.msg}")
+                Logger.e("$TAG: $errorMessage")
                 NetworkState.Error(
                     "登录过期了，请重新登录",
                     CookiesExpiredException()
@@ -140,8 +141,8 @@ object UnifiedExceptionHandler {
             }
 
             else -> {
-                Logger.e("$TAG: ${result.msg}")
-                NetworkState.Error(result.msg ?: result.status)
+                Logger.e("$TAG: $errorMessage")
+                NetworkState.Error(errorMessage)
             }
         }
     }

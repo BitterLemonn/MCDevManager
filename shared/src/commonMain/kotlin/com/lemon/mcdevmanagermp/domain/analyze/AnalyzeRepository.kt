@@ -1,6 +1,7 @@
 package com.lemon.mcdevmanagermp.domain.analyze
 
 import com.lemon.mcdevmanagermp.data.common.NetworkState
+import com.lemon.mcdevmanagermp.data.dto.netease.income.LobbyIncomeResourceListVO
 import com.lemon.mcdevmanagermp.data.dto.netease.income.OneResRealtimeIncomeVO
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResMonthDetailVO
@@ -21,7 +22,8 @@ interface AnalyzeRepository {
         category: String,
         startDate: String,
         endDate: String,
-        itemListStr: String
+        itemListStr: String,
+        isLobby: Boolean = false
     ): NetworkState<ResDetailVO>
 
     suspend fun getMonthDetail(
@@ -29,11 +31,20 @@ interface AnalyzeRepository {
         category: String,
         startDate: String,
         endDate: String,
-        dayDateId: String
+        dayDateId: String,
+        isLobby: Boolean = false
     ): NetworkState<ResMonthDetailVO>
 
     suspend fun getOneResRealtimeIncome(
         platform: String,
+        iid: String,
+        beginTime: String,
+        endTime: String
+    ): NetworkState<OneResRealtimeIncomeVO>
+
+    suspend fun getLobbyIncomeResources(): NetworkState<LobbyIncomeResourceListVO>
+
+    suspend fun getLobbyRealtimeIncome(
         iid: String,
         beginTime: String,
         endTime: String

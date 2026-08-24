@@ -133,7 +133,10 @@ internal fun CompactLayout(
                                 onNavigateToSubPage(Route.IncomeDetail())
                             },
                             onNavigateToLastMonthDetail = {
-                                onNavigateToSubPage(Route.IncomeDetail(isLastMonth = true))
+                                onNavigateToSubPage(Route.IncomeDetail(monthOffset = -1))
+                            },
+                            onNavigateToNextMonthDetail = {
+                                onNavigateToSubPage(Route.IncomeDetail(monthOffset = 1))
                             },
                             onNavigateToIncome = {
                                 onNavigateToSubPage(Route.Income)
@@ -193,6 +196,7 @@ internal fun CompactHomeTabContent(
     onAvatarClick: () -> Unit,
     onNavigateToIncomeDetail: () -> Unit = {},
     onNavigateToLastMonthDetail: () -> Unit = {},
+    onNavigateToNextMonthDetail: () -> Unit = {},
     onNavigateToIncome: () -> Unit = {},
     onNavigateToMailbox: () -> Unit = {}
 ) {
@@ -315,6 +319,19 @@ internal fun CompactHomeTabContent(
                         expanded = state.lastProfitExpanded,
                         onToggleExpand = { onAction(MainAction.ToggleLastProfitExpand) },
                         onNavigateToDetail = onNavigateToLastMonthDetail
+                    )
+                }
+
+                if (state.showNextMonthProfit) {
+                    Spacer(Modifier.height(12.dp))
+
+                    ProfitCard(
+                        title = "下月收益速算",
+                        profitData = state.nextProfitData ?: ProfitData(),
+                        isLoading = state.isProfitLoading,
+                        expanded = state.nextProfitExpanded,
+                        onToggleExpand = { onAction(MainAction.ToggleNextProfitExpand) },
+                        onNavigateToDetail = onNavigateToNextMonthDetail
                     )
                 }
 

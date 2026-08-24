@@ -5,6 +5,7 @@ import com.lemon.mcdevmanagermp.data.common.AppContext
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.repository.AnalyzeRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
 import com.lemon.mcdevmanagermp.domain.analyze.DayDetailConfig
 import com.lemon.mcdevmanagermp.domain.analyze.DayDetailUseCase
 import com.lemon.mcdevmanagermp.domain.analyze.formatYmd
@@ -45,7 +46,14 @@ class DayDetailViewModel : BaseViewModel<DayDetailState, DayDetailAction, DayDet
 
             is DayDetailAction.ToggleResource -> toggleResource(action.iid)
             is DayDetailAction.SetPlatform -> {
-                setState { copy(platform = action.platform, selectedIIDs = emptyList(), detailData = emptyMap()) }
+                setState {
+                    copy(
+                        platform = action.platform,
+                        selectedIIDs = emptyList(),
+                        detailData = emptyMap(),
+                        metricType = DayDetailMetricType.NEW_PURCHASE
+                    )
+                }
                 initLoad()
             }
 
@@ -93,7 +101,19 @@ class DayDetailViewModel : BaseViewModel<DayDetailState, DayDetailAction, DayDet
                 setState { copy(startDate = start, endDate = end) }
             }
 
-            when (val result = getResourceListUseCase(platform, onlineOnly = true)) {
+            val resourceResult = if (platform == "lobby") {
+                when (val result = AnalyzeRepositoryImpl.INSTANCE.getLobbyIncomeResources()) {
+                    is NetworkState.Success -> NetworkState.Success(
+                        result.data?.items?.map { ResourceData(itemId = it.itemId, itemName = it.itemName) }
+                            ?: emptyList()
+                    )
+
+                    is NetworkState.Error -> NetworkState.Error(result.msg, result.e)
+                }
+            } else {
+                getResourceListUseCase(platform, onlineOnly = true)
+            }
+            when (val result = resourceResult) {
                 is NetworkState.Success -> {
                     setState { copy(resList = result.data ?: emptyList(), isResListLoading = false) }
                 }

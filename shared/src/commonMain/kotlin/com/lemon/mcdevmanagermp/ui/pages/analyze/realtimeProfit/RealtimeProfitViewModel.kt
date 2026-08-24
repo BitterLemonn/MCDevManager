@@ -5,7 +5,9 @@ import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.consts.CookiesExpiredException
 import com.lemon.mcdevmanagermp.data.repository.AnalyzeRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
 import com.lemon.mcdevmanagermp.domain.analyze.RealtimeProfitUseCase
+import com.lemon.mcdevmanagermp.domain.analyze.mergeRealtimeIncome
 import com.lemon.mcdevmanagermp.domain.resource.GetResourceListUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
 import com.lemon.mcdevmanagermp.utils.Logger
@@ -71,11 +73,11 @@ class RealtimeProfitViewModel :
             }
             failedResources.clear()
 
-            // 1. 获取资源列表
-            when (val resourceResult =
+            // 1. 获取普通资源与联机大厅商业化作品
+            val resources = when (val resourceResult =
                 getResourceListUseCase(state.value.platform, onlineOnly = true)) {
                 is NetworkState.Success -> {
-                    setState { copy(resList = resourceResult.data ?: emptyList()) }
+                    resourceResult.data ?: emptyList()
                 }
 
                 is NetworkState.Error -> {
@@ -89,10 +91,31 @@ class RealtimeProfitViewModel :
                     return@launch
                 }
             }
+            val lobbyResources = if (state.value.platform == "pe") {
+                when (val result = realtimeProfitUseCase.getLobbyIncomeResources()) {
+                    is NetworkState.Success -> result.data?.items.orEmpty().map {
+                        ResourceData(itemId = it.itemId, itemName = it.itemName)
+                    }
 
-            // 2. 对每个资源获取实时收益
-            val resList = state.value.resList
-            if (resList.isEmpty()) {
+                    is NetworkState.Error -> {
+                        Logger.e("$TAG: 获取联机大厅作品列表失败: ${result.msg}")
+                        if (result.e is CookiesExpiredException) {
+                            sendEffect(RealtimeProfitEffect.NeedReLogin)
+                            setState { copy(isLoading = false) }
+                            return@launch
+                        }
+                        failedResources.add("联机大厅作品列表")
+                        emptyList()
+                    }
+                }
+            } else {
+                emptyList()
+            }
+            setState { copy(resList = (resources + lobbyResources).distinctBy { it.itemId }) }
+
+            // ponytail: 同作品普通销售与大厅内购合并；需分账展示时在状态中保留收益来源。
+            val incomeQueries = resources.map { it to false } + lobbyResources.map { it to true }
+            if (incomeQueries.isEmpty()) {
                 sendEffect(RealtimeProfitEffect.ShowToast("暂未查询到资源列表"))
                 setState { copy(isLoading = false) }
                 return@launch
@@ -101,16 +124,25 @@ class RealtimeProfitViewModel :
             val platform = state.value.platform
             val (beginTime, endTime) = realtimeProfitUseCase.computeTimeRange(state.value.checkDay)
 
-            for (res in resList) {
-                when (val result = realtimeProfitUseCase.getRealtimeIncome(
-                    platform = platform, iid = res.itemId, beginTime = beginTime, endTime = endTime
-                )) {
+            for ((res, isLobbyIncome) in incomeQueries) {
+                val result = if (isLobbyIncome) {
+                    realtimeProfitUseCase.getLobbyRealtimeIncome(
+                        iid = res.itemId, beginTime = beginTime, endTime = endTime
+                    )
+                } else {
+                    realtimeProfitUseCase.getRealtimeIncome(
+                        platform = platform,
+                        iid = res.itemId,
+                        beginTime = beginTime,
+                        endTime = endTime
+                    )
+                }
+                when (result) {
                     is NetworkState.Success -> {
                         result.data?.let { data ->
-                            // 排除无任何收益的模组
                             if (data.totalDiamonds == 0 && data.totalPoints == 0) return@let
                             val map = state.value.profitMap.toMutableMap()
-                            map[res.itemId] = data
+                            map[res.itemId] = mergeRealtimeIncome(map[res.itemId], data)
                             setState {
                                 copy(
                                     profitMap = map,
@@ -122,13 +154,14 @@ class RealtimeProfitViewModel :
                     }
 
                     is NetworkState.Error -> {
-                        Logger.e("$TAG: 获取资源${res.itemId}收益失败: ${result.msg}")
+                        val incomeType = if (isLobbyIncome) "联机大厅收益" else "普通收益"
+                        Logger.e("$TAG: 获取资源${res.itemId}${incomeType}失败: ${result.msg}")
                         if (result.e is CookiesExpiredException) {
                             sendEffect(RealtimeProfitEffect.NeedReLogin)
                             setState { copy(isLoading = false) }
                             return@launch
                         } else {
-                            failedResources.add(res.itemName)
+                            failedResources.add("${res.itemName}（$incomeType）")
                         }
                     }
                 }

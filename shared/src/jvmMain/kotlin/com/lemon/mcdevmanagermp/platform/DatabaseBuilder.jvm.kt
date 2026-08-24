@@ -11,12 +11,16 @@ import com.lemon.mcdevmanagermp.data.db.MIGRATION_2_3
 import com.lemon.mcdevmanagermp.data.db.MIGRATION_3_4
 import com.lemon.mcdevmanagermp.data.db.MIGRATION_4_5
 import com.lemon.mcdevmanagermp.data.db.MIGRATION_5_6
+import com.lemon.mcdevmanagermp.data.db.MIGRATION_6_7
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 
 private const val APP_DATA_DIRECTORY_NAME = "MCDevManager"
+private const val HOT_RELOAD_ACTIVE_PROPERTY = "compose.reload.isActive"
+private const val GRADLE_BUILD_ROOT_PROPERTY = "gradle.build.root"
+private const val HOT_RELOAD_ARGFILE_PROPERTY = "compose.reload.argfile"
 private object DbClassRef
 
 actual fun createAppDatabaseBuilder(): RoomDatabase.Builder<AppDatabase> {
@@ -26,14 +30,45 @@ actual fun createAppDatabaseBuilder(): RoomDatabase.Builder<AppDatabase> {
         name = dbFile.absolutePath,
         factory = AppDatabaseConstructor::initialize
     ).setDriver(BundledSQLiteDriver())
-        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
 }
 
 private fun resolveJvmDatabaseDirectory(): File {
     val codeLocation = File(DbClassRef::class.java.protectionDomain.codeSource.location.toURI())
-    val applicationDirectory = codeLocation.parentFile
+    val hotReloadApplicationDirectory = resolveHotReloadApplicationDirectory()
+    val applicationDirectory = hotReloadApplicationDirectory ?: codeLocation.parentFile
         ?: error("Unable to determine the application directory")
-    return selectJvmDatabaseDirectory(applicationDirectory, resolveJvmAppDataDirectory())
+    val dataDirectory = selectJvmDatabaseDirectory(applicationDirectory, resolveJvmAppDataDirectory())
+    if (hotReloadApplicationDirectory != null) {
+        migrateLegacyHotReloadDatabase(dataDirectory, resolveHotReloadRunDirectory())
+    }
+    return dataDirectory
+}
+
+internal fun resolveHotReloadApplicationDirectory(
+    isActive: String? = System.getProperty(HOT_RELOAD_ACTIVE_PROPERTY),
+    buildRoot: String? = System.getProperty(GRADLE_BUILD_ROOT_PROPERTY)
+): File? {
+    if (!isActive.toBoolean() || buildRoot.isNullOrBlank()) return null
+    return File(buildRoot).absoluteFile
+}
+
+internal fun resolveHotReloadRunDirectory(
+    argFile: String? = System.getProperty(HOT_RELOAD_ARGFILE_PROPERTY)
+): File? = argFile?.takeIf(String::isNotBlank)?.let(::File)?.absoluteFile?.parentFile
+
+internal fun migrateLegacyHotReloadDatabase(targetDirectory: File, runDirectory: File?) {
+    if (runDirectory == null || targetDirectory.resolve(DATABASE_NAME).exists()) return
+    val sourceDatabase = runDirectory.walkTopDown()
+        .maxDepth(8)
+        .filter { it.isFile && it.name == DATABASE_NAME }
+        .maxByOrNull(File::lastModified)
+        ?: return
+
+    Files.createDirectories(targetDirectory.toPath())
+    sourceDatabase.parentFile.listFiles()
+        ?.filter { it.name == DATABASE_NAME || it.name.startsWith("$DATABASE_NAME-") }
+        ?.forEach { it.copyTo(targetDirectory.resolve(it.name), overwrite = false) }
 }
 
 /**
