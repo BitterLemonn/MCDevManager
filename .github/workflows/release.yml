@@ -1,9 +1,12 @@
 name: Release
 
+# 仅手动触发。
+#
+# 注意：不要在此加入 push.tags 触发器。release job 用 softprops/action-gh-release 创建草稿
+# release，草稿不建 tag；当你在网页上点「Publish release」时 GitHub 会以你的身份创建 tag
+# vX.Y.Z，若这里监听了 push.tags，就会命中本 workflow 再整跑一遍（全平台重复构建约 40 分钟）。
+# tag 是发布流程的「产物」，不应作为入口。
 on:
-  push:
-    tags:
-      - 'v*'
   workflow_dispatch:
     inputs:
       version:
@@ -36,11 +39,7 @@ jobs:
       - name: Determine version
         id: vars
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            V="${{ inputs.version }}"
-          else
-            V="${GITHUB_REF#refs/tags/v}"
-          fi
+          V="${{ inputs.version }}"
           echo "version=${V#v}" >> "$GITHUB_OUTPUT"
 
       - name: Switch Gradle mirror to official source
@@ -87,11 +86,7 @@ jobs:
       - name: Determine version
         id: vars
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            V="${{ inputs.version }}"
-          else
-            V="${GITHUB_REF#refs/tags/v}"
-          fi
+          V="${{ inputs.version }}"
           echo "version=${V#v}" >> "$GITHUB_OUTPUT"
 
       - name: Switch Gradle mirror to official source
@@ -133,11 +128,7 @@ jobs:
         id: vars
         shell: pwsh
         run: |
-          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
-            $v = "${{ inputs.version }}"
-          } else {
-            $v = "${{ github.ref_name }}" -replace '^v',''
-          }
+          $v = "${{ inputs.version }}"
           $v = $v -replace '^v',''
           echo "version=$v" >> $env:GITHUB_OUTPUT
 
@@ -190,11 +181,7 @@ jobs:
       - name: Determine version
         id: vars
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            V="${{ inputs.version }}"
-          else
-            V="${GITHUB_REF#refs/tags/v}"
-          fi
+          V="${{ inputs.version }}"
           echo "version=${V#v}" >> "$GITHUB_OUTPUT"
 
       - name: Switch Gradle mirror to official source
@@ -242,11 +229,7 @@ jobs:
       - name: Determine version
         id: vars
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            V="${{ inputs.version }}"
-          else
-            V="${GITHUB_REF#refs/tags/v}"
-          fi
+          V="${{ inputs.version }}"
           echo "version=${V#v}" >> "$GITHUB_OUTPUT"
 
       - name: Switch Gradle mirror to official source
@@ -301,11 +284,7 @@ jobs:
       - name: Determine version
         id: version
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            V="${{ inputs.version }}"
-          else
-            V="${GITHUB_REF#refs/tags/v}"
-          fi
+          V="${{ inputs.version }}"
           echo "tag=v${V#v}" >> "$GITHUB_OUTPUT"
 
       - name: List artifacts
