@@ -70,8 +70,11 @@ class WorkDetailViewModel :
     private val fileUploadRepository: FileUploadRepository = FileUploadRepositoryImpl.INSTANCE
 
     override fun dispatch(action: WorkDetailAction) {
+        // 只读模式下除「加载详情」外的动作一律拒绝执行，作为 UI 置灰之外的最后一道防线。
+        if (state.value.readOnly && action !is WorkDetailAction.LoadDetail) return
+
         when (action) {
-            is WorkDetailAction.LoadDetail -> loadDetail(action.itemId)
+            is WorkDetailAction.LoadDetail -> loadDetail(action.itemId, action.readOnly)
             WorkDetailAction.InitNewWork -> initNewWork()
             is WorkDetailAction.UpdateItemName -> setState { copy(itemName = action.value) }
             is WorkDetailAction.ToggleJoinShantou -> setState { copy(joinShantou = action.value) }
@@ -258,10 +261,12 @@ class WorkDetailViewModel :
         }
     }
 
-    private fun loadDetail(itemId: String) {
+    private fun loadDetail(itemId: String, readOnly: Boolean = false) {
         if (state.value.isLoading) return
         viewModelScope.launch {
-            setState { copy(isLoading = true) }
+            // readOnly 必须在这里就生效：若延后到加载成功分支才设置，加载期间（以及加载失败后）
+            // 页面会以可写形态呈现，用户可能保存出一份新作品。
+            setState { copy(isLoading = true, readOnly = readOnly) }
             when (val result = workDetailUseCase.getResourceDetail(itemId)) {
                 is NetworkState.Success -> {
                     val d = result.data
@@ -271,6 +276,7 @@ class WorkDetailViewModel :
                             copy(
                                 isLoading = false,
                                 detail = d,
+                                readOnly = readOnly,
                                 itemId = d.itemId,
                                 normalNumber = d.normalNumber,
                                 itemVersion = d.itemVersion,

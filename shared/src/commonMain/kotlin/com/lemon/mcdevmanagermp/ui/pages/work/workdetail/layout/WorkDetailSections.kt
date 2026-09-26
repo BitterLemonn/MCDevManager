@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.lemon.mcdevmanagermp.ui.components.ReadOnlyRichDetail
 import com.lemon.mcdevmanagermp.ui.components.RichDetailForm
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailAction
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailState
@@ -30,8 +31,12 @@ import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 @Composable
 internal fun WorkDetailTopBarActions(
     isSubmitting: Boolean,
-    onAction: (WorkDetailAction) -> Unit
+    onAction: (WorkDetailAction) -> Unit,
+    readOnly: Boolean = false
 ) {
+    // 只读查看：不提供保存/提审入口
+    if (readOnly) return
+
     val contentColor = LocalContentColor.current
     val buttonColors = ButtonDefaults.textButtonColors(
         contentColor = contentColor,
@@ -91,29 +96,47 @@ internal fun WorkDetailInfoSections(
             onAction = onAction,
             modifier = Modifier.fillMaxWidth()
         )
-        RichDetailForm(
-            title = "PE 详情信息",
-            html = state.detail?.info ?: "",
-            echoKey = state.detail?.itemId,
-            onHtmlChange = { onAction(WorkDetailAction.UpdatePeDetail(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            required = true
-        )
+        if (state.readOnly) {
+            // 只读：直接渲染富文本，图片可正常显示（编辑器内为占位乱码，需点预览）
+            ReadOnlyRichDetail(
+                title = "PE 详情信息",
+                html = state.peDetail,
+                modifier = Modifier.fillMaxWidth(),
+                required = true
+            )
+        } else {
+            RichDetailForm(
+                title = "PE 详情信息",
+                html = state.detail?.info ?: "",
+                echoKey = state.detail?.itemId,
+                onHtmlChange = { onAction(WorkDetailAction.UpdatePeDetail(it)) },
+                modifier = Modifier.fillMaxWidth(),
+                required = true
+            )
+        }
         PeUpdateSummaryForm(
             state = state,
             onAction = onAction,
             modifier = Modifier.fillMaxWidth()
         )
         if (state.syncPc) {
-            RichDetailForm(
-                title = "PC 详细信息",
-                html = state.detail?.syncItemInfo?.info ?: "",
-                echoKey = state.detail?.itemId,
-                onHtmlChange = { onAction(WorkDetailAction.UpdatePcDetail(it)) },
-                syncFromPeHtml = { state.peDetail },
-                showPreviewButton = false,
-                modifier = Modifier.fillMaxWidth()
-            )
+            if (state.readOnly) {
+                ReadOnlyRichDetail(
+                    title = "PC 详细信息",
+                    html = state.pcDetail,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            } else {
+                RichDetailForm(
+                    title = "PC 详细信息",
+                    html = state.detail?.syncItemInfo?.info ?: "",
+                    echoKey = state.detail?.itemId,
+                    onHtmlChange = { onAction(WorkDetailAction.UpdatePcDetail(it)) },
+                    syncFromPeHtml = { state.peDetail },
+                    showPreviewButton = false,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
         ShelfSettingsForm(
             title = "PE 上架设置",
@@ -121,7 +144,8 @@ internal fun WorkDetailInfoSections(
             reason = state.peWeakOfflineReason,
             onToggleWeakOffline = { onAction(WorkDetailAction.TogglePeWeakOffline(it)) },
             onReasonChange = { onAction(WorkDetailAction.UpdatePeWeakOfflineReason(it)) },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            readOnly = state.readOnly
         )
         if (state.syncPc) {
             ShelfSettingsForm(
@@ -130,7 +154,8 @@ internal fun WorkDetailInfoSections(
                 reason = state.pcWeakOfflineReason,
                 onToggleWeakOffline = { onAction(WorkDetailAction.TogglePcWeakOffline(it)) },
                 onReasonChange = { onAction(WorkDetailAction.UpdatePcWeakOfflineReason(it)) },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                readOnly = state.readOnly
             )
         }
     }
@@ -160,7 +185,8 @@ internal fun WorkDetailMediaSections(
             },
             onRemove = { onAction(WorkDetailAction.RemovePeChannelImage(it)) },
             modifier = Modifier.fillMaxWidth(),
-            required = true
+            required = true,
+            readOnly = state.readOnly
         )
         VideoUploadForm(
             state = state,
@@ -180,7 +206,8 @@ internal fun WorkDetailMediaSections(
                     onAction(WorkDetailAction.SelectPcChannelImage(channel, file, metadata))
                 },
                 onRemove = { onAction(WorkDetailAction.RemovePcChannelImage(it)) },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                readOnly = state.readOnly
             )
         }
     }

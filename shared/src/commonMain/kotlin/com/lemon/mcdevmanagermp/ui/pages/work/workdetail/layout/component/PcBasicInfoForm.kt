@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.ui.components.BinarySelector
 import com.lemon.mcdevmanagermp.ui.components.FormSection
 import com.lemon.mcdevmanagermp.ui.components.ModSearchSelectField
+import com.lemon.mcdevmanagermp.ui.components.ReadOnlyField
 import com.lemon.mcdevmanagermp.ui.components.TagInputField
 import com.lemon.mcdevmanagermp.ui.components.YesNoSelector
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailAction
@@ -21,6 +22,8 @@ import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailState
  *
  * 字段：是否包含地图 / PC 模组标签 / PC 前置模组(包含·不包含，包含时输入 iid → relate_item_id) / PC 模组简介。
  * 复用 [TagInputField]（默认标签搜索 + 自定义）与 [YesNoSelector] / [BinarySelector]，视觉与基本信息一致。
+ *
+ * [WorkDetailState.readOnly]=true 时全部字段改为只读呈现。
  */
 @Composable
 internal fun PcBasicInfoForm(
@@ -28,13 +31,15 @@ internal fun PcBasicInfoForm(
     onAction: (WorkDetailAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val readOnly = state.readOnly
     FormSection(title = "PC 基本信息", modifier = modifier) {
         // 是否包含地图
         YesNoSelector(
             label = "是否包含地图",
             value = state.pcIncludeMap,
             onValueChange = { onAction(WorkDetailAction.TogglePcIncludeMap(it)) },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !readOnly
         )
 
         // PC 模组标签（仅可从 mc_consts.tag.comp 预设标签中选用，不可自定义）
@@ -46,7 +51,8 @@ internal fun PcBasicInfoForm(
             modifier = Modifier.fillMaxWidth(),
             placeholder = "选择标签",
             suggestions = state.pcTagOptions.map { it.title },
-            allowCustom = false
+            allowCustom = false,
+            readOnly = readOnly
         )
 
         // PC 前置模组（包含 / 不包含）
@@ -56,35 +62,54 @@ internal fun PcBasicInfoForm(
             optionFalse = "不包含",
             value = state.pcHasPrerequisite,
             onValueChange = { onAction(WorkDetailAction.TogglePcPrerequisite(it)) },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !readOnly
         )
 
         // 包含时搜索选择前置模组（comp，mcStatus=1；提交映射 relate_item_id）
         if (state.pcHasPrerequisite) {
-            ModSearchSelectField(
-                label = "PC 前置模组",
-                results = state.pcPrereqSearchResults,
-                isLoading = state.isSearchingPcPrereq,
-                selected = state.pcPrerequisites,
-                onSearch = { onAction(WorkDetailAction.SearchPcPrereqMods(it)) },
-                onSelect = { onAction(WorkDetailAction.SelectPcPrereqMod(it)) },
-                onRemove = { onAction(WorkDetailAction.RemovePcPrereqMod(it)) },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = "搜索 PC 前置模组名称",
-                multiSelect = true
-            )
+            if (readOnly) {
+                ReadOnlyField(
+                    label = "PC 前置模组",
+                    value = state.pcPrerequisites.joinToString("、") { it.name.ifEmpty { it.id } },
+                    singleLine = false,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            } else {
+                ModSearchSelectField(
+                    label = "PC 前置模组",
+                    results = state.pcPrereqSearchResults,
+                    isLoading = state.isSearchingPcPrereq,
+                    selected = state.pcPrerequisites,
+                    onSearch = { onAction(WorkDetailAction.SearchPcPrereqMods(it)) },
+                    onSelect = { onAction(WorkDetailAction.SelectPcPrereqMod(it)) },
+                    onRemove = { onAction(WorkDetailAction.RemovePcPrereqMod(it)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = "搜索 PC 前置模组名称",
+                    multiSelect = true
+                )
+            }
         }
 
         Spacer(Modifier.height(4.dp))
 
         // PC 模组简介（多行）
-        OutlinedTextField(
-            value = state.pcBrief,
-            onValueChange = { onAction(WorkDetailAction.UpdatePcIntro(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            minLines = 3,
-            maxLines = 5,
-            label = { Text("PC 模组简介") }
-        )
+        if (readOnly) {
+            ReadOnlyField(
+                label = "PC 模组简介",
+                value = state.pcBrief,
+                singleLine = false,
+                modifier = Modifier.fillMaxWidth()
+            )
+        } else {
+            OutlinedTextField(
+                value = state.pcBrief,
+                onValueChange = { onAction(WorkDetailAction.UpdatePcIntro(it)) },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 3,
+                maxLines = 5,
+                label = { Text("PC 模组简介") }
+            )
+        }
     }
 }

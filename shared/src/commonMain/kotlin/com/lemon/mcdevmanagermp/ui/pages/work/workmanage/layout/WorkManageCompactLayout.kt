@@ -40,7 +40,8 @@ internal fun WorkManageCompactLayout(
     state: WorkManageState,
     onAction: (WorkManageAction) -> Unit,
     onBack: () -> Unit,
-    onNavigateToDetail: (String) -> Unit = {}
+    onNavigateToDetail: (String) -> Unit = {},
+    onNavigateToViewDetail: (String) -> Unit = {}
 ) {
     val colors = LocalAppColors.current
     val listState = rememberLazyListState()
@@ -115,6 +116,8 @@ internal fun WorkManageCompactLayout(
                     WorkManageCard(item) { action ->
                         when (action) {
                             WorkItemActionEnum.UPDATE -> onNavigateToDetail(item.itemId)
+                            WorkItemActionEnum.VIEW_DETAIL ->
+                                onNavigateToViewDetail(item.itemId)
                             WorkItemActionEnum.SUBMIT_SELF_TEST ->
                                 pending = WorkManagePendingOp.SubmitSelfTest(item)
                             WorkItemActionEnum.ADJUST_PRICE ->

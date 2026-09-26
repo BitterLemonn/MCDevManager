@@ -79,6 +79,7 @@ internal fun PriceInfoForm(
     modifier: Modifier = Modifier
 ) {
     val colors = LocalAppColors.current
+    val readOnly = state.readOnly
     val isDiamond = state.priceType == PriceTypeEnum.DIAMOND
     val isEmerald = state.priceType == PriceTypeEnum.EMERALD
     val isFree = state.priceType == PriceTypeEnum.FREE
@@ -99,7 +100,7 @@ internal fun PriceInfoForm(
             selected = state.priceType.takeIf { it != PriceTypeEnum.UNKNOWN },
             onSelect = { onAction(WorkDetailAction.ChangePriceType(it)) },
             required = true,
-            enabled = !priceTypeLocked
+            enabled = !priceTypeLocked && !readOnly
         )
         if (priceTypeLocked) {
             Text(
@@ -116,7 +117,8 @@ internal fun PriceInfoForm(
                 options = DIAMOND_RANK_OPTIONS,
                 selected = state.priceRank.takeIf { it.type in 0..6 },
                 onSelect = { onAction(WorkDetailAction.ChangePriceRank(it)) },
-                required = true
+                required = true,
+                enabled = !readOnly
             )
         }
 
@@ -128,7 +130,7 @@ internal fun PriceInfoForm(
                 required = true
             )
 
-            isEmerald -> OutlinedTextField(
+            isEmerald && !readOnly -> OutlinedTextField(
                 value = state.emeraldPrice.toString(),
                 onValueChange = { raw ->
                     val digits = raw.filter { it.isDigit() }.take(9)
@@ -146,6 +148,12 @@ internal fun PriceInfoForm(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
 
+            isEmerald -> ReadOnlyField(
+                label = "定价",
+                value = "${state.emeraldPrice} 绿宝石",
+                required = true
+            )
+
             isFree -> ReadOnlyField(label = "定价", value = "免费", required = true)
 
             else -> ReadOnlyField(label = "定价", value = "—", required = true)
@@ -154,20 +162,43 @@ internal fun PriceInfoForm(
         // 折扣（仅钻石二档及以上）
         if (canEditDiscount) {
             Spacer(Modifier.height(4.dp))
-            DiscountSection(
-                discounts = state.discounts,
-                onChangePercent = { i, p ->
-                    onAction(
-                        WorkDetailAction.UpdateDiscountPercent(
-                            i,
-                            p
+            if (readOnly) {
+                DiscountReadOnlySection(discounts = state.discounts)
+            } else {
+                DiscountSection(
+                    discounts = state.discounts,
+                    onChangePercent = { i, p ->
+                        onAction(
+                            WorkDetailAction.UpdateDiscountPercent(
+                                i,
+                                p
+                            )
                         )
-                    )
-                },
-                onChangeBegin = { i, d -> onAction(WorkDetailAction.UpdateDiscountBegin(i, d)) },
-                onChangeEnd = { i, d -> onAction(WorkDetailAction.UpdateDiscountEnd(i, d)) },
-                onAdd = { onAction(WorkDetailAction.AddDiscount) },
-                onRemove = { i -> onAction(WorkDetailAction.RemoveDiscount(i)) }
+                    },
+                    onChangeBegin = { i, d -> onAction(WorkDetailAction.UpdateDiscountBegin(i, d)) },
+                    onChangeEnd = { i, d -> onAction(WorkDetailAction.UpdateDiscountEnd(i, d)) },
+                    onAdd = { onAction(WorkDetailAction.AddDiscount) },
+                    onRemove = { i -> onAction(WorkDetailAction.RemoveDiscount(i)) }
+                )
+            }
+        }
+    }
+}
+
+/** 只读折扣列表：仅展示百分比与起止日期，无删除/添加入口。 */
+@Composable
+private fun DiscountReadOnlySection(discounts: List<DiscountConfig>) {
+    FieldLabel(text = "折扣")
+    if (discounts.isEmpty()) {
+        ReadOnlyField(label = "折扣配置", value = "")
+        return
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        discounts.forEachIndexed { index, discount ->
+            ReadOnlyField(
+                label = "折扣 ${index + 1}",
+                value = "${discount.percent}%（${discount.beginDate} 至 ${discount.endDate}）",
+                singleLine = false
             )
         }
     }

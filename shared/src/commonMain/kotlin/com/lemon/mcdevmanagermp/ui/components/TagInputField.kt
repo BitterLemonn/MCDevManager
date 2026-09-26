@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.InputChip
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -51,6 +52,7 @@ import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
  * - [suggestions] 为默认标签源；输入为空时展示全部（排除已选），输入时按包含筛选。
  * - 列表为 popover，**强制在输入框下方展开**（自定义 [Popup] 位置，不向上翻转，
  *   避免遮挡输入框上方的已选标签 Chip）；超长可下滑；点击项即选用并保持展开，便于连续选择多个。
+ * - [readOnly]=true 时仅以 Chip 展示已选标签，隐藏输入框与删除按钮。
  */
 @Composable
 fun TagInputField(
@@ -63,7 +65,8 @@ fun TagInputField(
     required: Boolean = false,
     suggestions: List<String> = emptyList(),
     // false：仅可从 suggestions 选用，输入仅用于筛选列表，回车/逗号不添加自定义标签
-    allowCustom: Boolean = true
+    allowCustom: Boolean = true,
+    readOnly: Boolean = false
 ) {
     val colors = LocalAppColors.current
     val density = LocalDensity.current
@@ -73,6 +76,32 @@ fun TagInputField(
     var input by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
     var fieldWidthPx by remember { mutableIntStateOf(0) }
+
+    if (readOnly) {
+        Column(modifier = modifier.fillMaxWidth()) {
+            FieldLabel(text = label, required = required)
+            Spacer(Modifier.height(6.dp))
+            if (tags.isEmpty()) {
+                Text(
+                    text = "—",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = colors.onSurfaceVariant
+                )
+            } else {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    tags.forEach { tag ->
+                        InputChip(
+                            selected = false,
+                            onClick = {},
+                            enabled = false,
+                            label = { Text(tag) }
+                        )
+                    }
+                }
+            }
+        }
+        return
+    }
 
     // 输入为空 → 全部默认标签（可直接选择）；非空 → 按包含筛选；均排除已选
     val displayList = remember(input, suggestions, tags) {

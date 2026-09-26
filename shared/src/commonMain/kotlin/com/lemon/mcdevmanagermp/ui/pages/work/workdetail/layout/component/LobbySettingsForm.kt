@@ -26,6 +26,7 @@ import com.lemon.mcdevmanagermp.ui.components.FieldLabel
 import com.lemon.mcdevmanagermp.ui.components.FormSection
 import com.lemon.mcdevmanagermp.ui.components.OptionChip
 import com.lemon.mcdevmanagermp.ui.components.OptionChips
+import com.lemon.mcdevmanagermp.ui.components.ReadOnlyField
 import com.lemon.mcdevmanagermp.ui.components.YesNoSelector
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailAction
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailState
@@ -38,6 +39,10 @@ internal fun LobbySettingsForm(
 ) {
     if (state.peResourceType != PePriTypeEnum.LOBBY.value.toInt()) return
 
+    val readOnly = state.readOnly
+    // 只读时不允许修改阵营（与可写模式下已存在的作品一致，故复用 detail == null 的判断）
+    val campsEditable = state.detail == null && !readOnly
+
     FormSection(title = "联机大厅设置", modifier = modifier) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -48,21 +53,24 @@ internal fun LobbySettingsForm(
                 value = state.lobbyMinNum,
                 supportingText = "0 或 2–${state.lobbyForceMaxNum}",
                 onValueChange = { onAction(WorkDetailAction.UpdateLobbyMinNum(it)) },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                readOnly = readOnly
             )
             LobbyNumberField(
                 label = "建议最多人数",
                 value = state.lobbyMaxNum,
                 supportingText = "0 或 2–${state.lobbyForceMaxNum}",
                 onValueChange = { onAction(WorkDetailAction.UpdateLobbyMaxNum(it)) },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                readOnly = readOnly
             )
         }
         LobbyNumberField(
             label = "房间限制人数",
             value = state.lobbyForceMaxNum,
             supportingText = "范围 2–10",
-            onValueChange = { onAction(WorkDetailAction.UpdateLobbyForceMaxNum(it)) }
+            onValueChange = { onAction(WorkDetailAction.UpdateLobbyForceMaxNum(it)) },
+            readOnly = readOnly
         )
 
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -79,7 +87,7 @@ internal fun LobbySettingsForm(
                     OptionChip(
                         text = tag.title,
                         selected = selected,
-                        enabled = selected || !state.isLobbyCompetitive && !atLimit,
+                        enabled = !readOnly && (selected || !state.isLobbyCompetitive && !atLimit),
                         onClick = { onAction(WorkDetailAction.ToggleLobbyTag(tag.id)) }
                     )
                 }
@@ -91,24 +99,33 @@ internal fun LobbySettingsForm(
                 label = "是否为非对称对抗",
                 options = listOf("是" to true, "否" to false),
                 selected = state.lobbyIsAsymmetric,
-                enabled = state.detail == null,
+                enabled = campsEditable,
                 onSelect = { onAction(WorkDetailAction.ToggleLobbyAsymmetric(it)) }
             )
             if (state.lobbyIsAsymmetric) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     FieldLabel(text = "阵营分类", required = true)
                     state.lobbyCamps.forEachIndexed { index, camp ->
-                        OutlinedTextField(
-                            value = camp,
-                            onValueChange = {
-                                onAction(WorkDetailAction.UpdateLobbyCamp(index, it))
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            enabled = state.detail == null,
-                            singleLine = true,
-                            label = { Text("阵营 ${index + 1}") },
-                            placeholder = { Text("请输入阵营名称") }
-                        )
+                        if (readOnly) {
+                            ReadOnlyField(
+                                label = "阵营 ${index + 1}",
+                                value = camp,
+                                singleLine = false,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        } else {
+                            OutlinedTextField(
+                                value = camp,
+                                onValueChange = {
+                                    onAction(WorkDetailAction.UpdateLobbyCamp(index, it))
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                enabled = state.detail == null,
+                                singleLine = true,
+                                label = { Text("阵营 ${index + 1}") },
+                                placeholder = { Text("请输入阵营名称") }
+                            )
+                        }
                     }
                 }
             }
@@ -116,18 +133,21 @@ internal fun LobbySettingsForm(
                 label = "游戏开始人数",
                 value = state.lobbyPlayerNum,
                 supportingText = "范围 1–15",
-                onValueChange = { onAction(WorkDetailAction.UpdateLobbyPlayerNum(it)) }
+                onValueChange = { onAction(WorkDetailAction.UpdateLobbyPlayerNum(it)) },
+                readOnly = readOnly
             )
             YesNoSelector(
                 label = "在普通模式中显示",
                 value = state.lobbyNormalMode,
-                onValueChange = { onAction(WorkDetailAction.ToggleLobbyNormalMode(it)) }
+                onValueChange = { onAction(WorkDetailAction.ToggleLobbyNormalMode(it)) },
+                enabled = !readOnly
             )
             LobbyNumberField(
                 label = "逃跑时间（分钟）",
                 value = state.lobbyReconnectTime,
                 supportingText = "范围 1–99",
-                onValueChange = { onAction(WorkDetailAction.UpdateLobbyReconnectTime(it)) }
+                onValueChange = { onAction(WorkDetailAction.UpdateLobbyReconnectTime(it)) },
+                readOnly = readOnly
             )
         }
         // ponytail: 商业化与资源中心同步会改变 sub_type 提交语义，等产品明确开关流程后再开放。
@@ -140,8 +160,17 @@ private fun LobbyNumberField(
     value: Int,
     supportingText: String,
     onValueChange: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    readOnly: Boolean = false
 ) {
+    if (readOnly) {
+        ReadOnlyField(
+            label = label,
+            value = value.toString(),
+            modifier = modifier
+        )
+        return
+    }
     val focusManager = LocalFocusManager.current
     var text by remember { mutableStateOf(value.toString()) }
     var focused by remember { mutableStateOf(false) }

@@ -49,6 +49,8 @@ import io.github.vinceglb.filekit.mimeType
 /**
  * 上传视频区块：回显 video_info_list + 选视频即时上传（16:9 / ≤1:30 / ≤50MB / H264）。
  * 上限 1 个；cover 由用户单独上传封面图得到（封面区点击选图）。
+ *
+ * [WorkDetailState.readOnly]=true 时仅展示已上传的视频与封面，无上传/替换/删除入口。
  */
 @Composable
 internal fun VideoUploadForm(
@@ -57,6 +59,7 @@ internal fun VideoUploadForm(
     modifier: Modifier = Modifier
 ) {
     val colors = LocalAppColors.current
+    val readOnly = state.readOnly
     val videoPicker = rememberFilePickerLauncher(type = FileKitType.Video) { file: PlatformFile? ->
         if (file != null) onAction(WorkDetailAction.UploadVideo(file))
     }
@@ -66,29 +69,38 @@ internal fun VideoUploadForm(
         modifier = modifier,
         required = state.priceType == PriceTypeEnum.DIAMOND
     ) {
-        Text(
-            text = "要求: 16:9 比例，时长 1:30 以内，50MB 以内，H264 编码",
-            style = MaterialTheme.typography.bodySmall,
-            color = colors.onSurfaceVariant.copy(alpha = 0.6f)
-        )
-        Spacer(Modifier.height(8.dp))
+        if (!readOnly) {
+            Text(
+                text = "要求: 16:9 比例，时长 1:30 以内，50MB 以内，H264 编码",
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.onSurfaceVariant.copy(alpha = 0.6f)
+            )
+            Spacer(Modifier.height(8.dp))
+        }
 
         if (state.videos.isNotEmpty()) {
             state.videos.forEachIndexed { index, video ->
                 VideoCard(
                     video = video,
                     isUploadingVideo = state.isUploadingVideo,
-                    onRemove = { onAction(WorkDetailAction.RemoveVideo(index)) }
+                    onRemove = if (readOnly) null
+                    else ({ onAction(WorkDetailAction.RemoveVideo(index)) })
                 )
                 FieldLabel(text = "视频封面")
                 VideoCoverPicker(
                     video = video,
-                    enabled = !state.isUploadingVideo,
+                    enabled = !state.isUploadingVideo && !readOnly,
                     onUpload = { file, mt ->
                         onAction(WorkDetailAction.UploadVideoCover(index, file, mt))
                     }
                 )
             }
+        } else if (!state.isUploadingVideo && readOnly) {
+            Text(
+                text = "—",
+                style = MaterialTheme.typography.bodyLarge,
+                color = colors.onSurfaceVariant
+            )
         } else if (!state.isUploadingVideo) {
             Box(
                 modifier = Modifier
@@ -135,12 +147,12 @@ internal fun VideoUploadForm(
     }
 }
 
-/** 视频文件卡片：大小 + 删除/上传中指示。 */
+/** 视频文件卡片：大小 + 删除/上传中指示（[onRemove] 为 null 时不显示删除按钮）。 */
 @Composable
 private fun VideoCard(
     video: VideoItem,
     isUploadingVideo: Boolean,
-    onRemove: () -> Unit,
+    onRemove: (() -> Unit)?,
     modifier: Modifier = Modifier
 ) {
     val colors = LocalAppColors.current
@@ -179,7 +191,7 @@ private fun VideoCard(
                 color = colors.primary,
                 strokeWidth = 2.dp
             )
-        } else {
+        } else if (onRemove != null) {
             Box(
                 modifier = Modifier
                     .size(28.dp)

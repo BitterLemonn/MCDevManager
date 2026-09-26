@@ -55,6 +55,9 @@ import kotlinx.coroutines.delay
  * - [columns] <= 1：所有短字段单列
  * - [columns] >= 2：只读元数据 / 是·否选项用 FlowRow 多列网格，长字段（名称/前置/标签/活动说明）整行
  * - [showMetaRow]：是否在表单内渲染只读元数据组（expanded 改用 [MetaInfoBar] 顶栏展示）
+ *
+ * [WorkDetailState.readOnly]=true 时全部字段改为只读呈现：文本用 [ReadOnlyField]，
+ * 选择器置灰保留选中态，标签/授权图仅展示不可增删。
  */
 @Composable
 internal fun BasicInfoForm(
@@ -65,23 +68,34 @@ internal fun BasicInfoForm(
     showMetaRow: Boolean = true
 ) {
     val colors = LocalAppColors.current
+    val readOnly = state.readOnly
     // columns<=1 时给一个超过任何屏宽的 min，强制单列；否则以 260dp 为每列最小宽度
     val minFieldWidth = if (columns <= 1) 1000.dp else 260.dp
 
     FormSection(title = "基本信息", modifier = modifier) {
         // 资源名称（必填，整行）
-        OutlinedTextField(
-            value = state.itemName,
-            onValueChange = { onAction(WorkDetailAction.UpdateItemName(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            label = {
-                Text(buildAnnotatedString {
-                    withStyle(SpanStyle(color = colors.error)) { append("* ") }
-                    append("资源名称")
-                })
-            }
-        )
+        if (readOnly) {
+            ReadOnlyField(
+                label = "资源名称",
+                value = state.itemName,
+                required = true,
+                singleLine = false,
+                modifier = Modifier.fillMaxWidth()
+            )
+        } else {
+            OutlinedTextField(
+                value = state.itemName,
+                onValueChange = { onAction(WorkDetailAction.UpdateItemName(it)) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                label = {
+                    Text(buildAnnotatedString {
+                        withStyle(SpanStyle(color = colors.error)) { append("* ") }
+                        append("资源名称")
+                    })
+                }
+            )
+        }
 
         // 只读元数据组（可关闭：expanded 用顶部信息条替代）
         if (showMetaRow) {
@@ -121,28 +135,32 @@ internal fun BasicInfoForm(
                 value = state.joinShantou,
                 onValueChange = { onAction(WorkDetailAction.ToggleJoinShantou(it)) },
                 modifier = Modifier.weight(1f).widthIn(min = minFieldWidth),
-                required = true
+                required = true,
+                enabled = !readOnly
             )
             YesNoSelector(
                 label = "是否原创作品",
                 value = state.isOriginal,
                 onValueChange = { onAction(WorkDetailAction.ToggleOriginal(it)) },
                 modifier = Modifier.weight(1f).widthIn(min = minFieldWidth),
-                required = true
+                required = true,
+                enabled = !readOnly
             )
             YesNoSelector(
                 label = "是否为关联模组",
                 value = state.isRelatedMod,
                 onValueChange = { onAction(WorkDetailAction.ToggleRelatedMod(it)) },
                 modifier = Modifier.weight(1f).widthIn(min = minFieldWidth),
-                required = true
+                required = true,
+                enabled = !readOnly
             )
             YesNoSelector(
                 label = "是否同步生成 PC 模组",
                 value = state.syncPc,
                 onValueChange = { onAction(WorkDetailAction.ToggleSyncPc(it)) },
                 modifier = Modifier.weight(1f).widthIn(min = minFieldWidth),
-                required = true
+                required = true,
+                enabled = !readOnly
             )
         }
 
@@ -153,7 +171,8 @@ internal fun BasicInfoForm(
                 localFile = state.corpProofFile,
                 onSelect = { onAction(WorkDetailAction.SelectCorpProof(it)) },
                 onRemove = { onAction(WorkDetailAction.RemoveCorpProof) },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                readOnly = readOnly
             )
         }
 
@@ -167,21 +186,30 @@ internal fun BasicInfoForm(
         }
 
         // 前置模组
-        OutlinedTextField(
-            value = state.prerequisite,
-            onValueChange = { onAction(WorkDetailAction.UpdatePrerequisite(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            label = { Text("前置模组") },
-            placeholder = { Text("搜索前置模组名称") },
-            supportingText = {
-                Text(
-                    text = "搜索并选择已上传的私有前置模组，仅能关联一个前置模组",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = colors.onSurfaceVariant
-                )
-            }
-        )
+        if (readOnly) {
+            ReadOnlyField(
+                label = "前置模组",
+                value = state.prerequisite,
+                singleLine = false,
+                modifier = Modifier.fillMaxWidth()
+            )
+        } else {
+            OutlinedTextField(
+                value = state.prerequisite,
+                onValueChange = { onAction(WorkDetailAction.UpdatePrerequisite(it)) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                label = { Text("前置模组") },
+                placeholder = { Text("搜索前置模组名称") },
+                supportingText = {
+                    Text(
+                        text = "搜索并选择已上传的私有前置模组，仅能关联一个前置模组",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.onSurfaceVariant
+                    )
+                }
+            )
+        }
 
         // 模组标签（整行）
         TagInputField(
@@ -192,19 +220,29 @@ internal fun BasicInfoForm(
             modifier = Modifier.fillMaxWidth(),
             placeholder = "搜索标签 / 输入自定义标签",
             required = true,
-            suggestions = state.availableTags
+            suggestions = state.availableTags,
+            readOnly = readOnly
         )
 
         // 活动参与说明
-        OutlinedTextField(
-            value = state.activityDesc,
-            onValueChange = { onAction(WorkDetailAction.UpdateActivityDesc(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            minLines = 3,
-            maxLines = 5,
-            label = { Text("活动参与说明") },
-            placeholder = { Text("用于填写参与官方活动需上传介绍与说明，此处内容不会在游戏端出现") }
-        )
+        if (readOnly) {
+            ReadOnlyField(
+                label = "活动参与说明",
+                value = state.activityDesc,
+                singleLine = false,
+                modifier = Modifier.fillMaxWidth()
+            )
+        } else {
+            OutlinedTextField(
+                value = state.activityDesc,
+                onValueChange = { onAction(WorkDetailAction.UpdateActivityDesc(it)) },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 3,
+                maxLines = 5,
+                label = { Text("活动参与说明") },
+                placeholder = { Text("用于填写参与官方活动需上传介绍与说明，此处内容不会在游戏端出现") }
+            )
+        }
     }
 }
 
@@ -276,6 +314,8 @@ private fun MetaItem(
 
 /**
  * 关联模组补充字段（「是否为关联模组」选「是」时展开）：模组类型、搜索模组、当前关联模组（只读）。
+ *
+ * [WorkDetailState.readOnly]=true 时不渲染搜索选择框，改为只读展示所选关联模组。
  */
 @Composable
 internal fun RelatedModFields(
@@ -299,27 +339,46 @@ internal fun RelatedModFields(
             optionFalse = "副包",
             value = state.relatedIsMaster,
             onValueChange = { onAction(WorkDetailAction.ToggleRelatedPackType(it)) },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !state.readOnly
         )
 
-        // 搜索模组（pe，mcStatus=1）
-        ModSearchSelectField(
-            label = "搜索模组",
-            results = state.relatedSearchResults,
-            isLoading = state.isSearchingRelated,
-            selected = if (state.relatedItemId.isNotEmpty())
-                listOf(ModSelectOption(state.relatedItemId, state.relatedItemName))
-            else emptyList(),
-            onSearch = { onAction(WorkDetailAction.SearchRelatedMods(it)) },
-            onSelect = { onAction(WorkDetailAction.SelectRelatedMod(it)) },
-            onRemove = { onAction(WorkDetailAction.ClearRelatedMod) },
-            modifier = Modifier.fillMaxWidth()
-        )
+        if (state.readOnly) {
+            // 只读：不提供搜索/清空入口，仅展示当前关联的模组
+            ReadOnlyField(
+                label = "关联模组",
+                value = state.relatedItemName.ifEmpty { state.relatedItemId },
+                singleLine = false,
+                modifier = Modifier.fillMaxWidth()
+            )
+        } else {
+            // 搜索模组（pe，mcStatus=1）
+            ModSearchSelectField(
+                label = "搜索模组",
+                results = state.relatedSearchResults,
+                isLoading = state.isSearchingRelated,
+                selected = if (state.relatedItemId.isNotEmpty())
+                    listOf(ModSelectOption(state.relatedItemId, state.relatedItemName))
+                else emptyList(),
+                onSearch = { onAction(WorkDetailAction.SearchRelatedMods(it)) },
+                onSelect = { onAction(WorkDetailAction.SelectRelatedMod(it)) },
+                onRemove = { onAction(WorkDetailAction.ClearRelatedMod) },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
 
         // 当前关联模组（只读）
         FieldLabel(text = "当前关联模组")
-        ReadOnlyField(label = "主包", value = state.detail?.dlcInfo?.master.orEmpty())
-        ReadOnlyField(label = "副包", value = state.detail?.dlcInfo?.slaveList.orEmpty())
+        ReadOnlyField(
+            label = "主包",
+            value = state.detail?.dlcInfo?.master.orEmpty(),
+            singleLine = false
+        )
+        ReadOnlyField(
+            label = "副包",
+            value = state.detail?.dlcInfo?.slaveList.orEmpty(),
+            singleLine = false
+        )
     }
 }
 

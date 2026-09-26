@@ -11,12 +11,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.ui.components.FormSection
+import com.lemon.mcdevmanagermp.ui.components.ReadOnlyField
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailAction
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailState
 
 /**
  * PC 模组信息区块：模组类别 / 适用范围 / 具体类别
  * 一级分类仅新建可选，编辑场景锁定不可改；具体类别与适用范围均可改。
+ *
+ * [WorkDetailState.readOnly]=true 时改为纯文本汇总展示。
  */
 @Composable
 internal fun PcResourceManageForm(
@@ -24,6 +27,11 @@ internal fun PcResourceManageForm(
     onAction: (WorkDetailAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    if (state.readOnly) {
+        PcResourceReadOnlySection(state = state, modifier = modifier)
+        return
+    }
+
     // 一级分类（模组类别）仅新建可选；编辑场景作品已有类别，锁定不可改
     val typeEditable = state.detail == null
 
@@ -120,6 +128,34 @@ internal fun PcResourceManageForm(
                     }
                 }
             }
+        }
+    }
+}
+
+/** PC 模组信息（只读）：模组类别 / 适用范围 / 具体类别汇总为纯文本。 */
+@Composable
+private fun PcResourceReadOnlySection(
+    state: WorkDetailState,
+    modifier: Modifier = Modifier
+) {
+    FormSection(title = "上传 PC 模组信息", modifier = modifier) {
+        val typeTitle = state.pcResourceTypeOptions
+            .firstOrNull { it.id == state.pcResourceType }?.title.orEmpty()
+        val scopeTitle = state.pcAvailableScopeOptions
+            .firstOrNull { it.id == state.pcAvailableScope }?.title.orEmpty()
+        val subTypeOptions = state.pcResourceSubTypeOptions[state.pcResourceType].orEmpty()
+        val subTypeTitle = subTypeOptions
+            .firstOrNull { it.id == state.pcResourceSubType }?.title.orEmpty()
+
+        ReadOnlyField(label = "模组类别", value = typeTitle, required = true, singleLine = false)
+        ReadOnlyField(label = "适用范围", value = scopeTitle, required = true, singleLine = false)
+        if (subTypeOptions.isNotEmpty()) {
+            ReadOnlyField(
+                label = "具体类别",
+                value = subTypeTitle,
+                required = true,
+                singleLine = false
+            )
         }
     }
 }

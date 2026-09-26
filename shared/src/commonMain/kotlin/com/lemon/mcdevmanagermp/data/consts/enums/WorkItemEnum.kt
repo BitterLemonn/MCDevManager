@@ -15,7 +15,10 @@ enum class WorkItemActionEnum(val label: String) {
     CANCEL_TEST("取消自测"),
     VIEW_FEEDBACK("查看反馈"),
     APPOINT_ONLINE("定时上架"),
-    DELETE("删除")
+    DELETE("删除"),
+
+    /** 只读查看作品详情：所有状态下都可用，不触发任何写操作。 */
+    VIEW_DETAIL("查看详情")
 }
 
 /**
@@ -38,7 +41,7 @@ enum class WorkItemStatusEnum(val label: String, val des: String) {
     UNKNOWN("未知", "unknown");
 
     /**
-     * 该状态下可执行的操作列表。
+     * 该状态下可执行的操作列表。所有状态都保证包含 [WorkItemActionEnum.VIEW_DETAIL]（只读查看）。
      * @param isFree 作品是否免费（price <= 0）
      */
     fun actions(isFree: Boolean): List<WorkItemActionEnum> = when (this) {
@@ -66,10 +69,9 @@ enum class WorkItemStatusEnum(val label: String, val des: String) {
         ACCEPT -> listOf(WorkItemActionEnum.PUBLISH, WorkItemActionEnum.APPOINT_ONLINE)
         // 自测中, 自测准备中 -> [取消自测]
         SELF_TEST, SELF_TEST_PREPARE -> listOf(WorkItemActionEnum.CANCEL_TEST)
-        // 上架准备中
-        ONLINE_PREPARING -> emptyList()
-        UNKNOWN -> emptyList()
-    }
+        // 上架准备中 / 未知：无可写操作，仅可只读查看
+        ONLINE_PREPARING, UNKNOWN -> emptyList()
+    }.let { it + WorkItemActionEnum.VIEW_DETAIL }
 
     companion object {
         fun fromStatusString(status: String): WorkItemStatusEnum {

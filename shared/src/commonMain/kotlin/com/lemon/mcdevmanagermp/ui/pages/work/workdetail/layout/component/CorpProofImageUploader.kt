@@ -48,6 +48,7 @@ import io.github.vinceglb.filekit.path
  * - 回显：[imageUrl] 为后端已上传的授权图 URL；[localFile] 为用户新选的本地图片，预览优先取本地。
  * - 选图后仅本地预览 + 持有文件引用，提交时再上传（与活动参与页模式一致）。
  * - 点击缩略图可查看大图（缩放）；视觉与活动页 `UploadComponents` 的缩略图 / 添加按钮一致。
+ * - [readOnly]=true 时仅展示已有图片（可点开大图），隐藏删除角标与添加入口。
  */
 @Composable
 internal fun CorpProofImageUploader(
@@ -55,7 +56,8 @@ internal fun CorpProofImageUploader(
     localFile: PlatformFile?,
     onSelect: (PlatformFile) -> Unit,
     onRemove: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    readOnly: Boolean = false
 ) {
     val colors = LocalAppColors.current
     // 本地新选优先预览，否则回显远端 URL；两者皆空视为未上传
@@ -103,24 +105,33 @@ internal fun CorpProofImageUploader(
                         .fillMaxSize()
                         .clip(RoundedCornerShape(10.dp))
                 )
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(2.dp)
-                        .size(20.dp)
-                        .clip(CircleShape)
-                        .background(colors.error.copy(alpha = 0.85f))
-                        .clickable(onClick = onRemove),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Close,
-                        contentDescription = "删除授权图片",
-                        modifier = Modifier.size(12.dp),
-                        tint = colors.onError
-                    )
+                if (!readOnly) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(2.dp)
+                            .size(20.dp)
+                            .clip(CircleShape)
+                            .background(colors.error.copy(alpha = 0.85f))
+                            .clickable(onClick = onRemove),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = "删除授权图片",
+                            modifier = Modifier.size(12.dp),
+                            tint = colors.onError
+                        )
+                    }
                 }
             }
+        } else if (readOnly) {
+            // 只读：未上传时不给添加入口，仅提示
+            Text(
+                text = "—",
+                style = MaterialTheme.typography.bodyLarge,
+                color = colors.onSurfaceVariant
+            )
         } else {
             // 无图：添加按钮
             Box(
