@@ -9,15 +9,12 @@ import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.api.createClientPlugin
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.cookies.CookiesStorage
 import io.ktor.client.plugins.cookies.HttpCookies
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.http.ContentType
-import io.ktor.http.Cookie
 import io.ktor.http.HttpHeaders
-import io.ktor.http.Url
 import io.ktor.http.contentType
 import io.ktor.http.encodedPath
 import io.ktor.serialization.kotlinx.json.json
@@ -27,22 +24,7 @@ import kotlin.time.TimeSource
 import io.ktor.client.plugins.logging.Logger as KtorLogger
 
 object ApiFactory {
-    private val cookiesStorage = object : CookiesStorage {
-        override suspend fun addCookie(requestUrl: Url, cookie: Cookie) {
-            if (cookie.value.isEmpty()) {
-                CookiesStore.removeCookie(cookie.name)
-                return
-            }
-            CookiesStore.addCookie(cookie.name, cookie.value)
-        }
-
-        override suspend fun get(requestUrl: Url): List<Cookie> {
-            val cookies = CookiesStore.getAllCookiesMap()
-            return cookies.map { Cookie(it.key, it.value) }
-        }
-
-        override fun close() {}
-    }
+    private val cookiesStorage = SessionCookieStorage()
 
     private val TrailingSlashPlugin = createClientPlugin("TrailingSlashPlugin") {
         onRequest { request, _ ->
