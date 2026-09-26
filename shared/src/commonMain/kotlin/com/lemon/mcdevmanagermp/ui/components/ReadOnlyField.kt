@@ -18,6 +18,8 @@ import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 
 /**
  * 只读字段：上方标签，下方值（值缺省显示 "—"）。可选 [trailing] 尾部插槽（如复制按钮）。
+ *
+ * [singleLine]=false 时值可换行完整展示（用于只读详情中的长文本，如简介 / 下架理由）。
  */
 @Composable
 fun ReadOnlyField(
@@ -25,12 +27,13 @@ fun ReadOnlyField(
     value: String,
     modifier: Modifier = Modifier,
     required: Boolean = false,
+    singleLine: Boolean = true,
     trailing: @Composable (() -> Unit)? = null
 ) {
     val colors = LocalAppColors.current
     Row(
         modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.Bottom,
+        verticalAlignment = if (singleLine) Alignment.Bottom else Alignment.Top,
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Column(modifier = Modifier.weight(1f, fill = false)) {
@@ -41,8 +44,8 @@ fun ReadOnlyField(
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium,
                 color = colors.textColor,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                maxLines = if (singleLine) 1 else Int.MAX_VALUE,
+                overflow = if (singleLine) TextOverflow.Ellipsis else TextOverflow.Clip
             )
         }
         trailing?.invoke()

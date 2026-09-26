@@ -20,6 +20,7 @@ import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
+import kotlin.time.Clock
 
 @Serializable
 data class WorkUpdateDTO(
@@ -135,7 +136,9 @@ data class WorkUpdateDTO(
     @SerialName("running_status") val runningStatus: String = "normal",
     @SerialName("is_domain_server_item") val isDomainServerItem: Int = 0,
     @SerialName("main_city") val mainCity: Boolean = false,
-    @SerialName("pe_is_add_play_plan") val peIsAddPlayPlan: Boolean = false,
+    @SerialName("pe_is_add_play_plan") val peIsAddPlayPlan: Boolean,
+    @SerialName("play_plan_expire_time") val playPlanExpireTime: Int? = null,
+    @SerialName("play_plan_expire_month") val playPlanExpireMonth: Int? = null,
 
     @SerialName("dyeing_relation") val dyeingRelation: JsonObject = JsonObject(emptyMap()),
     val dyeing: String = "",
@@ -200,7 +203,12 @@ data class WorkUpdateSyncChannelDTO(
     val version: Int = 0
 )
 
-fun ResourceDetailVO.toWorkUpdateDTO(isCheckApply: Boolean): WorkUpdateDTO = WorkUpdateDTO(
+fun ResourceDetailVO.toWorkUpdateDTO(
+    isCheckApply: Boolean,
+    currentEpochSeconds: Long = Clock.System.now().epochSeconds
+): WorkUpdateDTO {
+    val isPlayPlanExpired = peIsAddPlayPlan && playPlanExpireTime > 0 && playPlanExpireTime < currentEpochSeconds
+    return WorkUpdateDTO(
     isCheckApply = isCheckApply,
     preReviewVideo = preReviewVideo.ifEmpty { "{}" },
     itemName = itemName,
@@ -308,7 +316,9 @@ fun ResourceDetailVO.toWorkUpdateDTO(isCheckApply: Boolean): WorkUpdateDTO = Wor
     runningStatus = runningStatus.ifEmpty { "normal" },
     isDomainServerItem = isDomainServerItem,
     mainCity = mainCity,
-    peIsAddPlayPlan = false,
+    peIsAddPlayPlan = peIsAddPlayPlan,
+    playPlanExpireTime = if (isPlayPlanExpired) null else playPlanExpireTime,
+    playPlanExpireMonth = if (isPlayPlanExpired) 0 else null,
     dyeingRelation = dyeingRelation,
     dyeing = dyeing,
     personaMtypeid = personaMtypeid,
@@ -363,6 +373,7 @@ fun ResourceDetailVO.toWorkUpdateDTO(isCheckApply: Boolean): WorkUpdateDTO = Wor
         )
     }
 )
+}
 
 private fun String?.toJsonObject(): JsonObject = runCatching {
     JSONConverter.parseToJsonElement(this.orEmpty()).jsonObject

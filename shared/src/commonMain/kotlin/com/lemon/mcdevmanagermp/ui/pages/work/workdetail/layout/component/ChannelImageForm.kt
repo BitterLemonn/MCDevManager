@@ -66,6 +66,7 @@ import kotlinx.coroutines.launch
  *
  * @param onSelect 回传 channelId + 裁剪后文件 + mimeType
  * @param onRemove 清空对应 channel 的 URL（本地状态，submit 接入后由服务端落库）
+ * @param readOnly 只读查看：隐藏上传入口与删除角标，已上传的图仍可点开大图
  */
 @Composable
 internal fun ChannelImageForm(
@@ -74,7 +75,8 @@ internal fun ChannelImageForm(
     onSelect: (channelId: Int, file: PlatformFile, mimeType: String) -> Unit,
     onRemove: (channelId: Int) -> Unit,
     modifier: Modifier = Modifier,
-    required: Boolean = false
+    required: Boolean = false,
+    readOnly: Boolean = false
 ) {
     FormSection(title = title, modifier = modifier, required = required) {
         if (slots.isEmpty()) {
@@ -89,7 +91,8 @@ internal fun ChannelImageForm(
                     slot = slot,
                     onSelect = onSelect,
                     onRemove = onRemove,
-                    required = required
+                    required = required,
+                    readOnly = readOnly
                 )
             }
         }
@@ -101,7 +104,8 @@ private fun ChannelImagePicker(
     slot: ChannelImageSlot,
     onSelect: (channelId: Int, file: PlatformFile, mimeType: String) -> Unit,
     onRemove: (channelId: Int) -> Unit,
-    required: Boolean
+    required: Boolean,
+    readOnly: Boolean = false
 ) {
     val colors = LocalAppColors.current
     val scope = rememberCoroutineScope()
@@ -154,7 +158,7 @@ private fun ChannelImagePicker(
                     RoundedCornerShape(10.dp)
                 )
                 .then(
-                    if (hasImage || slot.isUploading) Modifier
+                    if (hasImage || slot.isUploading || readOnly) Modifier
                     else Modifier.clickable { launcher.launch() }
                 )
         ) {
@@ -181,23 +185,25 @@ private fun ChannelImagePicker(
                             .clip(RoundedCornerShape(10.dp))
                             .clickable { showViewer = true }
                     )
-                    // 删除角标
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(4.dp)
-                            .size(22.dp)
-                            .clip(CircleShape)
-                            .background(colors.error.copy(alpha = 0.85f))
-                            .clickable { onRemove(slot.channelId) },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Close,
-                            contentDescription = "删除",
-                            modifier = Modifier.size(14.dp),
-                            tint = colors.onError
-                        )
+                    // 删除角标（只读时不提供）
+                    if (!readOnly) {
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(4.dp)
+                                .size(22.dp)
+                                .clip(CircleShape)
+                                .background(colors.error.copy(alpha = 0.85f))
+                                .clickable { onRemove(slot.channelId) },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Close,
+                                contentDescription = "删除",
+                                modifier = Modifier.size(14.dp),
+                                tint = colors.onError
+                            )
+                        }
                     }
                 }
 
@@ -206,27 +212,31 @@ private fun ChannelImagePicker(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.Add,
-                        contentDescription = "上传图片",
-                        modifier = Modifier.size(24.dp),
-                        tint = colors.onSurfaceVariant
-                    )
-                    Spacer(Modifier.height(4.dp))
+                    if (!readOnly) {
+                        Icon(
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = "上传图片",
+                            modifier = Modifier.size(24.dp),
+                            tint = colors.onSurfaceVariant
+                        )
+                        Spacer(Modifier.height(4.dp))
+                    }
                     Text(
-                        text = "上传图片",
+                        text = if (readOnly) "未设置" else "上传图片",
                         style = MaterialTheme.typography.labelSmall,
                         color = colors.onSurfaceVariant
                     )
                 }
             }
         }
-        Spacer(Modifier.height(6.dp))
-        Text(
-            text = "${slot.width}×${slot.height}，仅 PNG / JPG / JPEG，≤ 10MB",
-            style = MaterialTheme.typography.labelSmall,
-            color = colors.onSurfaceVariant
-        )
+        if (!readOnly) {
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = "${slot.width}×${slot.height}，仅 PNG / JPG / JPEG，≤ 10MB",
+                style = MaterialTheme.typography.labelSmall,
+                color = colors.onSurfaceVariant
+            )
+        }
     }
 
     pendingCrop?.let { (file, size) ->

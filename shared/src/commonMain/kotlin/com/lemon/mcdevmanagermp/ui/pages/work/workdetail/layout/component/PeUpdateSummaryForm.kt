@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.lemon.mcdevmanagermp.ui.components.FormSection
+import com.lemon.mcdevmanagermp.ui.components.ReadOnlyField
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailAction
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailState
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
@@ -19,6 +20,8 @@ private const val MAX_LENGTH = 200
 /**
  * PE 更新纪要：纯文本多行输入（自动高度），**不允许空格/换行字符**，最大 [MAX_LENGTH] 字，带计数器。
  * 回显来自 `ResourceDetailVO.updateSummary`，编辑通过 [WorkDetailAction.UpdatePeUpdateSummary] 同步。
+ *
+ * [WorkDetailState.readOnly]=true 时改为可换行的只读文本（无计数器，更新纪要中本就不含空白字符）。
  */
 @Composable
 internal fun PeUpdateSummaryForm(
@@ -29,6 +32,15 @@ internal fun PeUpdateSummaryForm(
     val colors = LocalAppColors.current
 
     FormSection(title = "PE 更新纪要", modifier = modifier) {
+        if (state.readOnly) {
+            ReadOnlyField(
+                label = "更新纪要",
+                value = state.peUpdateSummary,
+                singleLine = false,
+                modifier = Modifier.fillMaxWidth()
+            )
+            return@FormSection
+        }
         OutlinedTextField(
             value = state.peUpdateSummary,
             onValueChange = { raw ->

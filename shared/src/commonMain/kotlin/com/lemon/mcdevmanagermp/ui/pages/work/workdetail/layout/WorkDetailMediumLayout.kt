@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
+import com.lemon.mcdevmanagermp.ui.components.SelectableTextContainer
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailAction
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailState
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.layout.component.MetaInfoBar
@@ -38,13 +39,18 @@ internal fun WorkDetailMediumLayout(
 
     Column(modifier = Modifier.fillMaxSize()) {
         CollapsingTopBar(
-            title = if (state.detail == null) "新建作品" else "作品详情",
+            title = when {
+                state.readOnly -> "查看作品详情"
+                state.detail == null -> "新建作品"
+                else -> "作品详情"
+            },
             collapseFraction = scrollAlpha.value,
             onBack = onBack,
             actions = {
                 WorkDetailTopBarActions(
                     isSubmitting = state.isSubmitting,
-                    onAction = onAction
+                    onAction = onAction,
+                    readOnly = state.readOnly
                 )
             }
         )
@@ -61,30 +67,33 @@ internal fun WorkDetailMediumLayout(
                 )
             }
         } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(scrollState)
-                    .padding(20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+            // 只读查看：让整页文本可长按选中复制
+            SelectableTextContainer(enabled = state.readOnly) {
                 Column(
-                    modifier = Modifier.fillMaxWidth().widthIn(max = 760.dp),
-                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(scrollState)
+                        .padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    if (state.detail != null) {
-                        MetaInfoBar(state = state)
+                    Column(
+                        modifier = Modifier.fillMaxWidth().widthIn(max = 760.dp),
+                        verticalArrangement = Arrangement.spacedBy(24.dp)
+                    ) {
+                        if (state.detail != null) {
+                            MetaInfoBar(state = state)
+                        }
+                        WorkDetailInfoSections(
+                            state = state,
+                            onAction = onAction,
+                            columns = 2,
+                            showMetaRow = false
+                        )
+                        WorkDetailMediaSections(
+                            state = state,
+                            onAction = onAction
+                        )
                     }
-                    WorkDetailInfoSections(
-                        state = state,
-                        onAction = onAction,
-                        columns = 2,
-                        showMetaRow = false
-                    )
-                    WorkDetailMediaSections(
-                        state = state,
-                        onAction = onAction
-                    )
                 }
             }
         }

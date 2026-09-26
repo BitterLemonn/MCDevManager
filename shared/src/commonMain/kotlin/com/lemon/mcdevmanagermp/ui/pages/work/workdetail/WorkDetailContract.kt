@@ -20,6 +20,8 @@ data class WorkDetailState(
     val isSubmitting: Boolean = false,
     val submittingMessage: String = "",
     val detail: ResourceDetailVO? = null,
+    /** 只读模式：所有状态下均可进入，仅查看不可编辑（保存/提审隐藏，控件置灰）。 */
+    val readOnly: Boolean = false,
     // —— 只读字段 ——
     val itemId: String = "",
     val normalNumber: String = "",   // 模组码
@@ -121,7 +123,7 @@ data class WorkDetailState(
 ) : IUiState
 
 sealed interface WorkDetailAction : IUiAction {
-    data class LoadDetail(val itemId: String) : WorkDetailAction
+    data class LoadDetail(val itemId: String, val readOnly: Boolean = false) : WorkDetailAction
     data object InitNewWork : WorkDetailAction      // 新建模式：仅加载表单选项，不加载详情
     data class UpdateItemName(val value: String) : WorkDetailAction
     data class ToggleJoinShantou(val value: Boolean) : WorkDetailAction

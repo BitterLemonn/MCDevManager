@@ -2,6 +2,8 @@ package com.lemon.mcdevmanagermp
 
 import com.lemon.mcdevmanagermp.data.common.JSONConverter
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceTypeEnum
+import com.lemon.mcdevmanagermp.data.consts.enums.WorkItemActionEnum
+import com.lemon.mcdevmanagermp.data.consts.enums.WorkItemStatusEnum
 import com.lemon.mcdevmanagermp.data.dto.netease.activity.FileInfoDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.income.LobbyIncomeResourceListVO
 import com.lemon.mcdevmanagermp.data.dto.netease.income.OneResRealtimeIncomeVO
@@ -38,6 +40,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class SharedCommonTest {
 
@@ -127,12 +130,54 @@ class SharedCommonTest {
     }
 
     @Test
-    fun pePlayPlanIsAlwaysFalseInUpdateJson() {
+    fun pePlayPlanAndExpireTimeRoundTripInUpdateJsonWhenNotExpired() {
         val json = JSONConverter.encodeToJsonElement(
-            ResourceDetailVO(peIsAddPlayPlan = true).toWorkUpdateDTO(false)
+            ResourceDetailVO(peIsAddPlayPlan = true, playPlanExpireTime = 2000000000)
+                .toWorkUpdateDTO(false, currentEpochSeconds = 1700000000)
         ).jsonObject
 
-        assertFalse(json["pe_is_add_play_plan"]!!.jsonPrimitive.boolean)
+        assertTrue(json["pe_is_add_play_plan"]!!.jsonPrimitive.boolean)
+        assertEquals(2000000000, json["play_plan_expire_time"]!!.jsonPrimitive.int)
+        assertNull(json["play_plan_expire_month"])
+    }
+
+    @Test
+    fun pePlayPlanResetsExpireMonthWhenExpired() {
+        val json = JSONConverter.encodeToJsonElement(
+            ResourceDetailVO(peIsAddPlayPlan = true, playPlanExpireTime = 1700000000)
+                .toWorkUpdateDTO(false, currentEpochSeconds = 1800000000)
+        ).jsonObject
+
+        assertTrue(json["pe_is_add_play_plan"]!!.jsonPrimitive.boolean)
+        assertNull(json["play_plan_expire_time"])
+        assertEquals(0, json["play_plan_expire_month"]!!.jsonPrimitive.int)
+    }
+
+    @Test
+    fun everyWorkStatusExposesViewDetailAction() {
+        // 所有状态下都必须能只读查看详情，包括原本没有任何可写操作的状态
+        WorkItemStatusEnum.entries.forEach { status ->
+            assertTrue(
+                WorkItemActionEnum.VIEW_DETAIL in status.actions(isFree = true),
+                "状态 $status 缺少 VIEW_DETAIL"
+            )
+            assertTrue(
+                WorkItemActionEnum.VIEW_DETAIL in status.actions(isFree = false),
+                "状态 $status（付费）缺少 VIEW_DETAIL"
+            )
+        }
+    }
+
+    @Test
+    fun viewDetailIsTheOnlyActionForStatusesWithoutWriteOperations() {
+        // 上架准备中 / 未知：无可写操作，仅保留只读查看
+        listOf(WorkItemStatusEnum.ONLINE_PREPARING, WorkItemStatusEnum.UNKNOWN).forEach { status ->
+            assertEquals(
+                listOf(WorkItemActionEnum.VIEW_DETAIL),
+                status.actions(isFree = true),
+                "状态 $status 应仅有 VIEW_DETAIL"
+            )
+        }
     }
 
     @Test

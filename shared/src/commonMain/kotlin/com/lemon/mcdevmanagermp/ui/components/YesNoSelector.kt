@@ -19,7 +19,8 @@ fun YesNoSelector(
     value: Boolean,
     onValueChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
-    required: Boolean = false
+    required: Boolean = false,
+    enabled: Boolean = true
 ) {
     BinarySelector(
         label = label,
@@ -28,7 +29,8 @@ fun YesNoSelector(
         value = value,
         onValueChange = onValueChange,
         modifier = modifier,
-        required = required
+        required = required,
+        enabled = enabled
     )
 }
 
@@ -36,6 +38,7 @@ fun YesNoSelector(
  * 通用二选一胶囊选择器（选项文字可自定义）。是/否、主包/副包等均可复用。
  *
  * 按内容宽度排列、不占满整行，在宽屏布局中保持精致。
+ * [enabled]=false 时仅保留当前选中态高亮，不可切换（只读查看用）。
  */
 @Composable
 internal fun BinarySelector(
@@ -45,14 +48,25 @@ internal fun BinarySelector(
     value: Boolean,
     onValueChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
-    required: Boolean = false
+    required: Boolean = false,
+    enabled: Boolean = true
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         FieldLabel(text = label, required = required)
         Spacer(Modifier.height(8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OptionChip(text = optionTrue, selected = value, onClick = { onValueChange(true) })
-            OptionChip(text = optionFalse, selected = !value, onClick = { onValueChange(false) })
+            OptionChip(
+                text = optionTrue,
+                selected = value,
+                onClick = { onValueChange(true) },
+                enabled = enabled
+            )
+            OptionChip(
+                text = optionFalse,
+                selected = !value,
+                onClick = { onValueChange(false) },
+                enabled = enabled
+            )
         }
     }
 }

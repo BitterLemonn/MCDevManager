@@ -23,7 +23,8 @@ import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 fun WorkManagePage(
     onBack: () -> Unit,
     onNeedReLogin: () -> Unit = {},
-    onNavigateToDetail: (String) -> Unit = {}
+    onNavigateToDetail: (String) -> Unit = {},
+    onNavigateToViewDetail: (String) -> Unit = {}
 ) {
     val viewModel = remember { WorkManageViewModel() }
     val state by viewModel.state.collectAsState()
@@ -48,21 +49,24 @@ fun WorkManagePage(
                 state = state,
                 onAction = viewModel::dispatch,
                 onBack = onBack,
-                onNavigateToDetail = onNavigateToDetail
+                onNavigateToDetail = onNavigateToDetail,
+                onNavigateToViewDetail = onNavigateToViewDetail
             )
 
             WindowWidthSizeClass.Medium -> WorkManageMediumLayout(
                 state = state,
                 onAction = viewModel::dispatch,
                 onBack = onBack,
-                onNavigateToDetail = onNavigateToDetail
+                onNavigateToDetail = onNavigateToDetail,
+                onNavigateToViewDetail = onNavigateToViewDetail
             )
 
             else -> WorkManageCompactLayout(
                 state = state,
                 onAction = viewModel::dispatch,
                 onBack = onBack,
-                onNavigateToDetail = onNavigateToDetail
+                onNavigateToDetail = onNavigateToDetail,
+                onNavigateToViewDetail = onNavigateToViewDetail
             )
         }
 

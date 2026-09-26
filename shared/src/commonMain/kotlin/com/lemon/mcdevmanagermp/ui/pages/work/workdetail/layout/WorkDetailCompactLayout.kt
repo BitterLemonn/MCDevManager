@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
+import com.lemon.mcdevmanagermp.ui.components.SelectableTextContainer
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailAction
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailState
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
@@ -34,13 +35,18 @@ internal fun WorkDetailCompactLayout(
 
     Column(modifier = Modifier.fillMaxSize()) {
         CollapsingTopBar(
-            title = if (state.detail == null) "新建作品" else "作品详情",
+            title = when {
+                state.readOnly -> "查看作品详情"
+                state.detail == null -> "新建作品"
+                else -> "作品详情"
+            },
             collapseFraction = scrollAlpha.value,
             onBack = onBack,
             actions = {
                 WorkDetailTopBarActions(
                     isSubmitting = state.isSubmitting,
-                    onAction = onAction
+                    onAction = onAction,
+                    readOnly = state.readOnly
                 )
             }
         )
@@ -57,23 +63,26 @@ internal fun WorkDetailCompactLayout(
                 )
             }
         } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(scrollState)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
-            ) {
-                WorkDetailInfoSections(
-                    state = state,
-                    onAction = onAction,
-                    columns = 1,
-                    showMetaRow = state.detail != null
-                )
-                WorkDetailMediaSections(
-                    state = state,
-                    onAction = onAction
-                )
+            // 只读查看：让整页文本可长按选中复制
+            SelectableTextContainer(enabled = state.readOnly) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(scrollState)
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                ) {
+                    WorkDetailInfoSections(
+                        state = state,
+                        onAction = onAction,
+                        columns = 1,
+                        showMetaRow = state.detail != null
+                    )
+                    WorkDetailMediaSections(
+                        state = state,
+                        onAction = onAction
+                    )
+                }
             }
         }
     }

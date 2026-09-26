@@ -22,7 +22,8 @@ import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 fun WorkDetailPage(
     itemId: String,
     onBack: () -> Unit,
-    onNeedReLogin: () -> Unit = {}
+    onNeedReLogin: () -> Unit = {},
+    readOnly: Boolean = false
 ) {
     val viewModel = remember { WorkDetailViewModel() }
     val state by viewModel.state.collectAsState()
@@ -36,9 +37,9 @@ fun WorkDetailPage(
         }
     }
 
-    LaunchedEffect(itemId) {
+    LaunchedEffect(itemId, readOnly) {
         if (itemId.isNotEmpty()) {
-            viewModel.dispatch(WorkDetailAction.LoadDetail(itemId))
+            viewModel.dispatch(WorkDetailAction.LoadDetail(itemId, readOnly))
         } else {
             // itemId 为空 → 新建模式：进入空表单，仅加载表单选项
             viewModel.dispatch(WorkDetailAction.InitNewWork)

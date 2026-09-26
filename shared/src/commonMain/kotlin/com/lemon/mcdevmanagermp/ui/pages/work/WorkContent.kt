@@ -95,6 +95,8 @@ private suspend fun loadWorkBadges(): WorkBadges {
 fun WorkContent() {
     var currentSubPage by remember { mutableStateOf(WorkSubPage.List) }
     var detailItemId by remember { mutableStateOf("") }
+    // 详情页是否只读：由「查看详情」入口置 true，「更新」/「新增」置 false
+    var detailReadOnly by remember { mutableStateOf(false) }
 
     BackHandler(enabled = currentSubPage != WorkSubPage.List) {
         currentSubPage = WorkSubPage.List
@@ -140,13 +142,20 @@ fun WorkContent() {
                 onBack = { currentSubPage = WorkSubPage.List },
                 onNavigateToDetail = { id ->
                     detailItemId = id
+                    detailReadOnly = false
+                    currentSubPage = WorkSubPage.WorkDetail
+                },
+                onNavigateToViewDetail = { id ->
+                    detailItemId = id
+                    detailReadOnly = true
                     currentSubPage = WorkSubPage.WorkDetail
                 }
             )
 
             WorkSubPage.WorkDetail -> WorkDetailPage(
                 itemId = detailItemId,
-                onBack = { currentSubPage = WorkSubPage.WorkManage }
+                onBack = { currentSubPage = WorkSubPage.WorkManage },
+                readOnly = detailReadOnly
             )
         }
     }

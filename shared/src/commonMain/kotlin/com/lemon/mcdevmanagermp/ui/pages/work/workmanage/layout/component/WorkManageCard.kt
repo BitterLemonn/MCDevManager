@@ -44,6 +44,7 @@ import com.lemon.mcdevmanagermp.ui.iconpack.Feedback
 import com.lemon.mcdevmanagermp.ui.iconpack.IconPack
 import com.lemon.mcdevmanagermp.ui.iconpack.Modified
 import com.lemon.mcdevmanagermp.ui.iconpack.Sale
+import com.lemon.mcdevmanagermp.ui.iconpack.Show
 import com.lemon.mcdevmanagermp.ui.theme.AppColors
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
 
@@ -149,6 +150,7 @@ private fun ActionButton(
         WorkItemActionEnum.VIEW_FEEDBACK -> IconPack.Feedback
         WorkItemActionEnum.APPOINT_ONLINE -> IconPack.Calendar
         WorkItemActionEnum.DELETE -> Icons.Default.Delete
+        WorkItemActionEnum.VIEW_DETAIL -> IconPack.Show
     }
     val interaction = remember { MutableInteractionSource() }
     val isHovered by interaction.collectIsHoveredAsState()

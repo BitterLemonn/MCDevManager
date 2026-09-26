@@ -44,6 +44,7 @@ import com.lemon.mcdevmanagermp.platform.platformFileFromPath
 import com.lemon.mcdevmanagermp.platform.readFilePaths
 import com.lemon.mcdevmanagermp.ui.components.FieldLabel
 import com.lemon.mcdevmanagermp.ui.components.FormSection
+import com.lemon.mcdevmanagermp.ui.components.ReadOnlyField
 import com.lemon.mcdevmanagermp.ui.components.YesNoSelector
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailAction
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailState
@@ -64,6 +65,12 @@ internal fun PeResourceManageForm(
     onAction: (WorkDetailAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // 只读查看：走独立的纯文本汇总分支，避免在每个可编辑控件上散落 readOnly 判断
+    if (state.readOnly) {
+        PeResourceReadOnlySection(state = state, modifier = modifier)
+        return
+    }
+
     // zip 文件选择 → 触发上传
     val zipPicker = rememberFilePickerLauncher(type = FileKitType.File()) { file: PlatformFile? ->
         if (file != null) onAction(WorkDetailAction.UploadPeZip(file))
@@ -318,6 +325,99 @@ internal fun PeResourceManageForm(
 }
 
 /**
+ * PE 资源管理（只读）：把可写模式下散落在多个下拉/开关中的值汇总为纯文本字段。
+ * 资源文件仍以 [ResourceFileRow] 展示（隐藏删除按钮），保持与可写模式一致的视觉。
+ */
+@Composable
+private fun PeResourceReadOnlySection(
+    state: WorkDetailState,
+    modifier: Modifier = Modifier
+) {
+    FormSection(title = "上传 PE 资源管理", modifier = modifier) {
+        val typeTitle = state.peResourceTypeOptions
+            .firstOrNull { it.id == state.peResourceType }?.title.orEmpty()
+        val subTypeTitle = state.peResourceSubTypeOptions[state.peResourceType]
+            .orEmpty()
+            .firstOrNull { it.id == state.peResourceSubType }?.title.orEmpty()
+        val modSecondTitle = state.peModSecondTypeOptions
+            .firstOrNull { it.id == state.peResourceModSecondType }?.title.orEmpty()
+        val gameplayTags = state.peRecommendTagOptions.gameplayTag
+            .filter { state.peRecommendTags.contains(it.id) }
+            .joinToString("、") { it.title }
+        val themeTags = state.peRecommendTagOptions.themeTag
+            .filter { state.peRecommendTags.contains(it.id) }
+            .joinToString("、") { it.title }
+
+        ReadOnlyField(label = "资源类别", value = typeTitle, required = true, singleLine = false)
+        if (state.peResourceSubTypeOptions[state.peResourceType].orEmpty().isNotEmpty()) {
+            ReadOnlyField(
+                label = "具体类别",
+                value = subTypeTitle,
+                required = true,
+                singleLine = false
+            )
+        }
+        // 次级分类：与可写模式一致，仅「玩法组件」且 consts 有选项时展示
+        if (state.peResourceType == PePriTypeEnum.ADD_ONS.value.toInt() &&
+            state.peModSecondTypeOptions.isNotEmpty()
+        ) {
+            ReadOnlyField(
+                label = "次级分类",
+                value = modSecondTitle,
+                required = true,
+                singleLine = false
+            )
+        }
+        ReadOnlyField(
+            label = "推荐标签 · 玩法",
+            value = gameplayTags,
+            required = true,
+            singleLine = false
+        )
+        ReadOnlyField(
+            label = "推荐标签 · 主题",
+            value = themeTags,
+            required = true,
+            singleLine = false
+        )
+        ReadOnlyField(label = "modAPI 版本", value = state.peModVersion, required = true)
+        ReadOnlyField(
+            label = "加入模组畅玩计划",
+            value = if (state.peAddPlayPlan) "是" else "否"
+        )
+        ReadOnlyField(
+            label = "启用坐骑召唤功能",
+            value = if (state.peMountCallEnabled) "是" else "否"
+        )
+        ReadOnlyField(
+            label = "提升版本",
+            value = if (state.peAddVersion) "是" else "否",
+            required = true
+        )
+
+        // 资源文件：只读展示（无删除按钮），未上传显示占位
+        FieldLabel(text = "资源文件", required = true)
+        val res = state.peResource
+        if (res != null) {
+            ResourceFileRow(
+                name = res.name,
+                meta = listOf(formatSize(res.size), res.mcVersion.joinToString(", "))
+                    .filter { it.isNotEmpty() }
+                    .joinToString(" · "),
+                isUploading = false,
+                onRemove = null
+            )
+        } else {
+            Text(
+                text = "—",
+                style = MaterialTheme.typography.bodyLarge,
+                color = LocalAppColors.current.onSurfaceVariant
+            )
+        }
+    }
+}
+
+/**
  * 资源占位框：点击触发文件选择；Desktop 端支持拖入文件（onExternalDrag，移动端 no-op）。
  */
 @OptIn(ExperimentalFoundationApi::class)
@@ -378,13 +478,13 @@ private fun ResourceDropZone(
     }
 }
 
-/** 单文件展示行：图标 + 名称/大小/版本 + 删除按钮。 */
+/** 单文件展示行：图标 + 名称/大小/版本 + 删除按钮（[onRemove] 为 null 时不显示删除按钮）。 */
 @Composable
 private fun ResourceFileRow(
     name: String,
     meta: String,
     isUploading: Boolean,
-    onRemove: () -> Unit,
+    onRemove: (() -> Unit)?,
     modifier: Modifier = Modifier
 ) {
     val colors = LocalAppColors.current
@@ -423,7 +523,7 @@ private fun ResourceFileRow(
                 color = colors.primary,
                 strokeWidth = 2.dp
             )
-        } else {
+        } else if (onRemove != null) {
             IconButton(onClick = onRemove, modifier = Modifier.size(32.dp)) {
                 Icon(
                     imageVector = Icons.Filled.Close,
