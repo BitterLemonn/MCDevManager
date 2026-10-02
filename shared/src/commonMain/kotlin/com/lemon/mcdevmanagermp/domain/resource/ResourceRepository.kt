@@ -26,6 +26,9 @@ interface ResourceRepository {
 
     suspend fun getCompRequirements(itemName: String): NetworkState<RequirementVO>
 
+    /** PE 前置模组搜索（pe 类别列表按 pri_type=9 过滤）。 */
+    suspend fun getPePrerequisites(priType: Int, itemName: String): NetworkState<RequirementVO>
+
     suspend fun getResourceDetail(itemId: String): NetworkState<ResourceDetailVO>
 
     suspend fun getItemTag(): NetworkState<ItemTagVO>

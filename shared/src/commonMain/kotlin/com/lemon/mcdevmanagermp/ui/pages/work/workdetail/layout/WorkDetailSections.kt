@@ -84,7 +84,7 @@ internal fun WorkDetailInfoSections(
             onAction = onAction,
             modifier = Modifier.fillMaxWidth()
         )
-        if (state.syncPc) {
+        if (state.syncPc && !state.isPrerequisiteType) {
             PcBasicInfoForm(
                 state = state,
                 onAction = onAction,
@@ -177,22 +177,25 @@ internal fun WorkDetailMediaSections(
             onAction = onAction,
             modifier = Modifier.fillMaxWidth()
         )
-        ChannelImageForm(
-            title = "编辑 PE 图片",
-            slots = state.peImageSlots,
-            onSelect = { channel, file, metadata ->
-                onAction(WorkDetailAction.SelectPeChannelImage(channel, file, metadata))
-            },
-            onRemove = { onAction(WorkDetailAction.RemovePeChannelImage(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            required = true,
-            readOnly = state.readOnly
-        )
-        VideoUploadForm(
-            state = state,
-            onAction = onAction,
-            modifier = Modifier.fillMaxWidth()
-        )
+        // 前置模组不上架常规渠道：无宣传图、无宣传视频、无推广图（对齐开发者平台编辑页）
+        if (!state.isPrerequisiteType) {
+            ChannelImageForm(
+                title = "编辑 PE 图片",
+                slots = state.peImageSlots,
+                onSelect = { channel, file, metadata ->
+                    onAction(WorkDetailAction.SelectPeChannelImage(channel, file, metadata))
+                },
+                onRemove = { onAction(WorkDetailAction.RemovePeChannelImage(it)) },
+                modifier = Modifier.fillMaxWidth(),
+                required = true,
+                readOnly = state.readOnly
+            )
+            VideoUploadForm(
+                state = state,
+                onAction = onAction,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
         if (state.syncPc) {
             PcResourceManageForm(
                 state = state,

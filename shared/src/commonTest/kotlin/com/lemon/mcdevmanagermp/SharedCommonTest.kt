@@ -1,6 +1,9 @@
 package com.lemon.mcdevmanagermp
 
 import com.lemon.mcdevmanagermp.data.common.JSONConverter
+import com.lemon.mcdevmanagermp.data.common.ResponseData
+import com.lemon.mcdevmanagermp.data.consts.enums.PE_PREREQUISITE_PRI_TYPE
+import com.lemon.mcdevmanagermp.data.consts.enums.PriceRankEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceTypeEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.WorkItemActionEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.WorkItemStatusEnum
@@ -17,9 +20,12 @@ import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailChannel
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailDlcInfo
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailSyncChannel
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailSyncItemInfo
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailTag
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailVO
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailVideoInfo
 import com.lemon.mcdevmanagermp.domain.analyze.mergeRealtimeIncome
 import com.lemon.mcdevmanagermp.domain.main.mergeProfitDiamonds
+import com.lemon.mcdevmanagermp.domain.resource.MCConstsCache
 import com.lemon.mcdevmanagermp.domain.work.PeImageCompletenessPolicy
 import com.lemon.mcdevmanagermp.domain.work.WorkSaveValidationInput
 import com.lemon.mcdevmanagermp.domain.work.hasUnversionedPcImages
@@ -28,8 +34,12 @@ import com.lemon.mcdevmanagermp.domain.work.withCurrentPcImageChannels
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailState
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.buildUpdatePayload
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.buildWorkCreatePayload
+import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.normalizedForPrerequisite
+import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.parsePrerequisiteItemId
+import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.parsePrerequisiteItemName
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.validateLobbySettings
 import com.lemon.mcdevmanagermp.utils.extension.dumpAndGetCookiesValue
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.int
@@ -404,5 +414,282 @@ class SharedCommonTest {
                 )
             )
         )
+    }
+
+    // ===== PE 前置模组（pri_type=9） =====
+
+    /** 前置模组豁免标签/推荐标签/宣传图/定价/视频必填，仅名称+详情+资源文件校验。 */
+    @Test
+    fun prerequisiteItemSkipsStandardListingValidation() {
+        val prerequisite = WorkSaveValidationInput(
+            itemName = "【前置】自定义任务框架",
+            tags = emptyList(),
+            priceType = PriceTypeEnum.FREE,
+            priceRank = PriceRankEnum.FREE_TIER.type,
+            price = 0,
+            detailHtml = "<p>前置组件</p>",
+            peResourceType = PE_PREREQUISITE_PRI_TYPE,
+            recommendTagIds = emptyList(),
+            gameplayTagIds = emptySet(),
+            themeTagIds = emptySet(),
+            modVersion = "",
+            hasResource = true,
+            channelsLoaded = false,
+            requiredChannelIds = emptySet(),
+            availableChannelIds = emptySet(),
+            hasVideo = false,
+        )
+        assertNull(validateWorkSave(prerequisite))
+        // 名称 / 详情 / 资源文件仍为必填
+        assertEquals(
+            "请输入资源名称",
+            validateWorkSave(prerequisite.copy(itemName = ""))
+        )
+        assertEquals(
+            "PE 详情至少需要 1 个字符",
+            validateWorkSave(prerequisite.copy(detailHtml = "<p></p>"))
+        )
+        assertEquals(
+            "请上传 PE 资源文件",
+            validateWorkSave(prerequisite.copy(hasResource = false))
+        )
+        // 同类数据走常规类别时仍按常规必填拦截（对照）
+        assertEquals(
+            "请至少添加一个模组标签",
+            validateWorkSave(prerequisite.copy(peResourceType = 2))
+        )
+    }
+
+    /** 前置模组新建请求体：强制免费，且回写 prerequisite_items / prerequisite_item_ids。 */
+    @Test
+    fun prerequisiteItemForcesFreePriceInCreatePayload() {
+        val state = WorkDetailState(
+            peResourceType = PE_PREREQUISITE_PRI_TYPE,
+            itemName = "【前置】自定义任务框架",
+            priceType = PriceTypeEnum.DIAMOND,
+            priceRank = PriceRankEnum.DIAMOND_TIER_FIVE,
+            emeraldPrice = 1000,
+            prerequisiteItemId = "4679556122208731470",
+            prerequisiteItemName = "【苦柠】自定义任务",
+        )
+
+        val create = buildWorkCreatePayload(state, isCheckApply = false)
+
+        assertEquals("free", create.priceType)
+        assertEquals(PriceRankEnum.FREE_TIER.type, create.priceRank)
+        assertEquals(0, create.price)
+        assertEquals(listOf("4679556122208731470"), create.prerequisiteItemIds.map { it.jsonPrimitive.content })
+        assertEquals(
+            "【苦柠】自定义任务",
+            create.prerequisiteItems.first().jsonObject["item_name"]?.jsonPrimitive?.content
+        )
+    }
+
+    /** 普通作品同样能声明前置（前置关系由普通作品持有，前置模组自身是被依赖方）。 */
+    @Test
+    fun normalItemCarriesPrerequisiteItemsInPayloads() {
+        val state = WorkDetailState(
+            peResourceType = 2,
+            prerequisiteItemId = "4690901940785715551",
+            prerequisiteItemName = "【前置】自定义任务框架",
+            priceType = PriceTypeEnum.FREE,
+            priceRank = PriceRankEnum.FREE_TIER,
+        )
+
+        val create = buildWorkCreatePayload(state, isCheckApply = false)
+        val update = buildUpdatePayload(state, ResourceDetailVO(priType = 2), "")
+
+        assertEquals(
+            "4690901940785715551",
+            create.prerequisiteItems.first().jsonObject["item_id"]?.jsonPrimitive?.content
+        )
+        assertEquals(
+            "4690901940785715551",
+            update.prerequisiteItems.first().jsonObject["item_id"]?.jsonPrimitive?.content
+        )
+        // 未选前置时不下发该字段，避免清空既有关系
+        val none = buildWorkCreatePayload(WorkDetailState(peResourceType = 2), isCheckApply = false)
+        assertEquals(emptyList(), none.prerequisiteItems)
+        assertEquals(emptyList(), none.prerequisiteItemIds)
+    }
+
+    /** 前置模组更新请求体：强制免费档，且不残留旧折扣。 */
+    @Test
+    fun prerequisiteItemForcesFreePriceInUpdatePayload() {
+        val detail = ResourceDetailVO(
+            itemId = "4690901940785715551",
+            priType = PE_PREREQUISITE_PRI_TYPE,
+            priceType = "diamond",
+            priceRank = 4,
+            price = 5000,
+        )
+        val update = buildUpdatePayload(
+            WorkDetailState(
+                peResourceType = PE_PREREQUISITE_PRI_TYPE,
+                itemName = "【前置】自定义任务框架",
+                priceType = PriceTypeEnum.DIAMOND,
+                priceRank = PriceRankEnum.DIAMOND_TIER_FIVE,
+            ),
+            detail,
+            "",
+        )
+
+        assertEquals(PriceRankEnum.FREE_TIER.type, update.priceRank)
+        assertEquals(0, update.price)
+    }
+
+    /** 详情回显：prerequisite_items[{item_id,item_name}] → state 的两个字符串字段。 */
+    @Test
+    fun prerequisiteItemsParseBackToState() {
+        val items = listOf(
+            kotlinx.serialization.json.buildJsonObject {
+                put("item_id", kotlinx.serialization.json.JsonPrimitive("4690901940785715551"))
+                put("item_name", kotlinx.serialization.json.JsonPrimitive("【前置】自定义任务框架"))
+            }
+        )
+        assertEquals("4690901940785715551", parsePrerequisiteItemId(items))
+        assertEquals("【前置】自定义任务框架", parsePrerequisiteItemName(items))
+        // 结构异常 / 空列表 → 空串，不抛异常
+        assertEquals("", parsePrerequisiteItemId(emptyList()))
+        assertEquals(
+            "",
+            parsePrerequisiteItemId(listOf(kotlinx.serialization.json.JsonPrimitive("x")))
+        )
+    }
+
+    /** 前置模组提交归一化：隐藏区块的字段不得沿用详情旧值。 */
+    @Test
+    fun prerequisiteNormalizationClearsHiddenFields() {
+        val detail = ResourceDetailVO(
+            itemId = "4690901940785715551",
+            priType = PE_PREREQUISITE_PRI_TYPE,
+            isOriginal = false,
+            corpProofImage = "https://example.com/proof.png",
+            priceType = "diamond",
+            priceRank = 4,
+            price = 5000,
+            antiCheatEnable = 1,
+            achievementEnabled = 1,
+            achievementBackgroundUrl = "https://example.com/bg.png",
+            mountCallEnabled = true,
+            peIsAddPlayPlan = true,
+            syncPcFlag = true,
+            tags = listOf(ResourceDetailTag(name = "任务")),
+            labelTypeList = listOf(101, 209),
+            channel = listOf(ResourceDetailChannel(channelId = 3, channelUrl = "url")),
+            videoInfoList = listOf(ResourceDetailVideoInfo(url = "v"))
+        )
+
+        val normalized = detail.normalizedForPrerequisite()
+
+        assertTrue(normalized.isOriginal)
+        assertEquals("", normalized.corpProofImage)
+        assertEquals("free", normalized.priceType)
+        assertEquals(PriceRankEnum.FREE_TIER.type, normalized.priceRank)
+        assertEquals(0, normalized.price)
+        assertEquals(emptyList(), normalized.discount)
+        assertEquals(emptyList(), normalized.channel)
+        assertEquals(emptyList(), normalized.videoInfoList)
+        assertEquals(0, normalized.antiCheatEnable)
+        assertEquals(0, normalized.achievementEnabled)
+        assertEquals("", normalized.achievementBackgroundUrl)
+        assertEquals(false, normalized.mountCallEnabled)
+        assertEquals(false, normalized.peIsAddPlayPlan)
+        assertEquals(false, normalized.syncPcFlag)
+        assertEquals(emptyList(), normalized.tags)
+        assertEquals(emptyList(), normalized.labelTypeList)
+        // 名称与资源文件不受影响
+        assertEquals("4690901940785715551", normalized.itemId)
+    }
+
+    /** 非前置作品不被归一化改写。 */
+    @Test
+    fun normalizationLeavesNonPrerequisiteUntouched() {
+        val detail = ResourceDetailVO(
+            priType = 2,
+            priceType = "diamond",
+            priceRank = 4,
+            price = 5000,
+            tags = listOf(ResourceDetailTag(name = "任务")),
+            channel = listOf(ResourceDetailChannel(channelId = 3, channelUrl = "url"))
+        )
+        assertEquals(detail, detail.normalizedForPrerequisite())
+    }
+
+    /** 前置模组新建 payload：不携带定价/成就/反作弊/同步等隐藏字段。 */
+    @Test
+    fun prerequisiteCreatePayloadDropsHiddenFields() {
+        val state = WorkDetailState(
+            peResourceType = PE_PREREQUISITE_PRI_TYPE,
+            itemName = "【前置】自定义任务框架",
+            isOriginal = false,
+            tags = listOf("任务"),
+            syncPc = true,
+            peMountCallEnabled = true,
+            priceType = PriceTypeEnum.DIAMOND,
+            priceRank = PriceRankEnum.DIAMOND_TIER_FIVE,
+        )
+
+        val create = buildWorkCreatePayload(state, isCheckApply = false)
+
+        assertEquals("free", create.priceType)
+        assertEquals(PriceRankEnum.FREE_TIER.type, create.priceRank)
+        assertEquals(0, create.price)
+        // 归一化在提交链路完成（buildWorkCreatePayload 之后），此处校验归一化后的结果
+        val normalized = buildUpdatePayload(state, ResourceDetailVO(priType = PE_PREREQUISITE_PRI_TYPE), "")
+            .normalizedForPrerequisite()
+        assertEquals(false, normalized.syncPcFlag)
+        assertEquals(false, normalized.mountCallEnabled)
+        assertEquals(0, normalized.antiCheatEnable)
+        assertEquals(emptyList(), normalized.tags)
+    }
+
+    // ===== mc_consts 请求缓存 =====
+
+    /** 缓存命中后不再请求；clear() 后重新请求。 */
+    @Test
+    fun mcConstsCacheServesSecondCallWithoutRefetch() = runTest {
+        MCConstsCache.clear()
+        var fetches = 0
+        val consts = MCConstsVO(itemTagLimit = 3)
+        val fetch: suspend () -> ResponseData<MCConstsVO> = {
+            fetches++
+            ResponseData("ok", consts)
+        }
+
+        assertEquals(consts, MCConstsCache.loadOrFetch(fetch).data)
+        assertEquals(consts, MCConstsCache.loadOrFetch(fetch).data)
+        assertEquals(1, fetches)
+
+        MCConstsCache.clear()
+        MCConstsCache.loadOrFetch(fetch)
+        assertEquals(2, fetches)
+    }
+
+    /** 失败响应不写入缓存，下次仍会重试；成功后按正常缓存。 */
+    @Test
+    fun mcConstsCacheDoesNotCacheFailures() = runTest {
+        MCConstsCache.clear()
+        var fetches = 0
+        val consts = MCConstsVO(itemTagLimit = 3)
+
+        MCConstsCache.loadOrFetch {
+            fetches++
+            ResponseData("error", msg = "服务器开小差了")
+        }
+        MCConstsCache.loadOrFetch {
+            fetches++
+            ResponseData("401")
+        }
+        assertEquals(2, fetches)
+
+        MCConstsCache.loadOrFetch {
+            fetches++
+            ResponseData("ok", consts)
+        }
+        assertEquals(3, fetches)
+
+        assertEquals(consts, MCConstsCache.loadOrFetch { error("命中缓存时不应再请求") }.data)
+        assertEquals(3, fetches)
     }
 }

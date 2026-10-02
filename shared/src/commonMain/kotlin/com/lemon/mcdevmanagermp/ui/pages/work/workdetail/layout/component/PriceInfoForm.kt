@@ -39,6 +39,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import com.lemon.mcdevmanagermp.data.consts.enums.PE_PREREQUISITE_PRI_TYPE
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceRankEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceTypeEnum
 import com.lemon.mcdevmanagermp.ui.components.AppDatePickerDialog
@@ -87,6 +88,18 @@ internal fun PriceInfoForm(
     val canEditDiscount = isDiamond && state.priceRank.type >= 1
     // 已上架过的作品（首次上架时间非空）不可变更定价类型——平台规则：一旦产生交易记录即锁定
     val priceTypeLocked = state.detail?.firstOnlineTime?.isNotEmpty() == true
+    // 前置模组（pri_type=9）：平台强制免费，不提供任何定价编辑入口
+    // （与网易开发者平台一致：「前置模组强制免费，无需设置定价。」）
+    if (state.peResourceType == PE_PREREQUISITE_PRI_TYPE) {
+        FormSection(title = "定价", modifier = modifier) {
+            Text(
+                text = "前置模组强制免费，无需设置定价。",
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.onSurfaceVariant
+            )
+        }
+        return
+    }
 
     FormSection(title = "定价", modifier = modifier) {
         // 定价类型（必填）
@@ -155,6 +168,10 @@ internal fun PriceInfoForm(
             )
 
             isFree -> ReadOnlyField(label = "定价", value = "免费", required = true)
+            // 前置模组（pri_type=9）回读 priceType=free / price_rank=-4 → PriceTypeEnum.FREE，走上一分支；
+            // 此处兜底覆盖「类别已选前置、但 priceType 尚未回填」的瞬时态，避免显示「—」。
+            state.peResourceType == PE_PREREQUISITE_PRI_TYPE ->
+                ReadOnlyField(label = "定价", value = "免费", required = true)
 
             else -> ReadOnlyField(label = "定价", value = "—", required = true)
         }

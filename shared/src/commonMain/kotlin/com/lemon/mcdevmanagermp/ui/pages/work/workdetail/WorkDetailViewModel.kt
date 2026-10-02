@@ -2,6 +2,7 @@ package com.lemon.mcdevmanagermp.ui.pages.work.workdetail
 
 import androidx.lifecycle.viewModelScope
 import com.lemon.mcdevmanagermp.data.common.NetworkState
+import com.lemon.mcdevmanagermp.data.consts.enums.PE_PREREQUISITE_PRI_TYPE
 import com.lemon.mcdevmanagermp.data.consts.enums.PePriTypeEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceRankEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceTypeEnum
@@ -11,6 +12,7 @@ import com.lemon.mcdevmanagermp.data.dto.netease.work.WorkCreateRes
 import com.lemon.mcdevmanagermp.data.dto.netease.work.WorkUpdateDlcInfoDTO
 import com.lemon.mcdevmanagermp.data.repository.FileUploadRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
+import com.lemon.mcdevmanagermp.data.repository.UserRepositoryImpl
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.MCConstsChannelData
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.MCConstsCommonTitleData
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailChannel
@@ -25,6 +27,7 @@ import com.lemon.mcdevmanagermp.data.vo.netease.resource.VIDEO_COVER_CHANNEL_ID
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.requiredPeImageChannels
 import com.lemon.mcdevmanagermp.domain.upload.FileUploadRepository
 import com.lemon.mcdevmanagermp.domain.upload.parseUploadUrl
+import com.lemon.mcdevmanagermp.domain.user.UserRepository
 import com.lemon.mcdevmanagermp.domain.work.WorkDetailUseCase
 import com.lemon.mcdevmanagermp.domain.work.WorkSaveValidationInput
 import com.lemon.mcdevmanagermp.domain.work.validateWorkSave
@@ -69,6 +72,8 @@ class WorkDetailViewModel :
 
     private val fileUploadRepository: FileUploadRepository = FileUploadRepositoryImpl.INSTANCE
 
+    private val userRepository: UserRepository = UserRepositoryImpl.INSTANCE
+
     override fun dispatch(action: WorkDetailAction) {
         // 只读模式下除「加载详情」外的动作一律拒绝执行，作为 UI 置灰之外的最后一道防线。
         if (state.value.readOnly && action !is WorkDetailAction.LoadDetail) return
@@ -81,7 +86,24 @@ class WorkDetailViewModel :
             is WorkDetailAction.ToggleOriginal -> setState { copy(isOriginal = action.value) }
             is WorkDetailAction.AddTag -> addTag(action.name)
             is WorkDetailAction.RemoveTag -> removeTag(action.index)
-            is WorkDetailAction.UpdatePrerequisite -> setState { copy(prerequisite = action.value) }
+            is WorkDetailAction.SearchPrereqMods -> searchPrereqMods(action.query)
+            is WorkDetailAction.SelectPrereqMod -> setState {
+                copy(
+                    prerequisiteItemId = action.option.id,
+                    prerequisiteItemName = action.option.name,
+                    prereqSearchResults = emptyList(),
+                    isSearchingPrereq = false
+                )
+            }
+
+            WorkDetailAction.ClearPrereqMod -> setState {
+                copy(
+                    prerequisiteItemId = "",
+                    prerequisiteItemName = "",
+                    prereqSearchResults = emptyList()
+                )
+            }
+
             is WorkDetailAction.UpdateActivityDesc -> setState { copy(activityDesc = action.value) }
             is WorkDetailAction.ToggleRelatedMod -> setState { copy(isRelatedMod = action.value) }
             is WorkDetailAction.ToggleRelatedPackType -> setState { copy(relatedIsMaster = action.value) }
@@ -130,7 +152,13 @@ class WorkDetailViewModel :
             // —— PE 资源管理 ——
             is WorkDetailAction.UpdatePeResourceType -> setState {
                 // 切换资源类别时清空具体类别与次级分类：旧值不属于新类别，避免脏数据
-                copy(peResourceType = action.id, peResourceSubType = 0, peResourceModSecondType = 0)
+                copy(
+                    peResourceType = action.id,
+                    peResourceSubType = 0,
+                    peResourceModSecondType = 0,
+                    // 前置模组不同步 PC 侧：状态同步收起，避免表单仍渲染 PC 区块
+                    syncPc = if (action.id == PE_PREREQUISITE_PRI_TYPE) false else syncPc
+                )
             }
 
             is WorkDetailAction.UpdatePeResourceSubType -> setState { copy(peResourceSubType = action.id) }
@@ -284,8 +312,9 @@ class WorkDetailViewModel :
                                 joinShantou = d.isDomainServerItem == 1,
                                 isOriginal = d.isOriginal,
                                 tags = d.tags.map { it.name }.filter { it.isNotEmpty() },
-                                // prerequisiteItems 为 List<JsonElement>，结构未知，本期留空由用户手动填写
-                                prerequisite = "",
+                                // PE 前置模组：prerequisite_items → {item_id, item_name}（单选，取首项）
+                                prerequisiteItemId = parsePrerequisiteItemId(d.prerequisiteItems),
+                                prerequisiteItemName = parsePrerequisiteItemName(d.prerequisiteItems),
                                 activityDesc = d.activityDesc,
                                 isRelatedMod = d.dlcInfo.dlcSwitch,
                                 relatedIsMaster = d.dlcInfo.dlcType != ResourceDetailDlcInfo.DlcType.SLAVE.type,
@@ -371,6 +400,8 @@ class WorkDetailViewModel :
                         loadItemTags()
                         // 加载 PC 模组可选标签（mc_consts.tag.comp；失败不影响详情展示）
                         loadPcTagOptions()
+                        // 加载账号前置模组功能开关（users/me.prerequisite_switch；失败静默）
+                        loadPrerequisiteSwitch()
                     } else {
                         setState { copy(isLoading = false) }
                         sendEffect(WorkDetailEffect.ShowToast("获取详情失败"))
@@ -511,6 +542,45 @@ class WorkDetailViewModel :
 
     private fun clearRelatedMod() {
         setState { copy(relatedItemId = "", relatedItemName = "") }
+    }
+
+    /**
+     * 加载账号「前置模组功能」开关（users/me.prerequisite_switch）。
+     * 决定新建作品时资源类别下拉是否出现「前置模组」项；失败静默（当作未开通）。
+     */
+    private fun loadPrerequisiteSwitch() {
+        viewModelScope.launch {
+            when (val result = userRepository.getUserInfo()) {
+                is NetworkState.Success -> result.data?.let { user ->
+                    setState { copy(hasPrerequisiteSwitch = user.prerequisiteSwitch) }
+                }
+
+                is NetworkState.Error -> Unit
+            }
+        }
+    }
+
+    /** PE 前置模组搜索（pe 类别里 pri_type=9 的前置池）；空 query 清空结果不请求。 */
+    private fun searchPrereqMods(query: String) {
+        val q = query.trim()
+        if (q.isEmpty()) {
+            setState { copy(prereqSearchResults = emptyList(), isSearchingPrereq = false) }
+            return
+        }
+        viewModelScope.launch {
+            setState { copy(isSearchingPrereq = true) }
+            when (val result = workDetailUseCase.getPePrerequisites(q)) {
+                is NetworkState.Success -> setState {
+                    copy(
+                        isSearchingPrereq = false,
+                        prereqSearchResults = (result.data ?: emptyList())
+                            .map { ModSelectOption(it.itemId, it.itemName) }
+                    )
+                }
+
+                is NetworkState.Error -> setState { copy(isSearchingPrereq = false) }
+            }
+        }
     }
 
     /** PC 前置模组搜索（comp requirements 接口，按名称搜索可作前置的模组）；空 query 清空结果不请求。 */
@@ -1022,6 +1092,7 @@ class WorkDetailViewModel :
         setState { copy(isLoading = false, detail = null, itemId = "") }
         loadItemTags()
         loadPcTagOptions()
+        loadPrerequisiteSwitch()
     }
 
     /**
@@ -1116,9 +1187,8 @@ class WorkDetailViewModel :
             } else {
                 s.corpProofImage
             }
-            val payload = buildUpdatePayload(s, detail, corpProofUrl)
-            when (val result = workDetailUseCase.updateWork(payload, isCheckApply = false)) {
-                is NetworkState.Success -> if (alsoReview) {
+            val payload = buildUpdatePayload(s, detail, corpProofUrl).normalizedForPrerequisite()
+            when (val result = workDetailUseCase.updateWork(payload, isCheckApply = false)) {                is NetworkState.Success -> if (alsoReview) {
                     // 保存成功 → 第3节发起提审
                     when (val review = workDetailUseCase.submitForReview(detail.itemId)) {
                         is NetworkState.Success -> {
@@ -1285,6 +1355,37 @@ internal fun validateLobbySettings(state: WorkDetailState): String? {
     return null
 }
 
+/**
+ * 从详情 `prerequisiteItems`（List<JsonElement>，元素形如 `{item_id, item_name}`）取首项 item_id。
+ * 结构不存在或异常时返回空串。
+ */
+internal fun parsePrerequisiteItemId(items: List<JsonElement>): String =
+    items.firstOrNull()?.let { (it as? JsonObject)?.get("item_id")?.jsonPrimitive?.contentOrNull }
+        .orEmpty()
+
+/** 见 [parsePrerequisiteItemId]。 */
+internal fun parsePrerequisiteItemName(items: List<JsonElement>): String =
+    items.firstOrNull()?.let { (it as? JsonObject)?.get("item_name")?.jsonPrimitive?.contentOrNull }
+        .orEmpty()
+
+/**
+ * 编辑态 → 请求体的 `prerequisite_items`（元素 `{item_id, item_name}`）。
+ *
+ * 语义与平台一致：「前置模组」(pri_type=9) 是**被依赖方**，自身不再声明前置（选择器对 9 隐藏）；
+ * 声明前置的是普通作品。因此这里只按「是否已选」判断，不按类别判断。
+ */
+internal fun WorkDetailState.prerequisiteItems(): List<JsonElement> =
+    if (prerequisiteItemId.isNotEmpty() && prerequisiteItemName.isNotEmpty()) {
+        listOf(
+            buildJsonObject {
+                put("item_id", prerequisiteItemId)
+                put("item_name", prerequisiteItemName)
+            }
+        )
+    } else {
+        emptyList()
+    }
+
 /** 由编辑态构造新建请求体（pe/upload）。res/channel 仅含已上传（有 fileInfo）的项。 */
 internal fun buildWorkCreatePayload(s: WorkDetailState, isCheckApply: Boolean): WorkCreateDTO =
     WorkCreateDTO(
@@ -1318,11 +1419,14 @@ internal fun buildWorkCreatePayload(s: WorkDetailState, isCheckApply: Boolean): 
         ) s.lobbyReconnectTime else 0,
         updateSummary = s.peUpdateSummary,
         tag = s.tags.map { ResourceDetailTag(name = it) },
+        prerequisiteItemIds = s.prerequisiteItemId.takeIf { it.isNotEmpty() }
+            ?.let { listOf(JsonPrimitive(it)) } ?: emptyList(),
+        prerequisiteItems = s.prerequisiteItems(),
         isOriginal = s.isOriginal,
         isDomainServerItem = if (s.joinShantou) 1 else 0,
-        priceType = priceTypeString(s.priceType, "free"),
-        priceRank = s.priceRank.type,
-        price = when (s.priceType) {
+        priceType = if (s.peResourceType == PE_PREREQUISITE_PRI_TYPE) "free" else priceTypeString(s.priceType, "free"),
+        priceRank = if (s.peResourceType == PE_PREREQUISITE_PRI_TYPE) PriceRankEnum.FREE_TIER.type else s.priceRank.type,
+        price = if (s.peResourceType == PE_PREREQUISITE_PRI_TYPE) 0 else when (s.priceType) {
             PriceTypeEnum.EMERALD -> s.emeraldPrice
             PriceTypeEnum.DIAMOND -> if (s.priceRank.diamondPrice > 0) s.priceRank.diamondPrice else 0
             else -> 0
@@ -1401,20 +1505,25 @@ internal fun buildUpdatePayload(
     modSecondType = s.peResourceModSecondType,
     modVersion = s.peModVersion,
     labelTypeList = s.peRecommendTags,
+    prerequisiteItems = s.prerequisiteItems(),
     peIsAddPlayPlan = false,
     mountCallEnabled = s.peMountCallEnabled,
     weakOffline = s.peWeakOffline,
     weakOfflineReason = s.peWeakOfflineReason,
     syncPcFlag = s.syncPc,
-    priceType = priceTypeString(s.priceType, d.priceType),
-    priceRank = s.priceRank.type,
-    price = when (s.priceType) {
+    // 前置模组（pri_type=9）平台强制免费：定价字段一律锁定免费档，且不残留旧折扣
+    priceType = if (s.peResourceType == PE_PREREQUISITE_PRI_TYPE) "free"
+    else priceTypeString(s.priceType, d.priceType),
+    priceRank = if (s.peResourceType == PE_PREREQUISITE_PRI_TYPE) PriceRankEnum.FREE_TIER.type
+    else s.priceRank.type,
+    price = if (s.peResourceType == PE_PREREQUISITE_PRI_TYPE) 0 else when (s.priceType) {
         PriceTypeEnum.EMERALD -> s.emeraldPrice
         PriceTypeEnum.DIAMOND -> if (s.priceRank.diamondPrice > 0) s.priceRank.diamondPrice else d.price
         PriceTypeEnum.FREE -> 0
         else -> d.price
     },
-    discount = buildDiscountJson(s.discounts, d.discount),
+    discount = if (s.peResourceType == PE_PREREQUISITE_PRI_TYPE) emptyList()
+    else buildDiscountJson(s.discounts, d.discount),
     res = buildResList(s.peResource, d.res, s.peAddVersion),
     videoInfoList = s.videos.map {
         ResourceDetailVideoInfo(cover = it.cover, size = it.size.toInt(), url = it.url)
@@ -1470,6 +1579,40 @@ internal fun buildUpdatePayload(
         relateItemId = if (s.isRelatedMod) s.relatedItemId else ""
     )
 }
+
+/**
+ * 前置模组（pri_type=9）提交归一化：与该类作品的表单隐藏项一一对应。
+ * 隐藏的字段不能沿用详情原值，否则会把旧值原样回写（平台侧同样在提交前清空这些字段）。
+ */
+internal fun ResourceDetailVO.normalizedForPrerequisite(): ResourceDetailVO =
+    if (priType != PE_PREREQUISITE_PRI_TYPE) {
+        this
+    } else {
+        copy(
+            // 恒为原创（平台在切换类别时将 is_original 置真）
+            isOriginal = true,
+            corpProofImage = "",
+            // 强制免费
+            priceType = "free",
+            priceRank = PriceRankEnum.FREE_TIER.type,
+            price = 0,
+            discount = emptyList(),
+            // 无宣传图/推广图/视频
+            channel = emptyList(),
+            videoInfoList = emptyList(),
+            // 不参与成就、反作弊、双端同步、坐骑召唤、畅玩计划
+            achievementEnabled = 0,
+            achievementConfigs = emptyList(),
+            achievementBackgroundUrl = "",
+            antiCheatEnable = 0,
+            syncPcFlag = false,
+            mountCallEnabled = false,
+            peIsAddPlayPlan = false,
+            // 无标签（详情原值可能残留）
+            tags = emptyList(),
+            labelTypeList = emptyList()
+        )
+    }
 
 /** 折扣：用户未配置时保留原值，避免误清空；已配置则按 Unix 秒重建（vip_discount 暂同 discount）。 */
 private fun buildDiscountJson(

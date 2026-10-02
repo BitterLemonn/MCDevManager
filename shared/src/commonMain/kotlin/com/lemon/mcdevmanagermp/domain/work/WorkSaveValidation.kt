@@ -1,5 +1,6 @@
 package com.lemon.mcdevmanagermp.domain.work
 
+import com.lemon.mcdevmanagermp.data.consts.enums.PE_PREREQUISITE_PRI_TYPE
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceTypeEnum
 
 data class WorkSaveValidationInput(
@@ -37,6 +38,13 @@ fun validateWorkSave(
     peImagePolicy: PeImageCompletenessPolicy = PeImageCompletenessPolicy.REQUIRE_COMPLETE,
 ): String? {
     if (input.itemName.isBlank()) return "请输入资源名称"
+    // 前置模组（pri_type=9）由平台强制免费、且不参与常规上架字段校验
+    // （标签/推荐标签/宣传图/定价/视频），仅名称、详情与资源文件仍为必填。
+    if (input.peResourceType == PE_PREREQUISITE_PRI_TYPE) {
+        if (!hasVisibleHtmlText(input.detailHtml)) return "PE 详情至少需要 1 个字符"
+        if (!input.hasResource) return "请上传 PE 资源文件"
+        return null
+    }
     if (input.tags.none { it.isNotBlank() }) return "请至少添加一个模组标签"
     if (input.priceType == PriceTypeEnum.UNKNOWN) return "请选择定价类型"
     when (input.priceType) {

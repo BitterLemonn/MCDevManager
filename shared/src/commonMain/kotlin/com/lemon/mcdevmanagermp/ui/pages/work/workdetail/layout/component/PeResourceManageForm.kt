@@ -39,7 +39,10 @@ import androidx.compose.ui.draganddrop.DragAndDropEvent
 import androidx.compose.ui.draganddrop.DragAndDropTarget
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import com.lemon.mcdevmanagermp.data.consts.enums.PE_PREREQUISITE_LABEL
+import com.lemon.mcdevmanagermp.data.consts.enums.PE_PREREQUISITE_PRI_TYPE
 import com.lemon.mcdevmanagermp.data.consts.enums.PePriTypeEnum
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.MCConstsCommonTitleData
 import com.lemon.mcdevmanagermp.platform.platformFileFromPath
 import com.lemon.mcdevmanagermp.platform.readFilePaths
 import com.lemon.mcdevmanagermp.ui.components.FieldLabel
@@ -87,16 +90,42 @@ internal fun PeResourceManageForm(
         val personalizeId = PePriTypeEnum.PERSONALIZE.value.toInt()
         val lobbyId = PePriTypeEnum.LOBBY.value.toInt()
         val isCreateMode = state.detail == null
-        val typeOptions = state.peResourceTypeOptions.filter { opt ->
-            val notPersonalize = opt.id != personalizeId
-            val lobbyOk = opt.id != lobbyId || isCreateMode || state.detail.priType == lobbyId
-            val fileTypes = state.pePriTypeFileTypes[opt.id]
-            val fileTypeOk =
-                uploadedFileType == null || fileTypes.isNullOrEmpty() || uploadedFileType in fileTypes
-            notPersonalize && lobbyOk && fileTypeOk
+        // 「前置模组」由平台按权限注入（不在 mc_consts.pri_type.pe 中声明）。
+        // 常量表未加载时（请求中/失败）也要能显示它，否则类别退化为占位文案。
+        val alreadyPrerequisite = state.peResourceType == PE_PREREQUISITE_PRI_TYPE
+        val optionsWithPrerequisite = state.peResourceTypeOptions.let { opts ->
+            if ((alreadyPrerequisite || state.hasPrerequisiteSwitch) &&
+                opts.none { it.id == PE_PREREQUISITE_PRI_TYPE }
+            ) {
+                opts + MCConstsCommonTitleData(PE_PREREQUISITE_PRI_TYPE, PE_PREREQUISITE_LABEL)
+            } else {
+                opts
+            }
+        }
+        // 已选类别即便被过滤规则排除，也补回展示项，避免只读/编辑模式退化成占位文案。
+        val optionsWithSelected = if (
+            state.peResourceType > 0 && optionsWithPrerequisite.none { it.id == state.peResourceType }
+        ) {
+            optionsWithPrerequisite + MCConstsCommonTitleData(
+                state.peResourceType,
+                if (alreadyPrerequisite) PE_PREREQUISITE_LABEL else "类别 ${state.peResourceType}"
+            )
+        } else {
+            optionsWithPrerequisite
+        }
+        val typeOptions = optionsWithSelected.filter { opt ->
+            opt.id == state.peResourceType || run {
+                val notPersonalize = opt.id != personalizeId
+                val lobbyOk = opt.id != lobbyId || isCreateMode || state.detail.priType == lobbyId
+                val fileTypes = state.pePriTypeFileTypes[opt.id]
+                val fileTypeOk = uploadedFileType == null ||
+                    fileTypes.isNullOrEmpty() ||
+                    uploadedFileType in fileTypes
+                notPersonalize && lobbyOk && fileTypeOk
+            }
         }
         val selectedTypeTitle =
-            state.peResourceTypeOptions.firstOrNull { it.id == state.peResourceType }?.title
+            optionsWithSelected.firstOrNull { it.id == state.peResourceType }?.title
         Box {
             DropdownField(
                 label = "资源类别",

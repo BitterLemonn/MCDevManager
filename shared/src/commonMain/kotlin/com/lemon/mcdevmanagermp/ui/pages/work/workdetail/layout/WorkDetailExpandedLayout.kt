@@ -81,7 +81,7 @@ internal fun WorkDetailExpandedLayout(
                         modifier = Modifier.widthIn(max = 1200.dp),
                         verticalArrangement = Arrangement.spacedBy(24.dp)
                     ) {
-                        if (state.detail != null) {
+                        if (state.detail != null && state.showListingMeta) {
                             MetaInfoBar(state = state)
                         }
                         Row(

@@ -80,7 +80,7 @@ internal fun WorkDetailMediumLayout(
                         modifier = Modifier.fillMaxWidth().widthIn(max = 760.dp),
                         verticalArrangement = Arrangement.spacedBy(24.dp)
                     ) {
-                        if (state.detail != null) {
+                        if (state.detail != null && state.showListingMeta) {
                             MetaInfoBar(state = state)
                         }
                         WorkDetailInfoSections(
