@@ -8,9 +8,11 @@ import com.lemon.mcdevmanagermp.data.consts.enums.PriceTypeEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.WorkItemActionEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.WorkItemStatusEnum
 import com.lemon.mcdevmanagermp.data.dto.netease.activity.FileInfoDTO
+import com.lemon.mcdevmanagermp.data.dto.netease.income.LobbyGoodsListVO
 import com.lemon.mcdevmanagermp.data.dto.netease.income.LobbyIncomeResourceListVO
 import com.lemon.mcdevmanagermp.data.dto.netease.income.OneResRealtimeIncomeVO
 import com.lemon.mcdevmanagermp.data.dto.netease.work.toWorkUpdateDTO
+import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResAnalyzeData
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResMonthAnalyzeData
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResMonthDetailVO
@@ -27,6 +29,7 @@ import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailVideoInfo
 import com.lemon.mcdevmanagermp.domain.analyze.excludePrerequisiteRows
 import com.lemon.mcdevmanagermp.domain.analyze.mergeRealtimeIncome
+import com.lemon.mcdevmanagermp.domain.main.aggregateGoodsDiamondsByOwner
 import com.lemon.mcdevmanagermp.domain.main.mergeProfitDiamonds
 import com.lemon.mcdevmanagermp.domain.resource.MCConstsCache
 import com.lemon.mcdevmanagermp.domain.resource.filterResourceList
@@ -124,6 +127,47 @@ class SharedCommonTest {
                 lobby = mapOf("同名作品" to 20.0)
             )
         )
+    }
+
+    @Test
+    fun lobbyGoodsSumIntoSingleOwnerProfit() {
+        // 一个联机大厅作品下挂多个商品，作品收益应为各商品钻石之和
+        val rows = listOf(
+            ResAnalyzeData(iid = "g1", diamond = 30, cntBuy = 1, dateId = "20260816", resName = "钻石礼包"),
+            ResAnalyzeData(iid = "g2", diamond = 12, cntBuy = 1, dateId = "20260816", resName = "皮肤"),
+            ResAnalyzeData(iid = "g3", diamond = 8, cntBuy = 1, dateId = "20260816", resName = "坐骑")
+        )
+        val result = aggregateGoodsDiamondsByOwner(
+            rows = rows,
+            goodsToOwner = mapOf("g1" to "大厅A", "g2" to "大厅A", "g3" to "大厅B")
+        )
+
+        assertEquals(mapOf("大厅A" to 42.0, "大厅B" to 8.0), result)
+    }
+
+    @Test
+    fun lobbyGoodsNotBelongingToAnyOwnerAreIgnored() {
+        // 接口可能返回未纳入映射的商品（例如其他作品），不应污染结果
+        val rows = listOf(
+            ResAnalyzeData(iid = "g1", diamond = 30, cntBuy = 1, dateId = "20260816", resName = "钻石礼包"),
+            ResAnalyzeData(iid = "unknown", diamond = 999, cntBuy = 1, dateId = "20260816", resName = "未知")
+        )
+
+        assertEquals(
+            mapOf("大厅A" to 30.0),
+            aggregateGoodsDiamondsByOwner(rows, mapOf("g1" to "大厅A"))
+        )
+    }
+
+    @Test
+    fun lobbyGoodsListDecodesGoodsIdAndName() {
+        val goods = JSONConverter.decodeFromString<LobbyGoodsListVO>(
+            """{"goods":[{"goods_id":"1001","name":"钻石礼包"},{"goods_id":"1002","name":"皮肤"}]}"""
+        )
+
+        assertEquals(2, goods.goods.size)
+        assertEquals("1001", goods.goods[0].goodsId)
+        assertEquals("钻石礼包", goods.goods[0].name)
     }
 
     @Test

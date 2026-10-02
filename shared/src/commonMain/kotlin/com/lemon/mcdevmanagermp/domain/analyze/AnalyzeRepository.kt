@@ -1,6 +1,7 @@
 package com.lemon.mcdevmanagermp.domain.analyze
 
 import com.lemon.mcdevmanagermp.data.common.NetworkState
+import com.lemon.mcdevmanagermp.data.dto.netease.income.LobbyGoodsListVO
 import com.lemon.mcdevmanagermp.data.dto.netease.income.LobbyIncomeResourceListVO
 import com.lemon.mcdevmanagermp.data.dto.netease.income.OneResRealtimeIncomeVO
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResDetailVO
@@ -43,6 +44,8 @@ interface AnalyzeRepository {
     ): NetworkState<OneResRealtimeIncomeVO>
 
     suspend fun getLobbyIncomeResources(): NetworkState<LobbyIncomeResourceListVO>
+
+    suspend fun getLobbyGoodsList(iid: String): NetworkState<LobbyGoodsListVO>
 
     suspend fun getLobbyRealtimeIncome(
         iid: String,

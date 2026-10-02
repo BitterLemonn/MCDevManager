@@ -5,9 +5,9 @@ import com.lemon.mcdevmanagermp.data.common.AppContext
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.repository.AnalyzeRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
-import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
 import com.lemon.mcdevmanagermp.domain.analyze.DayDetailConfig
 import com.lemon.mcdevmanagermp.domain.analyze.DayDetailUseCase
+import com.lemon.mcdevmanagermp.domain.analyze.LobbyGoodsUseCase
 import com.lemon.mcdevmanagermp.domain.analyze.formatYmd
 import com.lemon.mcdevmanagermp.domain.analyze.spanDays
 import com.lemon.mcdevmanagermp.domain.resource.GetResourceListUseCase
@@ -28,6 +28,7 @@ class DayDetailViewModel : BaseViewModel<DayDetailState, DayDetailAction, DayDet
         analyzeRepository = AnalyzeRepositoryImpl.INSTANCE
     )
     private val getResourceListUseCase = GetResourceListUseCase(ResourceRepositoryImpl.INSTANCE)
+    private val lobbyGoodsUseCase = LobbyGoodsUseCase(AnalyzeRepositoryImpl.INSTANCE)
 
     companion object {
         private const val TAG = "DayDetailVM"
@@ -102,14 +103,7 @@ class DayDetailViewModel : BaseViewModel<DayDetailState, DayDetailAction, DayDet
             }
 
             val resourceResult = if (platform == "lobby") {
-                when (val result = AnalyzeRepositoryImpl.INSTANCE.getLobbyIncomeResources()) {
-                    is NetworkState.Success -> NetworkState.Success(
-                        result.data?.items?.map { ResourceData(itemId = it.itemId, itemName = it.itemName) }
-                            ?: emptyList()
-                    )
-
-                    is NetworkState.Error -> NetworkState.Error(result.msg, result.e)
-                }
+                lobbyGoodsUseCase.getLobbyGoodsResources()
             } else {
                 getResourceListUseCase(platform, onlineOnly = true, excludePrerequisites = true)
             }
