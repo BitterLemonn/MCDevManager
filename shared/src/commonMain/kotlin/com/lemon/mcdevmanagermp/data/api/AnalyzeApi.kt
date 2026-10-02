@@ -2,6 +2,7 @@ package com.lemon.mcdevmanagermp.data.api
 
 import com.lemon.mcdevmanagermp.data.common.ResponseData
 import com.lemon.mcdevmanagermp.data.consts.NETEASE_MC_DEV_LINK
+import com.lemon.mcdevmanagermp.data.dto.netease.income.LobbyGoodsListVO
 import com.lemon.mcdevmanagermp.data.dto.netease.income.LobbyIncomeResourceListVO
 import com.lemon.mcdevmanagermp.data.dto.netease.income.OneResRealtimeIncomeVO
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResDetailVO
@@ -84,6 +85,11 @@ interface AnalyzeApi {
         @Query("start") start: Int = 0,
         @Query("span") span: Int = Int.MAX_VALUE
     ): ResponseData<LobbyIncomeResourceListVO>
+
+    @GET("goods/pe/{iid}/")
+    suspend fun getLobbyGoodsList(
+        @Path("iid") iid: String
+    ): ResponseData<LobbyGoodsListVO>
 
     @GET("items/categories/pe/{iid}/lobby_incomes/")
     suspend fun getLobbyRealtimeIncome(

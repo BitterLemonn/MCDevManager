@@ -3,10 +3,13 @@ package com.lemon.mcdevmanagermp.domain.main
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.consts.CookiesExpiredException
 import com.lemon.mcdevmanagermp.data.consts.LoginException
+import com.lemon.mcdevmanagermp.data.dto.netease.income.LobbyGoodVO
+import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResAnalyzeData
 import com.lemon.mcdevmanagermp.data.vo.netease.user.LevelInfoVO
 import com.lemon.mcdevmanagermp.data.vo.netease.user.OverviewVO
 import com.lemon.mcdevmanagermp.data.vo.netease.user.UserInfoVO
 import com.lemon.mcdevmanagermp.domain.analyze.AnalyzeRepository
+import com.lemon.mcdevmanagermp.domain.analyze.LobbyGoodsUseCase
 import com.lemon.mcdevmanagermp.domain.resource.GetResourceListUseCase
 import com.lemon.mcdevmanagermp.domain.user.UserRepository
 import com.lemon.mcdevmanagermp.utils.ProfitData
@@ -66,7 +69,8 @@ internal fun profitMonthWindow(today: LocalDate): ProfitMonthWindow {
 class MainUseCase(
     private val userRepository: UserRepository,
     private val analyzeRepository: AnalyzeRepository,
-    private val getResourceListUseCase: GetResourceListUseCase
+    private val getResourceListUseCase: GetResourceListUseCase,
+    private val lobbyGoodsUseCase: LobbyGoodsUseCase = LobbyGoodsUseCase(analyzeRepository)
 ) {
     suspend fun loadDashboard(): MainDashboardData = coroutineScope {
         val userInfoDeferred = async { userRepository.getUserInfo() }
@@ -109,15 +113,18 @@ class MainUseCase(
 
     private suspend fun getOneMonthComponentDiamonds(year: Int, month: Int): Map<String, Double> =
         coroutineScope {
-            val normalResources = async { getResourceListUseCase("pe", onlineOnly = true) }
-            val lobbyResources = async { analyzeRepository.getLobbyIncomeResources() }
+            val normalResources = async {
+                getResourceListUseCase("pe", onlineOnly = true, excludePrerequisites = true)
+            }
+            // 联机大厅作品及其商品的获取（含作品列表请求）交由 lobbyGoodsUseCase 统一发起
+            val lobbyGoods = async { lobbyGoodsUseCase.getGoodsByOwner() }
             val resList = when (val resources = normalResources.await()) {
                 is NetworkState.Success -> resources.data ?: emptyList()
                 is NetworkState.Error -> emptyList()
             }
-            val lobbyResList = when (val resources = lobbyResources.await()) {
-                is NetworkState.Success -> resources.data?.items ?: emptyList()
-                is NetworkState.Error -> emptyList()
+            val goodsByOwner = when (val resources = lobbyGoods.await()) {
+                is NetworkState.Success -> resources.data ?: emptyMap()
+                is NetworkState.Error -> emptyMap()
             }
 
             val dateRange = monthDateRange(year, month)
@@ -139,26 +146,40 @@ class MainUseCase(
                     }
                 }
             }.associate { it.await() }
-            val lobbyDiamonds = lobbyResList.map { res ->
-                async {
-                    val result = analyzeRepository.getDayDetail(
-                        platform = "pe",
-                        category = "pe",
-                        startDate = dateRange.first,
-                        endDate = dateRange.second,
-                        itemListStr = res.itemId,
-                        isLobby = true
-                    )
-                    if (result is NetworkState.Success) {
-                        res.itemName to (result.data?.data?.sumOf { it.diamond.toDouble() } ?: 0.0)
-                    } else {
-                        res.itemName to 0.0
-                    }
-                }
-            }.associate { it.await() }
+            val lobbyDiamonds = lobbyItemDiamonds(goodsByOwner, dateRange)
 
             mergeProfitDiamonds(normalDiamonds, lobbyDiamonds)
         }
+
+    /**
+     * 计算联机大厅作品收益：作品下的各商品销售钻石累加回作品名。
+     */
+    private suspend fun lobbyItemDiamonds(
+        goodsByOwner: Map<String, List<LobbyGoodVO>>,
+        dateRange: Pair<String, String>
+    ): Map<String, Double> {
+        val goodsToOwner = goodsByOwner
+            .flatMap { (name, goods) -> goods.map { it.goodsId to name } }
+            .toMap()
+        if (goodsToOwner.isEmpty()) return emptyMap()
+
+        // 一次查询全部商品的日详情（item_list_str 支持逗号分隔）
+        val result = analyzeRepository.getDayDetail(
+            platform = "pe",
+            category = "pe",
+            startDate = dateRange.first,
+            endDate = dateRange.second,
+            itemListStr = goodsToOwner.keys.joinToString(","),
+            isLobby = true
+        )
+        val rows = if (result is NetworkState.Success) {
+            result.data?.data.orEmpty()
+        } else {
+            emptyList()
+        }
+
+        return aggregateGoodsDiamondsByOwner(rows, goodsToOwner)
+    }
 
     private fun monthDateRange(year: Int, month: Int): Pair<String, String> {
         val firstDay = LocalDate(year, month, 1)
@@ -182,3 +203,18 @@ internal fun mergeProfitDiamonds(
     putAll(normal)
     lobby.forEach { (name, diamonds) -> put(name, (get(name) ?: 0.0) + diamonds) }
 }
+
+/**
+ * 把商品维度的销售明细按所属作品累加：作品名 → 该作品下全部商品的钻石之和。
+ *
+ * @param rows 商品口径销售明细（每行的 [ResAnalyzeData.iid] 是商品 ID）
+ * @param goodsToOwner 商品 ID → 作品名
+ */
+internal fun aggregateGoodsDiamondsByOwner(
+    rows: List<ResAnalyzeData>,
+    goodsToOwner: Map<String, String>
+): Map<String, Double> =
+    rows.mapNotNull { row ->
+        goodsToOwner[row.iid]?.let { it to row.diamond.toDouble() }
+    }.groupBy({ it.first }, { it.second })
+        .mapValues { (_, values) -> values.sum() }

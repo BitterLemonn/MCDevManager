@@ -4,6 +4,7 @@ import com.lemon.mcdevmanagermp.data.api.AnalyzeApi
 import com.lemon.mcdevmanagermp.data.common.AppContext
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.db.entity.DayDetailConfigEntity
+import com.lemon.mcdevmanagermp.data.dto.netease.income.LobbyGoodsListVO
 import com.lemon.mcdevmanagermp.data.dto.netease.income.LobbyIncomeResourceListVO
 import com.lemon.mcdevmanagermp.data.dto.netease.income.OneResRealtimeIncomeVO
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResDetailVO
@@ -92,6 +93,12 @@ class AnalyzeRepositoryImpl : AnalyzeRepository {
     override suspend fun getLobbyIncomeResources(): NetworkState<LobbyIncomeResourceListVO> {
         return UnifiedExceptionHandler.handleRequest {
             analyzeApi.getLobbyIncomeResources()
+        }
+    }
+
+    override suspend fun getLobbyGoodsList(iid: String): NetworkState<LobbyGoodsListVO> {
+        return UnifiedExceptionHandler.handleRequest {
+            analyzeApi.getLobbyGoodsList(iid)
         }
     }
 

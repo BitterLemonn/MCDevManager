@@ -1,5 +1,6 @@
 package com.lemon.mcdevmanagermp.ui.pages.work.workdetail
 
+import com.lemon.mcdevmanagermp.data.consts.enums.PE_PREREQUISITE_PRI_TYPE
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceRankEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceTypeEnum
 import com.lemon.mcdevmanagermp.data.dto.netease.activity.FileInfoDTO
@@ -35,7 +36,11 @@ data class WorkDetailState(
     val corpProofFile: PlatformFile? = null,          // 本地新选授权图（提交时上传），非空时预览优先
     val tags: List<String> = emptyList(),             // 模组标签
     val availableTags: List<String> = emptyList(),    // 默认模组标签（搜索建议，来自 item-tag 接口）
-    val prerequisite: String = "",                    // 前置模组
+    val prerequisiteItemId: String = "",              // PE 前置模组 iid（单选；prerequisite_item_ids[0]）
+    val prerequisiteItemName: String = "",            // PE 前置模组名称（显示用）
+    val prereqSearchResults: List<ModSelectOption> = emptyList(),   // PE 前置搜索结果（pe, pri_type=9）
+    val isSearchingPrereq: Boolean = false,           // PE 前置搜索中
+    val hasPrerequisiteSwitch: Boolean = false,       // 账号是否开通前置模组功能（users/me.prerequisite_switch）
     val activityDesc: String = "",                    // 活动参与说明
     val isRelatedMod: Boolean = false,                // 是否为关联模组
     val relatedIsMaster: Boolean = true,              // 关联模组类型：主包(true)/副包(false)，isRelatedMod=true 时生效
@@ -120,7 +125,16 @@ data class WorkDetailState(
     // —— 视频 ——
     val videos: List<VideoItem> = emptyList(),               // 宣传视频（video_info_list 回显 + 上传结果；上限 1）
     val isUploadingVideo: Boolean = false                    // 视频上传中
-) : IUiState
+) : IUiState {
+    /**
+     * 是否为前置模组（pri_type=9）。该类作品由平台强制免费、且不参与常规上架字段填写，
+     * 表单据此隐藏定价、宣传图、视频、标签等区块（对齐开发者平台编辑页）。
+     */
+    val isPrerequisiteType: Boolean get() = peResourceType == PE_PREREQUISITE_PRI_TYPE
+
+    /** 前置模组隐藏「资源ID/模组码/资源版本」元数据，以及「是否加入我的山头专区」等常规开关。 */
+    val showListingMeta: Boolean get() = !isPrerequisiteType
+}
 
 sealed interface WorkDetailAction : IUiAction {
     data class LoadDetail(val itemId: String, val readOnly: Boolean = false) : WorkDetailAction
@@ -130,7 +144,9 @@ sealed interface WorkDetailAction : IUiAction {
     data class ToggleOriginal(val value: Boolean) : WorkDetailAction
     data class AddTag(val name: String) : WorkDetailAction
     data class RemoveTag(val index: Int) : WorkDetailAction
-    data class UpdatePrerequisite(val value: String) : WorkDetailAction
+    data class SearchPrereqMods(val query: String) : WorkDetailAction
+    data class SelectPrereqMod(val option: ModSelectOption) : WorkDetailAction
+    data object ClearPrereqMod : WorkDetailAction
     data class UpdateActivityDesc(val value: String) : WorkDetailAction
     data class ToggleRelatedMod(val value: Boolean) : WorkDetailAction
     data class ToggleRelatedPackType(val value: Boolean) : WorkDetailAction  // 关联模组类型 主包/副包

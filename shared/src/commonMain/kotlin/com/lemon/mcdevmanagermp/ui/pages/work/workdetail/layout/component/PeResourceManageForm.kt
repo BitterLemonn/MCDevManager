@@ -39,7 +39,10 @@ import androidx.compose.ui.draganddrop.DragAndDropEvent
 import androidx.compose.ui.draganddrop.DragAndDropTarget
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import com.lemon.mcdevmanagermp.data.consts.enums.PE_PREREQUISITE_LABEL
+import com.lemon.mcdevmanagermp.data.consts.enums.PE_PREREQUISITE_PRI_TYPE
 import com.lemon.mcdevmanagermp.data.consts.enums.PePriTypeEnum
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.MCConstsCommonTitleData
 import com.lemon.mcdevmanagermp.platform.platformFileFromPath
 import com.lemon.mcdevmanagermp.platform.readFilePaths
 import com.lemon.mcdevmanagermp.ui.components.FieldLabel
@@ -87,16 +90,42 @@ internal fun PeResourceManageForm(
         val personalizeId = PePriTypeEnum.PERSONALIZE.value.toInt()
         val lobbyId = PePriTypeEnum.LOBBY.value.toInt()
         val isCreateMode = state.detail == null
-        val typeOptions = state.peResourceTypeOptions.filter { opt ->
-            val notPersonalize = opt.id != personalizeId
-            val lobbyOk = opt.id != lobbyId || isCreateMode || state.detail.priType == lobbyId
-            val fileTypes = state.pePriTypeFileTypes[opt.id]
-            val fileTypeOk =
-                uploadedFileType == null || fileTypes.isNullOrEmpty() || uploadedFileType in fileTypes
-            notPersonalize && lobbyOk && fileTypeOk
+        // 「前置模组」由平台按权限注入（不在 mc_consts.pri_type.pe 中声明）。
+        // 常量表未加载时（请求中/失败）也要能显示它，否则类别退化为占位文案。
+        val alreadyPrerequisite = state.peResourceType == PE_PREREQUISITE_PRI_TYPE
+        val optionsWithPrerequisite = state.peResourceTypeOptions.let { opts ->
+            if ((alreadyPrerequisite || state.hasPrerequisiteSwitch) &&
+                opts.none { it.id == PE_PREREQUISITE_PRI_TYPE }
+            ) {
+                opts + MCConstsCommonTitleData(PE_PREREQUISITE_PRI_TYPE, PE_PREREQUISITE_LABEL)
+            } else {
+                opts
+            }
+        }
+        // 已选类别即便被过滤规则排除，也补回展示项，避免只读/编辑模式退化成占位文案。
+        val optionsWithSelected = if (
+            state.peResourceType > 0 && optionsWithPrerequisite.none { it.id == state.peResourceType }
+        ) {
+            optionsWithPrerequisite + MCConstsCommonTitleData(
+                state.peResourceType,
+                if (alreadyPrerequisite) PE_PREREQUISITE_LABEL else "类别 ${state.peResourceType}"
+            )
+        } else {
+            optionsWithPrerequisite
+        }
+        val typeOptions = optionsWithSelected.filter { opt ->
+            opt.id == state.peResourceType || run {
+                val notPersonalize = opt.id != personalizeId
+                val lobbyOk = opt.id != lobbyId || isCreateMode || state.detail.priType == lobbyId
+                val fileTypes = state.pePriTypeFileTypes[opt.id]
+                val fileTypeOk = uploadedFileType == null ||
+                    fileTypes.isNullOrEmpty() ||
+                    uploadedFileType in fileTypes
+                notPersonalize && lobbyOk && fileTypeOk
+            }
         }
         val selectedTypeTitle =
-            state.peResourceTypeOptions.firstOrNull { it.id == state.peResourceType }?.title
+            optionsWithSelected.firstOrNull { it.id == state.peResourceType }?.title
         Box {
             DropdownField(
                 label = "资源类别",
@@ -191,60 +220,62 @@ internal fun PeResourceManageForm(
             }
         }
 
-        // 推荐标签 · 玩法（下拉多选，必选≥1；与主题共享合计上限）
-        var gameplayExpanded by remember { mutableStateOf(false) }
-        val selectedGameplayNames = state.peRecommendTagOptions.gameplayTag
-            .filter { state.peRecommendTags.contains(it.id) }
-            .joinToString("、") { it.title }
-        Box {
-            DropdownField(
-                label = "推荐标签 · 玩法",
-                valueText = selectedGameplayNames.ifEmpty { "至少选 1 个" },
-                expanded = gameplayExpanded,
-                onClick = { gameplayExpanded = !gameplayExpanded },
-                required = true
-            )
-            DropdownMenu(
-                expanded = gameplayExpanded,
-                onDismissRequest = { gameplayExpanded = false },
-                modifier = Modifier.heightIn(max = 320.dp)
-            ) {
-                state.peRecommendTagOptions.gameplayTag.forEach { tag ->
-                    TagCheckItem(
-                        title = tag.title,
-                        selected = state.peRecommendTags.contains(tag.id),
-                        enabled = state.peRecommendTags.contains(tag.id) || !tagAtLimit,
-                        onClick = { onAction(WorkDetailAction.TogglePeRecommendTag(tag.id)) }
-                    )
+        // 推荐标签 · 玩法 / 主题（下拉多选，必选≥1；与主题共享合计上限）
+        // 前置模组不要求推荐标签，整组隐藏
+        if (!state.isPrerequisiteType) {
+            var gameplayExpanded by remember { mutableStateOf(false) }
+            val selectedGameplayNames = state.peRecommendTagOptions.gameplayTag
+                .filter { state.peRecommendTags.contains(it.id) }
+                .joinToString("、") { it.title }
+            Box {
+                DropdownField(
+                    label = "推荐标签 · 玩法",
+                    valueText = selectedGameplayNames.ifEmpty { "至少选 1 个" },
+                    expanded = gameplayExpanded,
+                    onClick = { gameplayExpanded = !gameplayExpanded },
+                    required = true
+                )
+                DropdownMenu(
+                    expanded = gameplayExpanded,
+                    onDismissRequest = { gameplayExpanded = false },
+                    modifier = Modifier.heightIn(max = 320.dp)
+                ) {
+                    state.peRecommendTagOptions.gameplayTag.forEach { tag ->
+                        TagCheckItem(
+                            title = tag.title,
+                            selected = state.peRecommendTags.contains(tag.id),
+                            enabled = state.peRecommendTags.contains(tag.id) || !tagAtLimit,
+                            onClick = { onAction(WorkDetailAction.TogglePeRecommendTag(tag.id)) }
+                        )
+                    }
                 }
             }
-        }
 
-        // 推荐标签 · 主题（下拉多选，必选≥1；与玩法共享合计上限）
-        var themeExpanded by remember { mutableStateOf(false) }
-        val selectedThemeNames = state.peRecommendTagOptions.themeTag
-            .filter { state.peRecommendTags.contains(it.id) }
-            .joinToString("、") { it.title }
-        Box {
-            DropdownField(
-                label = "推荐标签 · 主题",
-                valueText = selectedThemeNames.ifEmpty { "至少选 1 个" },
-                expanded = themeExpanded,
-                onClick = { themeExpanded = !themeExpanded },
-                required = true
-            )
-            DropdownMenu(
-                expanded = themeExpanded,
-                onDismissRequest = { themeExpanded = false },
-                modifier = Modifier.heightIn(max = 320.dp)
-            ) {
-                state.peRecommendTagOptions.themeTag.forEach { tag ->
-                    TagCheckItem(
-                        title = tag.title,
-                        selected = state.peRecommendTags.contains(tag.id),
-                        enabled = state.peRecommendTags.contains(tag.id) || !tagAtLimit,
-                        onClick = { onAction(WorkDetailAction.TogglePeRecommendTag(tag.id)) }
-                    )
+            var themeExpanded by remember { mutableStateOf(false) }
+            val selectedThemeNames = state.peRecommendTagOptions.themeTag
+                .filter { state.peRecommendTags.contains(it.id) }
+                .joinToString("、") { it.title }
+            Box {
+                DropdownField(
+                    label = "推荐标签 · 主题",
+                    valueText = selectedThemeNames.ifEmpty { "至少选 1 个" },
+                    expanded = themeExpanded,
+                    onClick = { themeExpanded = !themeExpanded },
+                    required = true
+                )
+                DropdownMenu(
+                    expanded = themeExpanded,
+                    onDismissRequest = { themeExpanded = false },
+                    modifier = Modifier.heightIn(max = 320.dp)
+                ) {
+                    state.peRecommendTagOptions.themeTag.forEach { tag ->
+                        TagCheckItem(
+                            title = tag.title,
+                            selected = state.peRecommendTags.contains(tag.id),
+                            enabled = state.peRecommendTags.contains(tag.id) || !tagAtLimit,
+                            onClick = { onAction(WorkDetailAction.TogglePeRecommendTag(tag.id)) }
+                        )
+                    }
                 }
             }
         }
@@ -277,21 +308,24 @@ internal fun PeResourceManageForm(
             }
         }
 
-        // 是否加入模组畅玩计划
-        YesNoSelector(
-            label = "加入模组畅玩计划",
-            value = state.peAddPlayPlan,
-            onValueChange = { onAction(WorkDetailAction.TogglePePlayPlan(it)) },
-            modifier = Modifier.fillMaxWidth()
-        )
+        // 畅玩计划 / 坐骑召唤（前置模组不参与，整组隐藏）
+        if (!state.isPrerequisiteType) {
+            // 是否加入模组畅玩计划
+            YesNoSelector(
+                label = "加入模组畅玩计划",
+                value = state.peAddPlayPlan,
+                onValueChange = { onAction(WorkDetailAction.TogglePePlayPlan(it)) },
+                modifier = Modifier.fillMaxWidth()
+            )
 
-        // 是否启用坐骑召唤功能
-        YesNoSelector(
-            label = "启用坐骑召唤功能",
-            value = state.peMountCallEnabled,
-            onValueChange = { onAction(WorkDetailAction.TogglePeMountCall(it)) },
-            modifier = Modifier.fillMaxWidth()
-        )
+            // 是否启用坐骑召唤功能
+            YesNoSelector(
+                label = "启用坐骑召唤功能",
+                value = state.peMountCallEnabled,
+                onValueChange = { onAction(WorkDetailAction.TogglePeMountCall(it)) },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
 
         // 本次上传是否提升版本
         YesNoSelector(
@@ -368,27 +402,32 @@ private fun PeResourceReadOnlySection(
                 singleLine = false
             )
         }
-        ReadOnlyField(
-            label = "推荐标签 · 玩法",
-            value = gameplayTags,
-            required = true,
-            singleLine = false
-        )
-        ReadOnlyField(
-            label = "推荐标签 · 主题",
-            value = themeTags,
-            required = true,
-            singleLine = false
-        )
+        // 前置模组不展示推荐标签 / 畅玩计划 / 坐骑召唤（与可写模式一致）
+        if (!state.isPrerequisiteType) {
+            ReadOnlyField(
+                label = "推荐标签 · 玩法",
+                value = gameplayTags,
+                required = true,
+                singleLine = false
+            )
+            ReadOnlyField(
+                label = "推荐标签 · 主题",
+                value = themeTags,
+                required = true,
+                singleLine = false
+            )
+        }
         ReadOnlyField(label = "modAPI 版本", value = state.peModVersion, required = true)
-        ReadOnlyField(
-            label = "加入模组畅玩计划",
-            value = if (state.peAddPlayPlan) "是" else "否"
-        )
-        ReadOnlyField(
-            label = "启用坐骑召唤功能",
-            value = if (state.peMountCallEnabled) "是" else "否"
-        )
+        if (!state.isPrerequisiteType) {
+            ReadOnlyField(
+                label = "加入模组畅玩计划",
+                value = if (state.peAddPlayPlan) "是" else "否"
+            )
+            ReadOnlyField(
+                label = "启用坐骑召唤功能",
+                value = if (state.peMountCallEnabled) "是" else "否"
+            )
+        }
         ReadOnlyField(
             label = "提升版本",
             value = if (state.peAddVersion) "是" else "否",

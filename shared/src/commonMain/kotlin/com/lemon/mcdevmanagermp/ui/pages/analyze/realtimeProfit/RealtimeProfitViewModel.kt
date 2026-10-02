@@ -75,7 +75,11 @@ class RealtimeProfitViewModel :
 
             // 1. 获取普通资源与联机大厅商业化作品
             val resources = when (val resourceResult =
-                getResourceListUseCase(state.value.platform, onlineOnly = true)) {
+                getResourceListUseCase(
+                    state.value.platform,
+                    onlineOnly = true,
+                    excludePrerequisites = true
+                )) {
                 is NetworkState.Success -> {
                     resourceResult.data ?: emptyList()
                 }

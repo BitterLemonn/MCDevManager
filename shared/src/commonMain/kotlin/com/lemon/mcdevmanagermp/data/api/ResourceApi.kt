@@ -38,6 +38,18 @@ interface ResourceApi {
     @GET("/items/categories/comp/requirements")
     suspend fun getRequirements(@Query("query_str") itemName: String): ResponseData<RequirementVO>
 
+    /**
+     * PE 前置模组搜索：pe 类别列表按 pri_type 过滤（pri_type=9 → 前置模组池）。
+     * PC 侧走 comp/requirements，PE 侧无独立 requirements 接口（实测 404）。
+     */
+    @GET("/items/categories/pe/")
+    suspend fun getPePrerequisites(
+        @Query("pri_type") priType: Int,
+        @Query("item_name") itemName: String,
+        @Query("start") start: Int = 0,
+        @Query("span") span: Int = 20
+    ): ResponseData<RequirementVO>
+
     @GET("items/categories/pe/{itemId}")
     suspend fun getResourceDetail(@Path("itemId") itemId: String): ResponseData<ResourceDetailVO>
 

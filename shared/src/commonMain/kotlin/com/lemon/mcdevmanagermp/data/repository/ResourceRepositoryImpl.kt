@@ -17,6 +17,7 @@ import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceListVO
 import com.lemon.mcdevmanagermp.data.vo.netease.work.ReviewApplyResultVO
 import com.lemon.mcdevmanagermp.data.vo.netease.work.ReviewFeedbackVO
+import com.lemon.mcdevmanagermp.domain.resource.MCConstsCache
 import com.lemon.mcdevmanagermp.domain.resource.ResourceRepository
 import com.lemon.mcdevmanagermp.utils.UnifiedExceptionHandler
 
@@ -43,6 +44,11 @@ class ResourceRepositoryImpl : ResourceRepository {
     override suspend fun getCompRequirements(itemName: String): NetworkState<RequirementVO> =
         UnifiedExceptionHandler.handleRequest { resourceApi.getRequirements(itemName) }
 
+    override suspend fun getPePrerequisites(priType: Int, itemName: String): NetworkState<RequirementVO> =
+        UnifiedExceptionHandler.handleRequest {
+            resourceApi.getPePrerequisites(priType = priType, itemName = itemName)
+        }
+
     override suspend fun getResourceDetail(itemId: String): NetworkState<ResourceDetailVO> =
         UnifiedExceptionHandler.handleRequest { resourceApi.getResourceDetail(itemId) }
 
@@ -53,7 +59,9 @@ class ResourceRepositoryImpl : ResourceRepository {
         UnifiedExceptionHandler.handleRequest { resourceApi.getItemTag() }
 
     override suspend fun getMCConsts(): NetworkState<MCConstsVO> =
-        UnifiedExceptionHandler.handleRequest { resourceApi.getMCConsts() }
+        UnifiedExceptionHandler.handleRequest {
+            MCConstsCache.loadOrFetch { resourceApi.getMCConsts() }
+        }
 
     override suspend fun updateItem(itemId: String, item: WorkUpdateDTO): NetworkState<NoNeedData> =
         UnifiedExceptionHandler.handleRequest { resourceApi.updateItem(itemId, item) }

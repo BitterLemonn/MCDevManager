@@ -35,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import com.lemon.mcdevmanagermp.data.consts.enums.PE_PREREQUISITE_PRI_TYPE
 import com.lemon.mcdevmanagermp.platform.copyTextToClipboard
 import com.lemon.mcdevmanagermp.ui.components.BinarySelector
 import com.lemon.mcdevmanagermp.ui.components.FieldLabel
@@ -97,8 +98,11 @@ internal fun BasicInfoForm(
             )
         }
 
-        // 只读元数据组（可关闭：expanded 用顶部信息条替代）
-        if (showMetaRow) {
+        // 前置模组（pri_type=9）基本信息只需填写名称，其余字段整块隐藏
+        if (state.isPrerequisiteType) return@FormSection
+
+        // 只读元数据组（可关闭：expanded 用顶部信息条替代）；前置模组不展示
+        if (showMetaRow && state.showListingMeta) {
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -130,21 +134,24 @@ internal fun BasicInfoForm(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            YesNoSelector(
-                label = "是否加入到「我的山头」专区",
-                value = state.joinShantou,
-                onValueChange = { onAction(WorkDetailAction.ToggleJoinShantou(it)) },
-                modifier = Modifier.weight(1f).widthIn(min = minFieldWidth),
-                required = true,
-                enabled = !readOnly
-            )
+            // 前置模组不可加入「我的山头」专区，也不可设为非原创（恒为原创，无需授权图）
+            if (!state.isPrerequisiteType) {
+                YesNoSelector(
+                    label = "是否加入到「我的山头」专区",
+                    value = state.joinShantou,
+                    onValueChange = { onAction(WorkDetailAction.ToggleJoinShantou(it)) },
+                    modifier = Modifier.weight(1f).widthIn(min = minFieldWidth),
+                    required = true,
+                    enabled = !readOnly
+                )
+            }
             YesNoSelector(
                 label = "是否原创作品",
                 value = state.isOriginal,
                 onValueChange = { onAction(WorkDetailAction.ToggleOriginal(it)) },
                 modifier = Modifier.weight(1f).widthIn(min = minFieldWidth),
                 required = true,
-                enabled = !readOnly
+                enabled = !readOnly && !state.isPrerequisiteType
             )
             YesNoSelector(
                 label = "是否为关联模组",
@@ -154,14 +161,17 @@ internal fun BasicInfoForm(
                 required = true,
                 enabled = !readOnly
             )
-            YesNoSelector(
-                label = "是否同步生成 PC 模组",
-                value = state.syncPc,
-                onValueChange = { onAction(WorkDetailAction.ToggleSyncPc(it)) },
-                modifier = Modifier.weight(1f).widthIn(min = minFieldWidth),
-                required = true,
-                enabled = !readOnly
-            )
+            // 前置模组不同步生成 PC 侧内容，不展示该开关
+            if (!state.isPrerequisiteType) {
+                YesNoSelector(
+                    label = "是否同步生成 PC 模组",
+                    value = state.syncPc,
+                    onValueChange = { onAction(WorkDetailAction.ToggleSyncPc(it)) },
+                    modifier = Modifier.weight(1f).widthIn(min = minFieldWidth),
+                    required = true,
+                    enabled = !readOnly
+                )
+            }
         }
 
         // 授权信息图片（非原创必填）
@@ -185,44 +195,53 @@ internal fun BasicInfoForm(
             )
         }
 
-        // 前置模组
-        if (readOnly) {
-            ReadOnlyField(
-                label = "前置模组",
-                value = state.prerequisite,
-                singleLine = false,
-                modifier = Modifier.fillMaxWidth()
-            )
-        } else {
-            OutlinedTextField(
-                value = state.prerequisite,
-                onValueChange = { onAction(WorkDetailAction.UpdatePrerequisite(it)) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                label = { Text("前置模组") },
-                placeholder = { Text("搜索前置模组名称") },
-                supportingText = {
-                    Text(
-                        text = "搜索并选择已上传的私有前置模组，仅能关联一个前置模组",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = colors.onSurfaceVariant
-                    )
-                }
-            )
+        // PE 前置模组（单选，pe 类别里 pri_type=9 的前置池）。
+        // 账号需开通前置模组功能（users/me.prerequisite_switch）；前置模组自身不可再挂前置。
+        // 已存在前置关系时无条件展示，避免无开关账号编辑旧数据时看不到而误清空。
+        if (state.peResourceType != PE_PREREQUISITE_PRI_TYPE &&
+            (state.hasPrerequisiteSwitch || state.prerequisiteItemId.isNotEmpty())
+        ) {
+            if (readOnly) {
+                ReadOnlyField(
+                    label = "前置模组",
+                    value = state.prerequisiteItemName.ifEmpty { state.prerequisiteItemId },
+                    singleLine = false,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            } else {
+                ModSearchSelectField(
+                    label = "前置模组",
+                    results = state.prereqSearchResults,
+                    isLoading = state.isSearchingPrereq,
+                    selected = if (state.prerequisiteItemId.isNotEmpty()) {
+                        listOf(
+                            ModSelectOption(state.prerequisiteItemId, state.prerequisiteItemName)
+                        )
+                    } else {
+                        emptyList()
+                    },
+                    onSearch = { onAction(WorkDetailAction.SearchPrereqMods(it)) },
+                    onSelect = { onAction(WorkDetailAction.SelectPrereqMod(it)) },
+                    onRemove = { onAction(WorkDetailAction.ClearPrereqMod) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
 
-        // 模组标签（整行）
-        TagInputField(
-            label = "模组标签",
-            tags = state.tags,
-            onAdd = { onAction(WorkDetailAction.AddTag(it)) },
-            onRemove = { onAction(WorkDetailAction.RemoveTag(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            placeholder = "搜索标签 / 输入自定义标签",
-            required = true,
-            suggestions = state.availableTags,
-            readOnly = readOnly
-        )
+        // 模组标签（整行）；前置模组不要求标签
+        if (!state.isPrerequisiteType) {
+            TagInputField(
+                label = "模组标签",
+                tags = state.tags,
+                onAdd = { onAction(WorkDetailAction.AddTag(it)) },
+                onRemove = { onAction(WorkDetailAction.RemoveTag(it)) },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = "搜索标签 / 输入自定义标签",
+                required = true,
+                suggestions = state.availableTags,
+                readOnly = readOnly
+            )
+        }
 
         // 活动参与说明
         if (readOnly) {

@@ -2,6 +2,7 @@ package com.lemon.mcdevmanagermp.domain.work
 
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.common.NoNeedData
+import com.lemon.mcdevmanagermp.data.consts.enums.PE_PREREQUISITE_PRI_TYPE
 import com.lemon.mcdevmanagermp.data.dto.netease.work.ApplyReviewDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.work.WorkCreateDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.work.toWorkUpdateDTO
@@ -47,6 +48,17 @@ class WorkDetailUseCase(
      */
     suspend fun getCompRequirements(itemName: String): NetworkState<List<RequirementItemData>> {
         return when (val result = resourceRepository.getCompRequirements(itemName)) {
+            is NetworkState.Success -> NetworkState.Success(result.data?.item ?: emptyList())
+            is NetworkState.Error -> NetworkState.Error(result.msg, result.e)
+        }
+    }
+
+    /** PE 前置模组搜索（pe 类别列表按 pri_type=9 过滤）。 */
+    suspend fun getPePrerequisites(
+        itemName: String,
+        priType: Int = PE_PREREQUISITE_PRI_TYPE
+    ): NetworkState<List<RequirementItemData>> {
+        return when (val result = resourceRepository.getPePrerequisites(priType, itemName)) {
             is NetworkState.Success -> NetworkState.Success(result.data?.item ?: emptyList())
             is NetworkState.Error -> NetworkState.Error(result.msg, result.e)
         }
