@@ -2,6 +2,7 @@ package com.lemon.mcdevmanagermp.domain.analyze
 
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResMonthAnalyzeData
+import com.lemon.mcdevmanagermp.domain.resource.GetResourceListUseCase
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
@@ -21,10 +22,11 @@ object QuickTimeRange {
  * 月详情 UseCase：封装月度汇总数据获取与排序逻辑
  */
 class MonthDetailUseCase(
-    private val analyzeRepository: AnalyzeRepository
+    private val analyzeRepository: AnalyzeRepository,
+    private val getResourceListUseCase: GetResourceListUseCase
 ) {
     /**
-     * 获取月度汇总数据，按 monthId 降序排列
+     * 获取月度汇总数据，按 monthId 降序排列；剔除前置模组（聚合接口不含 pri_type，需按 iid 交叉比对）
      * @param platform 平台标识（UI 层的 "pe" / 其他）
      * @param startDate 开始日期 "yyyyMMdd"
      * @param endDate 结束日期 "yyyyMMdd"
@@ -47,13 +49,23 @@ class MonthDetailUseCase(
             isLobby = isLobby
         )) {
             is NetworkState.Success -> {
+                val prerequisiteIds = prerequisiteItemIds(apiPlatform)
                 val sorted = result.data?.data?.sortedByDescending { it.monthId } ?: emptyList()
-                NetworkState.Success(sorted)
+                NetworkState.Success(excludePrerequisiteRows(sorted, prerequisiteIds))
             }
 
             is NetworkState.Error -> NetworkState.Error(result.msg, result.e)
         }
     }
+
+    /** 当前账户前置模组的 iid 集合；获取失败时返回空集，不阻断汇总主流程。 */
+    private suspend fun prerequisiteItemIds(platform: String): Set<String> =
+        when (val result = getResourceListUseCase(platform, excludePrerequisites = false)) {
+            is NetworkState.Success ->
+                result.data.orEmpty().filter { it.isPrerequisite() }.map { it.itemId }.toSet()
+
+            is NetworkState.Error -> emptySet()
+        }
 
     /**
      * 根据快捷时间范围计算起止日期
@@ -101,3 +113,10 @@ class MonthDetailUseCase(
         return date.toString().replace("-", "")
     }
 }
+
+/** 剔除 iid 命中 [prerequisiteIds] 的月度汇总行（前置模组不产生收益）。 */
+internal fun excludePrerequisiteRows(
+    rows: List<ResMonthAnalyzeData>,
+    prerequisiteIds: Set<String>
+): List<ResMonthAnalyzeData> =
+    if (prerequisiteIds.isEmpty()) rows else rows.filterNot { it.iid in prerequisiteIds }

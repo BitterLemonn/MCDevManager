@@ -111,7 +111,7 @@ class DayDetailViewModel : BaseViewModel<DayDetailState, DayDetailAction, DayDet
                     is NetworkState.Error -> NetworkState.Error(result.msg, result.e)
                 }
             } else {
-                getResourceListUseCase(platform, onlineOnly = true)
+                getResourceListUseCase(platform, onlineOnly = true, excludePrerequisites = true)
             }
             when (val result = resourceResult) {
                 is NetworkState.Success -> {

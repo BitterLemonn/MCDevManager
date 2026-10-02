@@ -1,5 +1,6 @@
 package com.lemon.mcdevmanagermp.data.vo.netease.resource
 
+import com.lemon.mcdevmanagermp.data.consts.enums.PE_PREREQUISITE_PRI_TYPE
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceRankEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceTypeEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.WorkItemStatusEnum
@@ -44,6 +45,9 @@ data class ResourceData(
     // 上架时间
     @SerialName("online_time")
     val onlineTime: String = "UNKNOWN",
+    // 资源类别（前置模组为 9，平台强制免费、不产生收益）
+    @SerialName("pri_type")
+    val priType: Int = 0,
     // 价格类型
     @SerialName("price_type")
     val priceType: String = "",
@@ -88,6 +92,9 @@ data class ResourceData(
 
     /** 是否上架过（含已下架）；从未上架时 online_time 为空或 "UNKNOWN" */
     fun hasEverBeenOnline(): Boolean = onlineTime.isNotEmpty() && onlineTime != "UNKNOWN"
+
+    /** 是否为前置模组（平台强制免费，不产生流水，收益/分析类统计需剔除） */
+    fun isPrerequisite(): Boolean = priType == PE_PREREQUISITE_PRI_TYPE
 }
 
 /**

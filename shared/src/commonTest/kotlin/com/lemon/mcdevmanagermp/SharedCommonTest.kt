@@ -12,10 +12,12 @@ import com.lemon.mcdevmanagermp.data.dto.netease.income.LobbyIncomeResourceListV
 import com.lemon.mcdevmanagermp.data.dto.netease.income.OneResRealtimeIncomeVO
 import com.lemon.mcdevmanagermp.data.dto.netease.work.toWorkUpdateDTO
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResDetailVO
+import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResMonthAnalyzeData
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResMonthDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.MCConstsChannelData
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.MCConstsChannelDataList
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.MCConstsVO
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailChannel
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailDlcInfo
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailSyncChannel
@@ -23,9 +25,11 @@ import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailSyncItemI
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailTag
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailVO
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceDetailVideoInfo
+import com.lemon.mcdevmanagermp.domain.analyze.excludePrerequisiteRows
 import com.lemon.mcdevmanagermp.domain.analyze.mergeRealtimeIncome
 import com.lemon.mcdevmanagermp.domain.main.mergeProfitDiamonds
 import com.lemon.mcdevmanagermp.domain.resource.MCConstsCache
+import com.lemon.mcdevmanagermp.domain.resource.filterResourceList
 import com.lemon.mcdevmanagermp.domain.work.PeImageCompletenessPolicy
 import com.lemon.mcdevmanagermp.domain.work.WorkSaveValidationInput
 import com.lemon.mcdevmanagermp.domain.work.hasUnversionedPcImages
@@ -779,5 +783,45 @@ class SharedCommonTest {
 
         assertEquals(consts, MCConstsCache.loadOrFetch { error("命中缓存时不应再请求") }.data)
         assertEquals(3, fetches)
+    }
+
+    // ===== 收益/数据总览剔除前置模组 =====
+
+    @Test
+    fun resourceDataRecognizesPrerequisiteType() {
+        assertTrue(ResourceData(priType = PE_PREREQUISITE_PRI_TYPE).isPrerequisite())
+        assertFalse(ResourceData(priType = 1).isPrerequisite())
+        assertFalse(ResourceData().isPrerequisite())
+    }
+
+    /** 排除开关开启时剔除前置模组；关闭时保留（作品管理需可见）。 */
+    @Test
+    fun filterResourceListExcludesPrerequisitesOnlyWhenRequested() {
+        val normal = ResourceData(itemId = "1", itemName = "普通", onlineTime = "2026-01-01", priType = 1)
+        val prerequisite = ResourceData(itemId = "2", itemName = "前置", onlineTime = "2026-01-01", priType = 9)
+        val draft = ResourceData(itemId = "3", itemName = "草稿", onlineTime = "UNKNOWN", priType = 1)
+        val items = listOf(normal, prerequisite, draft)
+
+        assertEquals(
+            listOf(normal, draft),
+            filterResourceList(items, onlineOnly = false, excludePrerequisites = true)
+        )
+        assertEquals(items, filterResourceList(items, onlineOnly = false, excludePrerequisites = false))
+        // 前置模组自身也已上架时，onlineOnly 与剔除条件同时生效
+        assertEquals(
+            listOf(normal),
+            filterResourceList(items, onlineOnly = true, excludePrerequisites = true)
+        )
+    }
+
+    @Test
+    fun excludePrerequisiteRowsDropsMatchingIids() {
+        val keep = ResMonthAnalyzeData(avgDayBuy = 1, iid = "1", monthId = "202608", resName = "普通", totalDiamond = 100)
+        val drop = ResMonthAnalyzeData(avgDayBuy = 0, iid = "9", monthId = "202608", resName = "前置", totalDiamond = 0)
+        val rows = listOf(keep, drop)
+
+        assertEquals(listOf(keep), excludePrerequisiteRows(rows, setOf("9")))
+        // 空集合短路：原样返回
+        assertEquals(rows, excludePrerequisiteRows(rows, emptySet()))
     }
 }

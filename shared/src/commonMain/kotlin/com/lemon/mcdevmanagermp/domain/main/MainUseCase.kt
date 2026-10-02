@@ -109,7 +109,9 @@ class MainUseCase(
 
     private suspend fun getOneMonthComponentDiamonds(year: Int, month: Int): Map<String, Double> =
         coroutineScope {
-            val normalResources = async { getResourceListUseCase("pe", onlineOnly = true) }
+            val normalResources = async {
+                getResourceListUseCase("pe", onlineOnly = true, excludePrerequisites = true)
+            }
             val lobbyResources = async { analyzeRepository.getLobbyIncomeResources() }
             val resList = when (val resources = normalResources.await()) {
                 is NetworkState.Success -> resources.data ?: emptyList()
