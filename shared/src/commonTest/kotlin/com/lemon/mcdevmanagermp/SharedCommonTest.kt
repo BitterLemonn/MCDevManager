@@ -31,6 +31,8 @@ import com.lemon.mcdevmanagermp.domain.work.WorkSaveValidationInput
 import com.lemon.mcdevmanagermp.domain.work.hasUnversionedPcImages
 import com.lemon.mcdevmanagermp.domain.work.validateWorkSave
 import com.lemon.mcdevmanagermp.domain.work.withCurrentPcImageChannels
+import com.lemon.mcdevmanagermp.ui.components.normalizeStyleCss
+import com.lemon.mcdevmanagermp.ui.components.sanitizeDetailHtml
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailState
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.buildUpdatePayload
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.buildWorkCreatePayload
@@ -642,6 +644,92 @@ class SharedCommonTest {
         assertEquals(false, normalized.mountCallEnabled)
         assertEquals(0, normalized.antiCheatEnable)
         assertEquals(emptyList(), normalized.tags)
+    }
+
+    // ===== 详情 HTML 清洗（平台白名单） =====
+
+    /** 编辑器输出的 b/i/u/s 收敛为平台接受的 strong/em/样式 span（否则提交报 bad tag）。 */
+    @Test
+    fun sanitizeConvertsEditorInlineTags() {
+        assertEquals("<strong>x</strong>", sanitizeDetailHtml("<b>x</b>"))
+        assertEquals("<em>x</em>", sanitizeDetailHtml("<i>x</i>"))
+        assertEquals(
+            "<span style=\"text-decoration: underline;\">x</span>",
+            sanitizeDetailHtml("<u>x</u>")
+        )
+        assertEquals(
+            "<span style=\"text-decoration: line-through;\">x</span>",
+            sanitizeDetailHtml("<s>x</s>")
+        )
+        // 已是白名单的标签原样保留
+        assertEquals("<p><strong>x</strong></p>", sanitizeDetailHtml("<p><strong>x</strong></p>"))
+        assertEquals("<em>x</em>", sanitizeDetailHtml("<em>x</em>"))
+    }
+
+    /** 图片只保留 src（去 width/height/alt），其余标签去壳保留文本。 */
+    @Test
+    fun sanitizeStripsImageAttrsAndUnknownTags() {
+        assertEquals(
+            "<img src=\"data:image/png;base64,iVBORw0KGgo=\">",
+            sanitizeDetailHtml(
+                "<img src=\"data:image/png;base64,iVBORw0KGgo=\" width=\"0\" height=\"0\" alt=\"\">"
+            )
+        )
+        // 未知标签去壳保留内容，不丢用户文本
+        assertEquals("x", sanitizeDetailHtml("<div>x</div>"))
+        assertEquals("x", sanitizeDetailHtml("<ul><li>x</li></ul>"))
+        // 去壳后文本保留，与相邻白名单标签拼接
+        assertEquals("x<p>x</p>", sanitizeDetailHtml("<h1>x</h1><p>x</p>"))
+        assertEquals("x", sanitizeDetailHtml("<a href=\"u\">x</a>"))
+        // script/style 连同内容整体丢弃
+        assertEquals("p", sanitizeDetailHtml("<script>alert(1)</script>p"))
+        assertEquals("p", sanitizeDetailHtml("<style>a{}</style>p"))
+    }
+
+    /** 平台实际放行的样例必须原样通过（p / img / span[style] / br）。 */
+    @Test
+    fun sanitizeAcceptsPlatformAcceptedMarkup() {
+        val accepted = "<p><img src=\"https://x19.fp.ps.netease.com/file/698a0d59aa74a4881fef19760fY2slO407\"></p>" +
+            "<p><img src=\"https://x19.fp.ps.netease.com/file/6ab123b37996919380c50dc4phmKMM4207\"></p>" +
+            "<p>附魔书越攒越多，箱子翻来翻去，却总找不到想要的那一本？</p>" +
+            "<p><span style=\"background-color: white; color: white;\">魔咒图书馆、苦柠</span></p>"
+        assertEquals(accepted, sanitizeDetailHtml(accepted))
+
+        assertEquals("<p>a<br>b</p>", sanitizeDetailHtml("<p>a<br>b</p>"))
+    }
+
+    /**
+     * 内联样式归一化：键名统一为 `background-color`（线上实测只用该键名，编辑器会简写成
+     * `background`），并给 `rgb()`/`rgba()` 的逗号补空格 —— 编辑器解码器要求逗号后带空白，
+     * 否则 `rgb(255,255,255)` 会被解析成 `#225555` 这类错误颜色。
+     */
+    @Test
+    fun normalizeStyleCssKeepsEditorOutputReparsable() {
+        assertEquals(
+            "background-color: rgba(255, 0, 0, 1.0)",
+            normalizeStyleCss("background: rgba(255, 0, 0, 1.0)")
+        )
+        assertEquals(
+            "background-color: rgb(255, 255, 255)",
+            normalizeStyleCss("background-color: rgb(255,255,255)")
+        )
+        assertEquals("color: #FF0000", normalizeStyleCss("color: #FF0000"))
+        // 已规范的写法不再改动
+        assertEquals(
+            "background-color: rgba(0, 0, 0, 0.5)",
+            normalizeStyleCss("background-color: rgba(0, 0, 0, 0.5)")
+        )
+        // `background-clip` 等含 background 前缀的属性名不被误伤
+        assertEquals("background-clip: text", normalizeStyleCss("background-clip: text"))
+    }
+
+    /** 编辑器输出的 rgba 颜色经清洗后仍能通过白名单，且键名已归一。 */
+    @Test
+    fun sanitizeNormalizesEditorStyle() {
+        assertEquals(
+            "<p><span style=\"background-color: rgba(255, 0, 0, 1.0);\">x</span></p>",
+            sanitizeDetailHtml("<p><span style=\"background: rgba(255, 0, 0, 1.0);\">x</span></p>")
+        )
     }
 
     // ===== mc_consts 请求缓存 =====

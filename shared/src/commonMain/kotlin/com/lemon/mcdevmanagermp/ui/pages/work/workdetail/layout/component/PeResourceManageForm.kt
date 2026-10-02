@@ -220,60 +220,62 @@ internal fun PeResourceManageForm(
             }
         }
 
-        // 推荐标签 · 玩法（下拉多选，必选≥1；与主题共享合计上限）
-        var gameplayExpanded by remember { mutableStateOf(false) }
-        val selectedGameplayNames = state.peRecommendTagOptions.gameplayTag
-            .filter { state.peRecommendTags.contains(it.id) }
-            .joinToString("、") { it.title }
-        Box {
-            DropdownField(
-                label = "推荐标签 · 玩法",
-                valueText = selectedGameplayNames.ifEmpty { "至少选 1 个" },
-                expanded = gameplayExpanded,
-                onClick = { gameplayExpanded = !gameplayExpanded },
-                required = true
-            )
-            DropdownMenu(
-                expanded = gameplayExpanded,
-                onDismissRequest = { gameplayExpanded = false },
-                modifier = Modifier.heightIn(max = 320.dp)
-            ) {
-                state.peRecommendTagOptions.gameplayTag.forEach { tag ->
-                    TagCheckItem(
-                        title = tag.title,
-                        selected = state.peRecommendTags.contains(tag.id),
-                        enabled = state.peRecommendTags.contains(tag.id) || !tagAtLimit,
-                        onClick = { onAction(WorkDetailAction.TogglePeRecommendTag(tag.id)) }
-                    )
+        // 推荐标签 · 玩法 / 主题（下拉多选，必选≥1；与主题共享合计上限）
+        // 前置模组不要求推荐标签，整组隐藏
+        if (!state.isPrerequisiteType) {
+            var gameplayExpanded by remember { mutableStateOf(false) }
+            val selectedGameplayNames = state.peRecommendTagOptions.gameplayTag
+                .filter { state.peRecommendTags.contains(it.id) }
+                .joinToString("、") { it.title }
+            Box {
+                DropdownField(
+                    label = "推荐标签 · 玩法",
+                    valueText = selectedGameplayNames.ifEmpty { "至少选 1 个" },
+                    expanded = gameplayExpanded,
+                    onClick = { gameplayExpanded = !gameplayExpanded },
+                    required = true
+                )
+                DropdownMenu(
+                    expanded = gameplayExpanded,
+                    onDismissRequest = { gameplayExpanded = false },
+                    modifier = Modifier.heightIn(max = 320.dp)
+                ) {
+                    state.peRecommendTagOptions.gameplayTag.forEach { tag ->
+                        TagCheckItem(
+                            title = tag.title,
+                            selected = state.peRecommendTags.contains(tag.id),
+                            enabled = state.peRecommendTags.contains(tag.id) || !tagAtLimit,
+                            onClick = { onAction(WorkDetailAction.TogglePeRecommendTag(tag.id)) }
+                        )
+                    }
                 }
             }
-        }
 
-        // 推荐标签 · 主题（下拉多选，必选≥1；与玩法共享合计上限）
-        var themeExpanded by remember { mutableStateOf(false) }
-        val selectedThemeNames = state.peRecommendTagOptions.themeTag
-            .filter { state.peRecommendTags.contains(it.id) }
-            .joinToString("、") { it.title }
-        Box {
-            DropdownField(
-                label = "推荐标签 · 主题",
-                valueText = selectedThemeNames.ifEmpty { "至少选 1 个" },
-                expanded = themeExpanded,
-                onClick = { themeExpanded = !themeExpanded },
-                required = true
-            )
-            DropdownMenu(
-                expanded = themeExpanded,
-                onDismissRequest = { themeExpanded = false },
-                modifier = Modifier.heightIn(max = 320.dp)
-            ) {
-                state.peRecommendTagOptions.themeTag.forEach { tag ->
-                    TagCheckItem(
-                        title = tag.title,
-                        selected = state.peRecommendTags.contains(tag.id),
-                        enabled = state.peRecommendTags.contains(tag.id) || !tagAtLimit,
-                        onClick = { onAction(WorkDetailAction.TogglePeRecommendTag(tag.id)) }
-                    )
+            var themeExpanded by remember { mutableStateOf(false) }
+            val selectedThemeNames = state.peRecommendTagOptions.themeTag
+                .filter { state.peRecommendTags.contains(it.id) }
+                .joinToString("、") { it.title }
+            Box {
+                DropdownField(
+                    label = "推荐标签 · 主题",
+                    valueText = selectedThemeNames.ifEmpty { "至少选 1 个" },
+                    expanded = themeExpanded,
+                    onClick = { themeExpanded = !themeExpanded },
+                    required = true
+                )
+                DropdownMenu(
+                    expanded = themeExpanded,
+                    onDismissRequest = { themeExpanded = false },
+                    modifier = Modifier.heightIn(max = 320.dp)
+                ) {
+                    state.peRecommendTagOptions.themeTag.forEach { tag ->
+                        TagCheckItem(
+                            title = tag.title,
+                            selected = state.peRecommendTags.contains(tag.id),
+                            enabled = state.peRecommendTags.contains(tag.id) || !tagAtLimit,
+                            onClick = { onAction(WorkDetailAction.TogglePeRecommendTag(tag.id)) }
+                        )
+                    }
                 }
             }
         }
@@ -306,21 +308,24 @@ internal fun PeResourceManageForm(
             }
         }
 
-        // 是否加入模组畅玩计划
-        YesNoSelector(
-            label = "加入模组畅玩计划",
-            value = state.peAddPlayPlan,
-            onValueChange = { onAction(WorkDetailAction.TogglePePlayPlan(it)) },
-            modifier = Modifier.fillMaxWidth()
-        )
+        // 畅玩计划 / 坐骑召唤（前置模组不参与，整组隐藏）
+        if (!state.isPrerequisiteType) {
+            // 是否加入模组畅玩计划
+            YesNoSelector(
+                label = "加入模组畅玩计划",
+                value = state.peAddPlayPlan,
+                onValueChange = { onAction(WorkDetailAction.TogglePePlayPlan(it)) },
+                modifier = Modifier.fillMaxWidth()
+            )
 
-        // 是否启用坐骑召唤功能
-        YesNoSelector(
-            label = "启用坐骑召唤功能",
-            value = state.peMountCallEnabled,
-            onValueChange = { onAction(WorkDetailAction.TogglePeMountCall(it)) },
-            modifier = Modifier.fillMaxWidth()
-        )
+            // 是否启用坐骑召唤功能
+            YesNoSelector(
+                label = "启用坐骑召唤功能",
+                value = state.peMountCallEnabled,
+                onValueChange = { onAction(WorkDetailAction.TogglePeMountCall(it)) },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
 
         // 本次上传是否提升版本
         YesNoSelector(
@@ -397,27 +402,32 @@ private fun PeResourceReadOnlySection(
                 singleLine = false
             )
         }
-        ReadOnlyField(
-            label = "推荐标签 · 玩法",
-            value = gameplayTags,
-            required = true,
-            singleLine = false
-        )
-        ReadOnlyField(
-            label = "推荐标签 · 主题",
-            value = themeTags,
-            required = true,
-            singleLine = false
-        )
+        // 前置模组不展示推荐标签 / 畅玩计划 / 坐骑召唤（与可写模式一致）
+        if (!state.isPrerequisiteType) {
+            ReadOnlyField(
+                label = "推荐标签 · 玩法",
+                value = gameplayTags,
+                required = true,
+                singleLine = false
+            )
+            ReadOnlyField(
+                label = "推荐标签 · 主题",
+                value = themeTags,
+                required = true,
+                singleLine = false
+            )
+        }
         ReadOnlyField(label = "modAPI 版本", value = state.peModVersion, required = true)
-        ReadOnlyField(
-            label = "加入模组畅玩计划",
-            value = if (state.peAddPlayPlan) "是" else "否"
-        )
-        ReadOnlyField(
-            label = "启用坐骑召唤功能",
-            value = if (state.peMountCallEnabled) "是" else "否"
-        )
+        if (!state.isPrerequisiteType) {
+            ReadOnlyField(
+                label = "加入模组畅玩计划",
+                value = if (state.peAddPlayPlan) "是" else "否"
+            )
+            ReadOnlyField(
+                label = "启用坐骑召唤功能",
+                value = if (state.peMountCallEnabled) "是" else "否"
+            )
+        }
         ReadOnlyField(
             label = "提升版本",
             value = if (state.peAddVersion) "是" else "否",

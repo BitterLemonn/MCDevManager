@@ -76,25 +76,14 @@ private val PRESET_COLORS = listOf(
 )
 
 /**
- * 剥离 `<img>` 标签的 width / height 属性。
- *
- * rich-editor 的 toHtml() 对图片无条件输出 width/height（缺省值为 0），网易详情接口要求纯净
- * `<img>`（不携带尺寸），故在所有 toHtml() 输出处统一清洗。仅作用于 `<img>` 标签内部；
- * img 为 void element、属性值（base64 data URI）不含 `>`，正则边界安全。
- */
-// ponytail: 假设库输出标准引号属性；库固定双引号，单引号分支仅作防御
-private fun stripImgSizeAttrs(html: String): String =
-    html.replace(Regex("<img\\b([^>]*)>")) { m ->
-        "<img" + m.groupValues[1]
-            .replace(Regex("\\s+(width|height)\\s*=\\s*(\"[^\"]*\"|'[^']*')"), "") + ">"
-    }
-
-/**
  * HTML 富文本详情编辑器（PE 详情信息 / PC 详细信息共用）。
  *
  * 所见即所得编辑，支持粗体/斜体/下划线/删除线/文字颜色/文字底色/图片，HTML 与调用方 state 双向同步。
  * 基于 rich-editor 的 [RichTextEditor]（移动端原生输入体验）。工具栏 [FlowRow] 自适应窄屏换行；
  * 颜色为预设色板弹层；图片以 base64 data URI 内嵌（编辑器内渲染依赖 rich-editor 能力，HTML 始终正确）。
+ *
+ * 所有 `toHtml()` 输出统一经 [sanitizeDetailHtml] 收敛到平台白名单：编辑器会把粗体/斜体输出为
+ * `<b>` / `<i>`、并保留 `<u>` / `<s>` 等平台不接受的标签（提交将报 bad tag），故在输出处一次性清洗。
  *
  * - [html] 为回显源（如 `state.detail?.info` / `state.detail?.syncItemInfo?.info`）；
  *   [echoKey] 仅用于触发首次回显（如 `itemId`），**不可**用 [html] 本身——否则与下方 toHtml 同步形成回写死循环。
@@ -134,7 +123,7 @@ fun RichDetailForm(
     }
     // 编辑/规范化后同步 HTML 到 VM（toHtml 为 suspend，置于协程内）
     LaunchedEffect(richState.annotatedString) {
-        onHtmlChange(stripImgSizeAttrs(richState.toHtml()))
+        onHtmlChange(sanitizeDetailHtml(richState.toHtml()))
     }
 
     // 图片选择：读 bytes → base64 → 插入 <img>
@@ -166,7 +155,7 @@ fun RichDetailForm(
             onPickImage = { imagePicker.launch() },
             onPreview = {
                 scope.launch {
-                    previewHtml = stripImgSizeAttrs(richState.toHtml()); showPreview = true
+                    previewHtml = sanitizeDetailHtml(richState.toHtml()); showPreview = true
                 }
             },
             onSyncFromPe = syncFromPeHtml?.let { fn ->

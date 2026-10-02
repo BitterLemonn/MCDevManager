@@ -98,6 +98,9 @@ internal fun BasicInfoForm(
             )
         }
 
+        // 前置模组（pri_type=9）基本信息只需填写名称，其余字段整块隐藏
+        if (state.isPrerequisiteType) return@FormSection
+
         // 只读元数据组（可关闭：expanded 用顶部信息条替代）；前置模组不展示
         if (showMetaRow && state.showListingMeta) {
             FlowRow(
