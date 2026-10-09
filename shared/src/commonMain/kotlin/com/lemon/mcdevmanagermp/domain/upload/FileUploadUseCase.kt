@@ -61,6 +61,21 @@ class FileUploadUseCase(
     }
 
     /**
+     * 上传单张图片字节数据
+     * @param fileName 文件名
+     * @param bytes 字节数据
+     * @param mimeType MIME 类型，如 "image/jpeg"
+     * @return NetworkState<FileInfoDTO>
+     */
+    suspend fun uploadImageBytes(
+        fileName: String,
+        bytes: ByteArray,
+        mimeType: String
+    ): NetworkState<FileInfoDTO> {
+        return fileUploadRepository.uploadBytes("image", fileName, bytes, mimeType)
+    }
+
+    /**
      * 批量上传图片（逐个上传，同一时间只有一个文件在内存中）
      * @param files 待上传文件列表
      * @return BatchUploadResult

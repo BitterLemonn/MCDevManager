@@ -1,6 +1,7 @@
 package com.lemon.mcdevmanagermp
 
 import com.lemon.mcdevmanagermp.data.common.JSONConverter
+import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.common.ResponseData
 import com.lemon.mcdevmanagermp.data.consts.enums.PE_PREREQUISITE_PRI_TYPE
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceRankEnum
@@ -33,13 +34,16 @@ import com.lemon.mcdevmanagermp.domain.main.aggregateGoodsDiamondsByOwner
 import com.lemon.mcdevmanagermp.domain.main.mergeProfitDiamonds
 import com.lemon.mcdevmanagermp.domain.resource.MCConstsCache
 import com.lemon.mcdevmanagermp.domain.resource.filterResourceList
+import com.lemon.mcdevmanagermp.domain.upload.FileUploadRepository
 import com.lemon.mcdevmanagermp.domain.work.PeImageCompletenessPolicy
 import com.lemon.mcdevmanagermp.domain.work.WorkSaveValidationInput
 import com.lemon.mcdevmanagermp.domain.work.hasUnversionedPcImages
 import com.lemon.mcdevmanagermp.domain.work.validateWorkSave
 import com.lemon.mcdevmanagermp.domain.work.withCurrentPcImageChannels
+import com.lemon.mcdevmanagermp.ui.components.ensureHtmlImagesOnFilepicker
 import com.lemon.mcdevmanagermp.ui.components.normalizeStyleCss
 import com.lemon.mcdevmanagermp.ui.components.sanitizeDetailHtml
+import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.ChannelImageSlot
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailState
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.buildUpdatePayload
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.buildWorkCreatePayload
@@ -48,6 +52,7 @@ import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.parsePrerequisiteItemId
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.parsePrerequisiteItemName
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.validateLobbySettings
 import com.lemon.mcdevmanagermp.utils.extension.dumpAndGetCookiesValue
+import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.encodeToJsonElement
@@ -867,5 +872,100 @@ class SharedCommonTest {
         assertEquals(listOf(keep), excludePrerequisiteRows(rows, setOf("9")))
         // 空集合短路：原样返回
         assertEquals(rows, excludePrerequisiteRows(rows, emptySet()))
+    }
+
+    // ===== 详情富文本图片 filepicker 上传校验 =====
+
+    @Test
+    fun ensureHtmlImagesOnFilepickerLeavesNonBase64HtmlIntact() = runTest {
+        var uploadCalls = 0
+        val fakeRepo = object : FileUploadRepository {
+            override suspend fun uploadFile(
+                fileType: String,
+                fileName: String,
+                file: PlatformFile,
+                mimeType: String,
+                secure: String
+            ): NetworkState<FileInfoDTO> = error("不应调用")
+
+            override suspend fun uploadBytes(
+                fileType: String,
+                fileName: String,
+                bytes: ByteArray,
+                mimeType: String,
+                secure: String
+            ): NetworkState<FileInfoDTO> {
+                uploadCalls++
+                return error("不应调用")
+            }
+        }
+
+        val html = "<p><img src=\"https://x19.fp.ps.netease.com/file/test\"></p><p>纯文本</p>"
+        val result = ensureHtmlImagesOnFilepicker(html, fakeRepo)
+        assertTrue(result is NetworkState.Success)
+        assertEquals(html, result.data)
+        assertEquals(0, uploadCalls)
+    }
+
+    @Test
+    fun ensureHtmlImagesOnFilepickerUploadsBase64Images() = runTest {
+        var uploadCalls = 0
+        val fakeRepo = object : FileUploadRepository {
+            override suspend fun uploadFile(
+                fileType: String,
+                fileName: String,
+                file: PlatformFile,
+                mimeType: String,
+                secure: String
+            ): NetworkState<FileInfoDTO> = error("不应调用")
+
+            override suspend fun uploadBytes(
+                fileType: String,
+                fileName: String,
+                bytes: ByteArray,
+                mimeType: String,
+                secure: String
+            ): NetworkState<FileInfoDTO> {
+                uploadCalls++
+                assertEquals("image", fileType)
+                assertEquals("image/png", mimeType)
+                return NetworkState.Success(
+                    FileInfoDTO(
+                        body = """{"url":"https://x19.fp.ps.netease.com/file/uploaded_$uploadCalls"}""",
+                        fileType = "image",
+                        sign = "sign"
+                    )
+                )
+            }
+        }
+
+        val html = "<p><img src=\"data:image/png;base64,aGVsbG8=\"></p>"
+        val result = ensureHtmlImagesOnFilepicker(html, fakeRepo)
+        assertTrue(result is NetworkState.Success)
+        assertEquals(
+            "<p><img src=\"https://x19.fp.ps.netease.com/file/uploaded_1\"></p>",
+            result.data
+        )
+        assertEquals(1, uploadCalls)
+    }
+
+    @Test
+    fun buildUpdatePayloadFiltersEmptyPeImageSlots() {
+        val detail = ResourceDetailVO(
+            itemId = "item-1",
+            channel = listOf(
+                ResourceDetailChannel(channelId = 1, channelUrl = "https://x19.fp.ps.netease.com/1", version = 1)
+            )
+        )
+        val state = WorkDetailState(
+            itemId = "item-1",
+            peImageSlots = listOf(
+                ChannelImageSlot(channelId = 1, title = "t1", width = 100, height = 100, channelUrl = "https://x19.fp.ps.netease.com/1", version = 1),
+                ChannelImageSlot(channelId = 2, title = "t2", width = 100, height = 100, channelUrl = "", version = 1), // 空槽位
+            )
+        )
+        val payload = buildUpdatePayload(state, detail, "")
+        assertEquals(1, payload.channel.size)
+        assertEquals(1, payload.channel.first().channelId)
     }
 }

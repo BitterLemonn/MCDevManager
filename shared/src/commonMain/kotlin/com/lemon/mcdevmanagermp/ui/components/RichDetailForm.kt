@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.FormatUnderlined
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Preview
 import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -35,6 +36,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -55,18 +57,20 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import com.lemon.mcdevmanagermp.data.common.NetworkState
+import com.lemon.mcdevmanagermp.data.repository.FileUploadRepositoryImpl
+import com.lemon.mcdevmanagermp.domain.upload.parseUploadUrl
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
+import com.mohamedrejeb.richeditor.model.LocalImageLoader
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
+import io.github.vinceglb.filekit.mimeType
 import io.github.vinceglb.filekit.name
-import io.github.vinceglb.filekit.readBytes
 import kotlinx.coroutines.launch
-import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 
 /** 预设色板（文字颜色 / 文字底色共用）。 */
 private val PRESET_COLORS = listOf(
@@ -80,7 +84,7 @@ private val PRESET_COLORS = listOf(
  *
  * 所见即所得编辑，支持粗体/斜体/下划线/删除线/文字颜色/文字底色/图片，HTML 与调用方 state 双向同步。
  * 基于 rich-editor 的 [RichTextEditor]（移动端原生输入体验）。工具栏 [FlowRow] 自适应窄屏换行；
- * 颜色为预设色板弹层；图片以 base64 data URI 内嵌（编辑器内渲染依赖 rich-editor 能力，HTML 始终正确）。
+ * 颜色为预设色板弹层；图片上传至网易文件服务后以 URL 插入。
  *
  * 所有 `toHtml()` 输出统一经 [sanitizeDetailHtml] 收敛到平台白名单：编辑器会把粗体/斜体输出为
  * `<b>` / `<i>`、并保留 `<u>` / `<s>` 等平台不接受的标签（提交将报 bad tag），故在输出处一次性清洗。
@@ -91,7 +95,6 @@ private val PRESET_COLORS = listOf(
  * - [syncFromPeHtml] 非 null 时工具栏显示「同步 PE」按钮：点击将其返回的 HTML 灌入本编辑器（仅 PC 详情用，
  *   返回 `state.peDetail` 即可把 PE 详情一键同步到 PC）。
  */
-@OptIn(ExperimentalEncodingApi::class)
 @Composable
 fun RichDetailForm(
     title: String,
@@ -126,21 +129,48 @@ fun RichDetailForm(
         onHtmlChange(sanitizeDetailHtml(richState.toHtml()))
     }
 
-    // 图片选择：读 bytes → base64 → 插入 <img>
+    var isUploadingImage by remember { mutableStateOf(false) }
+    var uploadErrorMessage by remember { mutableStateOf<String?>(null) }
+
+    // 图片选择：上传至网易文件服务（filepicker）后插入图片 URL <img>
     val imagePicker = rememberFilePickerLauncher(type = FileKitType.Image) { file: PlatformFile? ->
         if (file != null) {
             scope.launch {
+                isUploadingImage = true
+                uploadErrorMessage = null
                 runCatching {
-                    val bytes = file.readBytes()
-                    val b64 = Base64.encode(bytes)
                     val ext = file.name.substringAfterLast('.', "png").lowercase()
-                    val mime = when (ext) {
-                        "jpg", "jpeg" -> "jpeg"
-                        "png", "gif", "webp", "bmp" -> ext
-                        else -> "png"
+                    val mime = runCatching { file.mimeType()?.toString() }.getOrNull() ?: when (ext) {
+                        "jpg", "jpeg" -> "image/jpeg"
+                        "png" -> "image/png"
+                        "gif" -> "image/gif"
+                        "webp" -> "image/webp"
+                        "bmp" -> "image/bmp"
+                        else -> "image/png"
                     }
-                    richState.insertHtmlAfterSelection("""<img src="data:image/$mime;base64,$b64" alt="" />""")
+                    val result = FileUploadRepositoryImpl.INSTANCE.uploadFile(
+                        fileType = "image",
+                        fileName = file.name,
+                        file = file,
+                        mimeType = mime
+                    )
+                    when (result) {
+                        is NetworkState.Success -> {
+                            val url = parseUploadUrl(result.data?.body.orEmpty())
+                            if (url.isNotEmpty()) {
+                                richState.insertHtmlAfterSelection("""<img src="$url" alt="" />""")
+                            } else {
+                                uploadErrorMessage = "上传成功但未能解析图片地址"
+                            }
+                        }
+                        is NetworkState.Error -> {
+                            uploadErrorMessage = result.msg
+                        }
+                    }
+                }.onFailure { e ->
+                    uploadErrorMessage = e.message ?: "图片上传失败"
                 }
+                isUploadingImage = false
             }
         }
     }
@@ -152,7 +182,8 @@ fun RichDetailForm(
     ) {
         RichTextToolbar(
             richState = richState,
-            onPickImage = { imagePicker.launch() },
+            onPickImage = { if (!isUploadingImage) imagePicker.launch() },
+            isUploadingImage = isUploadingImage,
             onPreview = {
                 scope.launch {
                     previewHtml = sanitizeDetailHtml(richState.toHtml()); showPreview = true
@@ -172,27 +203,55 @@ fun RichDetailForm(
             showPreviewButton = showPreviewButton,
             modifier = Modifier.fillMaxWidth()
         )
+        if (isUploadingImage) {
+            Row(
+                modifier = Modifier.padding(top = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(16.dp),
+                    strokeWidth = 2.dp,
+                    color = colors.primary
+                )
+                Text(
+                    text = "正在上传图片至网易服务器...",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.primary
+                )
+            }
+        }
+        uploadErrorMessage?.let { msg ->
+            Text(
+                text = msg,
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.error,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
         Text(
-            text = "图片在编辑时会以乱码占位符显示, 具体效果请点击预览",
+            text = "支持插入图片（自动上传至网易服务器），效果可点击预览查看",
             style = MaterialTheme.typography.bodySmall,
             color = colors.onSurfaceVariant,
             modifier = Modifier.padding(top = 4.dp)
         )
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 300.dp, max = 480.dp),
-            shape = RoundedCornerShape(12.dp),
-            color = colors.scheme.surface,
-            tonalElevation = 1.dp,
-            border = BorderStroke(1.dp, if (isOverLimit) colors.error else colors.outlineVariant)
-        ) {
-            RichTextEditor(
-                state = richState,
+        CompositionLocalProvider(LocalImageLoader provides SketchImageLoader) {
+            Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(12.dp)
-            )
+                    .heightIn(min = 300.dp, max = 480.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = colors.scheme.surface,
+                tonalElevation = 1.dp,
+                border = BorderStroke(1.dp, if (isOverLimit) colors.error else colors.outlineVariant)
+            ) {
+                RichTextEditor(
+                    state = richState,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp)
+                )
+            }
         }
         // 字符计数器
         Row(
@@ -226,7 +285,8 @@ private fun RichTextToolbar(
     onPreview: () -> Unit,
     modifier: Modifier = Modifier,
     onSyncFromPe: (() -> Unit)? = null,
-    showPreviewButton: Boolean = true
+    showPreviewButton: Boolean = true,
+    isUploadingImage: Boolean = false
 ) {
     val colors = LocalAppColors.current
     val current = richState.currentSpanStyle
@@ -313,8 +373,9 @@ private fun RichTextToolbar(
                 }
                 ToolButton(
                     icon = Icons.Filled.Image,
-                    desc = "插入图片",
+                    desc = if (isUploadingImage) "图片上传中..." else "插入图片",
                     selected = false,
+                    enabled = !isUploadingImage,
                     onClick = onPickImage
                 )
             }
@@ -349,13 +410,15 @@ private fun ToolButton(
     desc: String,
     selected: Boolean,
     onClick: () -> Unit,
-    iconTint: Color? = null
+    iconTint: Color? = null,
+    enabled: Boolean = true
 ) = ToolButton(
     icon = rememberVectorPainter(icon),
     desc = desc,
     selected = selected,
     onClick = onClick,
-    iconTint = iconTint
+    iconTint = iconTint,
+    enabled = enabled
 )
 
 @Composable
@@ -364,11 +427,13 @@ private fun ToolButton(
     desc: String,
     selected: Boolean,
     onClick: () -> Unit,
-    iconTint: Color? = null
+    iconTint: Color? = null,
+    enabled: Boolean = true
 ) {
     val colors = LocalAppColors.current
     IconButton(
         onClick = onClick,
+        enabled = enabled,
         modifier = Modifier
             // 不抢占焦点：保持富文本编辑器焦点与选区，使 toggleSpanStyle 等格式操作作用于选区
             .focusProperties { canFocus = false }

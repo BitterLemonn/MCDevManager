@@ -76,6 +76,46 @@ object UploadApi {
     }
 
     /**
+     * 上传字节数据到网易 FP 服务
+     * @param auth 上传 token
+     * @param fileName 文件名
+     * @param bytes 字节数据
+     * @param mimeType MIME 类型
+     * @return UploadResponse 包含响应体和 x-ntes-signature 签名
+     */
+    suspend fun uploadBytes(
+        auth: String,
+        fileName: String,
+        bytes: ByteArray,
+        mimeType: String
+    ): UploadFileResponseVO {
+        val uploadUrl = resolveUploadUrl(auth)
+
+        val response = client.submitFormWithBinaryData(
+            url = uploadUrl,
+            formData = formData {
+                append("Authorization", auth)
+                append(
+                    key = "fpfile",
+                    value = bytes,
+                    headers = Headers.build {
+                        append(
+                            HttpHeaders.ContentDisposition,
+                            "filename=\"$fileName\""
+                        )
+                        append(HttpHeaders.ContentType, mimeType)
+                    }
+                )
+            }
+        )
+        val sign = response.headers[NETEASE_FILE_SIGN_MARKER]
+        return UploadFileResponseVO(
+            body = response.bodyAsText(),
+            sign = sign
+        )
+    }
+
+    /**
      * 从 token policy 解析实际上传地址：token 形如 "Policy <sig>:<base64-json>"，
      * base64 解码后取 "url" 字段。解析失败回退默认地址（不破坏现有 image/video 流程）。
      */

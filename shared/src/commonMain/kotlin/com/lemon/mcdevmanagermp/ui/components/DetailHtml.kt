@@ -1,5 +1,12 @@
 package com.lemon.mcdevmanagermp.ui.components
 
+import com.lemon.mcdevmanagermp.data.common.NetworkState
+import com.lemon.mcdevmanagermp.domain.upload.FileUploadRepository
+import com.lemon.mcdevmanagermp.domain.upload.parseUploadUrl
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
+import kotlin.time.Clock
+
 /**
  * 平台 PE 详情（`info` / `sync_item_info.info`）实际接受的标签。
  * 取值依据：抓取线上已上架作品的详情，标签集合仅为 p / em / span / img / br / strong。
@@ -116,4 +123,60 @@ internal fun normalizeStyleCss(css: String): String {
         val args = m.groupValues[2].split(",").joinToString(", ") { it.trim() }
         "$fn($args)"
     }
+}
+
+private val BASE64_IMG_SRC_REGEX = Regex(
+    """data:image/([a-zA-Z0-9.+_-]+);base64,([A-Za-z0-9+/= \r\n\t]+)""",
+    RegexOption.IGNORE_CASE
+)
+
+/**
+ * 确保详情 HTML 中的图片均上传至网易文件服务（filepicker）。
+ * 若包含 Base64 格式的图片数据，将其解码并上传至网易 FP，替换为网易 CDN 地址。
+ */
+@OptIn(ExperimentalEncodingApi::class)
+suspend fun ensureHtmlImagesOnFilepicker(
+    html: String,
+    fileUploadRepository: FileUploadRepository
+): NetworkState<String> {
+    if (!html.contains("data:image/", ignoreCase = true)) {
+        return NetworkState.Success(html)
+    }
+
+    var result = html
+    val matches = BASE64_IMG_SRC_REGEX.findAll(html).toList()
+    for ((index, match) in matches.withIndex()) {
+        val fullDataUri = match.value
+        val subtype = match.groupValues[1].lowercase()
+        val rawBase64 = match.groupValues[2].filter { !it.isWhitespace() }
+        val bytes = runCatching { Base64.decode(rawBase64) }.getOrNull()
+            ?: return NetworkState.Error("解析第 ${index + 1} 张图片数据失败")
+
+        val ext = when (subtype) {
+            "jpeg" -> "jpg"
+            else -> subtype
+        }
+        val fileName = "detail_${Clock.System.now().toEpochMilliseconds()}_$index.$ext"
+        val mimeType = "image/$subtype"
+
+        val uploadResult = fileUploadRepository.uploadBytes(
+            fileType = "image",
+            fileName = fileName,
+            bytes = bytes,
+            mimeType = mimeType
+        )
+        when (uploadResult) {
+            is NetworkState.Success -> {
+                val url = parseUploadUrl(uploadResult.data?.body.orEmpty())
+                if (url.isEmpty()) {
+                    return NetworkState.Error("图片上传成功但未返回有效地址")
+                }
+                result = result.replace(fullDataUri, url)
+            }
+            is NetworkState.Error -> {
+                return NetworkState.Error("上传详情图片失败: ${uploadResult.msg}", uploadResult.e)
+            }
+        }
+    }
+    return NetworkState.Success(result)
 }

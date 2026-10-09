@@ -20,4 +20,20 @@ interface FileUploadRepository {
         mimeType: String,
         secure: String = "false"
     ): NetworkState<FileInfoDTO>
+
+    /**
+     * 上传字节数据到网易 FP 服务
+     * @param fileType 文件类型："image" 或 "video"
+     * @param fileName 文件名
+     * @param bytes 字节数据
+     * @param mimeType MIME 类型，如 "image/jpeg"
+     * @return 上传成功返回文件信息，失败返回错误信息
+     */
+    suspend fun uploadBytes(
+        fileType: String,
+        fileName: String,
+        bytes: ByteArray,
+        mimeType: String,
+        secure: String = "false"
+    ): NetworkState<FileInfoDTO>
 }
