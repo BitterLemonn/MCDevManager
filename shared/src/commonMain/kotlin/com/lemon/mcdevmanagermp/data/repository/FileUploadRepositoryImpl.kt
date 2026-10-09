@@ -68,4 +68,54 @@ class FileUploadRepositoryImpl : FileUploadRepository {
             NetworkState.Error("文件上传失败: ${e.message}", e)
         }
     }
+
+    override suspend fun uploadBytes(
+        fileType: String,
+        fileName: String,
+        bytes: ByteArray,
+        mimeType: String,
+        secure: String
+    ): NetworkState<FileInfoDTO> {
+        return try {
+            val tokenResult = UnifiedExceptionHandler.handleRequest {
+                filesApi.getFileToken(fileType = fileType, secure = secure)
+            }
+            val token = when (tokenResult) {
+                is NetworkState.Success -> tokenResult.data?.token
+                    ?: return NetworkState.Error("获取上传 token 失败")
+
+                is NetworkState.Error -> return NetworkState.Error(tokenResult.msg, tokenResult.e)
+            }
+            Logger.d("$TAG: 获取 token 成功, 准备上传字节数据")
+
+            val uploadResponse = UploadApi.uploadBytes(
+                auth = token,
+                fileName = fileName,
+                bytes = bytes,
+                mimeType = mimeType
+            )
+            val responseText = uploadResponse.body
+            val jsonText = Regex("<textarea>(.*?)</textarea>")
+                .find(responseText)?.groupValues?.get(1)?.trim()
+                ?: run {
+                    Logger.e("$TAG: 解析上传响应失败")
+                    return NetworkState.Error("解析上传响应失败")
+                }
+            val sign = uploadResponse.sign ?: return NetworkState.Error("上传失败，文件签名为空")
+            Logger.d("$TAG: 文件上传成功")
+
+            NetworkState.Success(
+                FileInfoDTO(
+                    body = jsonText,
+                    fileType = fileType,
+                    sign = sign
+                )
+            )
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Logger.e("$TAG: 文件上传失败", e)
+            NetworkState.Error("文件上传失败: ${e.message}", e)
+        }
+    }
 }

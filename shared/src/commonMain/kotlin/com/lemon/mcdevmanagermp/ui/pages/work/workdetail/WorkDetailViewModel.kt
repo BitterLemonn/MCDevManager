@@ -34,6 +34,7 @@ import com.lemon.mcdevmanagermp.domain.work.validateWorkSave
 import com.lemon.mcdevmanagermp.platform.validateVideoFile
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
 import com.lemon.mcdevmanagermp.ui.components.ModSelectOption
+import com.lemon.mcdevmanagermp.ui.components.ensureHtmlImagesOnFilepicker
 import com.lemon.mcdevmanagermp.utils.Logger
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.mimeType
@@ -1107,6 +1108,18 @@ class WorkDetailViewModel :
                     submittingMessage = if (alsoReview) "创建并提审中..." else "创建中..."
                 )
             }
+            val peDetailResult = ensureHtmlImagesOnFilepicker(state.value.peDetail, fileUploadRepository)
+            val peDetailClean = when (peDetailResult) {
+                is NetworkState.Success -> peDetailResult.data ?: state.value.peDetail
+                is NetworkState.Error -> {
+                    setState { copy(isSubmitting = false, submittingMessage = "") }
+                    sendEffect(WorkDetailEffect.ShowToast(peDetailResult.msg))
+                    return@launch
+                }
+            }
+            if (peDetailClean != state.value.peDetail) {
+                setState { copy(peDetail = peDetailClean) }
+            }
             val payload = buildWorkCreatePayload(state.value, isCheckApply = alsoReview)
             when (val result = workDetailUseCase.createWork(payload)) {
                 is NetworkState.Success -> {
@@ -1167,9 +1180,34 @@ class WorkDetailViewModel :
                     submittingMessage = if (alsoReview) "提交审核中..." else "保存中..."
                 )
             }
+            val peDetailResult = ensureHtmlImagesOnFilepicker(s.peDetail, fileUploadRepository)
+            val peDetailClean = when (peDetailResult) {
+                is NetworkState.Success -> peDetailResult.data ?: s.peDetail
+                is NetworkState.Error -> {
+                    setState { copy(isSubmitting = false, submittingMessage = "") }
+                    sendEffect(WorkDetailEffect.ShowToast(peDetailResult.msg))
+                    return@launch
+                }
+            }
+            val pcDetailClean = if (s.syncPc) {
+                when (val pcResult = ensureHtmlImagesOnFilepicker(s.pcDetail, fileUploadRepository)) {
+                    is NetworkState.Success -> pcResult.data ?: s.pcDetail
+                    is NetworkState.Error -> {
+                        setState { copy(isSubmitting = false, submittingMessage = "") }
+                        sendEffect(WorkDetailEffect.ShowToast(pcResult.msg))
+                        return@launch
+                    }
+                }
+            } else {
+                s.pcDetail
+            }
+            if (peDetailClean != s.peDetail || pcDetailClean != s.pcDetail) {
+                setState { copy(peDetail = peDetailClean, pcDetail = pcDetailClean) }
+            }
+            val currentS = state.value
             // 授权图：本地新选则先上传，否则沿用远端 URL
-            val corpProofUrl = if (s.corpProofFile != null) {
-                val file = s.corpProofFile
+            val corpProofUrl = if (currentS.corpProofFile != null) {
+                val file = currentS.corpProofFile
                 val mimeType = runCatching { file.mimeType()?.toString() }.getOrNull() ?: "image/*"
                 when (val r = fileUploadRepository.uploadFile(
                     fileType = "image",
@@ -1185,9 +1223,9 @@ class WorkDetailViewModel :
                     }
                 }
             } else {
-                s.corpProofImage
+                currentS.corpProofImage
             }
-            val payload = buildUpdatePayload(s, detail, corpProofUrl).normalizedForPrerequisite()
+            val payload = buildUpdatePayload(currentS, detail, corpProofUrl).normalizedForPrerequisite()
             when (val result = workDetailUseCase.updateWork(payload, isCheckApply = false)) {                is NetworkState.Success -> if (alsoReview) {
                     // 保存成功 → 第3节发起提审
                     when (val review = workDetailUseCase.submitForReview(detail.itemId)) {
@@ -1528,14 +1566,16 @@ internal fun buildUpdatePayload(
     videoInfoList = s.videos.map {
         ResourceDetailVideoInfo(cover = it.cover, size = it.size.toInt(), url = it.url)
     },
-    channel = if (s.peImageSlots.isEmpty()) d.channel else s.peImageSlots.map { slot ->
-        ResourceDetailChannel(
-            channelId = slot.channelId,
-            channelUrl = slot.channelUrl,
-            version = d.channel.firstOrNull { it.channelId == slot.channelId }?.version ?: 0,
-            fileInfo = slot.fileInfo
-        )
-    },
+    channel = if (s.peImageSlots.isEmpty()) d.channel else s.peImageSlots
+        .filter { it.channelUrl.isNotBlank() || it.fileInfo != null }
+        .map { slot ->
+            ResourceDetailChannel(
+                channelId = slot.channelId,
+                channelUrl = slot.channelUrl,
+                version = d.channel.firstOrNull { it.channelId == slot.channelId }?.version ?: 0,
+                fileInfo = slot.fileInfo
+            )
+        },
     syncItemInfo = d.syncItemInfo.copy(
         brief = s.pcBrief,
         info = s.pcDetail,
