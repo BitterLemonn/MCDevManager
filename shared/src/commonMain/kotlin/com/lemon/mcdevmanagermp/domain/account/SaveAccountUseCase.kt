@@ -3,6 +3,7 @@ package com.lemon.mcdevmanagermp.domain.account
 import com.lemon.mcdevmanagermp.data.common.JSONConverter
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.domain.user.UserRepository
+import com.lemon.mcdevmanagermp.utils.PasswordCrypto
 import kotlinx.serialization.serializer
 import kotlin.time.Clock
 
@@ -31,9 +32,9 @@ class SaveAccountUseCase(
         if (existing != null) {
             val savedEmail = if (email.isNotBlank()) email else existing.email
             val (savedPassword, savedRemember) = if (email.isNotBlank()) {
-                if (rememberPassword) password to true else "" to false
+                if (rememberPassword) encryptPassword(password) to true else "" to false
             } else {
-                existing.password to existing.rememberPassword
+                existing.password.toEncrypted() to existing.rememberPassword
             }
             accountRepository.upsertAccount(
                 existing.copy(
@@ -46,7 +47,7 @@ class SaveAccountUseCase(
                 )
             )
         } else {
-            val savedPassword = if (rememberPassword) password else ""
+            val savedPassword = if (rememberPassword) encryptPassword(password) else ""
             accountRepository.upsertAccount(
                 Account(
                     nickname = accountName,
@@ -60,4 +61,13 @@ class SaveAccountUseCase(
             )
         }
     }
+
+    private suspend fun encryptPassword(password: String): String =
+        if (password.isEmpty()) "" else PasswordCrypto.encrypt(password)
+
+    /**
+     * 历史版本在库中保存的是明文密码，此处按需转换为密文，避免明文长期留存。
+     */
+    private suspend fun String.toEncrypted(): String =
+        if (isEmpty() || PasswordCrypto.isEncrypted(this)) this else PasswordCrypto.encrypt(this)
 }
