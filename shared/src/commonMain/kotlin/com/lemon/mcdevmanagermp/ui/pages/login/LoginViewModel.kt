@@ -11,6 +11,7 @@ import com.lemon.mcdevmanagermp.domain.login.LoginUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
 import com.lemon.mcdevmanagermp.ui.navigation.Route
 import com.lemon.mcdevmanagermp.ui.pages.main.MainViewModel
+import com.lemon.mcdevmanagermp.utils.PasswordCrypto
 import kotlinx.coroutines.launch
 
 class LoginViewModel : BaseViewModel<LoginState, LoginAction, LoginEffect>(LoginState()) {
@@ -39,12 +40,13 @@ class LoginViewModel : BaseViewModel<LoginState, LoginAction, LoginEffect>(Login
             val savedWithEmail = accounts.filter { it.email.isNotBlank() }
             val lastUsed = accountRepository.getLastUsedAccount()
             val initialAccount = lastUsed?.takeIf { it.email.isNotBlank() } ?: savedWithEmail.firstOrNull()
+            val initialPassword = initialAccount.rememberedPassword()
 
             setState {
                 copy(
                     savedAccounts = savedWithEmail,
                     email = initialAccount?.email ?: email,
-                    password = if (initialAccount?.rememberPassword == true) initialAccount.password else password,
+                    password = initialPassword ?: password,
                     rememberPassword = initialAccount?.rememberPassword ?: true
                 )
             }
@@ -67,12 +69,15 @@ class LoginViewModel : BaseViewModel<LoginState, LoginAction, LoginEffect>(Login
     private fun handleUpdateEmail(newEmail: String) {
         val matched = state.value.savedAccounts.firstOrNull { it.email == newEmail }
         if (matched != null) {
-            setState {
-                copy(
-                    email = newEmail,
-                    password = if (matched.rememberPassword) matched.password else password,
-                    rememberPassword = matched.rememberPassword
-                )
+            viewModelScope.launch {
+                val remembered = matched.rememberedPassword()
+                setState {
+                    copy(
+                        email = newEmail,
+                        password = remembered ?: password,
+                        rememberPassword = matched.rememberPassword
+                    )
+                }
             }
         } else {
             setState { copy(email = newEmail) }
@@ -80,14 +85,21 @@ class LoginViewModel : BaseViewModel<LoginState, LoginAction, LoginEffect>(Login
     }
 
     private fun handleSelectSavedAccount(account: Account) {
-        setState {
-            copy(
-                email = account.email,
-                password = if (account.rememberPassword) account.password else "",
-                rememberPassword = account.rememberPassword
-            )
+        viewModelScope.launch {
+            val remembered = account.rememberedPassword()
+            setState {
+                copy(
+                    email = account.email,
+                    password = remembered ?: "",
+                    rememberPassword = account.rememberPassword
+                )
+            }
         }
     }
+
+    /** 已记住密码时解密出明文用于回填，解密失败视为无可用密码。 */
+    private suspend fun Account?.rememberedPassword(): String? =
+        this?.takeIf { it.rememberPassword }?.let { PasswordCrypto.decrypt(it.password) }
 
     private fun doLogin() {
         val s = state.value

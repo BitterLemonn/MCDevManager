@@ -197,7 +197,11 @@ class DatabaseBuilderJvmTest {
             val saved1 = fakeAccountRepo.getAccountByNickname("TestUser")
             kotlin.test.assertNotNull(saved1)
             kotlin.test.assertEquals("test@example.com", saved1.email)
-            kotlin.test.assertEquals("secretPassword", saved1.password)
+            kotlin.test.assertNotEquals("secretPassword", saved1.password)
+            kotlin.test.assertEquals(
+                "secretPassword",
+                com.lemon.mcdevmanagermp.utils.PasswordCrypto.decrypt(saved1.password)
+            )
             kotlin.test.assertTrue(saved1.rememberPassword)
 
             // Remember password = false
@@ -206,6 +210,32 @@ class DatabaseBuilderJvmTest {
             kotlin.test.assertNotNull(saved2)
             kotlin.test.assertEquals("", saved2.password)
             kotlin.test.assertFalse(saved2.rememberPassword)
+        }
+    }
+
+    @Test
+    fun `password crypto round trip and legacy plaintext handling`() {
+        kotlinx.coroutines.runBlocking {
+            val encrypted = com.lemon.mcdevmanagermp.utils.PasswordCrypto.encrypt("p@ss-中文-123")
+            kotlin.test.assertTrue(com.lemon.mcdevmanagermp.utils.PasswordCrypto.isEncrypted(encrypted))
+            kotlin.test.assertFalse(encrypted.contains("p@ss-中文-123"))
+            kotlin.test.assertEquals(
+                "p@ss-中文-123",
+                com.lemon.mcdevmanagermp.utils.PasswordCrypto.decrypt(encrypted)
+            )
+            // 同一密码重复加密结果不同（OAEP 随机填充）
+            kotlin.test.assertNotEquals(
+                encrypted,
+                com.lemon.mcdevmanagermp.utils.PasswordCrypto.encrypt("p@ss-中文-123")
+            )
+            // 历史明文保持可读，空值不产生密文
+            kotlin.test.assertFalse(com.lemon.mcdevmanagermp.utils.PasswordCrypto.isEncrypted("legacy"))
+            kotlin.test.assertEquals(
+                "legacy",
+                com.lemon.mcdevmanagermp.utils.PasswordCrypto.decrypt("legacy")
+            )
+            kotlin.test.assertEquals("", com.lemon.mcdevmanagermp.utils.PasswordCrypto.encrypt(""))
+            kotlin.test.assertNull(com.lemon.mcdevmanagermp.utils.PasswordCrypto.decrypt(""))
         }
     }
 
