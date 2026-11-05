@@ -304,6 +304,7 @@ internal fun CompactHomeTabContent(
                     title = "本月收益速算",
                     profitData = state.profitData ?: ProfitData(),
                     isLoading = state.isProfitLoading,
+                    showTaxEstimate = state.userInfo?.isEnterprise != true,
                     expanded = state.profitExpanded,
                     onToggleExpand = { onAction(MainAction.ToggleProfitExpand) },
                     onNavigateToDetail = onNavigateToIncomeDetail
@@ -316,6 +317,7 @@ internal fun CompactHomeTabContent(
                         title = "上月收益速算",
                         profitData = state.lastProfitData ?: ProfitData(),
                         isLoading = state.isProfitLoading,
+                        showTaxEstimate = state.userInfo?.isEnterprise != true,
                         expanded = state.lastProfitExpanded,
                         onToggleExpand = { onAction(MainAction.ToggleLastProfitExpand) },
                         onNavigateToDetail = onNavigateToLastMonthDetail
@@ -329,6 +331,7 @@ internal fun CompactHomeTabContent(
                         title = "下月收益速算",
                         profitData = state.nextProfitData ?: ProfitData(),
                         isLoading = state.isProfitLoading,
+                        showTaxEstimate = state.userInfo?.isEnterprise != true,
                         expanded = state.nextProfitExpanded,
                         onToggleExpand = { onAction(MainAction.ToggleNextProfitExpand) },
                         onNavigateToDetail = onNavigateToNextMonthDetail
