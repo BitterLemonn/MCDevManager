@@ -45,6 +45,11 @@ class EcoFeeReverseTest {
     }
 
     @Test
+    fun incompleteFlowCannotReverse() {
+        assertNull(profit.copy(isFlowComplete = false).reverseEcoFeeRate(profit.totalProfit))
+    }
+
+    @Test
     fun enterpriseDetectedFromPayType() {
         val base = """"exp":0,"level":1,"nickname":"n","income":"0","onsale_item_count":0,""" +
             """"cur_month_incentive_fund":0,"unextract_income":"0","prerequisite_switch":false"""
