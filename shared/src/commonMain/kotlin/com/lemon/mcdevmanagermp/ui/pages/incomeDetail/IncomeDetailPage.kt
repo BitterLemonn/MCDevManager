@@ -163,7 +163,8 @@ fun IncomeDetailPage(initialMonthOffset: Int = 0, onBack: () -> Unit) {
                         EcoFeeReverseCard(
                             profitData = profitData,
                             month = state.selectedMonth,
-                            dataReady = !state.isLoading && state.errorMessage == null
+                            dataReady = !state.isLoading && state.errorMessage == null,
+                            onRetry = viewModel::retry
                         )
                         ModuleList(modules, columns)
                     }
@@ -420,10 +421,19 @@ private val AMOUNT_INPUT_REGEX = Regex("""^\d{0,9}(\.\d{0,2})?$""")
  * 实际收益反推生态费卡片：输入该月实际税前收益，按预估公式反解实际生态费率与金额。
  * 输入内容随月份隔离，切换月份即清空，避免把上个月的实际收益套到新月份的流水上。
  *
+ * 流水不完整（[ProfitData.isFlowComplete] 为 false）时不反推：缺失的作品流水会让费率系统性偏低，
+ * 改为提示并提供重新加载。
+ *
  * @param dataReady 该月收益数据已加载成功；加载中或失败时流水为空，不展示反推结果
+ * @param onRetry 强制重新加载当月收益（跳过缓存），用于流水不完整时补齐数据
  */
 @Composable
-private fun EcoFeeReverseCard(profitData: ProfitData, month: ProfitMonth, dataReady: Boolean) {
+private fun EcoFeeReverseCard(
+    profitData: ProfitData,
+    month: ProfitMonth,
+    dataReady: Boolean,
+    onRetry: () -> Unit
+) {
     val colors = LocalAppColors.current
     var input by remember(month) { mutableStateOf("") }
     val actualIncome = input.toDoubleOrNull()
@@ -453,7 +463,25 @@ private fun EcoFeeReverseCard(profitData: ProfitData, month: ProfitMonth, dataRe
                 modifier = Modifier.fillMaxWidth()
             )
 
-            if (dataReady && actualIncome != null) {
+            if (dataReady && !profitData.isFlowComplete) {
+                // 不论是否已输入都提示，避免用户先输入后才发现结果不可用
+                Spacer(Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(colors.surfaceContainerHighest, RoundedCornerShape(8.dp))
+                        .padding(start = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "部分作品流水获取失败，数据不完整，暂不反推生态费",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.warning,
+                        modifier = Modifier.weight(1f)
+                    )
+                    TextButton(onClick = onRetry) { Text("重试") }
+                }
+            } else if (dataReady && actualIncome != null) {
                 val ecoFeeRate = profitData.reverseEcoFeeRate(actualIncome)
                 Spacer(Modifier.height(8.dp))
                 Column(

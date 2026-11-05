@@ -15,6 +15,7 @@ import com.lemon.mcdevmanagermp.domain.user.UserRepository
 import com.lemon.mcdevmanagermp.utils.ProfitData
 import com.lemon.mcdevmanagermp.utils.calculateProfit
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
@@ -108,28 +109,42 @@ class MainUseCase(
         )
     }
 
-    suspend fun computeMonthProfit(year: Int, month: Int): ProfitData =
-        calculateProfit(getOneMonthComponentDiamonds(year, month))
+    /**
+     * 计算某月收益预估。
+     * 任一流水请求失败时仍返回已拿到部分的估算（首页速算可用），但 [ProfitData.isFlowComplete] 置为 false。
+     */
+    suspend fun computeMonthProfit(year: Int, month: Int): ProfitData {
+        val flow = getOneMonthComponentDiamonds(year, month)
+        return calculateProfit(flow.diamonds).copy(isFlowComplete = flow.isComplete)
+    }
 
-    private suspend fun getOneMonthComponentDiamonds(year: Int, month: Int): Map<String, Double> =
+    /**
+     * 汇总某月各作品流水（钻石）。
+     * 作品列表、联机大厅商品列表、单个作品流水任一请求失败，失败部分按 0 计入并标记为不完整，
+     * 由调用方决定是否接受不完整数据。
+     */
+    private suspend fun getOneMonthComponentDiamonds(year: Int, month: Int): MonthFlow =
         coroutineScope {
             val normalResources = async {
                 getResourceListUseCase("pe", onlineOnly = true, excludePrerequisites = true)
             }
             // 联机大厅作品及其商品的获取（含作品列表请求）交由 lobbyGoodsUseCase 统一发起
             val lobbyGoods = async { lobbyGoodsUseCase.getGoodsByOwner() }
-            val resList = when (val resources = normalResources.await()) {
-                is NetworkState.Success -> resources.data ?: emptyList()
+            val resourcesResult = normalResources.await()
+            val resList = when (resourcesResult) {
+                is NetworkState.Success -> resourcesResult.data ?: emptyList()
                 is NetworkState.Error -> emptyList()
             }
-            val goodsByOwner = when (val resources = lobbyGoods.await()) {
-                is NetworkState.Success -> resources.data ?: emptyMap()
-                is NetworkState.Error -> emptyMap()
+            val lobbyGoodsResult = lobbyGoods.await()
+            val goodsByOwner = when (lobbyGoodsResult) {
+                is NetworkState.Success -> lobbyGoodsResult.data
+                is NetworkState.Error -> null
             }
 
             val dateRange = monthDateRange(year, month)
 
-            val normalDiamonds = resList.map { res ->
+            // 作品名 → 流水；null 表示该作品的流水请求失败
+            val normalResults = resList.map { res ->
                 async {
                     val result = analyzeRepository.getDayDetail(
                         platform = "pe",
@@ -138,26 +153,34 @@ class MainUseCase(
                         endDate = dateRange.second,
                         itemListStr = res.itemId
                     )
-                    if (result is NetworkState.Success) {
-                        res.itemName to (result.data?.data?.sumOf { it.diamond * (1 - it.refundRate) }
-                            ?: 0.0)
-                    } else {
-                        res.itemName to 0.0
+                    res.itemName to when (result) {
+                        is NetworkState.Success ->
+                            result.data?.data?.sumOf { it.diamond * (1 - it.refundRate) } ?: 0.0
+
+                        is NetworkState.Error -> null
                     }
                 }
-            }.associate { it.await() }
-            val lobbyDiamonds = lobbyItemDiamonds(goodsByOwner, dateRange)
+            }.awaitAll()
+            val normalDiamonds = normalResults.associate { (name, diamonds) -> name to (diamonds ?: 0.0) }
+            val lobbyDiamonds = lobbyItemDiamonds(goodsByOwner?.goodsByOwner.orEmpty(), dateRange)
 
-            mergeProfitDiamonds(normalDiamonds, lobbyDiamonds)
+            MonthFlow(
+                diamonds = mergeProfitDiamonds(normalDiamonds, lobbyDiamonds.orEmpty()),
+                isComplete = resourcesResult is NetworkState.Success &&
+                        goodsByOwner?.isComplete == true &&
+                        normalResults.none { (_, diamonds) -> diamonds == null } &&
+                        lobbyDiamonds != null
+            )
         }
 
     /**
      * 计算联机大厅作品收益：作品下的各商品销售钻石累加回作品名。
+     * @return 作品名 → 钻石；商品流水请求失败时返回 null（无商品时为空表，属于完整数据）
      */
     private suspend fun lobbyItemDiamonds(
         goodsByOwner: Map<String, List<LobbyGoodVO>>,
         dateRange: Pair<String, String>
-    ): Map<String, Double> {
+    ): Map<String, Double>? {
         val goodsToOwner = goodsByOwner
             .flatMap { (name, goods) -> goods.map { it.goodsId to name } }
             .toMap()
@@ -172,13 +195,12 @@ class MainUseCase(
             itemListStr = goodsToOwner.keys.joinToString(","),
             isLobby = true
         )
-        val rows = if (result is NetworkState.Success) {
-            result.data?.data.orEmpty()
-        } else {
-            emptyList()
-        }
+        return when (result) {
+            is NetworkState.Success ->
+                aggregateGoodsDiamondsByOwner(result.data?.data.orEmpty(), goodsToOwner)
 
-        return aggregateGoodsDiamondsByOwner(rows, goodsToOwner)
+            is NetworkState.Error -> null
+        }
     }
 
     private fun monthDateRange(year: Int, month: Int): Pair<String, String> {
@@ -195,6 +217,16 @@ class MainUseCase(
         }
     }
 }
+
+/**
+ * 某月各作品流水汇总。
+ * @property diamonds 作品名 → 钻石（失败的作品按 0 计入）
+ * @property isComplete 所有相关请求是否都成功
+ */
+internal data class MonthFlow(
+    val diamonds: Map<String, Double>,
+    val isComplete: Boolean
+)
 
 internal fun mergeProfitDiamonds(
     normal: Map<String, Double>,
