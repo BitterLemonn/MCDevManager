@@ -2,9 +2,11 @@ package com.lemon.mcdevmanagermp.ui.pages.incomeDetail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.repository.AnalyzeRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.UserRepositoryImpl
+import com.lemon.mcdevmanagermp.data.vo.netease.user.UserInfoVO
 import com.lemon.mcdevmanagermp.domain.main.MainUseCase
 import com.lemon.mcdevmanagermp.domain.main.ProfitMonth
 import com.lemon.mcdevmanagermp.domain.resource.GetResourceListUseCase
@@ -19,15 +21,25 @@ internal data class IncomeDetailState(
     val selectedMonth: ProfitMonth,
     val profitData: ProfitData = ProfitData(),
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    /** 企业开发者自行开票缴税，页面不展示按个人劳务报酬预估的税后收益 */
+    val isEnterprise: Boolean = false
 )
 
+/**
+ * 收益详情 ViewModel：按月加载并缓存收益预估数据，同时确定账号是否为企业开发者。
+ *
+ * @param initialData 首页已计算好的该月收益，非空时直接复用避免重复请求
+ * @param initialUserInfo 首页已加载的用户信息，为空时会单独请求以判定企业开发者
+ */
 internal class IncomeDetailViewModel(
     initialMonth: ProfitMonth,
-    initialData: ProfitData?
+    initialData: ProfitData?,
+    initialUserInfo: UserInfoVO?
 ) : ViewModel() {
+    private val userRepository = UserRepositoryImpl.INSTANCE
     private val mainUseCase = MainUseCase(
-        userRepository = UserRepositoryImpl.INSTANCE,
+        userRepository = userRepository,
         analyzeRepository = AnalyzeRepositoryImpl.INSTANCE,
         getResourceListUseCase = GetResourceListUseCase(ResourceRepositoryImpl.INSTANCE)
     )
@@ -36,13 +48,31 @@ internal class IncomeDetailViewModel(
         IncomeDetailState(
             selectedMonth = initialMonth,
             profitData = initialData ?: ProfitData(),
-            isLoading = initialData == null
+            isLoading = initialData == null,
+            isEnterprise = initialUserInfo?.isEnterprise == true
         )
     )
     val state = _state.asStateFlow()
 
     init {
         if (initialData != null) cache[initialMonth] = initialData else load(initialMonth)
+        if (initialUserInfo == null) loadEnterpriseFlag()
+    }
+
+    /**
+     * 首页用户信息未就绪时单独拉取 users/me 判定企业开发者。
+     * 失败时保持默认（按个人开发者展示扣税预估），不影响收益数据本身的加载。
+     */
+    private fun loadEnterpriseFlag() {
+        viewModelScope.launch {
+            when (val result = userRepository.getUserInfo()) {
+                is NetworkState.Success -> _state.update {
+                    it.copy(isEnterprise = result.data?.isEnterprise == true)
+                }
+
+                is NetworkState.Error -> Logger.e("收益详情获取用户信息失败: ${result.msg}", result.e)
+            }
+        }
     }
 
     fun selectMonth(month: ProfitMonth) {
@@ -54,12 +84,17 @@ internal class IncomeDetailViewModel(
 
     private fun load(month: ProfitMonth, force: Boolean = false) {
         val cached = if (force) null else cache[month]
+        // 用 copy 而非重建 state，保留与月份无关的 isEnterprise
         if (cached != null) {
-            _state.value = IncomeDetailState(selectedMonth = month, profitData = cached)
+            _state.update {
+                it.copy(selectedMonth = month, profitData = cached, isLoading = false, errorMessage = null)
+            }
             return
         }
 
-        _state.value = IncomeDetailState(selectedMonth = month, isLoading = true)
+        _state.update {
+            it.copy(selectedMonth = month, profitData = ProfitData(), isLoading = true, errorMessage = null)
+        }
         viewModelScope.launch {
             try {
                 val data = mainUseCase.computeMonthProfit(month.year, month.month)
