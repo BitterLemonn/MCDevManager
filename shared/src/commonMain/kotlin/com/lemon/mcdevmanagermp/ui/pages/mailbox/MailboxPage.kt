@@ -63,7 +63,7 @@ import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.data.vo.netease.mailbox.MailListContentVO
 import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
 import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
-import com.lemon.mcdevmanagermp.ui.components.RichHtmlText
+import com.lemon.mcdevmanagermp.ui.components.RichHtmlWithTablesText
 import com.lemon.mcdevmanagermp.ui.components.collectUiEffect
 import com.lemon.mcdevmanagermp.ui.pages.mailbox.layout.CompactMailboxLayout
 import com.lemon.mcdevmanagermp.ui.pages.mailbox.layout.ExpandedMailboxLayout
@@ -499,7 +499,7 @@ internal fun MailDetailCard(
                     )
                 }
             } else if (content != null) {
-                RichHtmlText(
+                RichHtmlWithTablesText(
                     html = content.detail.ifBlank { "（无内容）" },
                     modifier = Modifier
                         .fillMaxWidth()
