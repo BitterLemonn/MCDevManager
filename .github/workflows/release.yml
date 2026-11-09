@@ -228,9 +228,15 @@ jobs:
 
       - name: Determine version
         id: vars
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
         run: |
-          V="${{ inputs.version }}"
-          echo "version=${V#v}" >> "$GITHUB_OUTPUT"
+          V="${RELEASE_VERSION#v}"
+          if [[ ! "$V" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "iOS release version must be numeric X.Y.Z" >&2
+            exit 1
+          fi
+          echo "version=$V" >> "$GITHUB_OUTPUT"
 
       - name: Switch Gradle mirror to official source
         run: sed -i '' 's|distributionUrl=.*|distributionUrl=https://services.gradle.org/distributions/gradle-9.5.0-bin.zip|' gradle/wrapper/gradle-wrapper.properties
@@ -241,6 +247,8 @@ jobs:
       # Xcode 的 Compile Kotlin Framework 阶段会调用
       # :shared:embedAndSignAppleFrameworkForXcode，无需提前重复启动 Gradle。
       - name: Build device framework and unsigned app
+        env:
+          RELEASE_VERSION: ${{ steps.vars.outputs.version }}
         run: |
           xcodebuild -project iosApp/iosApp.xcodeproj \
             -scheme iosApp \
@@ -248,6 +256,8 @@ jobs:
             -destination 'generic/platform=iOS' \
             -configuration Release \
             -derivedDataPath build \
+            MARKETING_VERSION="$RELEASE_VERSION" \
+            CURRENT_PROJECT_VERSION="$GITHUB_RUN_NUMBER" \
             CODE_SIGNING_ALLOWED=NO \
             COMPILER_INDEX_STORE_ENABLE=NO \
             DEBUG_INFORMATION_FORMAT=dwarf \
@@ -266,6 +276,33 @@ jobs:
         with:
           name: ios-ipa
           path: MCDevManagerMP-V${{ steps.vars.outputs.version }}-ios-arm64.ipa
+
+      - name: Generate AltStore / SideStore source with all release history
+        env:
+          RELEASE_VERSION: ${{ steps.vars.outputs.version }}
+          REPOSITORY: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python3 -B -m unittest discover -s iosApp/scripts -p 'test_*altstore*.py'
+          python3 iosApp/scripts/sync_altstore_source.py \
+            --repository "$REPOSITORY" \
+            --ipa "MCDevManagerMP-V$RELEASE_VERSION-ios-arm64.ipa" \
+            --release-tag "v$RELEASE_VERSION" \
+            --output build/altstore/source.json
+
+      - name: Upload AltStore source
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-altstore-source
+          path: build/altstore/source.json
+
+      - name: Upload source inspection report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-altstore-report
+          path: build/altstore/report.json
+          if-no-files-found: ignore
 
   # ============================================================
   # Release — 汇总所有产物并创建 GitHub Release

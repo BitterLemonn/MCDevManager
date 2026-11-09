@@ -62,6 +62,8 @@
 | Android | 已支持 | APK               |
 | iOS     | 开发中 | IPA（需自行签名）        |
 
+iOS 用户和维护者可参考 [AltStore / SideStore 软件源：安装、发布与 Fork 配置](docs/altstore-source.md)。
+
 ---
 
 ## 多端适配

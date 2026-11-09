@@ -1,0 +1,94 @@
+name: Sync AltStore / SideStore Source
+
+on:
+  workflow_dispatch:
+    inputs:
+      include_prereleases:
+        description: 'Include prereleases (may make a beta the newest version)'
+        type: boolean
+        default: false
+  release:
+    types: [published, edited, deleted, unpublished]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: altstore-source-history
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Use the maintained generator, even when an old Release is edited.
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test source tools
+        run: python -B -m unittest discover -s iosApp/scripts -p 'test_*altstore*.py' -v
+      - name: Collect all published IPA releases (no compilation)
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          INCLUDE_PRERELEASES: ${{ inputs.include_prereleases || false }}
+        run: |
+          extra=()
+          if [ "$INCLUDE_PRERELEASES" = "true" ]; then extra+=(--include-prereleases); fi
+          python3 iosApp/scripts/sync_altstore_source.py --repository "$REPOSITORY" "${extra[@]}"
+      - name: Upload source and inspection report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: altstore-source-${{ github.run_id }}-${{ github.run_attempt }}
+          path: build/altstore/*.json
+          if-no-files-found: warn
+
+  publish:
+    needs: collect
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: altstore-source-${{ github.run_id }}-${{ github.run_attempt }}
+          path: source
+      - name: Atomically publish JSON to the dedicated source branch
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const repo = context.repo;
+            const branch = 'altstore-source';
+            const source = fs.readFileSync('source/source.json', 'utf8');
+            const parsed = JSON.parse(source);
+            const report = JSON.parse(fs.readFileSync('source/report.json', 'utf8'));
+            if (report.errors.length || !parsed.apps[0]?.versions?.length) {
+              throw new Error('Refusing to publish an empty or failed source');
+            }
+            let parent;
+            try { parent = (await github.rest.git.getRef({...repo, ref: `heads/${branch}`})).data.object.sha; }
+            catch (error) { if (error.status !== 404) throw error; }
+            let baseTree;
+            if (parent) baseTree = (await github.rest.git.getCommit({...repo, commit_sha: parent})).data.tree.sha;
+            const tree = (await github.rest.git.createTree({...repo, base_tree: baseTree, tree: [
+              {path: 'source.json', mode: '100644', type: 'blob', content: source},
+              {path: 'report.json', mode: '100644', type: 'blob', content: JSON.stringify(report, null, 2) + '\n'}
+            ]})).data.sha;
+            if (tree !== baseTree) {
+              const commit = (await github.rest.git.createCommit({...repo, tree,
+                parents: parent ? [parent] : [], message: 'Update AltStore / SideStore release history'})).data.sha;
+              if (parent) await github.rest.git.updateRef({...repo, ref: `heads/${branch}`, sha: commit, force: false});
+              else await github.rest.git.createRef({...repo, ref: `refs/heads/${branch}`, sha: commit});
+            }
+            const url = `https://raw.githubusercontent.com/${repo.owner}/${repo.repo}/${branch}/source.json`;
+            await core.summary.addHeading('AltStore / SideStore source updated')
+              .addLink('Source JSON', url)
+              .addRaw(`\n\nIncluded ${report.included.length}; skipped ${report.skipped.length}. See report.json for reasons.\n`)
+              .write();

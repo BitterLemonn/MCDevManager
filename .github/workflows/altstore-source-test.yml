@@ -1,0 +1,42 @@
+name: Test AltStore / SideStore Source
+
+on:
+  pull_request:
+    paths:
+      - 'altstore/**'
+      - 'iosApp/scripts/*altstore*'
+      - '.github/workflows/altstore-source-test.yml'
+      - '.github/workflows/altstore-source.yml'
+      - '.github/workflows/release.yml'
+  push:
+    paths:
+      - 'altstore/**'
+      - 'iosApp/scripts/*altstore*'
+      - '.github/workflows/altstore-source-test.yml'
+      - '.github/workflows/altstore-source.yml'
+      - '.github/workflows/release.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run tests and expose failure details in check annotations
+        shell: bash
+        run: |
+          if python -B -m unittest discover -s iosApp/scripts -p 'test_*altstore*.py' -v > test-output.log 2>&1; then
+            cat test-output.log
+          else
+            cat test-output.log
+            python -c "from pathlib import Path; text = Path('test-output.log').read_text()[-12000:]; print('::error title=Source test failure::' + text.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A'))"
+            exit 1
+          fi
