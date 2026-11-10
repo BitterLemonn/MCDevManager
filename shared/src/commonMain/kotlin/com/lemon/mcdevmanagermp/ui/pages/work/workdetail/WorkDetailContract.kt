@@ -288,10 +288,13 @@ data class ChannelImageSlot(
     val fileInfo: FileInfoDTO? = null
 )
 
-/** 宣传视频（对应 ResourceDetailVideoInfo，回显与上传结果统一模型；cover 由用户上传封面图得到）。 */
+/** 宣传视频（对应 ResourceDetailVideoInfo，回显与上传结果统一模型；cover 由用户上传封面图得到）。
+ *  保存时带 fileInfo/coverFileInfo 的字段以回执对象提交（新上传），否则提交地址字符串（沿用旧值）。 */
 data class VideoItem(
     val cover: String = "",
     val size: Long = 0,
     val url: String = "",
-    val isUploadingCover: Boolean = false
+    val isUploadingCover: Boolean = false,
+    val fileInfo: FileInfoDTO? = null,
+    val coverFileInfo: FileInfoDTO? = null
 )

@@ -27,6 +27,7 @@ import com.lemon.mcdevmanagermp.data.vo.netease.resource.VIDEO_COVER_CHANNEL_ID
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.requiredPeImageChannels
 import com.lemon.mcdevmanagermp.domain.upload.FileUploadRepository
 import com.lemon.mcdevmanagermp.domain.upload.parseUploadUrl
+import com.lemon.mcdevmanagermp.domain.upload.uploadReceiptOrAddress
 import com.lemon.mcdevmanagermp.domain.user.UserRepository
 import com.lemon.mcdevmanagermp.domain.work.WorkDetailUseCase
 import com.lemon.mcdevmanagermp.domain.work.WorkSaveValidationInput
@@ -376,13 +377,13 @@ class WorkDetailViewModel :
                                 // —— 视频 ——
                                 videos = d.videoInfoList.map {
                                     VideoItem(
-                                        cover = it.cover.ifEmpty {
+                                        cover = it.coverAddress.ifEmpty {
                                             d.channel.firstOrNull { channel ->
                                                 channel.channelId == VIDEO_COVER_CHANNEL_ID
                                             }?.channelUrl.orEmpty()
                                         },
                                         size = it.size.toLong(),
-                                        url = it.url
+                                        url = it.urlAddress
                                     )
                                 },
                                 // —— 上架设置（弱下架） ——
@@ -948,11 +949,19 @@ class WorkDetailViewModel :
             )
             when (result) {
                 is NetworkState.Success -> {
-                    val url = parseUploadUrl(result.data?.body.orEmpty())
+                    val fileInfo = result.data
+                    val url = parseUploadUrl(fileInfo?.body.orEmpty())
                     setState {
                         copy(
                             isUploadingVideo = false,
-                            videos = listOf(VideoItem(cover = "", size = size, url = url))
+                            videos = listOf(
+                                VideoItem(
+                                    cover = "",
+                                    size = size,
+                                    url = url,
+                                    fileInfo = fileInfo
+                                )
+                            )
                         )
                     }
                     if (url.isEmpty()) sendEffect(WorkDetailEffect.ShowToast("上传成功但未能解析视频地址"))
@@ -981,12 +990,14 @@ class WorkDetailViewModel :
             )
             when (result) {
                 is NetworkState.Success -> {
-                    val coverUrl = parseUploadUrl(result.data?.body.orEmpty())
+                    val coverInfo = result.data
+                    val coverUrl = parseUploadUrl(coverInfo?.body.orEmpty())
                     setState {
                         copy(videos = videos.mapIndexed { i, v ->
                             if (i == index) v.copy(
                                 cover = coverUrl,
-                                isUploadingCover = false
+                                isUploadingCover = false,
+                                coverFileInfo = coverInfo
                             ) else v
                         })
                     }
@@ -1483,9 +1494,9 @@ internal fun buildWorkCreatePayload(s: WorkDetailState, isCheckApply: Boolean): 
         },
         videoInfoList = s.videos.map { video ->
             buildJsonObject {
-                put("cover", video.cover)
+                put("cover", uploadReceiptOrAddress(video.coverFileInfo, video.cover))
                 put("size", video.size)
-                put("url", video.url)
+                put("url", uploadReceiptOrAddress(video.fileInfo, video.url))
             }
         },
         syncPcFlag = s.syncPc,
@@ -1564,7 +1575,11 @@ internal fun buildUpdatePayload(
     else buildDiscountJson(s.discounts, d.discount),
     res = buildResList(s.peResource, d.res, s.peAddVersion),
     videoInfoList = s.videos.map {
-        ResourceDetailVideoInfo(cover = it.cover, size = it.size.toInt(), url = it.url)
+        ResourceDetailVideoInfo(
+            cover = uploadReceiptOrAddress(it.coverFileInfo, it.cover),
+            size = it.size.toInt(),
+            url = uploadReceiptOrAddress(it.fileInfo, it.url)
+        )
     },
     channel = if (s.peImageSlots.isEmpty()) d.channel else s.peImageSlots
         .filter { it.channelUrl.isNotBlank() || it.fileInfo != null }
