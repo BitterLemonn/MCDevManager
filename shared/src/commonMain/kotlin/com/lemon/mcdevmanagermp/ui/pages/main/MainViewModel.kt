@@ -8,7 +8,6 @@ import com.lemon.mcdevmanagermp.data.consts.enums.RankSubCategoryTypeEnum
 import com.lemon.mcdevmanagermp.data.page.RankCategoryData
 import com.lemon.mcdevmanagermp.data.repository.AccountRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.AnalyzeRepositoryImpl
-import com.lemon.mcdevmanagermp.data.repository.EcoFeeRecordRepository
 import com.lemon.mcdevmanagermp.data.repository.MailboxRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.RankListRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
@@ -17,7 +16,6 @@ import com.lemon.mcdevmanagermp.data.vo.netease.user.LevelInfoVO
 import com.lemon.mcdevmanagermp.data.vo.netease.user.OverviewVO
 import com.lemon.mcdevmanagermp.data.vo.netease.user.UserInfoVO
 import com.lemon.mcdevmanagermp.domain.main.MainUseCase
-import com.lemon.mcdevmanagermp.domain.main.ProfitMonth
 import com.lemon.mcdevmanagermp.domain.main.profitMonthWindow
 import com.lemon.mcdevmanagermp.domain.rankList.RankListUseCase
 import com.lemon.mcdevmanagermp.domain.resource.GetResourceListUseCase
@@ -281,7 +279,6 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
                 cachedShowLastMonthProfit = window.showLastMonth
                 cachedShowNextMonthProfit = window.showNextMonth
                 cachedProfitDate = todayString()
-                saveLastMonthSnapshot(window.current.shift(-1), result.lastMonth)
                 setState {
                     copy(
                         profitData = result.thisMonth,
@@ -294,22 +291,6 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
                 }
             } catch (_: Exception) {
                 setState { copy(isProfitLoading = false) }
-            }
-        }
-    }
-
-    /**
-     * 计算周期截止后登录即保存上月预估快照，供结算单出账后反推生态费；
-     * 上月流水不完整或无流水时跳过，待下次登录重试。失败不影响首页加载。
-     */
-    private fun saveLastMonthSnapshot(month: ProfitMonth, lastMonth: ProfitData?) {
-        val last = lastMonth ?: return
-        val accountKey = AppContext.userInfo?.nickname ?: return
-        viewModelScope.launch {
-            try {
-                EcoFeeRecordRepository.INSTANCE.saveSnapshot(accountKey, month, last)
-            } catch (e: Exception) {
-                Logger.e("保存上月生态费快照失败", e)
             }
         }
     }

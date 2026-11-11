@@ -1,13 +1,10 @@
 package com.lemon.mcdevmanagermp.ui.pages.income
 
 import androidx.lifecycle.viewModelScope
-import com.lemon.mcdevmanagermp.data.common.AppContext
 import com.lemon.mcdevmanagermp.data.common.NetworkState
-import com.lemon.mcdevmanagermp.data.repository.EcoFeeRecordRepository
 import com.lemon.mcdevmanagermp.data.repository.IncomeRepositoryImpl
 import com.lemon.mcdevmanagermp.domain.income.IncomeUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
-import com.lemon.mcdevmanagermp.utils.Logger
 import kotlinx.coroutines.launch
 
 class IncomeViewModel : BaseViewModel<IncomeState, IncomeAction, IncomeEffect>(IncomeState()) {
@@ -47,23 +44,6 @@ class IncomeViewModel : BaseViewModel<IncomeState, IncomeAction, IncomeEffect>(I
             // 更新未提取收益
             result.unExtractedIncome?.let {
                 setState { copy(unExtractedIncome = it) }
-            }
-
-            loadEcoFeeRates()
-        }
-    }
-
-    /** 加载本地已反推的历史生态费率，展示在对应月份的结算条目上 */
-    private fun loadEcoFeeRates() {
-        val accountKey = AppContext.userInfo?.nickname ?: return
-        viewModelScope.launch {
-            try {
-                val rates = EcoFeeRecordRepository.INSTANCE.getRated(accountKey)
-                    .mapNotNull { record -> record.ecoFeeRate?.let { record.dataMonth to it } }
-                    .toMap()
-                setState { copy(ecoFeeRates = rates) }
-            } catch (e: Exception) {
-                Logger.e("加载历史生态费率失败", e)
             }
         }
     }
