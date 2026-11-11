@@ -18,7 +18,7 @@ import com.lemon.mcdevmanagermp.data.db.entity.PromotionTemplateEntity
 
 @Database(
     entities = [AccountEntity::class, PromotionTemplateEntity::class, DayDetailConfigEntity::class, EcoFeeRecordEntity::class],
-    version = 8,
+    version = 9,
     exportSchema = false
 )
 @ConstructedBy(AppDatabaseConstructor::class)
@@ -158,20 +158,32 @@ val MIGRATION_6_7 = object : Migration(6, 7) {
  */
 val MIGRATION_7_8 = object : Migration(7, 8) {
     override fun migrate(connection: SQLiteConnection) {
-        connection.execSQL(
-            """
-            CREATE TABLE IF NOT EXISTS eco_fee_record (
-              accountKey TEXT NOT NULL,
-              dataMonth TEXT NOT NULL,
-              profitDataJson TEXT NOT NULL,
-              ecoFeeRate REAL,
-              ecoFeeAmount REAL,
-              actualIncome REAL,
-              playPlanIncome REAL,
-              updatedAt INTEGER NOT NULL,
-              PRIMARY KEY (accountKey, dataMonth)
-            )
-            """.trimIndent()
-        )
+        connection.execSQL(CREATE_ECO_FEE_RECORD_TABLE_SQL)
     }
 }
+
+/**
+ * 数据库迁移 8→9：重建 eco_fee_record 表。
+ * 早期 8 版本的表结构（费率字段非空、无快照列）与最终结构不一致，直接重建；
+ * 旧表数据不迁移，快照可由后续登录重新保存，费率在结算单出账后浏览时重新反推。
+ */
+val MIGRATION_8_9 = object : Migration(8, 9) {
+    override fun migrate(connection: SQLiteConnection) {
+        connection.execSQL("DROP TABLE IF EXISTS eco_fee_record")
+        connection.execSQL(CREATE_ECO_FEE_RECORD_TABLE_SQL)
+    }
+}
+
+private const val CREATE_ECO_FEE_RECORD_TABLE_SQL = """
+    CREATE TABLE IF NOT EXISTS eco_fee_record (
+      accountKey TEXT NOT NULL,
+      dataMonth TEXT NOT NULL,
+      profitDataJson TEXT NOT NULL,
+      ecoFeeRate REAL,
+      ecoFeeAmount REAL,
+      actualIncome REAL,
+      playPlanIncome REAL,
+      updatedAt INTEGER NOT NULL,
+      PRIMARY KEY (accountKey, dataMonth)
+    )
+"""
