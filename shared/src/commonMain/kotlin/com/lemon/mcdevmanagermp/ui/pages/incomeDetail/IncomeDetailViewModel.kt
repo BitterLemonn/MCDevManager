@@ -4,8 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.repository.AnalyzeRepositoryImpl
+import com.lemon.mcdevmanagermp.data.repository.IncomeRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.UserRepositoryImpl
+import com.lemon.mcdevmanagermp.data.vo.netease.income.IncomeVO
 import com.lemon.mcdevmanagermp.data.vo.netease.user.UserInfoVO
 import com.lemon.mcdevmanagermp.domain.main.MainUseCase
 import com.lemon.mcdevmanagermp.domain.main.ProfitMonth
@@ -23,8 +25,31 @@ internal data class IncomeDetailState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     /** 企业开发者自行开票缴税，页面不展示按个人劳务报酬预估的税后收益 */
-    val isEnterprise: Boolean = false
+    val isEnterprise: Boolean = false,
+    /** 当前月份的结算单；未出账时为 null */
+    val settlement: IncomeVO? = null,
+    val isSettlementLoading: Boolean = true,
+    val settlementError: String? = null
 )
+
+/**
+ * 结算单 dataMonth 与所选月份比较。
+ * 兼容 "2026-10"、"2026-1"、"202610" 等格式：去掉非数字字符后统一按 yyyyMM 比较。
+ */
+internal fun matchesProfitMonth(dataMonth: String, month: ProfitMonth): Boolean {
+    val digits = dataMonth.filter { it.isDigit() }
+    if (digits.length < 5) return false
+    val year = digits.substring(0, 4).toIntOrNull() ?: return false
+    val monthDigits = digits.substring(4).take(2).toIntOrNull() ?: return false
+    return year == month.year && monthDigits == month.month
+}
+
+/**
+ * 结算单税前收益换算为反推生态费的输入口径：结算单 income 已包含畅玩计划收益，
+ * 而预估公式（分成 + 模组激励 + 流水激励）不包含，需剔除后再反推。
+ */
+internal val IncomeVO.reverseInputIncome: Double
+    get() = (income.toDoubleOrNull() ?: 0.0) - (playPlanIncome.toDoubleOrNull() ?: 0.0)
 
 /**
  * 收益详情 ViewModel：按月加载并缓存收益预估数据，同时确定账号是否为企业开发者。
@@ -38,12 +63,17 @@ internal class IncomeDetailViewModel(
     initialUserInfo: UserInfoVO?
 ) : ViewModel() {
     private val userRepository = UserRepositoryImpl.INSTANCE
+    private val incomeRepository = IncomeRepositoryImpl.INSTANCE
     private val mainUseCase = MainUseCase(
         userRepository = userRepository,
         analyzeRepository = AnalyzeRepositoryImpl.INSTANCE,
         getResourceListUseCase = GetResourceListUseCase(ResourceRepositoryImpl.INSTANCE)
     )
     private val cache = mutableMapOf<ProfitMonth, ProfitData>()
+
+    /** pe 平台全量结算列表缓存，切月份时本地匹配，避免重复请求 */
+    private var settlementCache: List<IncomeVO>? = null
+
     private val _state = MutableStateFlow(
         IncomeDetailState(
             selectedMonth = initialMonth,
@@ -57,6 +87,7 @@ internal class IncomeDetailViewModel(
     init {
         if (initialData != null) cache[initialMonth] = initialData else load(initialMonth)
         if (initialUserInfo == null) loadEnterpriseFlag()
+        loadSettlement()
     }
 
     /**
@@ -78,9 +109,59 @@ internal class IncomeDetailViewModel(
     fun selectMonth(month: ProfitMonth) {
         if (month == _state.value.selectedMonth) return
         load(month)
+        // 结算列表已缓存时仅本地匹配，不重复请求
+        if (settlementCache != null) matchSettlement()
     }
 
-    fun retry() = load(_state.value.selectedMonth, force = true)
+    fun retry() {
+        load(_state.value.selectedMonth, force = true)
+        loadSettlement(force = true)
+    }
+
+    /**
+     * 拉取 pe 平台结算列表并匹配当前月份的结算单。
+     * 结算单未出账（如本月、下月）时匹配结果为 null，由界面提示。
+     */
+    private fun loadSettlement(force: Boolean = false) {
+        val cached = if (force) null else settlementCache
+        if (cached != null) {
+            matchSettlement()
+            return
+        }
+
+        _state.update { it.copy(isSettlementLoading = true, settlementError = null) }
+        viewModelScope.launch {
+            when (val result = incomeRepository.getIncome("pe")) {
+                is NetworkState.Success -> {
+                    settlementCache = result.data?.incomes.orEmpty()
+                    matchSettlement()
+                }
+
+                is NetworkState.Error -> {
+                    Logger.e("收益详情获取结算数据失败: ${result.msg}", result.e)
+                    _state.update {
+                        it.copy(
+                            isSettlementLoading = false,
+                            settlementError = "结算数据获取失败，请重试",
+                            settlement = null
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun matchSettlement() {
+        val list = settlementCache ?: return
+        val month = _state.value.selectedMonth
+        _state.update {
+            it.copy(
+                settlement = list.firstOrNull { income -> matchesProfitMonth(income.dataMonth, month) },
+                isSettlementLoading = false,
+                settlementError = null
+            )
+        }
+    }
 
     private fun load(month: ProfitMonth, force: Boolean = false) {
         val cached = if (force) null else cache[month]
