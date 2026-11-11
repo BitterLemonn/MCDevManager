@@ -2,7 +2,9 @@ package com.lemon.mcdevmanagermp.ui.pages.incomeDetail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lemon.mcdevmanagermp.data.common.AppContext
 import com.lemon.mcdevmanagermp.data.common.NetworkState
+import com.lemon.mcdevmanagermp.data.db.entity.EcoFeeRecordEntity
 import com.lemon.mcdevmanagermp.data.repository.AnalyzeRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.IncomeRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
@@ -14,10 +16,12 @@ import com.lemon.mcdevmanagermp.domain.main.ProfitMonth
 import com.lemon.mcdevmanagermp.domain.resource.GetResourceListUseCase
 import com.lemon.mcdevmanagermp.utils.Logger
 import com.lemon.mcdevmanagermp.utils.ProfitData
+import com.lemon.mcdevmanagermp.utils.reverseEcoFeeRate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.time.Clock
 
 internal data class IncomeDetailState(
     val selectedMonth: ProfitMonth,
@@ -29,7 +33,9 @@ internal data class IncomeDetailState(
     /** 当前月份的结算单；未出账时为 null */
     val settlement: IncomeVO? = null,
     val isSettlementLoading: Boolean = true,
-    val settlementError: String? = null
+    val settlementError: String? = null,
+    /** 已保存的历史生态费记录，按月份倒序 */
+    val ecoFeeHistory: List<EcoFeeRecordEntity> = emptyList()
 )
 
 /**
@@ -50,6 +56,32 @@ internal fun matchesProfitMonth(dataMonth: String, month: ProfitMonth): Boolean 
  */
 internal val IncomeVO.reverseInputIncome: Double
     get() = (income.toDoubleOrNull() ?: 0.0) - (playPlanIncome.toDoubleOrNull() ?: 0.0)
+
+/**
+ * 该月计算周期结束（结算单已出账）且数据可反推时，汇总保存一条生态费记录。
+ * 流水不完整、无流水或费率超出 0~100% 时返回 null，不保存。
+ */
+internal fun buildEcoFeeRecord(
+    accountKey: String,
+    month: ProfitMonth,
+    profitData: ProfitData,
+    settlement: IncomeVO
+): EcoFeeRecordEntity? {
+    if (accountKey.isBlank() || !profitData.isFlowComplete) return null
+    val ecoFeeRate = profitData.reverseEcoFeeRate(settlement.reverseInputIncome) ?: return null
+    if (ecoFeeRate !in 0.0..1.0) return null
+    return EcoFeeRecordEntity(
+        accountKey = accountKey,
+        dataMonth = "%04d-%02d".format(month.year, month.month),
+        ecoFeeRate = ecoFeeRate,
+        ecoFeeAmount = profitData.sumProfit / 100.0 * ecoFeeRate,
+        actualIncome = settlement.reverseInputIncome,
+        playPlanIncome = settlement.playPlanIncome.toDoubleOrNull() ?: 0.0,
+        estimatedTotalProfit = profitData.totalProfit,
+        sumProfit = profitData.sumProfit,
+        updatedAt = Clock.System.now().toEpochMilliseconds()
+    )
+}
 
 /**
  * 收益详情 ViewModel：按月加载并缓存收益预估数据，同时确定账号是否为企业开发者。
@@ -88,6 +120,7 @@ internal class IncomeDetailViewModel(
         if (initialData != null) cache[initialMonth] = initialData else load(initialMonth)
         if (initialUserInfo == null) loadEnterpriseFlag()
         loadSettlement()
+        loadEcoFeeHistory()
     }
 
     /**
@@ -161,6 +194,7 @@ internal class IncomeDetailViewModel(
                 settlementError = null
             )
         }
+        trySaveEcoFeeRecord()
     }
 
     private fun load(month: ProfitMonth, force: Boolean = false) {
@@ -170,6 +204,7 @@ internal class IncomeDetailViewModel(
             _state.update {
                 it.copy(selectedMonth = month, profitData = cached, isLoading = false, errorMessage = null)
             }
+            trySaveEcoFeeRecord()
             return
         }
 
@@ -182,6 +217,7 @@ internal class IncomeDetailViewModel(
                 cache[month] = data
                 if (_state.value.selectedMonth == month) {
                     _state.update { it.copy(profitData = data, isLoading = false) }
+                    trySaveEcoFeeRecord()
                 }
             } catch (e: Exception) {
                 Logger.e("收益详情加载失败", e)
@@ -190,6 +226,41 @@ internal class IncomeDetailViewModel(
                         it.copy(isLoading = false, errorMessage = "收益加载失败，请重试")
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * 该月流水与结算单都就绪且反推有效时，把结果写入本地数据库，形成历史生态费记录。
+     * 同月重复触发时按主键覆盖，保留最新一次反推结果。
+     */
+    private fun trySaveEcoFeeRecord() {
+        val settlement = _state.value.settlement ?: return
+        val accountKey = AppContext.userInfo?.nickname ?: return
+        val record = buildEcoFeeRecord(
+            accountKey = accountKey,
+            month = _state.value.selectedMonth,
+            profitData = _state.value.profitData,
+            settlement = settlement
+        ) ?: return
+        viewModelScope.launch {
+            try {
+                AppContext.database.ecoFeeRecordDao().upsert(record)
+                loadEcoFeeHistory()
+            } catch (e: Exception) {
+                Logger.e("保存生态费记录失败", e)
+            }
+        }
+    }
+
+    private fun loadEcoFeeHistory() {
+        val accountKey = AppContext.userInfo?.nickname ?: return
+        viewModelScope.launch {
+            try {
+                val history = AppContext.database.ecoFeeRecordDao().getByAccount(accountKey)
+                _state.update { it.copy(ecoFeeHistory = history) }
+            } catch (e: Exception) {
+                Logger.e("加载生态费历史失败", e)
             }
         }
     }

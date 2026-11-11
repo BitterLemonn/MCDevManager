@@ -4,6 +4,7 @@ import com.lemon.mcdevmanagermp.data.common.JSONConverter
 import com.lemon.mcdevmanagermp.data.vo.netease.income.IncomeVO
 import com.lemon.mcdevmanagermp.data.vo.netease.user.UserInfoVO
 import com.lemon.mcdevmanagermp.domain.main.ProfitMonth
+import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.buildEcoFeeRecord
 import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.matchesProfitMonth
 import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.reverseInputIncome
 import com.lemon.mcdevmanagermp.utils.ECO_FEE_RATE
@@ -79,6 +80,36 @@ class EcoFeeReverseTest {
         assertFalse(matchesProfitMonth("2025-10", month))
         assertFalse(matchesProfitMonth("", month))
         assertFalse(matchesProfitMonth("abc", month))
+    }
+
+    @Test
+    fun ecoFeeRecordBuiltWhenSettledAndComplete() {
+        val month = ProfitMonth(2026, 10)
+        val s = settlement(dataMonth = "2026-10", income = profit.totalProfit.toString())
+        val record = checkNotNull(buildEcoFeeRecord("开发者", month, profit, s))
+        assertEquals("2026-10", record.dataMonth)
+        assertClose(ECO_FEE_RATE, record.ecoFeeRate)
+        assertEquals(profit.totalProfit, record.actualIncome, 1e-9)
+        assertEquals(profit.sumProfit / 100.0 * ECO_FEE_RATE, record.ecoFeeAmount, 1e-9)
+    }
+
+    @Test
+    fun ecoFeeRecordSkippedWhenIncomplete() {
+        val s = settlement(income = profit.totalProfit.toString())
+        assertNull(buildEcoFeeRecord("开发者", ProfitMonth(2026, 10), profit.copy(isFlowComplete = false), s))
+    }
+
+    @Test
+    fun ecoFeeRecordSkippedWhenRateOutOfRange() {
+        // 实际收益远超预估可解释范围，反推费率为负，不保存
+        val s = settlement(income = (profit.totalProfit * 10).toString())
+        assertNull(buildEcoFeeRecord("开发者", ProfitMonth(2026, 10), profit, s))
+    }
+
+    @Test
+    fun ecoFeeRecordSkippedWithoutAccount() {
+        val s = settlement(income = profit.totalProfit.toString())
+        assertNull(buildEcoFeeRecord("", ProfitMonth(2026, 10), profit, s))
     }
 
     @Test

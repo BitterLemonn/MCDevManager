@@ -9,14 +9,16 @@ import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.execSQL
 import com.lemon.mcdevmanagermp.data.db.dao.AccountDao
 import com.lemon.mcdevmanagermp.data.db.dao.DayDetailConfigDao
+import com.lemon.mcdevmanagermp.data.db.dao.EcoFeeRecordDao
 import com.lemon.mcdevmanagermp.data.db.dao.PromotionTemplateDao
 import com.lemon.mcdevmanagermp.data.db.entity.AccountEntity
 import com.lemon.mcdevmanagermp.data.db.entity.DayDetailConfigEntity
+import com.lemon.mcdevmanagermp.data.db.entity.EcoFeeRecordEntity
 import com.lemon.mcdevmanagermp.data.db.entity.PromotionTemplateEntity
 
 @Database(
-    entities = [AccountEntity::class, PromotionTemplateEntity::class, DayDetailConfigEntity::class],
-    version = 7,
+    entities = [AccountEntity::class, PromotionTemplateEntity::class, DayDetailConfigEntity::class, EcoFeeRecordEntity::class],
+    version = 8,
     exportSchema = false
 )
 @ConstructedBy(AppDatabaseConstructor::class)
@@ -24,6 +26,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun accountDao(): AccountDao
     abstract fun promotionTemplateDao(): PromotionTemplateDao
     abstract fun dayDetailConfigDao(): DayDetailConfigDao
+    abstract fun ecoFeeRecordDao(): EcoFeeRecordDao
 }
 
 expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
@@ -146,5 +149,29 @@ val MIGRATION_6_7 = object : Migration(6, 7) {
                 "ALTER TABLE account ADD COLUMN rememberPassword INTEGER NOT NULL DEFAULT 0"
             )
         }
+    }
+}
+
+/**
+ * 数据库迁移 7→8：新增每月生态费反推记录表（按账号 + 月份隔离）。
+ */
+val MIGRATION_7_8 = object : Migration(7, 8) {
+    override fun migrate(connection: SQLiteConnection) {
+        connection.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS eco_fee_record (
+              accountKey TEXT NOT NULL,
+              dataMonth TEXT NOT NULL,
+              ecoFeeRate REAL NOT NULL,
+              ecoFeeAmount REAL NOT NULL,
+              actualIncome REAL NOT NULL,
+              playPlanIncome REAL NOT NULL,
+              estimatedTotalProfit REAL NOT NULL,
+              sumProfit REAL NOT NULL,
+              updatedAt INTEGER NOT NULL,
+              PRIMARY KEY (accountKey, dataMonth)
+            )
+            """.trimIndent()
+        )
     }
 }
