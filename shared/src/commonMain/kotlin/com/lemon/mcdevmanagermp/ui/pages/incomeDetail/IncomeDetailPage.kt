@@ -50,9 +50,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.data.db.entity.EcoFeeRecordEntity
+import com.lemon.mcdevmanagermp.data.repository.reverseInputIncome
 import com.lemon.mcdevmanagermp.data.vo.netease.income.IncomeVO
 import com.lemon.mcdevmanagermp.domain.main.ProfitMonth
 import com.lemon.mcdevmanagermp.domain.main.profitMonthWindow
@@ -550,8 +550,8 @@ private fun EcoFeeReverseCard(
 // ============================================================
 
 /**
- * 历史生态费卡片：展示本地已保存的各月生态费反推记录（按月份倒序）。
- * 记录在该月结算单出账后浏览收益详情时自动保存。
+ * 历史生态费卡片：展示本地已保存的各月实际生态费率（按月份倒序）。
+ * 记录在该月计算周期截止后保存预估快照，结算单出账后反推补全。
  */
 @Composable
 private fun EcoFeeHistoryCard(history: List<EcoFeeRecordEntity>) {
@@ -581,53 +581,27 @@ private fun EcoFeeHistoryCard(history: List<EcoFeeRecordEntity>) {
             ) {
                 if (history.isEmpty()) {
                     Text(
-                        text = "暂无记录，结算单出账后浏览对应月份将自动保存生态费",
+                        text = "暂无记录，结算单出账后浏览对应月份将自动反推并保存",
                         style = MaterialTheme.typography.bodySmall,
                         color = colors.onSurfaceVariant
                     )
                 } else {
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            text = "月份",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = colors.onSurfaceVariant,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Text(
-                            text = "实际生态费率",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = colors.onSurfaceVariant,
-                            modifier = Modifier.width(90.dp)
-                        )
-                        Text(
-                            text = "生态费(元)",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = colors.onSurfaceVariant,
-                            modifier = Modifier.width(90.dp),
-                            textAlign = TextAlign.End
-                        )
-                    }
                     history.forEach { record ->
-                        Row(modifier = Modifier.fillMaxWidth()) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Text(
                                 text = record.dataMonth.displayMonth(),
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = colors.textColor,
-                                modifier = Modifier.weight(1f)
+                                color = colors.textColor
                             )
                             Text(
-                                text = "${(record.ecoFeeRate * 100).formatDecimal(2)}%",
+                                text = "${((record.ecoFeeRate ?: 0.0) * 100).formatDecimal(2)}%",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = colors.primary,
-                                modifier = Modifier.width(90.dp)
-                            )
-                            Text(
-                                text = record.ecoFeeAmount.formatDecimal(2),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = colors.textColor,
-                                modifier = Modifier.width(90.dp),
-                                textAlign = TextAlign.End
+                                color = colors.primary
                             )
                         }
                     }

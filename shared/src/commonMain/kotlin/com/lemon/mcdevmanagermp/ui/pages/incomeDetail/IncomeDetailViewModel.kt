@@ -6,9 +6,12 @@ import com.lemon.mcdevmanagermp.data.common.AppContext
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.db.entity.EcoFeeRecordEntity
 import com.lemon.mcdevmanagermp.data.repository.AnalyzeRepositoryImpl
+import com.lemon.mcdevmanagermp.data.repository.EcoFeeRecordRepository
 import com.lemon.mcdevmanagermp.data.repository.IncomeRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.UserRepositoryImpl
+import com.lemon.mcdevmanagermp.data.repository.monthKey
+import com.lemon.mcdevmanagermp.data.repository.normalizeMonthKey
 import com.lemon.mcdevmanagermp.data.vo.netease.income.IncomeVO
 import com.lemon.mcdevmanagermp.data.vo.netease.user.UserInfoVO
 import com.lemon.mcdevmanagermp.domain.main.MainUseCase
@@ -16,11 +19,13 @@ import com.lemon.mcdevmanagermp.domain.main.ProfitMonth
 import com.lemon.mcdevmanagermp.domain.resource.GetResourceListUseCase
 import com.lemon.mcdevmanagermp.utils.Logger
 import com.lemon.mcdevmanagermp.utils.ProfitData
-import com.lemon.mcdevmanagermp.utils.reverseEcoFeeRate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.number
+import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 
 internal data class IncomeDetailState(
@@ -34,57 +39,13 @@ internal data class IncomeDetailState(
     val settlement: IncomeVO? = null,
     val isSettlementLoading: Boolean = true,
     val settlementError: String? = null,
-    /** 已保存的历史生态费记录，按月份倒序 */
+    /** 已反推出费率的历史生态费记录，按月份倒序 */
     val ecoFeeHistory: List<EcoFeeRecordEntity> = emptyList()
 )
 
 /**
- * 结算单 dataMonth 与所选月份比较。
- * 兼容 "2026-10"、"2026-1"、"202610" 等格式：去掉非数字字符后统一按 yyyyMM 比较。
- */
-internal fun matchesProfitMonth(dataMonth: String, month: ProfitMonth): Boolean {
-    val digits = dataMonth.filter { it.isDigit() }
-    if (digits.length < 5) return false
-    val year = digits.substring(0, 4).toIntOrNull() ?: return false
-    val monthDigits = digits.substring(4).take(2).toIntOrNull() ?: return false
-    return year == month.year && monthDigits == month.month
-}
-
-/**
- * 结算单税前收益换算为反推生态费的输入口径：结算单 income 已包含畅玩计划收益，
- * 而预估公式（分成 + 模组激励 + 流水激励）不包含，需剔除后再反推。
- */
-internal val IncomeVO.reverseInputIncome: Double
-    get() = (income.toDoubleOrNull() ?: 0.0) - (playPlanIncome.toDoubleOrNull() ?: 0.0)
-
-/**
- * 该月计算周期结束（结算单已出账）且数据可反推时，汇总保存一条生态费记录。
- * 流水不完整、无流水或费率超出 0~100% 时返回 null，不保存。
- */
-internal fun buildEcoFeeRecord(
-    accountKey: String,
-    month: ProfitMonth,
-    profitData: ProfitData,
-    settlement: IncomeVO
-): EcoFeeRecordEntity? {
-    if (accountKey.isBlank() || !profitData.isFlowComplete) return null
-    val ecoFeeRate = profitData.reverseEcoFeeRate(settlement.reverseInputIncome) ?: return null
-    if (ecoFeeRate !in 0.0..1.0) return null
-    return EcoFeeRecordEntity(
-        accountKey = accountKey,
-        dataMonth = "%04d-%02d".format(month.year, month.month),
-        ecoFeeRate = ecoFeeRate,
-        ecoFeeAmount = profitData.sumProfit / 100.0 * ecoFeeRate,
-        actualIncome = settlement.reverseInputIncome,
-        playPlanIncome = settlement.playPlanIncome.toDoubleOrNull() ?: 0.0,
-        estimatedTotalProfit = profitData.totalProfit,
-        sumProfit = profitData.sumProfit,
-        updatedAt = Clock.System.now().toEpochMilliseconds()
-    )
-}
-
-/**
  * 收益详情 ViewModel：按月加载并缓存收益预估数据，同时确定账号是否为企业开发者。
+ * 已截止月份优先使用周期截止后保存的预估快照，结算单出账后以快照反推生态费。
  *
  * @param initialData 首页已计算好的该月收益，非空时直接复用避免重复请求
  * @param initialUserInfo 首页已加载的用户信息，为空时会单独请求以判定企业开发者
@@ -96,6 +57,7 @@ internal class IncomeDetailViewModel(
 ) : ViewModel() {
     private val userRepository = UserRepositoryImpl.INSTANCE
     private val incomeRepository = IncomeRepositoryImpl.INSTANCE
+    private val ecoFeeRecordRepository = EcoFeeRecordRepository.INSTANCE
     private val mainUseCase = MainUseCase(
         userRepository = userRepository,
         analyzeRepository = AnalyzeRepositoryImpl.INSTANCE,
@@ -117,7 +79,12 @@ internal class IncomeDetailViewModel(
     val state = _state.asStateFlow()
 
     init {
-        if (initialData != null) cache[initialMonth] = initialData else load(initialMonth)
+        if (initialData != null) {
+            cache[initialMonth] = initialData
+            trySaveEcoFeeRecord()
+        } else {
+            load(initialMonth)
+        }
         if (initialUserInfo == null) loadEnterpriseFlag()
         loadSettlement()
         loadEcoFeeHistory()
@@ -147,6 +114,7 @@ internal class IncomeDetailViewModel(
     }
 
     fun retry() {
+        // 快照可能与登录时的最新数据不一致，重试时跳过快照强制走网络
         load(_state.value.selectedMonth, force = true)
         loadSettlement(force = true)
     }
@@ -189,7 +157,7 @@ internal class IncomeDetailViewModel(
         val month = _state.value.selectedMonth
         _state.update {
             it.copy(
-                settlement = list.firstOrNull { income -> matchesProfitMonth(income.dataMonth, month) },
+                settlement = list.firstOrNull { income -> normalizeMonthKey(income.dataMonth) == monthKey(month) },
                 isSettlementLoading = false,
                 settlementError = null
             )
@@ -213,12 +181,23 @@ internal class IncomeDetailViewModel(
         }
         viewModelScope.launch {
             try {
-                val data = mainUseCase.computeMonthProfit(month.year, month.month)
+                val accountKey = AppContext.userInfo?.nickname
+                // 已截止月份优先使用周期截止后保存的快照，出账后反推以其为准
+                val snapshot = if (accountKey != null && !force && isMonthClosed(month)) {
+                    ecoFeeRecordRepository.getSnapshot(accountKey, month)
+                } else {
+                    null
+                }
+                val data = snapshot ?: mainUseCase.computeMonthProfit(month.year, month.month)
                 cache[month] = data
                 if (_state.value.selectedMonth == month) {
                     _state.update { it.copy(profitData = data, isLoading = false) }
-                    trySaveEcoFeeRecord()
                 }
+                // 网络拉取的已截止月份保存快照；快照来源无需重复保存
+                if (snapshot == null && accountKey != null && isMonthClosed(month)) {
+                    ecoFeeRecordRepository.saveSnapshot(accountKey, month, data)
+                }
+                trySaveEcoFeeRecord()
             } catch (e: Exception) {
                 Logger.e("收益详情加载失败", e)
                 if (_state.value.selectedMonth == month) {
@@ -237,15 +216,12 @@ internal class IncomeDetailViewModel(
     private fun trySaveEcoFeeRecord() {
         val settlement = _state.value.settlement ?: return
         val accountKey = AppContext.userInfo?.nickname ?: return
-        val record = buildEcoFeeRecord(
-            accountKey = accountKey,
-            month = _state.value.selectedMonth,
-            profitData = _state.value.profitData,
-            settlement = settlement
-        ) ?: return
+        val month = _state.value.selectedMonth
+        val profitData = _state.value.profitData
+        if (!profitData.isFlowComplete) return
         viewModelScope.launch {
             try {
-                AppContext.database.ecoFeeRecordDao().upsert(record)
+                ecoFeeRecordRepository.saveReverseResult(accountKey, month, profitData, settlement)
                 loadEcoFeeHistory()
             } catch (e: Exception) {
                 Logger.e("保存生态费记录失败", e)
@@ -257,11 +233,17 @@ internal class IncomeDetailViewModel(
         val accountKey = AppContext.userInfo?.nickname ?: return
         viewModelScope.launch {
             try {
-                val history = AppContext.database.ecoFeeRecordDao().getByAccount(accountKey)
+                val history = ecoFeeRecordRepository.getRated(accountKey)
                 _state.update { it.copy(ecoFeeHistory = history) }
             } catch (e: Exception) {
                 Logger.e("加载生态费历史失败", e)
             }
         }
+    }
+
+    /** 计算周期是否已截止：该月已完整结束（当前自然月之前的月份） */
+    private fun isMonthClosed(month: ProfitMonth): Boolean {
+        val now = Clock.System.now().toLocalDateTime(TimeZone.of("Asia/Shanghai"))
+        return month < ProfitMonth(now.year, now.month.number)
     }
 }

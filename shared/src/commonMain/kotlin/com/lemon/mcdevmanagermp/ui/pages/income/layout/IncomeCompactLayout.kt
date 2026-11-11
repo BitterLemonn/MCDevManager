@@ -62,6 +62,7 @@ internal fun CompactIncomeLayout(
             IncomeList(
                 incomeList = state.currentList,
                 isLoading = state.isLoading,
+                ecoFeeRates = state.ecoFeeRates,
                 modifier = Modifier.fillMaxWidth().weight(1f)
             )
         }

@@ -8,8 +8,11 @@ import com.lemon.mcdevmanagermp.data.db.entity.EcoFeeRecordEntity
 @Dao
 interface EcoFeeRecordDao {
 
-    @Query("SELECT * FROM eco_fee_record WHERE accountKey = :accountKey ORDER BY dataMonth DESC")
-    suspend fun getByAccount(accountKey: String): List<EcoFeeRecordEntity>
+    @Query("SELECT * FROM eco_fee_record WHERE accountKey = :accountKey AND dataMonth = :dataMonth LIMIT 1")
+    suspend fun get(accountKey: String, dataMonth: String): EcoFeeRecordEntity?
+
+    @Query("SELECT * FROM eco_fee_record WHERE accountKey = :accountKey AND ecoFeeRate IS NOT NULL ORDER BY dataMonth DESC")
+    suspend fun getRatedByAccount(accountKey: String): List<EcoFeeRecordEntity>
 
     @Upsert
     suspend fun upsert(record: EcoFeeRecordEntity)
