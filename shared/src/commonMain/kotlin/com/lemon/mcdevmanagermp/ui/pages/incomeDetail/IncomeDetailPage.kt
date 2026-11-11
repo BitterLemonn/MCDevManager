@@ -50,7 +50,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.lemon.mcdevmanagermp.data.db.entity.EcoFeeRecordEntity
 import com.lemon.mcdevmanagermp.data.vo.netease.income.IncomeVO
 import com.lemon.mcdevmanagermp.domain.main.ProfitMonth
 import com.lemon.mcdevmanagermp.domain.main.profitMonthWindow
@@ -166,6 +168,7 @@ fun IncomeDetailPage(initialMonthOffset: Int = 0, onBack: () -> Unit) {
                             dataReady = !state.isLoading && state.errorMessage == null,
                             onRetry = viewModel::retry
                         )
+                        EcoFeeHistoryCard(history = state.ecoFeeHistory)
                         ModuleList(modules, columns)
                     }
                 }
@@ -520,7 +523,7 @@ private fun EcoFeeReverseCard(
                             )
 
                             else -> {
-                                DetailRow("实际收益(结算单，元)", settlement.income, colors)
+                                DetailRow("税前实际收益(元)", settlement.income, colors)
                                 val playPlan = settlement.playPlanIncome.toDoubleOrNull() ?: 0.0
                                 if (playPlan > 0.0) {
                                     DetailRow("剔除畅玩计划(元)", playPlan.formatDecimal(2), colors)
@@ -540,6 +543,106 @@ private fun EcoFeeReverseCard(
             }
         }
     }
+}
+
+// ============================================================
+// Eco Fee History Card — 历史各月生态费记录
+// ============================================================
+
+/**
+ * 历史生态费卡片：展示本地已保存的各月生态费反推记录（按月份倒序）。
+ * 记录在该月结算单出账后浏览收益详情时自动保存。
+ */
+@Composable
+private fun EcoFeeHistoryCard(history: List<EcoFeeRecordEntity>) {
+    val colors = LocalAppColors.current
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+            Text(
+                text = "历史生态费",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = colors.textColor
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(colors.surfaceContainerHighest, RoundedCornerShape(8.dp))
+                    .padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                if (history.isEmpty()) {
+                    Text(
+                        text = "暂无记录，结算单出账后浏览对应月份将自动保存生态费",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.onSurfaceVariant
+                    )
+                } else {
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "月份",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = colors.onSurfaceVariant,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = "实际生态费率",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = colors.onSurfaceVariant,
+                            modifier = Modifier.width(90.dp)
+                        )
+                        Text(
+                            text = "生态费(元)",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = colors.onSurfaceVariant,
+                            modifier = Modifier.width(90.dp),
+                            textAlign = TextAlign.End
+                        )
+                    }
+                    history.forEach { record ->
+                        Row(modifier = Modifier.fillMaxWidth()) {
+                            Text(
+                                text = record.dataMonth.displayMonth(),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = colors.textColor,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                text = "${(record.ecoFeeRate * 100).formatDecimal(2)}%",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = colors.primary,
+                                modifier = Modifier.width(90.dp)
+                            )
+                            Text(
+                                text = record.ecoFeeAmount.formatDecimal(2),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = colors.textColor,
+                                modifier = Modifier.width(90.dp),
+                                textAlign = TextAlign.End
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** "yyyy-MM" 转为 "yyyy年M月" 展示 */
+private fun String.displayMonth(): String {
+    val parts = split("-")
+    val year = parts.getOrNull(0) ?: return this
+    val month = parts.getOrNull(1)?.toIntOrNull() ?: return this
+    return "${year}年${month}月"
 }
 
 // ============================================================
