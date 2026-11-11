@@ -1,0 +1,21 @@
+{
+  "name": "MCDevManager",
+  "subtitle": "网易 MC 开发者管理器",
+  "website": "https://github.com/BitterLemonn/MCDevManager",
+  "apps": [
+    {
+      "name": "MCDevManager",
+      "bundleIdentifier": "com.lemon.mcdevmanagermp.MCDevManagerMPR",
+      "developerName": "BitterLemonn",
+      "localizedDescription": "一站式网易 MC 开发者平台管理工具，支持作品管理、数据分析、收益与互动。此版本需要通过 AltStore Classic / SideStore 自行签名。",
+      "iconURL": "https://raw.githubusercontent.com/BitterLemonn/MCDevManager/mp-master/iosApp/iosApp/Assets.xcassets/AppIcon.appiconset/app-icon-1024.png",
+      "category": "developer",
+      "versions": [
+        {
+          "downloadURL": "https://github.com/BitterLemonn/MCDevManager/releases/download/{tag}/{filename}"
+        }
+      ]
+    }
+  ],
+  "news": []
+}

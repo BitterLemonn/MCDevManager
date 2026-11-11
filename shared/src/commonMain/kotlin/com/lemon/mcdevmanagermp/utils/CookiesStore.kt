@@ -5,9 +5,15 @@ object CookiesStore {
 
     fun addCookies(list: List<String>) {
         list.forEach {
-            val cookie = it.split(";")[0]
-            val key = cookie.split("=")[0]
-            val value = cookie.split("=")[1]
+            val cookie = it.substringBefore(';')
+            val separator = cookie.indexOf('=')
+            if (separator <= 0) return@forEach
+
+            val key = cookie.substring(0, separator).trim()
+            if (key.isEmpty()) return@forEach
+
+            // Cookie 值也可能包含等号，只在第一个等号处分隔。
+            val value = cookie.substring(separator + 1).trim()
             cookies[key] = value
         }
     }
