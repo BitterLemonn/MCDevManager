@@ -83,7 +83,6 @@ internal fun ExpandedIncomeLayout(
                 IncomeList(
                     incomeList = state.currentList,
                     isLoading = state.isLoading,
-                    ecoFeeRates = state.ecoFeeRates,
                     modifier = Modifier.weight(1f)
                 )
             }

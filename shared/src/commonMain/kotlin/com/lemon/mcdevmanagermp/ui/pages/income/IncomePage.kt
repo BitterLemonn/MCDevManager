@@ -61,7 +61,6 @@ import com.lemon.mcdevmanagermp.ui.components.collectUiEffect
 import com.lemon.mcdevmanagermp.ui.pages.income.layout.CompactIncomeLayout
 import com.lemon.mcdevmanagermp.ui.pages.income.layout.ExpandedIncomeLayout
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import com.lemon.mcdevmanagermp.data.repository.normalizeMonthKey
 import com.lemon.mcdevmanagermp.utils.extension.formatDecimal
 
 @Composable
@@ -328,7 +327,6 @@ internal fun SettleableBanner(
 internal fun IncomeList(
     incomeList: List<com.lemon.mcdevmanagermp.data.vo.netease.income.IncomeVO>,
     isLoading: Boolean,
-    ecoFeeRates: Map<String, Double> = emptyMap(),
     modifier: Modifier = Modifier
 ) {
     val colors = LocalAppColors.current
@@ -350,7 +348,7 @@ internal fun IncomeList(
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         itemsIndexed(incomeList) { _, income ->
-            IncomeItemCard(income, ecoFeeRates)
+            IncomeItemCard(income)
         }
     }
 }
@@ -360,13 +358,9 @@ internal fun IncomeList(
 // ============================================================
 
 @Composable
-internal fun IncomeItemCard(
-    data: com.lemon.mcdevmanagermp.data.vo.netease.income.IncomeVO,
-    ecoFeeRates: Map<String, Double> = emptyMap()
-) {
+internal fun IncomeItemCard(data: com.lemon.mcdevmanagermp.data.vo.netease.income.IncomeVO) {
     val colors = LocalAppColors.current
     val isUnsettled = data.status == "未结算"
-    val ecoFeeRate = normalizeMonthKey(data.dataMonth)?.let { ecoFeeRates[it] }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -377,7 +371,7 @@ internal fun IncomeItemCard(
         Column(modifier = Modifier.fillMaxWidth().padding(14.dp)) {
             IncomeItemHeader(data, isUnsettled, colors)
             Spacer(Modifier.height(10.dp))
-            IncomeItemDetails(data, isUnsettled, ecoFeeRate, colors)
+            IncomeItemDetails(data, isUnsettled, colors)
         }
     }
 }
@@ -412,7 +406,6 @@ private fun IncomeItemHeader(
 private fun IncomeItemDetails(
     data: com.lemon.mcdevmanagermp.data.vo.netease.income.IncomeVO,
     isUnsettled: Boolean,
-    ecoFeeRate: Double?,
     colors: com.lemon.mcdevmanagermp.ui.theme.AppColors
 ) {
     Column(
@@ -422,9 +415,6 @@ private fun IncomeItemDetails(
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        if (ecoFeeRate != null) {
-            DetailRow("实际生态费率", "${(ecoFeeRate * 100).formatDecimal(2)}%", colors.primary)
-        }
         DetailRow("当前月收益", data.income, if (isUnsettled) colors.primary else colors.textColor)
         DetailRow("消耗钻石", "${data.totalDiamond}", colors.textColor)
         DetailRow("激励金额", data.incentiveIncome, colors.textColor)

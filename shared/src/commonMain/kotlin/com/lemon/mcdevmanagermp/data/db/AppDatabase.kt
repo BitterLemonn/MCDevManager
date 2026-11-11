@@ -9,16 +9,14 @@ import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.execSQL
 import com.lemon.mcdevmanagermp.data.db.dao.AccountDao
 import com.lemon.mcdevmanagermp.data.db.dao.DayDetailConfigDao
-import com.lemon.mcdevmanagermp.data.db.dao.EcoFeeRecordDao
 import com.lemon.mcdevmanagermp.data.db.dao.PromotionTemplateDao
 import com.lemon.mcdevmanagermp.data.db.entity.AccountEntity
 import com.lemon.mcdevmanagermp.data.db.entity.DayDetailConfigEntity
-import com.lemon.mcdevmanagermp.data.db.entity.EcoFeeRecordEntity
 import com.lemon.mcdevmanagermp.data.db.entity.PromotionTemplateEntity
 
 @Database(
-    entities = [AccountEntity::class, PromotionTemplateEntity::class, DayDetailConfigEntity::class, EcoFeeRecordEntity::class],
-    version = 9,
+    entities = [AccountEntity::class, PromotionTemplateEntity::class, DayDetailConfigEntity::class],
+    version = 7,
     exportSchema = false
 )
 @ConstructedBy(AppDatabaseConstructor::class)
@@ -26,7 +24,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun accountDao(): AccountDao
     abstract fun promotionTemplateDao(): PromotionTemplateDao
     abstract fun dayDetailConfigDao(): DayDetailConfigDao
-    abstract fun ecoFeeRecordDao(): EcoFeeRecordDao
 }
 
 expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
@@ -151,39 +148,3 @@ val MIGRATION_6_7 = object : Migration(6, 7) {
         }
     }
 }
-
-/**
- * 数据库迁移 7→8：新增每月生态费记录表（按账号 + 月份隔离）。
- * 周期截止后保存预估快照，出账后补全费率字段（可空）。
- */
-val MIGRATION_7_8 = object : Migration(7, 8) {
-    override fun migrate(connection: SQLiteConnection) {
-        connection.execSQL(CREATE_ECO_FEE_RECORD_TABLE_SQL)
-    }
-}
-
-/**
- * 数据库迁移 8→9：重建 eco_fee_record 表。
- * 早期 8 版本的表结构（费率字段非空、无快照列）与最终结构不一致，直接重建；
- * 旧表数据不迁移，快照可由后续登录重新保存，费率在结算单出账后浏览时重新反推。
- */
-val MIGRATION_8_9 = object : Migration(8, 9) {
-    override fun migrate(connection: SQLiteConnection) {
-        connection.execSQL("DROP TABLE IF EXISTS eco_fee_record")
-        connection.execSQL(CREATE_ECO_FEE_RECORD_TABLE_SQL)
-    }
-}
-
-private const val CREATE_ECO_FEE_RECORD_TABLE_SQL = """
-    CREATE TABLE IF NOT EXISTS eco_fee_record (
-      accountKey TEXT NOT NULL,
-      dataMonth TEXT NOT NULL,
-      profitDataJson TEXT NOT NULL,
-      ecoFeeRate REAL,
-      ecoFeeAmount REAL,
-      actualIncome REAL,
-      playPlanIncome REAL,
-      updatedAt INTEGER NOT NULL,
-      PRIMARY KEY (accountKey, dataMonth)
-    )
-"""
