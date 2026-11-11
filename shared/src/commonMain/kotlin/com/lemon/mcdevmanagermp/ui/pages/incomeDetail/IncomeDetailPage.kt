@@ -51,9 +51,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.lemon.mcdevmanagermp.data.db.entity.EcoFeeRecordEntity
-import com.lemon.mcdevmanagermp.data.repository.reverseInputIncome
-import com.lemon.mcdevmanagermp.data.vo.netease.income.IncomeVO
 import com.lemon.mcdevmanagermp.domain.main.ProfitMonth
 import com.lemon.mcdevmanagermp.domain.main.profitMonthWindow
 import com.lemon.mcdevmanagermp.ui.components.AppScaffold
@@ -63,12 +60,10 @@ import com.lemon.mcdevmanagermp.ui.components.LocalToastScope
 import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
 import com.lemon.mcdevmanagermp.ui.pages.main.MainViewModel
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
-import com.lemon.mcdevmanagermp.utils.ECO_FEE_RATE
 import com.lemon.mcdevmanagermp.utils.ModuleIncomeDetail
 import com.lemon.mcdevmanagermp.utils.ProfitData
 import com.lemon.mcdevmanagermp.utils.extension.formatDecimal
 import com.lemon.mcdevmanagermp.utils.getTaxMoney
-import com.lemon.mcdevmanagermp.utils.reverseEcoFeeRate
 import com.lemon.mcdevmanagermp.utils.toModuleIncomeDetails
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
@@ -98,9 +93,7 @@ fun IncomeDetailPage(initialMonthOffset: Int = 0, onBack: () -> Unit) {
             else -> MainViewModel.cachedProfitData
         }
     }
-    val viewModel = remember(initialMonth) {
-        IncomeDetailViewModel(initialMonth, initialData, MainViewModel.cachedUserInfo)
-    }
+    val viewModel = remember(initialMonth) { IncomeDetailViewModel(initialMonth, initialData) }
     val state by viewModel.state.collectAsState()
     val profitData = state.profitData
     val monthLabel = "${state.selectedMonth.year}年${state.selectedMonth.month}月"
@@ -159,16 +152,7 @@ fun IncomeDetailPage(initialMonthOffset: Int = 0, onBack: () -> Unit) {
                         state.errorMessage?.let { message ->
                             LoadErrorCard(message = message, onRetry = viewModel::retry)
                         }
-                        SummaryCard(profitData, modules, showTaxEstimate = !state.isEnterprise)
-                        EcoFeeReverseCard(
-                            profitData = profitData,
-                            settlement = state.settlement,
-                            isSettlementLoading = state.isSettlementLoading,
-                            settlementError = state.settlementError,
-                            dataReady = !state.isLoading && state.errorMessage == null,
-                            onRetry = viewModel::retry
-                        )
-                        EcoFeeHistoryCard(history = state.ecoFeeHistory)
+                        SummaryCard(profitData, modules)
                         ModuleList(modules, columns)
                     }
                 }
@@ -303,16 +287,8 @@ private fun ProfitMonthPickerDialog(
 // Summary Card
 // ============================================================
 
-/**
- * 收益汇总卡片。
- * @param showTaxEstimate 是否展示按个人劳务报酬预估的税后收益；企业开发者自行开票缴税，传 false 隐藏
- */
 @Composable
-private fun SummaryCard(
-    profitData: ProfitData,
-    modules: List<ModuleIncomeDetail>,
-    showTaxEstimate: Boolean
-) {
+private fun SummaryCard(profitData: ProfitData, modules: List<ModuleIncomeDetail>) {
     val colors = LocalAppColors.current
 
     Card(
@@ -386,237 +362,29 @@ private fun SummaryCard(
                         color = colors.primary
                     )
                 }
-                if (showTaxEstimate) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "税后收益(元)",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = colors.textColor
-                        )
-                        Text(
-                            text = (profitData.totalProfit - getTaxMoney(profitData.totalProfit)).formatDecimal(
-                                2
-                            ),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = colors.primary
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-// ============================================================
-// Eco Fee Reverse Card — 读取结算单实际收益反推生态费
-// ============================================================
-
-/**
- * 实际收益反推生态费卡片：自动读取该月结算单的实际税前收益，按预估公式反解实际生态费率与金额。
- * 结算单未出账（如本月、下月）时提示，待平台出账后即可自动反推。
- *
- * 流水不完整（[ProfitData.isFlowComplete] 为 false）时不反推：缺失的作品流水会让费率系统性偏低，
- * 改为提示并提供重新加载。
- *
- * @param settlement 该月结算单；null 表示尚未出账
- * @param dataReady 该月收益数据已加载成功；加载中或失败时流水为空，不展示反推结果
- * @param onRetry 强制重新加载当月收益与结算数据（跳过缓存）
- */
-@Composable
-private fun EcoFeeReverseCard(
-    profitData: ProfitData,
-    settlement: IncomeVO?,
-    isSettlementLoading: Boolean,
-    settlementError: String?,
-    dataReady: Boolean,
-    onRetry: () -> Unit
-) {
-    val colors = LocalAppColors.current
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-            Text(
-                text = "实际收益反推生态费",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                color = colors.textColor
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            if (!dataReady) {
-                // 收益加载中或失败时不展示，等数据就绪后随重组出现
-                return@Card
-            }
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(colors.surfaceContainerHighest, RoundedCornerShape(8.dp))
-                    .padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                when {
-                    // 流水不完整优先提示：即使结算单就绪，不完整的流水也无法反推
-                    !profitData.isFlowComplete -> Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "部分作品流水获取失败，数据不完整，暂不反推生态费",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = colors.warning,
-                            modifier = Modifier.weight(1f)
-                        )
-                        TextButton(onClick = onRetry) { Text("重试") }
-                    }
-
-                    settlementError != null -> Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = settlementError,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = colors.warning,
-                            modifier = Modifier.weight(1f)
-                        )
-                        TextButton(onClick = onRetry) { Text("重试") }
-                    }
-
-                    isSettlementLoading -> Text(
-                        text = "正在获取结算数据…",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = colors.onSurfaceVariant
-                    )
-
-                    settlement == null -> Text(
-                        text = "该月结算单尚未生成，待平台出账后自动反推生态费",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = colors.onSurfaceVariant
-                    )
-
-                    else -> {
-                        val ecoFeeRate = profitData.reverseEcoFeeRate(settlement.reverseInputIncome)
-                        when {
-                            ecoFeeRate == null -> Text(
-                                text = "该月无流水，无法反推生态费",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = colors.onSurfaceVariant
-                            )
-
-                            // 费率落在 0~100% 之外：实际收益无法由预估公式解释（如激励未发放、口径不一致）
-                            ecoFeeRate !in 0.0..1.0 -> Text(
-                                text = "实际收益超出预估公式可解释的范围，可能存在预估未计入的收益或调整项",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = colors.warning
-                            )
-
-                            else -> {
-                                DetailRow("税前实际收益(元)", settlement.income, colors)
-                                val playPlan = settlement.playPlanIncome.toDoubleOrNull() ?: 0.0
-                                if (playPlan > 0.0) {
-                                    DetailRow("剔除畅玩计划(元)", playPlan.formatDecimal(2), colors)
-                                }
-                                DetailRow("预估总收益(元)", profitData.totalProfit.formatDecimal(2), colors)
-                                DetailRow("预估生态费率", "${(ECO_FEE_RATE * 100).formatDecimal(2)}%", colors)
-                                DetailRow("实际生态费率", "${(ecoFeeRate * 100).formatDecimal(2)}%", colors)
-                                DetailRow(
-                                    "实际生态费(元)",
-                                    (profitData.sumProfit / 100.0 * ecoFeeRate).formatDecimal(2),
-                                    colors
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-// ============================================================
-// Eco Fee History Card — 历史各月生态费记录
-// ============================================================
-
-/**
- * 历史生态费卡片：展示本地已保存的各月实际生态费率（按月份倒序）。
- * 记录在该月计算周期截止后保存预估快照，结算单出账后反推补全。
- */
-@Composable
-private fun EcoFeeHistoryCard(history: List<EcoFeeRecordEntity>) {
-    val colors = LocalAppColors.current
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-            Text(
-                text = "历史生态费",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                color = colors.textColor
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(colors.surfaceContainerHighest, RoundedCornerShape(8.dp))
-                    .padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                if (history.isEmpty()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Text(
-                        text = "暂无记录，结算单出账后浏览对应月份将自动反推并保存",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = colors.onSurfaceVariant
+                        text = "税后收益(元)",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = colors.textColor
                     )
-                } else {
-                    history.forEach { record ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = record.dataMonth.displayMonth(),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = colors.textColor
-                            )
-                            Text(
-                                text = "${((record.ecoFeeRate ?: 0.0) * 100).formatDecimal(2)}%",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = colors.primary
-                            )
-                        }
-                    }
+                    Text(
+                        text = (profitData.totalProfit - getTaxMoney(profitData.totalProfit)).formatDecimal(
+                            2
+                        ),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = colors.primary
+                    )
                 }
             }
         }
     }
-}
-
-/** "yyyy-MM" 转为 "yyyy年M月" 展示 */
-private fun String.displayMonth(): String {
-    val parts = split("-")
-    val year = parts.getOrNull(0) ?: return this
-    val month = parts.getOrNull(1)?.toIntOrNull() ?: return this
-    return "${year}年${month}月"
 }
 
 // ============================================================
