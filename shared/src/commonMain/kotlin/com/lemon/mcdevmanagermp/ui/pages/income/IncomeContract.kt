@@ -13,6 +13,8 @@ data class IncomeState(
     val selectedPlatform: String = "pe",
     val applyDetailList: List<ApplyIncomeDetailVO> = emptyList(),
     val unExtractedIncome: String = "0.00",
+    /** 历史生态费率（数据月份 yyyy-MM → 费率），来自本地保存的反推记录 */
+    val ecoFeeRates: Map<String, Double> = emptyMap(),
 ) : IUiState {
 
     val currentList: List<IncomeVO>

@@ -153,7 +153,8 @@ val MIGRATION_6_7 = object : Migration(6, 7) {
 }
 
 /**
- * 数据库迁移 7→8：新增每月生态费反推记录表（按账号 + 月份隔离）。
+ * 数据库迁移 7→8：新增每月生态费记录表（按账号 + 月份隔离）。
+ * 周期截止后保存预估快照，出账后补全费率字段（可空）。
  */
 val MIGRATION_7_8 = object : Migration(7, 8) {
     override fun migrate(connection: SQLiteConnection) {
@@ -162,12 +163,11 @@ val MIGRATION_7_8 = object : Migration(7, 8) {
             CREATE TABLE IF NOT EXISTS eco_fee_record (
               accountKey TEXT NOT NULL,
               dataMonth TEXT NOT NULL,
-              ecoFeeRate REAL NOT NULL,
-              ecoFeeAmount REAL NOT NULL,
-              actualIncome REAL NOT NULL,
-              playPlanIncome REAL NOT NULL,
-              estimatedTotalProfit REAL NOT NULL,
-              sumProfit REAL NOT NULL,
+              profitDataJson TEXT NOT NULL,
+              ecoFeeRate REAL,
+              ecoFeeAmount REAL,
+              actualIncome REAL,
+              playPlanIncome REAL,
               updatedAt INTEGER NOT NULL,
               PRIMARY KEY (accountKey, dataMonth)
             )

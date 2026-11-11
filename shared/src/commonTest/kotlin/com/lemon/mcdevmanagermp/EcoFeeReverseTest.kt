@@ -1,12 +1,12 @@
 package com.lemon.mcdevmanagermp
 
 import com.lemon.mcdevmanagermp.data.common.JSONConverter
+import com.lemon.mcdevmanagermp.data.repository.monthKey
+import com.lemon.mcdevmanagermp.data.repository.normalizeMonthKey
+import com.lemon.mcdevmanagermp.data.repository.reverseInputIncome
 import com.lemon.mcdevmanagermp.data.vo.netease.income.IncomeVO
 import com.lemon.mcdevmanagermp.data.vo.netease.user.UserInfoVO
 import com.lemon.mcdevmanagermp.domain.main.ProfitMonth
-import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.buildEcoFeeRecord
-import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.matchesProfitMonth
-import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.reverseInputIncome
 import com.lemon.mcdevmanagermp.utils.ECO_FEE_RATE
 import com.lemon.mcdevmanagermp.utils.ProfitData
 import com.lemon.mcdevmanagermp.utils.calculateProfit
@@ -18,7 +18,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/** 实际收益反推生态费率、结算单匹配、企业开发者判定 */
+/** 实际收益反推生态费率、结算单月份匹配、企业开发者判定 */
 class EcoFeeReverseTest {
     // 覆盖不同分成档位与模组激励档位，并带流水激励（月流水 100w~500w 钻石区间）
     private val profit = calculateProfit(
@@ -70,46 +70,17 @@ class EcoFeeReverseTest {
     }
 
     @Test
-    fun dataMonthMatchesAcrossFormats() {
-        val month = ProfitMonth(2026, 10)
-        assertTrue(matchesProfitMonth("2026-10", month))
-        assertTrue(matchesProfitMonth("202610", month))
-        assertTrue(matchesProfitMonth("2026-1", ProfitMonth(2026, 1)))
-        assertTrue(matchesProfitMonth("20261", ProfitMonth(2026, 1)))
-        assertFalse(matchesProfitMonth("2026-11", month))
-        assertFalse(matchesProfitMonth("2025-10", month))
-        assertFalse(matchesProfitMonth("", month))
-        assertFalse(matchesProfitMonth("abc", month))
-    }
-
-    @Test
-    fun ecoFeeRecordBuiltWhenSettledAndComplete() {
-        val month = ProfitMonth(2026, 10)
-        val s = settlement(dataMonth = "2026-10", income = profit.totalProfit.toString())
-        val record = checkNotNull(buildEcoFeeRecord("开发者", month, profit, s))
-        assertEquals("2026-10", record.dataMonth)
-        assertClose(ECO_FEE_RATE, record.ecoFeeRate)
-        assertEquals(profit.totalProfit, record.actualIncome, 1e-9)
-        assertEquals(profit.sumProfit / 100.0 * ECO_FEE_RATE, record.ecoFeeAmount, 1e-9)
-    }
-
-    @Test
-    fun ecoFeeRecordSkippedWhenIncomplete() {
-        val s = settlement(income = profit.totalProfit.toString())
-        assertNull(buildEcoFeeRecord("开发者", ProfitMonth(2026, 10), profit.copy(isFlowComplete = false), s))
-    }
-
-    @Test
-    fun ecoFeeRecordSkippedWhenRateOutOfRange() {
-        // 实际收益远超预估可解释范围，反推费率为负，不保存
-        val s = settlement(income = (profit.totalProfit * 10).toString())
-        assertNull(buildEcoFeeRecord("开发者", ProfitMonth(2026, 10), profit, s))
-    }
-
-    @Test
-    fun ecoFeeRecordSkippedWithoutAccount() {
-        val s = settlement(income = profit.totalProfit.toString())
-        assertNull(buildEcoFeeRecord("", ProfitMonth(2026, 10), profit, s))
+    fun dataMonthNormalizesToMonthKey() {
+        assertEquals("2026-10", normalizeMonthKey("2026-10"))
+        assertEquals("2026-10", normalizeMonthKey("202610"))
+        assertEquals("2026-01", normalizeMonthKey("2026-1"))
+        assertEquals("2026-01", normalizeMonthKey("20261"))
+        assertNull(normalizeMonthKey("2026-13"))
+        assertNull(normalizeMonthKey("2026-0"))
+        assertNull(normalizeMonthKey(""))
+        assertNull(normalizeMonthKey("abc"))
+        assertEquals("2026-10", monthKey(ProfitMonth(2026, 10)))
+        assertEquals("2026-01", monthKey(ProfitMonth(2026, 1)))
     }
 
     @Test
