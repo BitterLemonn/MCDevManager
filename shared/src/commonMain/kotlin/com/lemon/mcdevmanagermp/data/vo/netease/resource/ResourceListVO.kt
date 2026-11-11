@@ -394,8 +394,33 @@ data class ResourceDetailSyncChannel(
 @Serializable
 data class ResourceDetailTag(val name: String = "", val source: Int = 0)
 
+/**
+ * 宣传视频信息。url/cover 为二态字段：直接字符串地址，或上传回执对象（body/file_type/sign）；
+ * 服务端保存新上传的文件必须收到回执对象，回执对象取其 url 属性作为地址。
+ */
 @Serializable
-data class ResourceDetailVideoInfo(val cover: String = "", val size: Int = 0, val url: String = "")
+data class ResourceDetailVideoInfo(
+    val cover: JsonElement = JsonPrimitive(""),
+    val size: Int = 0,
+    val url: JsonElement = JsonPrimitive("")
+) {
+    val coverAddress: String get() = cover.videoAddress()
+    val urlAddress: String get() = url.videoAddress()
+
+    companion object {
+        fun of(url: String, size: Int, cover: String = "") = ResourceDetailVideoInfo(
+            cover = JsonPrimitive(cover),
+            size = size,
+            url = JsonPrimitive(url)
+        )
+    }
+}
+
+internal fun JsonElement.videoAddress(): String = when (this) {
+    is JsonPrimitive -> content
+    is JsonObject -> (this["url"] as? JsonPrimitive)?.content ?: ""
+    else -> ""
+}
 
 @Serializable
 data class ResourceRequirementData(

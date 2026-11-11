@@ -44,6 +44,7 @@ import com.lemon.mcdevmanagermp.ui.components.ensureHtmlImagesOnFilepicker
 import com.lemon.mcdevmanagermp.ui.components.normalizeStyleCss
 import com.lemon.mcdevmanagermp.ui.components.sanitizeDetailHtml
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.ChannelImageSlot
+import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.VideoItem
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.WorkDetailState
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.buildUpdatePayload
 import com.lemon.mcdevmanagermp.ui.pages.work.workdetail.buildWorkCreatePayload
@@ -632,7 +633,7 @@ class SharedCommonTest {
             tags = listOf(ResourceDetailTag(name = "任务")),
             labelTypeList = listOf(101, 209),
             channel = listOf(ResourceDetailChannel(channelId = 3, channelUrl = "url")),
-            videoInfoList = listOf(ResourceDetailVideoInfo(url = "v"))
+            videoInfoList = listOf(ResourceDetailVideoInfo.of(url = "v", size = 0))
         )
 
         val normalized = detail.normalizedForPrerequisite()
@@ -967,5 +968,192 @@ class SharedCommonTest {
         val payload = buildUpdatePayload(state, detail, "")
         assertEquals(1, payload.channel.size)
         assertEquals(1, payload.channel.first().channelId)
+    }
+
+    @Test
+    fun videoInfoListDecodesPlainStringForm() {
+        val detail = JSONConverter.decodeFromString<ResourceDetailVO>(
+            """{"item_id":"1","video_info_list":[{"cover":"https://x19.fp.ps.netease.com/c.jpg","size":123,"url":"https://x19.fp.ps.netease.com/v.mp4"}]}"""
+        )
+
+        assertEquals(1, detail.videoInfoList.size)
+        assertEquals("https://x19.fp.ps.netease.com/v.mp4", detail.videoInfoList.first().urlAddress)
+        assertEquals("https://x19.fp.ps.netease.com/c.jpg", detail.videoInfoList.first().coverAddress)
+        assertEquals(123, detail.videoInfoList.first().size)
+    }
+
+    @Test
+    fun videoInfoListDecodesUploadReceiptObjectForm() {
+        val detail = JSONConverter.decodeFromString<ResourceDetailVO>(
+            """{"item_id":"1","video_info_list":[{"url":{"url":"https://x19.fp.ps.netease.com/v.mp4","body":"{\"fsize\":123}"},"size":123,"cover":{"url":"https://x19.fp.ps.netease.com/c.jpg"}}]}"""
+        )
+
+        assertEquals(1, detail.videoInfoList.size)
+        assertEquals("https://x19.fp.ps.netease.com/v.mp4", detail.videoInfoList.first().urlAddress)
+        assertEquals("https://x19.fp.ps.netease.com/c.jpg", detail.videoInfoList.first().coverAddress)
+        assertEquals(123, detail.videoInfoList.first().size)
+    }
+
+    @Test
+    fun videoInfoListDecodesElementWithoutCover() {
+        val detail = JSONConverter.decodeFromString<ResourceDetailVO>(
+            """{"item_id":"1","video_info_list":[{"url":"https://x19.fp.ps.netease.com/v.mp4","size":123}]}"""
+        )
+
+        assertEquals(1, detail.videoInfoList.size)
+        assertEquals("https://x19.fp.ps.netease.com/v.mp4", detail.videoInfoList.first().urlAddress)
+        assertEquals("", detail.videoInfoList.first().coverAddress)
+    }
+
+    @Test
+    fun videoInfoListSerializesUrlAndCoverAsPlainStrings() {
+        val element = JSONConverter.encodeToJsonElement(
+            ResourceDetailVideoInfo.of(
+                cover = "https://x19.fp.ps.netease.com/c.jpg",
+                size = 123,
+                url = "https://x19.fp.ps.netease.com/v.mp4"
+            )
+        ).jsonObject
+
+        assertEquals("https://x19.fp.ps.netease.com/v.mp4", element["url"]?.jsonPrimitive?.content)
+        assertEquals("https://x19.fp.ps.netease.com/c.jpg", element["cover"]?.jsonPrimitive?.content)
+        assertEquals(123, element["size"]?.jsonPrimitive?.int)
+    }
+
+    @Test
+    fun updatePayloadSubmitsUploadReceiptForNewlyUploadedVideo() {
+        val detail = ResourceDetailVO(itemId = "item-1")
+        val state = WorkDetailState(
+            itemId = "item-1",
+            videos = listOf(
+                VideoItem(
+                    cover = "https://x19.fp.ps.netease.com/c.jpg",
+                    size = 123,
+                    url = "https://x19.fp.ps.netease.com/v.mp4",
+                    fileInfo = FileInfoDTO(
+                        body = """{"url":"https://x19.fp.ps.netease.com/v.mp4","fsize":123}""",
+                        fileType = "video",
+                        sign = "sig-1"
+                    ),
+                    coverFileInfo = FileInfoDTO(
+                        body = """{"url":"https://x19.fp.ps.netease.com/c.jpg"}""",
+                        fileType = "image",
+                        sign = "sig-2"
+                    )
+                )
+            )
+        )
+
+        val payload = buildUpdatePayload(state, detail, "")
+        val video = JSONConverter.encodeToJsonElement(payload.videoInfoList.single()).jsonObject
+
+        val url = video["url"]!!.jsonObject
+        assertEquals("""{"url":"https://x19.fp.ps.netease.com/v.mp4","fsize":123}""", url["body"]?.jsonPrimitive?.content)
+        assertEquals("video", url["file_type"]?.jsonPrimitive?.content)
+        assertEquals("sig-1", url["sign"]?.jsonPrimitive?.content)
+        val cover = video["cover"]!!.jsonObject
+        assertEquals("image", cover["file_type"]?.jsonPrimitive?.content)
+        assertEquals("sig-2", cover["sign"]?.jsonPrimitive?.content)
+    }
+
+    @Test
+    fun updatePayloadSubmitsAddressStringForExistingVideo() {
+        val detail = ResourceDetailVO(itemId = "item-1")
+        val state = WorkDetailState(
+            itemId = "item-1",
+            videos = listOf(
+                VideoItem(
+                    cover = "https://x19.fp.ps.netease.com/c.jpg",
+                    size = 123,
+                    url = "https://x19.fp.ps.netease.com/v.mp4"
+                )
+            )
+        )
+
+        val payload = buildUpdatePayload(state, detail, "")
+        val video = JSONConverter.encodeToJsonElement(payload.videoInfoList.single()).jsonObject
+
+        assertEquals("https://x19.fp.ps.netease.com/v.mp4", video["url"]?.jsonPrimitive?.content)
+        assertEquals("https://x19.fp.ps.netease.com/c.jpg", video["cover"]?.jsonPrimitive?.content)
+    }
+
+    /**
+     * 用线上 detail 接口的完整真实响应回放，验证整条读取链路（含 res/lobby_res/perf_data/dlc_info 等嵌套结构）不因任何字段解析失败，
+     * 且宣传视频被正确读出。
+     */
+    @Test
+    fun realWorldDetailResponseWithVideoDecodesEndToEnd() {
+        val realResponse = """
+            {"achievement_background_url":"","achievement_configs":[],"achievement_enabled":0,
+            "activity_desc":"","activity_only":false,"adv_obtain_num":0,"android_price":0,
+            "android_price_type":"","anti_cheat_enable":0,
+            "apply_review_time":"2026-11-10T08:10:33.661000+00:00",
+            "author_info":"<p>作者</p>","banner_pic":"","body_type":"","can_manage_server":false,
+            "can_silent_online":true,"can_synchronize_pc_old":false,"category":"pe","change_log":[],
+            "channel":[{"channel_id":3,"channel_url":"https://x19.fp.ps.netease.com/file/a","version":1},
+            {"channel_id":5,"channel_url":"https://x19.fp.ps.netease.com/file/b","version":1}],
+            "charge_desc":"付费备注","charge_type":"worlds","claim_item_enabled":0,
+            "collection_id":"0","collection_name":"",
+            "create_time":"2026-11-08T06:07:23.935000+00:00","decompose_currency":0,
+            "decompose_currency_type":"ordinary","discount":[],"discount_activity_status":"init",
+            "dlc_info":{"dlc_switch":false,"dlc_type":"off","master":null,"slave_list":null},
+            "dyeing":"","dyeing_origin":false,"dyeing_relation":{},"exchange_currency":0,
+            "exchange_currency_type":"ordinary","exempt_perf_review_num":0,"first_online_time":null,
+            "first_sell_rank_top":false,"force_encrypt":false,"game_host":null,
+            "info":"<p>详情</p>","intercept_fields":[],"ios_jelly_id":"","ios_price":0,
+            "ios_price_type":"","is_domain_server_item":0,"is_ea":0,
+            "is_in_promotion_application":false,"is_joint_activity":false,
+            "is_lobby_competitive":false,"is_lottery_reward":false,"is_official_item":false,
+            "is_original":true,"is_persona":false,"is_premium":false,"is_recommend":false,
+            "is_season_mod":false,"is_silent_online":false,"is_spigot":false,
+            "is_suitable_pc":false,"is_sync":false,"is_vip_benefit":false,
+            "item_id":"4691723405681290277","item_name":"【苦柠】魔咒图书馆",
+            "item_real_status":99,"item_update_push":true,"item_version":"0.5",
+            "joint_activity_name":"","joint_activity_tag":[],"label_type_list":[101,209],
+            "level_data":null,"level_data_sync_error":null,"level_data_sync_status":null,
+            "level_data_version":null,"lobby_camps":[],"lobby_commercialize":false,
+            "lobby_config_op_log":[],"lobby_force_max_num":10,"lobby_max_num":0,"lobby_min_num":0,
+            "lobby_normal_mode":false,"lobby_player_num":0,"lobby_reconnect_time":0,
+            "lobby_res":{"lobby_manifest_version":"0.0.f0840479","lobby_res_md5":"d10847f5",
+            "lobby_res_size":134341,"lobby_res_url":"https://x19.gph.netease.com/item.zip",
+            "mcp_signs":["AYhloha9sv19BHgc"]},
+            "lobby_sort_key":{},"lobby_tags":[],"lottery_id":0,"main_city":false,
+            "maintain":"normal","mc_version":"","mod_second_type":205,"mod_version":"3.9",
+            "mount_call_enabled":false,"multi_tags":"0","need_behaviour_uuid":false,
+            "need_method_uuid":false,"normal_number":"","ori_weak_offline":false,
+            "ori_weak_offline_reason":"","pe_activity_coupon":[],"pe_chat_bubble_id":[],
+            "pe_emotes_id":[],"pe_frame_id":[],"pe_furniture_id":[],"pe_game_introduction":"",
+            "pe_home_cash":[],"pe_is_add_play_plan":false,"pe_item_id":[],"pe_lottery_chance":[],
+            "pe_mc_item_id":[],"pe_one_month_vip_id":[],"pe_passport_ten_id":[],
+            "pe_six_month_vip_id":[],"pe_user_background_id":[],
+            "perf_data":{"mem_size":60,"mem_warning":false},
+            "performance_service_available":0,"performance_service_status":0,
+            "persona_mtype":"","persona_mtypeid":0,"persona_stype":"","persona_stypeid":0,
+            "play_plan_expire_time":-1,"pre_review_video":"{}","premium_apply_status":"no_apply",
+            "prerequisite_items":[],"pri_effect_type":null,"pri_type":2,"price":0,"price_rank":-4,
+            "price_type":"free","pure":false,"queue_position":0,"rarity":0,"rating_level":0,
+            "res":[{"add_version":true,"cdn_info":{"res_md5":"ed6ff1d3","res_size":127617,
+            "res_time":"2026-11-09T09:43:41.348000+00:00"},
+            "cdn_url":"https://x19.gph.netease.com/item.original.zip","mc_version":[],"res_id":2,
+            "res_info":{"res_md5":"ed6ff1d3","res_size":85707,
+            "res_time":"2026-11-09T09:42:25.148000+00:00"},
+            "res_name":"enchantLibrary_free.zip","res_url":"res_url"}],
+            "running_status":"normal","searchable":true,"season_begin":0,"status":"reviewing",
+            "sub_effect_type":null,"sub_type":6,"subject_id":"","suit_id":"0","sync_pc_flag":false,
+            "tags":[],"trial_duration":0,"update_summary":"修复漏斗传入问题","urgent_reason":"",
+            "urgent_status":0,"vanity_number":"","version_compatible_enable":false,
+            "video_info_list":[{"cover":"https://x19.fp.ps.netease.com/file/6af2d16f0638af1de15e50d5t50TF2Nt07",
+            "size":41523884,"url":"https://x19.fp.ps.netease.com/file/6af2d1723a1b7c93821b1923N0YxgWea07"}],
+            "vip_only":false,"weak_offline":false,"weak_offline_reason":"","whitelist":""}
+        """.trimIndent()
+
+        val detail = JSONConverter.decodeFromString<ResourceDetailVO>(realResponse)
+
+        assertEquals(1, detail.videoInfoList.size)
+        val video = detail.videoInfoList.first()
+        assertEquals("https://x19.fp.ps.netease.com/file/6af2d1723a1b7c93821b1923N0YxgWea07", video.urlAddress)
+        assertEquals("https://x19.fp.ps.netease.com/file/6af2d16f0638af1de15e50d5t50TF2Nt07", video.coverAddress)
+        assertEquals(41523884, video.size)
+        assertEquals("reviewing", detail.status)
     }
 }
