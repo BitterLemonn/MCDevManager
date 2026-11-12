@@ -1,0 +1,223 @@
+{
+  "repository": "BitterLemonn/MCDevManager",
+  "includePrereleases": false,
+  "scannedReleases": 32,
+  "included": [
+    {
+      "tag": "v1.2.10",
+      "asset": "MCDevManagerMP-V1.2.10-ios-arm64.ipa",
+      "assetId": 739936256,
+      "version": "1.2.10",
+      "buildVersion": "27",
+      "sha256": "186d557b837d95458871418725d6c5e3b698e21ad1938c900522ba9411227b95"
+    },
+    {
+      "tag": "v1.2.9",
+      "asset": "MCDevManagerMP-V1.2.9-ios-arm64.ipa",
+      "assetId": 661895254,
+      "version": "1.0",
+      "buildVersion": "1",
+      "sha256": "b185fc961f3c3669b5b4774efd44de02789fbfefd2b5abe183d3118b739cd334"
+    }
+  ],
+  "skipped": [
+    {
+      "tag": "v0.6.4",
+      "reason": "no IPA asset"
+    },
+    {
+      "tag": "v0.6.3",
+      "reason": "no IPA asset"
+    },
+    {
+      "tag": "v0.6.2",
+      "reason": "no IPA asset"
+    },
+    {
+      "tag": "v0.6.1",
+      "reason": "no IPA asset"
+    },
+    {
+      "tag": "v0.6.0",
+      "reason": "no IPA asset"
+    },
+    {
+      "tag": "v0.5.5",
+      "reason": "no IPA asset"
+    },
+    {
+      "tag": "v0.5.4",
+      "reason": "no IPA asset"
+    },
+    {
+      "tag": "v0.5.2",
+      "reason": "no IPA asset"
+    },
+    {
+      "tag": "v0.5.0",
+      "reason": "no IPA asset"
+    },
+    {
+      "tag": "v0.4.2",
+      "reason": "no IPA asset"
+    },
+    {
+      "tag": "v0.4.1",
+      "reason": "no IPA asset"
+    },
+    {
+      "tag": "v0.4.0",
+      "reason": "no IPA asset"
+    },
+    {
+      "tag": "v0.3.5",
+      "reason": "no IPA asset"
+    },
+    {
+      "tag": "v0.3.4",
+      "reason": "no IPA asset"
+    },
+    {
+      "tag": "v0.3.3",
+      "reason": "no IPA asset"
+    },
+    {
+      "tag": "v0.3.2",
+      "reason": "no IPA asset"
+    },
+    {
+      "tag": "v0.3.1",
+      "reason": "no IPA asset"
+    },
+    {
+      "tag": "v0.2.1",
+      "reason": "prerelease excluded"
+    },
+    {
+      "tag": "v0.1",
+      "reason": "prerelease excluded"
+    },
+    {
+      "tag": "v1.2.8",
+      "asset": "MCDevManagerMP-V1.2.8-ios-arm64.ipa",
+      "assetId": 624917506,
+      "version": "1.0",
+      "buildVersion": "1",
+      "sha256": "7723592b42cc5307579cb25c400cf62055363f24777dbc8539f8587cdd08f8e7",
+      "reason": "duplicate real version/build",
+      "keptTag": "v1.2.9",
+      "sameBytes": false
+    },
+    {
+      "tag": "v1.2.7",
+      "asset": "MCDevManagerMP-V1.2.7-ios-arm64.ipa",
+      "assetId": 606089088,
+      "version": "1.0",
+      "buildVersion": "1",
+      "sha256": "0da7f4c05c1595b27f0aac931f3636dffd3744c143185e4bd4505e81c654a7dd",
+      "reason": "duplicate real version/build",
+      "keptTag": "v1.2.9",
+      "sameBytes": false
+    },
+    {
+      "tag": "v1.2.6",
+      "asset": "MCDevManagerMP-V1.2.6-ios-arm64.ipa",
+      "assetId": 590624647,
+      "version": "1.0",
+      "buildVersion": "1",
+      "sha256": "759d52f93835e52ed996e707523ec10f7cef7caf565e09c5a29fe74a9cf4472b",
+      "reason": "duplicate real version/build",
+      "keptTag": "v1.2.9",
+      "sameBytes": false
+    },
+    {
+      "tag": "v1.2.5",
+      "asset": "MCDevManagerMP-V1.2.5-ios-arm64.ipa",
+      "assetId": 527223095,
+      "version": "1.0",
+      "buildVersion": "1",
+      "sha256": "68f999fa124eb32a08b50922ac09143daa62914c80c88a6324ac7e9e95c32f5c",
+      "reason": "duplicate real version/build",
+      "keptTag": "v1.2.9",
+      "sameBytes": false
+    },
+    {
+      "tag": "v1.2.4",
+      "asset": "MCDevManagerMP-V1.2.4-ios-arm64.ipa",
+      "assetId": 514262187,
+      "version": "1.0",
+      "buildVersion": "1",
+      "sha256": "bb83049fef1b3dda74f228ff465e4c95e90e76130018d5a8072ec3ed68d13483",
+      "reason": "duplicate real version/build",
+      "keptTag": "v1.2.9",
+      "sameBytes": false
+    },
+    {
+      "tag": "v1.2.2",
+      "asset": "MCDevManagerMP-V1.2.2-ios-arm64.ipa",
+      "assetId": 489557532,
+      "version": "1.0",
+      "buildVersion": "1",
+      "sha256": "9a04b13b4cce5c7388021e00aa4fbe3ed7626099c738f2c35f988b7ac83acb52",
+      "reason": "duplicate real version/build",
+      "keptTag": "v1.2.9",
+      "sameBytes": false
+    },
+    {
+      "tag": "v1.2.1",
+      "asset": "MCDevManagerMP-V1.2.1-ios-arm64.ipa",
+      "assetId": 487196550,
+      "version": "1.0",
+      "buildVersion": "1",
+      "sha256": "11d8ae504bd258e43de483fb7411d237ed831339c8b872438af0ca92c35d58ef",
+      "reason": "duplicate real version/build",
+      "keptTag": "v1.2.9",
+      "sameBytes": false
+    },
+    {
+      "tag": "v1.2.0",
+      "asset": "MCDevManagerMP-V1.2.0-ios-arm64.ipa",
+      "assetId": 486980726,
+      "version": "1.0",
+      "buildVersion": "1",
+      "sha256": "ca83d627d03ef8b1a99bdecd5ad1c3a35ca08d662a7190b4e58162e925a6fb8c",
+      "reason": "duplicate real version/build",
+      "keptTag": "v1.2.9",
+      "sameBytes": false
+    },
+    {
+      "tag": "v1.1.1",
+      "asset": "MCDevManagerMP-V1.1.1-ios-arm64.ipa",
+      "assetId": 461127542,
+      "version": "1.0",
+      "buildVersion": "1",
+      "sha256": "3b33ec960114aeb4442c56e248cc9af79b8b6c7e6b665d2a2a666eb1a46b93b0",
+      "reason": "duplicate real version/build",
+      "keptTag": "v1.2.9",
+      "sameBytes": false
+    },
+    {
+      "tag": "v1.1.0",
+      "asset": "MCDevManagerMP-V1.1.0-ios-arm64.ipa",
+      "assetId": 449784860,
+      "version": "1.0",
+      "buildVersion": "1",
+      "sha256": "e58e6007305151c6f2adb87cf3d45fd8196838d8aa7edf5bf4ac5cf9a58a3ac3",
+      "reason": "duplicate real version/build",
+      "keptTag": "v1.2.9",
+      "sameBytes": false
+    },
+    {
+      "tag": "v1.0.0",
+      "asset": "MCDevManagerMP-V1.0.0-ios-arm64.ipa",
+      "assetId": 443468483,
+      "version": "1.0",
+      "buildVersion": "1",
+      "sha256": "54b7aa4fd1592e038d2018ef9f1cbbad5f7b7f7de1a5236595e5e5c02e64f7f5",
+      "reason": "duplicate real version/build",
+      "keptTag": "v1.2.9",
+      "sameBytes": false
+    }
+  ],
+  "errors": []
+}
