@@ -19,10 +19,11 @@ internal fun normalizeMonthKey(dataMonth: String): String? {
     val year = digits.substring(0, 4).toIntOrNull() ?: return null
     val month = digits.substring(4).take(2).toIntOrNull() ?: return null
     if (month !in 1..12) return null
-    return "%04d-%02d".format(year, month)
+    return monthKey(ProfitMonth(year, month))
 }
 
-internal fun monthKey(month: ProfitMonth): String = "%04d-%02d".format(month.year, month.month)
+internal fun monthKey(month: ProfitMonth): String =
+    "${month.year.toString().padStart(4, '0')}-${month.month.toString().padStart(2, '0')}"
 
 /** 结算单 dataMonth 解析为 [ProfitMonth]；无法解析时返回 null。 */
 internal fun parseMonthKey(dataMonth: String): ProfitMonth? {
