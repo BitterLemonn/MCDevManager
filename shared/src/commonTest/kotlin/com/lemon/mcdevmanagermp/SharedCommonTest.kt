@@ -35,6 +35,7 @@ import com.lemon.mcdevmanagermp.domain.main.mergeProfitDiamonds
 import com.lemon.mcdevmanagermp.domain.resource.MCConstsCache
 import com.lemon.mcdevmanagermp.domain.resource.filterResourceList
 import com.lemon.mcdevmanagermp.domain.upload.FileUploadRepository
+import com.lemon.mcdevmanagermp.domain.work.EMERALD_PRICE_REJECTED_MESSAGE
 import com.lemon.mcdevmanagermp.domain.work.PeImageCompletenessPolicy
 import com.lemon.mcdevmanagermp.domain.work.WorkSaveValidationInput
 import com.lemon.mcdevmanagermp.domain.work.hasUnversionedPcImages
@@ -437,9 +438,34 @@ class SharedCommonTest {
         val diamond = validInput.copy(priceType = PriceTypeEnum.DIAMOND, priceRank = 0)
         assertEquals("付费资源必须上传视频", validateWorkSave(diamond))
         assertNull(validateWorkSave(diamond.copy(hasVideo = true)))
+    }
 
+    /** 绿宝石定价停止提交：新建与更新一律拦截，存量作品需先改定价才能保存。 */
+    @Test
+    fun emeraldPriceIsRejectedForSave() {
         val emerald = validInput.copy(priceType = PriceTypeEnum.EMERALD, priceRank = -5, price = 1)
-        assertNull(validateWorkSave(emerald))
+        assertEquals(EMERALD_PRICE_REJECTED_MESSAGE, validateWorkSave(emerald))
+    }
+
+    /** 存量绿宝石作品仍可编辑，但原详情判定为绿宝石；普通作品不受影响。 */
+    @Test
+    fun legacyEmeraldDetailIsDetectedForForm() {
+        val legacy = WorkDetailState(
+            detail = ResourceDetailVO(itemId = "1", priceType = "point", priceRank = -5, price = 10),
+            priceType = PriceTypeEnum.EMERALD,
+            priceRank = PriceRankEnum.EMERALD_TIER,
+            emeraldPrice = 10,
+        )
+
+        assertTrue(legacy.isLegacyEmeraldPricing)
+        // 编辑态未被强制只读，用户仍可修改其他字段并改定价后保存
+        assertFalse(legacy.readOnly)
+        val normal = legacy.copy(
+            detail = ResourceDetailVO(itemId = "2", priceType = "diamond", priceRank = 0, price = 300),
+            priceType = PriceTypeEnum.DIAMOND,
+            priceRank = PriceRankEnum.DIAMOND_TIER_ONE,
+        )
+        assertFalse(normal.isLegacyEmeraldPricing)
     }
 
     @Test

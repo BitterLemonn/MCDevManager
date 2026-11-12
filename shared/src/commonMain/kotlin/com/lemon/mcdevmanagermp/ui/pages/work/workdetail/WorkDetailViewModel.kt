@@ -244,7 +244,6 @@ class WorkDetailViewModel :
             // —— 定价 ——
             is WorkDetailAction.ChangePriceType -> changePriceType(action.type)
             is WorkDetailAction.ChangePriceRank -> changePriceRank(action.rank)
-            is WorkDetailAction.UpdateEmeraldPrice -> setState { copy(emeraldPrice = action.value) }
 
             // —— 折扣 ——
             WorkDetailAction.AddDiscount -> addDiscount()

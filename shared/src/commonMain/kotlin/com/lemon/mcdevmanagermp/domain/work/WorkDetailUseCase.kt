@@ -3,6 +3,7 @@ package com.lemon.mcdevmanagermp.domain.work
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.common.NoNeedData
 import com.lemon.mcdevmanagermp.data.consts.enums.PE_PREREQUISITE_PRI_TYPE
+import com.lemon.mcdevmanagermp.data.consts.enums.PriceTypeEnum
 import com.lemon.mcdevmanagermp.data.dto.netease.work.ApplyReviewDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.work.WorkCreateDTO
 import com.lemon.mcdevmanagermp.data.dto.netease.work.toWorkUpdateDTO
@@ -74,6 +75,10 @@ class WorkDetailUseCase(
         mcConsts: MCConstsVO? = null,
     ): NetworkState<NoNeedData> {
         if (item.itemId.isEmpty()) return NetworkState.Error("作品 ID 为空")
+        // 绿宝石定价已停止提交：存量作品可编辑，但更新前必须先把定价类型改掉
+        if (PriceTypeEnum.fromStringType(item.priceType) == PriceTypeEnum.EMERALD) {
+            return NetworkState.Error(EMERALD_PRICE_REJECTED_MESSAGE)
+        }
         val normalized = if (item.hasPcImages()) {
             val consts = mcConsts ?: when (val result = resourceRepository.getMCConsts()) {
                 is NetworkState.Success -> result.data
@@ -102,6 +107,9 @@ class WorkDetailUseCase(
 
     /** 新建作品（pe/upload）。body 由 ViewModel 从编辑表单构造（res_url/channel_url 为上传回执）。 */
     suspend fun createWork(body: WorkCreateDTO): NetworkState<NoNeedData> {
+        if (PriceTypeEnum.fromStringType(body.priceType) == PriceTypeEnum.EMERALD) {
+            return NetworkState.Error(EMERALD_PRICE_REJECTED_MESSAGE)
+        }
         return resourceRepository.createItem(body)
     }
 }

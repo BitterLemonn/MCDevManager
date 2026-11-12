@@ -32,12 +32,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.data.consts.enums.PE_PREREQUISITE_PRI_TYPE
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceRankEnum
@@ -88,6 +85,16 @@ internal fun PriceInfoForm(
     val canEditDiscount = isDiamond && state.priceRank.type >= 1
     // 已上架过的作品（首次上架时间非空）不可变更定价类型——平台规则：一旦产生交易记录即锁定
     val priceTypeLocked = state.detail?.firstOnlineTime?.isNotEmpty() == true
+    // 存量绿宝石作品仅保留「改为钻石定价」这一条可提交路径，避免其彻底无法保存
+    val isLegacyEmerald = state.isLegacyEmeraldPricing
+    val priceTypeOptions = if (isLegacyEmerald) {
+        listOf("钻石" to PriceTypeEnum.DIAMOND)
+    } else {
+        listOf(
+            "钻石" to PriceTypeEnum.DIAMOND,
+            "免费" to PriceTypeEnum.FREE
+        )
+    }
     // 前置模组（pri_type=9）：平台强制免费，不提供任何定价编辑入口
     // （与网易开发者平台一致：「前置模组强制免费，无需设置定价。」）
     if (state.peResourceType == PE_PREREQUISITE_PRI_TYPE) {
@@ -102,24 +109,29 @@ internal fun PriceInfoForm(
     }
 
     FormSection(title = "定价", modifier = modifier) {
-        // 定价类型（必填）
+        // 定价类型（必填）：绿宝石定价已停止提交，不再作为可选项。
+        // 存量绿宝石作品仍可编辑，但必须先改定价才能保存。
         OptionChips(
             label = "定价类型",
-            options = listOf(
-                "钻石" to PriceTypeEnum.DIAMOND,
-                "绿宝石" to PriceTypeEnum.EMERALD,
-                "免费" to PriceTypeEnum.FREE
-            ),
-            selected = state.priceType.takeIf { it != PriceTypeEnum.UNKNOWN },
+            options = priceTypeOptions,
+            selected = state.priceType.takeIf { it == PriceTypeEnum.DIAMOND || it == PriceTypeEnum.FREE },
             onSelect = { onAction(WorkDetailAction.ChangePriceType(it)) },
             required = true,
-            enabled = !priceTypeLocked && !readOnly
+            enabled = (!priceTypeLocked || isLegacyEmerald) && !readOnly
         )
-        if (priceTypeLocked) {
+        if (priceTypeLocked && !isLegacyEmerald) {
             Text(
                 text = "已上架作品不可修改定价类型",
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.onSurfaceVariant
+            )
+        }
+        // 存量绿宝石作品：原定价仅回显，改价后方可保存
+        if (isEmerald) {
+            Text(
+                text = "该作品当前为绿宝石定价，已停止提交，请先修改定价类型再保存。",
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.error
             )
         }
 
@@ -135,30 +147,12 @@ internal fun PriceInfoForm(
             )
         }
 
-        // 定价：钻石由档位决定（只读），绿宝石可输入，免费只读
+        // 定价：钻石由档位决定（只读），绿宝石仅回显原价，免费只读
         when {
             isDiamond -> ReadOnlyField(
                 label = "定价",
                 value = "${state.priceRank.diamondPrice} 钻石",
                 required = true
-            )
-
-            isEmerald && !readOnly -> OutlinedTextField(
-                value = state.emeraldPrice.toString(),
-                onValueChange = { raw ->
-                    val digits = raw.filter { it.isDigit() }.take(9)
-                    onAction(WorkDetailAction.UpdateEmeraldPrice(digits.toIntOrNull() ?: 0))
-                },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                label = {
-                    Text(buildAnnotatedString {
-                        withStyle(SpanStyle(color = colors.error)) { append("* ") }
-                        append("定价")
-                    })
-                },
-                suffix = { Text("绿宝石") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
 
             isEmerald -> ReadOnlyField(
