@@ -1,0 +1,26 @@
+name: Check Commit Attribution
+
+on:
+  pull_request:
+    branches: [mp-master, MPR]
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  check-co-authored-by:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Reject Claude Co-Authored-By trailers
+        run: |
+          if git log --format='%H %ae %ce %B' "${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}" | grep -iE '(^[[:space:]]*Co-Authored-By:.*(claude|anthropic)|noreply@anthropic\.com)'; then
+            echo "::error::Commit contains disallowed Claude attribution or Co-Authored-By trailer."
+            exit 1
+          fi
