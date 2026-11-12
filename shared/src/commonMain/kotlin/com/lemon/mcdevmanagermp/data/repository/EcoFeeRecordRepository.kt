@@ -24,6 +24,14 @@ internal fun normalizeMonthKey(dataMonth: String): String? {
 
 internal fun monthKey(month: ProfitMonth): String = "%04d-%02d".format(month.year, month.month)
 
+/** 结算单 dataMonth 解析为 [ProfitMonth]；无法解析时返回 null。 */
+internal fun parseMonthKey(dataMonth: String): ProfitMonth? {
+    val key = normalizeMonthKey(dataMonth) ?: return null
+    val year = key.substring(0, 4).toIntOrNull() ?: return null
+    val month = key.substring(5).toIntOrNull() ?: return null
+    return ProfitMonth(year, month)
+}
+
 /**
  * 结算单税前收益换算为反推生态费的输入口径：结算单 income 已包含畅玩计划收益，
  * 而预估公式（分成 + 模组激励 + 流水激励）不包含，需剔除后再反推。
@@ -67,19 +75,21 @@ internal class EcoFeeRecordRepository {
      * 结算单出账后反推生态费并更新记录。
      * 优先使用周期截止时保存的快照计算（避免出账时平台流水数据已调整）；无快照时用传入的预估计据。
      * 无流水、流水不完整或费率超出 0~100% 时不写入。
+     *
+     * @return 是否写入了反推结果
      */
     suspend fun saveReverseResult(
         accountKey: String,
         month: ProfitMonth,
         profitData: ProfitData,
         settlement: IncomeVO
-    ) {
-        if (accountKey.isBlank() || !profitData.isFlowComplete) return
+    ): Boolean {
+        if (accountKey.isBlank() || !profitData.isFlowComplete) return false
         val dataMonth = monthKey(month)
         val existing = AppContext.database.ecoFeeRecordDao().get(accountKey, dataMonth)
         val snapshot = existing?.profitDataJson?.let { decodeProfitData(it) } ?: profitData
-        val ecoFeeRate = snapshot.reverseEcoFeeRate(settlement.reverseInputIncome) ?: return
-        if (ecoFeeRate !in 0.0..1.0) return
+        val ecoFeeRate = snapshot.reverseEcoFeeRate(settlement.reverseInputIncome) ?: return false
+        if (ecoFeeRate !in 0.0..1.0) return false
         AppContext.database.ecoFeeRecordDao().upsert(
             EcoFeeRecordEntity(
                 accountKey = accountKey,
@@ -92,6 +102,7 @@ internal class EcoFeeRecordRepository {
                 updatedAt = Clock.System.now().toEpochMilliseconds()
             )
         )
+        return true
     }
 
     /** 读取某月已保存的预估快照；未保存时返回 null */
@@ -99,6 +110,10 @@ internal class EcoFeeRecordRepository {
         val record = AppContext.database.ecoFeeRecordDao().get(accountKey, monthKey(month)) ?: return null
         return decodeProfitData(record.profitDataJson)
     }
+
+    /** 某月是否已反推出费率 */
+    suspend fun isRated(accountKey: String, month: ProfitMonth): Boolean =
+        AppContext.database.ecoFeeRecordDao().get(accountKey, monthKey(month))?.ecoFeeRate != null
 
     /** 已反推出费率的历史记录，按月份倒序 */
     suspend fun getRated(accountKey: String): List<EcoFeeRecordEntity> =
