@@ -1,0 +1,15 @@
+#!/bin/sh
+MSG_FILE="$1"
+TMP_FILE="${MSG_FILE}.tmp"
+
+awk '
+  {
+    sub(/\r$/, "")
+    if (tolower($0) ~ /^[[:space:]]*co-authored-by:.*(claude|anthropic)/) next
+    lines[++n] = $0
+  }
+  END {
+    while (n > 0 && lines[n] ~ /^[[:space:]]*$/) n--
+    for (i = 1; i <= n; i++) print lines[i]
+  }
+' "$MSG_FILE" > "$TMP_FILE" && mv "$TMP_FILE" "$MSG_FILE"
