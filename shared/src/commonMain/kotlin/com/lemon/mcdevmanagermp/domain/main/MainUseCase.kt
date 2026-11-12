@@ -4,7 +4,10 @@ import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.consts.CookiesExpiredException
 import com.lemon.mcdevmanagermp.data.consts.LoginException
 import com.lemon.mcdevmanagermp.data.dto.netease.income.LobbyGoodVO
+import com.lemon.mcdevmanagermp.data.repository.EcoFeeRecordRepository
+import com.lemon.mcdevmanagermp.data.repository.parseMonthKey
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResAnalyzeData
+import com.lemon.mcdevmanagermp.data.vo.netease.income.IncomeVO
 import com.lemon.mcdevmanagermp.data.vo.netease.user.LevelInfoVO
 import com.lemon.mcdevmanagermp.data.vo.netease.user.OverviewVO
 import com.lemon.mcdevmanagermp.data.vo.netease.user.UserInfoVO
@@ -56,6 +59,10 @@ internal data class ProfitMonthWindow(
     val showNextMonth: Boolean
 )
 
+/** 计算周期是否已截止：该月已完整结束（当前自然月之前的月份） */
+internal fun isMonthClosed(month: ProfitMonth, today: LocalDate): Boolean =
+    month < ProfitMonth(today.year, today.month.number)
+
 internal fun profitMonthWindow(today: LocalDate): ProfitMonthWindow {
     val current = ProfitMonth(today.year, today.month.number)
     val nextMonth = current.shift(1)
@@ -67,11 +74,12 @@ internal fun profitMonthWindow(today: LocalDate): ProfitMonthWindow {
     )
 }
 
-class MainUseCase(
+class MainUseCase internal constructor(
     private val userRepository: UserRepository,
     private val analyzeRepository: AnalyzeRepository,
     private val getResourceListUseCase: GetResourceListUseCase,
-    private val lobbyGoodsUseCase: LobbyGoodsUseCase = LobbyGoodsUseCase(analyzeRepository)
+    private val lobbyGoodsUseCase: LobbyGoodsUseCase = LobbyGoodsUseCase(analyzeRepository),
+    private val ecoFeeRecordRepository: EcoFeeRecordRepository = EcoFeeRecordRepository.INSTANCE
 ) {
     suspend fun loadDashboard(): MainDashboardData = coroutineScope {
         val userInfoDeferred = async { userRepository.getUserInfo() }
@@ -116,6 +124,44 @@ class MainUseCase(
     suspend fun computeMonthProfit(year: Int, month: Int): ProfitData {
         val flow = getOneMonthComponentDiamonds(year, month)
         return calculateProfit(flow.diamonds).copy(isFlowComplete = flow.isComplete)
+    }
+
+    /**
+     * 计算已出账月份的生态费：对给定结算单逐月反推实际生态费率并写入本地记录。
+     *
+     * 已反推出费率的月份跳过，避免重复计算与重复请求。已截止月份优先用周期截止时保存的预估快照
+     * 反推（出账时平台流水可能已调整）；无快照时回落到实时计算。流水不完整或反推结果无效的月份不写入。
+     *
+     * @param accountKey 账号标识（nickname）
+     * @param settlements 平台结算单列表
+     * @return 本次新写入的记录
+     */
+    internal suspend fun syncEcoFeeRecords(
+        accountKey: String,
+        settlements: List<IncomeVO>,
+        today: LocalDate
+    ): List<ProfitMonth> {
+        if (accountKey.isBlank()) return emptyList()
+        val pending = settlements.mapNotNull { settlement ->
+            val month = parseMonthKey(settlement.dataMonth) ?: return@mapNotNull null
+            if (ecoFeeRecordRepository.isRated(accountKey, month)) null else month to settlement
+        }
+        if (pending.isEmpty()) return emptyList()
+
+        // 逐月串行：同一账号写同一张表，且每月的流水请求本身已是并发发起的
+        return pending.mapNotNull { (month, settlement) ->
+            val cached = ecoFeeRecordRepository.getSnapshot(accountKey, month)
+            val profitData = cached ?: computeMonthProfit(month.year, month.month)
+            // 已截止月份实时计算后补存快照，后续无需重复请求
+            if (cached == null && isMonthClosed(month, today)) {
+                ecoFeeRecordRepository.saveSnapshot(accountKey, month, profitData)
+            }
+            if (ecoFeeRecordRepository.saveReverseResult(accountKey, month, profitData, settlement)) {
+                month
+            } else {
+                null
+            }
+        }
     }
 
     /**

@@ -127,6 +127,13 @@ data class WorkDetailState(
     val isUploadingVideo: Boolean = false                    // 视频上传中
 ) : IUiState {
     /**
+     * 是否为存量绿宝石定价作品（以平台返回的原详情判定）。绿宝石定价已停止提交，
+     * 此类作品仍可编辑，但保存前必须把定价类型改为钻石。
+     */
+    val isLegacyEmeraldPricing: Boolean
+        get() = PriceTypeEnum.fromStringType(detail?.priceType.orEmpty()) == PriceTypeEnum.EMERALD
+
+    /**
      * 是否为前置模组（pri_type=9）。该类作品由平台强制免费、且不参与常规上架字段填写，
      * 表单据此隐藏定价、宣传图、视频、标签等区块（对齐开发者平台编辑页）。
      */
@@ -222,7 +229,6 @@ sealed interface WorkDetailAction : IUiAction {
     // —— 定价 ——
     data class ChangePriceType(val type: PriceTypeEnum) : WorkDetailAction
     data class ChangePriceRank(val rank: PriceRankEnum) : WorkDetailAction
-    data class UpdateEmeraldPrice(val value: Int) : WorkDetailAction
 
     // —— 折扣（仅钻石二档及以上） ——
     data object AddDiscount : WorkDetailAction
@@ -288,10 +294,13 @@ data class ChannelImageSlot(
     val fileInfo: FileInfoDTO? = null
 )
 
-/** 宣传视频（对应 ResourceDetailVideoInfo，回显与上传结果统一模型；cover 由用户上传封面图得到）。 */
+/** 宣传视频（对应 ResourceDetailVideoInfo，回显与上传结果统一模型；cover 由用户上传封面图得到）。
+ *  保存时带 fileInfo/coverFileInfo 的字段以回执对象提交（新上传），否则提交地址字符串（沿用旧值）。 */
 data class VideoItem(
     val cover: String = "",
     val size: Long = 0,
     val url: String = "",
-    val isUploadingCover: Boolean = false
+    val isUploadingCover: Boolean = false,
+    val fileInfo: FileInfoDTO? = null,
+    val coverFileInfo: FileInfoDTO? = null
 )

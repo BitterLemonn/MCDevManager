@@ -33,6 +33,9 @@ enum class PeImageCompletenessPolicy {
     SKIP_UNTOUCHED_CHANNELS,
 }
 
+/** 绿宝石定价拦截文案：新建与更新共用，存量作品需先改价才能提交。 */
+const val EMERALD_PRICE_REJECTED_MESSAGE = "定价类型不支持，请修改定价后再提交"
+
 fun validateWorkSave(
     input: WorkSaveValidationInput,
     peImagePolicy: PeImageCompletenessPolicy = PeImageCompletenessPolicy.REQUIRE_COMPLETE,
@@ -47,16 +50,12 @@ fun validateWorkSave(
     }
     if (input.tags.none { it.isNotBlank() }) return "请至少添加一个模组标签"
     if (input.priceType == PriceTypeEnum.UNKNOWN) return "请选择定价类型"
-    when (input.priceType) {
-        PriceTypeEnum.DIAMOND -> if (input.priceRank !in 0..6) {
-            return "请选择有效的钻石定价档位"
-        }
-
-        PriceTypeEnum.EMERALD -> if (input.price <= 0) {
-            return "请输入大于 0 的绿宝石价格"
-        }
-
-        else -> Unit
+    // 绿宝石定价已停止提交：新建与更新均不允许，存量作品须先改定价再保存
+    if (input.priceType == PriceTypeEnum.EMERALD) {
+        return EMERALD_PRICE_REJECTED_MESSAGE
+    }
+    if (input.priceType == PriceTypeEnum.DIAMOND && input.priceRank !in 0..6) {
+        return "请选择有效的钻石定价档位"
     }
     if (!hasVisibleHtmlText(input.detailHtml)) return "PE 详情至少需要 1 个字符"
     if (input.peResourceType <= 0) return "请选择 PE 资源类别"

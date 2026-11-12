@@ -3,14 +3,17 @@ package com.lemon.mcdevmanagermp
 import com.lemon.mcdevmanagermp.data.common.JSONConverter
 import com.lemon.mcdevmanagermp.data.repository.monthKey
 import com.lemon.mcdevmanagermp.data.repository.normalizeMonthKey
+import com.lemon.mcdevmanagermp.data.repository.parseMonthKey
 import com.lemon.mcdevmanagermp.data.repository.reverseInputIncome
 import com.lemon.mcdevmanagermp.data.vo.netease.income.IncomeVO
 import com.lemon.mcdevmanagermp.data.vo.netease.user.UserInfoVO
 import com.lemon.mcdevmanagermp.domain.main.ProfitMonth
+import com.lemon.mcdevmanagermp.domain.main.isMonthClosed
 import com.lemon.mcdevmanagermp.utils.ECO_FEE_RATE
 import com.lemon.mcdevmanagermp.utils.ProfitData
 import com.lemon.mcdevmanagermp.utils.calculateProfit
 import com.lemon.mcdevmanagermp.utils.reverseEcoFeeRate
+import kotlinx.datetime.LocalDate
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -81,6 +84,25 @@ class EcoFeeReverseTest {
         assertNull(normalizeMonthKey("abc"))
         assertEquals("2026-10", monthKey(ProfitMonth(2026, 10)))
         assertEquals("2026-01", monthKey(ProfitMonth(2026, 1)))
+    }
+
+    @Test
+    fun dataMonthParsesToProfitMonth() {
+        assertEquals(ProfitMonth(2026, 10), parseMonthKey("2026-10"))
+        assertEquals(ProfitMonth(2026, 10), parseMonthKey("202610"))
+        assertEquals(ProfitMonth(2026, 1), parseMonthKey("2026-1"))
+        assertNull(parseMonthKey("2026-13"))
+        assertNull(parseMonthKey(""))
+    }
+
+    /** 登录后自动反推依赖月份截止判定：上月已截止，本月与下月尚未截止 */
+    @Test
+    fun monthClosedOnlyForPastMonths() {
+        val today = LocalDate(2026, 11, 12)
+        assertTrue(isMonthClosed(ProfitMonth(2026, 10), today))
+        assertTrue(isMonthClosed(ProfitMonth(2025, 12), today))
+        assertFalse(isMonthClosed(ProfitMonth(2026, 11), today))
+        assertFalse(isMonthClosed(ProfitMonth(2026, 12), today))
     }
 
     @Test

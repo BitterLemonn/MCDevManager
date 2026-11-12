@@ -16,6 +16,7 @@ import com.lemon.mcdevmanagermp.data.vo.netease.income.IncomeVO
 import com.lemon.mcdevmanagermp.data.vo.netease.user.UserInfoVO
 import com.lemon.mcdevmanagermp.domain.main.MainUseCase
 import com.lemon.mcdevmanagermp.domain.main.ProfitMonth
+import com.lemon.mcdevmanagermp.domain.main.isMonthClosed
 import com.lemon.mcdevmanagermp.domain.resource.GetResourceListUseCase
 import com.lemon.mcdevmanagermp.utils.Logger
 import com.lemon.mcdevmanagermp.utils.ProfitData
@@ -241,9 +242,8 @@ internal class IncomeDetailViewModel(
         }
     }
 
-    /** 计算周期是否已截止：该月已完整结束（当前自然月之前的月份） */
     private fun isMonthClosed(month: ProfitMonth): Boolean {
-        val now = Clock.System.now().toLocalDateTime(TimeZone.of("Asia/Shanghai"))
-        return month < ProfitMonth(now.year, now.month.number)
+        val today = Clock.System.now().toLocalDateTime(TimeZone.of("Asia/Shanghai")).date
+        return isMonthClosed(month, today)
     }
 }

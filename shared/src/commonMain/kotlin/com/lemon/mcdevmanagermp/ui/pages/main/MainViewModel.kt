@@ -9,6 +9,7 @@ import com.lemon.mcdevmanagermp.data.page.RankCategoryData
 import com.lemon.mcdevmanagermp.data.repository.AccountRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.AnalyzeRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.EcoFeeRecordRepository
+import com.lemon.mcdevmanagermp.data.repository.IncomeRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.MailboxRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.RankListRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
@@ -100,6 +101,7 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
         analyzeRepository = AnalyzeRepositoryImpl.INSTANCE,
         getResourceListUseCase = GetResourceListUseCase(ResourceRepositoryImpl.INSTANCE)
     )
+    private val incomeRepository = IncomeRepositoryImpl.INSTANCE
     private val rankListUseCase = RankListUseCase(
         rankListRepository = RankListRepositoryImpl.INSTANCE
     )
@@ -233,6 +235,7 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
                 if (sessionExpired) {
                     sendEffect(MainEffect.SessionExpired)
                 } else {
+                    syncEcoFeeRecords()
                     // 兼容旧版本：将当前账号的 email 字段更新为 nickname
                     if (userInfo != null) {
                         val currentAccount = accountRepository.getLastUsedAccount()
@@ -294,6 +297,30 @@ class MainViewModel : BaseViewModel<MainState, MainAction, MainEffect>(MainState
                 }
             } catch (_: Exception) {
                 setState { copy(isProfitLoading = false) }
+            }
+        }
+    }
+
+    /**
+     * 登录后自动反推已出账月份的生态费，无需进入收益详情页触发。
+     * 已在本地记录费率的月份跳过，其余月份按结算单反推后落库；失败不影响首页加载。
+     */
+    private fun syncEcoFeeRecords() {
+        val accountKey = AppContext.userInfo?.nickname ?: return
+        viewModelScope.launch {
+            try {
+                val settlements = when (val result = incomeRepository.getIncome("pe")) {
+                    is NetworkState.Success -> result.data?.incomes.orEmpty()
+                    is NetworkState.Error -> {
+                        Logger.e("获取结算数据失败: ${result.msg}", result.e)
+                        return@launch
+                    }
+                }
+                val timeZone = TimeZone.of("Asia/Shanghai")
+                val today = Clock.System.now().toLocalDateTime(timeZone).date
+                mainUseCase.syncEcoFeeRecords(accountKey, settlements, today)
+            } catch (e: Exception) {
+                Logger.e("自动反推生态费失败", e)
             }
         }
     }
