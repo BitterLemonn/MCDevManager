@@ -10,7 +10,12 @@ data class ProfitData(
     val profitSubsidy: Double = 0.0,
     val subsidyProfit: Map<String, Double> = emptyMap(),
     val subsidyPercent: Double = 0.0,
-    val moduleDiamonds: Map<String, Double> = emptyMap()
+    val moduleDiamonds: Map<String, Double> = emptyMap(),
+    /**
+     * 流水是否完整：拉取作品列表或单个作品流水时有请求失败，失败部分会按 0 计入，此时为 false。
+     * 随收益数据一起缓存和传递；需要精确流水的计算（如反推生态费）必须先检查它。
+     */
+    val isFlowComplete: Boolean = true
 )
 
 data class ModuleIncomeDetail(
@@ -21,6 +26,9 @@ data class ModuleIncomeDetail(
     val subsidyAmount: Double,
     val totalIncome: Double
 )
+
+/** 预估使用的生态费率：流水先扣除该比例，剩余部分再按分成比例结算给开发者 */
+const val ECO_FEE_RATE = 0.3
 
 private fun getSharedProfit(profit: Double): Double = when {
     profit < 1_000_000 -> 0.5
@@ -34,7 +42,7 @@ fun ProfitData.toModuleIncomeDetails(): List<ModuleIncomeDetail> {
         .filter { (_, revenue) -> revenue > 0 }
         .map { (name, revenue) ->
             val sharedProfit = getSharedProfit(revenue)
-            val shareReturnDiamonds = revenue * 0.7 * (1 - sharedProfit) * subsidyPercent
+            val shareReturnDiamonds = revenue * (1 - ECO_FEE_RATE) * (1 - sharedProfit) * subsidyPercent
             val shareRmb = getDeveloperProfit(revenue, subsidyPercent) / 100.0
             val subsidy = subsidyProfit[name] ?: 0.0
             ModuleIncomeDetail(
@@ -138,5 +146,26 @@ fun getDeveloperProfit(profit: Double, subsidyPercent: Double): Double {
         profit < 10_000_000 -> 0.525
         else -> 0.55
     }
-    return profit * (1 - 0.3) * (sharedProfit + (1 - sharedProfit) * subsidyPercent)
+    return profit * (1 - ECO_FEE_RATE) * (sharedProfit + (1 - sharedProfit) * subsidyPercent)
+}
+
+/**
+ * 根据实际税前收益反推实际生态费率。
+ *
+ * 预估口径：总收益 = Σ 流水 × (1 - 生态费率) × 分成系数 / 100 + 模组激励 + 流水激励。
+ * 只有开发者分成（含分成返还）随生态费率线性变化，激励为固定金额，因此可直接解出费率。
+ *
+ * 流水缺失会让分母偏小、算出的费率系统性偏低，因此 [ProfitData.isFlowComplete] 为 false 时拒绝计算；
+ * 界面应先检查该标记，给出"数据不完整"的提示而不是"无流水"。
+ *
+ * @param actualIncome 实际税前收益（元），口径需与 [ProfitData.totalProfit] 一致
+ * @return 实际生态费率；超出 0~1 说明输入与预估口径不一致。流水不完整或当月无流水时返回 null
+ */
+fun ProfitData.reverseEcoFeeRate(actualIncome: Double): Double? {
+    if (!isFlowComplete) return null
+    // developerProfit 已按 ECO_FEE_RATE 扣过生态费，先还原为"零生态费"时的分成（元）
+    val shareWithoutFee = developerProfit / (1 - ECO_FEE_RATE) / 100.0
+    if (shareWithoutFee <= 0.0) return null
+    val fixedSubsidy = subsidyProfit.values.sum() + profitSubsidy
+    return 1 - (actualIncome - fixedSubsidy) / shareWithoutFee
 }
