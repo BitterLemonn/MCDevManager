@@ -18,7 +18,7 @@ import com.lemon.mcdevmanagermp.data.db.entity.PromotionTemplateEntity
 
 @Database(
     entities = [AccountEntity::class, PromotionTemplateEntity::class, DayDetailConfigEntity::class, EcoFeeRecordEntity::class],
-    version = 9,
+    version = 10,
     exportSchema = false
 )
 @ConstructedBy(AppDatabaseConstructor::class)
@@ -32,6 +32,18 @@ abstract class AppDatabase : RoomDatabase() {
 expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
     override fun initialize(): AppDatabase
 }
+
+internal fun RoomDatabase.Builder<AppDatabase>.addAppDatabaseMigrations() = addMigrations(
+    MIGRATION_1_2,
+    MIGRATION_2_3,
+    MIGRATION_3_4,
+    MIGRATION_4_5,
+    MIGRATION_5_6,
+    MIGRATION_6_7,
+    MIGRATION_7_8,
+    MIGRATION_8_9,
+    MIGRATION_9_10
+)
 
 val MIGRATION_1_2 = object : Migration(1, 2) {
     override fun migrate(connection: SQLiteConnection) {
@@ -168,6 +180,19 @@ val MIGRATION_7_8 = object : Migration(7, 8) {
  * 旧表数据不迁移，快照可由后续登录重新保存，费率在结算单出账后浏览时重新反推。
  */
 val MIGRATION_8_9 = object : Migration(8, 9) {
+    override fun migrate(connection: SQLiteConnection) {
+        connection.execSQL("DROP TABLE IF EXISTS eco_fee_record")
+        connection.execSQL(CREATE_ECO_FEE_RECORD_TABLE_SQL)
+    }
+}
+
+/**
+ * 数据库迁移 9→10：重建 eco_fee_record 表。
+ * 9 版本把绿宝石计价模组的商品流水（平台允许其改为钻石模组后按钻石面额折算）按钻石流水
+ * 计入了反推分母，费率普遍虚高，旧记录全部作废；表结构与 8→9 一致，仅清空数据，
+ * 快照与费率由后续登录按正确口径重新生成。
+ */
+val MIGRATION_9_10 = object : Migration(9, 10) {
     override fun migrate(connection: SQLiteConnection) {
         connection.execSQL("DROP TABLE IF EXISTS eco_fee_record")
         connection.execSQL(CREATE_ECO_FEE_RECORD_TABLE_SQL)

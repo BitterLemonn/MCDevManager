@@ -12,8 +12,17 @@ data class ProfitData(
     val subsidyPercent: Double = 0.0,
     val moduleDiamonds: Map<String, Double> = emptyMap(),
     /**
+     * 绿宝石计价模组的商品销售流水（面额口径）。平台允许旧绿宝石模组改为钻石模组，
+     * 但绿宝石计价期间的销售在数据分析接口里按钻石面额折算返回，与实际结算收益不符，
+     * 计入会把收益预估与生态费反推整体抬高数倍，因此与 [moduleDiamonds] 分离存放、不参与计算；
+     * 已改为钻石定价的模组流水为真钻石口径，计入 [moduleDiamonds] 正常参与计算。
+     */
+    val emeraldModDiamonds: Map<String, Double> = emptyMap(),
+    /**
      * 流水是否完整：拉取作品列表或单个作品流水时有请求失败，失败部分会按 0 计入，此时为 false。
      * 随收益数据一起缓存和传递；需要精确流水的计算（如反推生态费）必须先检查它。
+     * 覆盖普通作品流水、商品化模组列表、钻石定价模组的商品列表与商品流水。
+     * 绿宝石定价模组的商品列表或商品流水请求失败不影响本标记。
      */
     val isFlowComplete: Boolean = true
 )

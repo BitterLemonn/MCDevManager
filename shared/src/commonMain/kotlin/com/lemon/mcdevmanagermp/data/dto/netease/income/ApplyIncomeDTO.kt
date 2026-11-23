@@ -23,7 +23,7 @@ data class LobbyIncomeResourceVO(
     val itemName: String = ""
 )
 
-// 联机大厅作品下的商品列表（含未上架/已下架商品，收益统计需全量）
+// 商品化模组下的商品列表（含未上架/已下架商品，收益统计需全量）
 @Serializable
 data class LobbyGoodsListVO(
     val goods: List<LobbyGoodVO> = emptyList()

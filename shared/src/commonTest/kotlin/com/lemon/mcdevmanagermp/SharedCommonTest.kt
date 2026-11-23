@@ -126,21 +126,21 @@ class SharedCommonTest {
     }
 
     @Test
-    fun normalAndLobbyProfitWithSameNameAddsTogether() {
+    fun normalAndGoodsProfitWithSameNameAddsTogether() {
         assertEquals(
-            mapOf("同名作品" to 30.0),
+            mapOf("同名模组" to 30.0),
             mergeProfitDiamonds(
-                normal = mapOf("同名作品" to 10.0),
-                lobby = mapOf("同名作品" to 20.0)
+                normal = mapOf("同名模组" to 10.0),
+                goods = mapOf("同名模组" to 20.0)
             )
         )
     }
 
     @Test
     fun lobbyGoodsSumIntoSingleOwnerProfit() {
-        // 一个联机大厅作品下挂多个商品，作品收益应为各商品钻石之和
+        // 一个商品化模组下挂多个商品，模组流水应为各商品扣除退款率后的钻石之和
         val rows = listOf(
-            ResAnalyzeData(iid = "g1", diamond = 30, cntBuy = 1, dateId = "20260816", resName = "钻石礼包"),
+            ResAnalyzeData(iid = "g1", diamond = 30, refundRate = 0.1, cntBuy = 1, dateId = "20260816", resName = "钻石礼包"),
             ResAnalyzeData(iid = "g2", diamond = 12, cntBuy = 1, dateId = "20260816", resName = "皮肤"),
             ResAnalyzeData(iid = "g3", diamond = 8, cntBuy = 1, dateId = "20260816", resName = "坐骑")
         )
@@ -149,7 +149,7 @@ class SharedCommonTest {
             goodsToOwner = mapOf("g1" to "大厅A", "g2" to "大厅A", "g3" to "大厅B")
         )
 
-        assertEquals(mapOf("大厅A" to 42.0, "大厅B" to 8.0), result)
+        assertEquals(mapOf("大厅A" to 39.0, "大厅B" to 8.0), result)
     }
 
     @Test

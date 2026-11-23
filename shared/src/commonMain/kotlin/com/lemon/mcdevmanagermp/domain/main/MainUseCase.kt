@@ -3,7 +3,7 @@ package com.lemon.mcdevmanagermp.domain.main
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.consts.CookiesExpiredException
 import com.lemon.mcdevmanagermp.data.consts.LoginException
-import com.lemon.mcdevmanagermp.data.dto.netease.income.LobbyGoodVO
+import com.lemon.mcdevmanagermp.data.consts.enums.PriceTypeEnum
 import com.lemon.mcdevmanagermp.data.repository.EcoFeeRecordRepository
 import com.lemon.mcdevmanagermp.data.repository.parseMonthKey
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResAnalyzeData
@@ -12,6 +12,7 @@ import com.lemon.mcdevmanagermp.data.vo.netease.user.LevelInfoVO
 import com.lemon.mcdevmanagermp.data.vo.netease.user.OverviewVO
 import com.lemon.mcdevmanagermp.data.vo.netease.user.UserInfoVO
 import com.lemon.mcdevmanagermp.domain.analyze.AnalyzeRepository
+import com.lemon.mcdevmanagermp.domain.analyze.LobbyGoodsByOwner
 import com.lemon.mcdevmanagermp.domain.analyze.LobbyGoodsUseCase
 import com.lemon.mcdevmanagermp.domain.resource.GetResourceListUseCase
 import com.lemon.mcdevmanagermp.domain.user.UserRepository
@@ -123,7 +124,10 @@ class MainUseCase internal constructor(
      */
     suspend fun computeMonthProfit(year: Int, month: Int): ProfitData {
         val flow = getOneMonthComponentDiamonds(year, month)
-        return calculateProfit(flow.diamonds).copy(isFlowComplete = flow.isComplete)
+        return calculateProfit(flow.diamonds).copy(
+            emeraldModDiamonds = flow.emeraldModDiamonds,
+            isFlowComplete = flow.isComplete
+        )
     }
 
     /**
@@ -166,15 +170,15 @@ class MainUseCase internal constructor(
 
     /**
      * 汇总某月各作品流水（钻石）。
-     * 作品列表、联机大厅商品列表、单个作品流水任一请求失败，失败部分按 0 计入并标记为不完整，
-     * 由调用方决定是否接受不完整数据。
+     * 普通作品流水、钻石定价模组的商品流水任一请求失败，失败部分按 0 计入并标记为不完整，
+     * 由调用方决定是否接受不完整数据；绿宝石定价模组的商品流水不参与计算，其失败不影响完整性。
      */
     private suspend fun getOneMonthComponentDiamonds(year: Int, month: Int): MonthFlow =
         coroutineScope {
             val normalResources = async {
                 getResourceListUseCase("pe", onlineOnly = true, excludePrerequisites = true)
             }
-            // 联机大厅作品及其商品的获取（含作品列表请求）交由 lobbyGoodsUseCase 统一发起
+            // 商品化模组及其商品的获取（含模组列表请求）交由 lobbyGoodsUseCase 统一发起
             val lobbyGoods = async { lobbyGoodsUseCase.getGoodsByOwner() }
             val resourcesResult = normalResources.await()
             val resList = when (resourcesResult) {
@@ -183,8 +187,8 @@ class MainUseCase internal constructor(
             }
             val lobbyGoodsResult = lobbyGoods.await()
             val goodsByOwner = when (lobbyGoodsResult) {
-                is NetworkState.Success -> lobbyGoodsResult.data
-                is NetworkState.Error -> null
+                is NetworkState.Success -> lobbyGoodsResult.data.orEmpty()
+                is NetworkState.Error -> emptyList()
             }
 
             val dateRange = monthDateRange(year, month)
@@ -208,31 +212,44 @@ class MainUseCase internal constructor(
                 }
             }.awaitAll()
             val normalDiamonds = normalResults.associate { (name, diamonds) -> name to (diamonds ?: 0.0) }
-            val lobbyDiamonds = lobbyItemDiamonds(goodsByOwner?.goodsByOwner.orEmpty(), dateRange)
+
+            // 商品化模组按当前定价分流：平台允许旧绿宝石模组改为钻石模组，已改为钻石定价的模组
+            // 其商品流水为真钻石口径、参与计算；仍为绿宝石定价的模组，接口返回的钻石数是
+            // 绿宝石销售按面额折算的结果，与实际结算不符，不参与计算。
+            // 资源列表中查不到的模组无法确认定价，按绿宝石口径处理（宁少算不错算）。
+            val resById = resList.associateBy { it.itemId }
+            val (diamondOwners, emeraldOwners) = goodsByOwner.partition { (owner, _) ->
+                resById[owner.itemId]?.getPriceType() == PriceTypeEnum.DIAMOND
+            }
+            val diamondGoods = async { lobbyItemDiamonds(diamondOwners, dateRange) }
+            val emeraldGoods = async { lobbyItemDiamonds(emeraldOwners, dateRange) }
+            val diamondModDiamonds = diamondGoods.await()
 
             MonthFlow(
-                diamonds = mergeProfitDiamonds(normalDiamonds, lobbyDiamonds.orEmpty()),
+                diamonds = mergeProfitDiamonds(normalDiamonds, diamondModDiamonds.orEmpty()),
+                emeraldModDiamonds = emeraldGoods.await().orEmpty(),
                 isComplete = resourcesResult is NetworkState.Success &&
-                        goodsByOwner?.isComplete == true &&
+                        lobbyGoodsResult is NetworkState.Success &&
                         normalResults.none { (_, diamonds) -> diamonds == null } &&
-                        lobbyDiamonds != null
+                        diamondOwners.none { it.goods == null } &&
+                        diamondModDiamonds != null
             )
         }
 
     /**
-     * 计算联机大厅作品收益：作品下的各商品销售钻石累加回作品名。
-     * @return 作品名 → 钻石；商品流水请求失败时返回 null（无商品时为空表，属于完整数据）
+     * 计算商品化模组流水：模组下的各商品销售钻石累加回模组名。
+     * @return 模组名 → 钻石；商品流水请求失败时返回 null（无商品时为空表，属于完整数据）
      */
     private suspend fun lobbyItemDiamonds(
-        goodsByOwner: Map<String, List<LobbyGoodVO>>,
+        goodsByOwner: List<LobbyGoodsByOwner>,
         dateRange: Pair<String, String>
     ): Map<String, Double>? {
         val goodsToOwner = goodsByOwner
-            .flatMap { (name, goods) -> goods.map { it.goodsId to name } }
+            .flatMap { (owner, goods) -> goods.orEmpty().map { it.goodsId to owner.itemName } }
             .toMap()
         if (goodsToOwner.isEmpty()) return emptyMap()
 
-        // 一次查询全部商品的日详情（item_list_str 支持逗号分隔）
+        // 一次查询同一口径下全部商品的日详情（item_list_str 支持逗号分隔）
         val result = analyzeRepository.getDayDetail(
             platform = "pe",
             category = "pe",
@@ -266,33 +283,37 @@ class MainUseCase internal constructor(
 
 /**
  * 某月各作品流水汇总。
- * @property diamonds 作品名 → 钻石（失败的作品按 0 计入）
- * @property isComplete 所有相关请求是否都成功
+ * @property diamonds 钻石口径作品名 → 钻石（失败的作品按 0 计入；含钻石定价模组的商品流水）
+ * @property emeraldModDiamonds 绿宝石计价模组名 → 商品流水（面额口径，不参与收益计算）
+ * @property isComplete 钻石口径的流水请求是否都成功
  */
 internal data class MonthFlow(
     val diamonds: Map<String, Double>,
+    val emeraldModDiamonds: Map<String, Double>,
     val isComplete: Boolean
 )
 
+/** 同名作品的普通流水与商品流水相加合并 */
 internal fun mergeProfitDiamonds(
     normal: Map<String, Double>,
-    lobby: Map<String, Double>
+    goods: Map<String, Double>
 ): Map<String, Double> = buildMap {
     putAll(normal)
-    lobby.forEach { (name, diamonds) -> put(name, (get(name) ?: 0.0) + diamonds) }
+    goods.forEach { (name, diamonds) -> put(name, (get(name) ?: 0.0) + diamonds) }
 }
 
 /**
- * 把商品维度的销售明细按所属作品累加：作品名 → 该作品下全部商品的钻石之和。
+ * 把商品维度的销售明细按所属模组累加：模组名 → 该模组下全部商品的钻石之和。
+ * 与普通作品流水同口径，扣除退款率。
  *
  * @param rows 商品口径销售明细（每行的 [ResAnalyzeData.iid] 是商品 ID）
- * @param goodsToOwner 商品 ID → 作品名
+ * @param goodsToOwner 商品 ID → 模组名
  */
 internal fun aggregateGoodsDiamondsByOwner(
     rows: List<ResAnalyzeData>,
     goodsToOwner: Map<String, String>
 ): Map<String, Double> =
     rows.mapNotNull { row ->
-        goodsToOwner[row.iid]?.let { it to row.diamond.toDouble() }
+        goodsToOwner[row.iid]?.let { it to row.diamond * (1 - row.refundRate) }
     }.groupBy({ it.first }, { it.second })
         .mapValues { (_, values) -> values.sum() }
