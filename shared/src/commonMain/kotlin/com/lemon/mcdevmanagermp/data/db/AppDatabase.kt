@@ -26,7 +26,7 @@ import com.lemon.mcdevmanagermp.data.db.entity.PromotionTemplateEntity
         EcoFeeRecordEntity::class,
         ArchivedWorkEntity::class
     ],
-    version = 11,
+    version = 10,
     exportSchema = false
 )
 @ConstructedBy(AppDatabaseConstructor::class)
@@ -51,8 +51,7 @@ internal fun RoomDatabase.Builder<AppDatabase>.addAppDatabaseMigrations() = addM
     MIGRATION_6_7,
     MIGRATION_7_8,
     MIGRATION_8_9,
-    MIGRATION_9_10,
-    MIGRATION_10_11
+    MIGRATION_9_10
 )
 
 val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -197,33 +196,16 @@ val MIGRATION_8_9 = object : Migration(8, 9) {
 }
 
 /**
- * 数据库迁移 9→10：重建 eco_fee_record 表。
- * 9 版本把绿宝石计价模组的商品流水（平台允许其改为钻石模组后按钻石面额折算）按钻石流水
- * 计入了反推分母，费率普遍虚高，旧记录全部作废；表结构与 8→9 一致，仅清空数据，
- * 快照与费率由后续登录按正确口径重新生成。
+ * 数据库迁移 9→10：
+ * 1. 重建 eco_fee_record 表：9 版本把绿宝石计价模组的商品流水按钻石流水计入了反推分母，
+ *    旧记录全部作废，快照与费率由后续登录按正确口径重新生成。
+ * 2. 新增本地作品归档表 archived_work（按账号 + 作品 ID 隔离）。
  */
 val MIGRATION_9_10 = object : Migration(9, 10) {
     override fun migrate(connection: SQLiteConnection) {
         connection.execSQL("DROP TABLE IF EXISTS eco_fee_record")
         connection.execSQL(CREATE_ECO_FEE_RECORD_TABLE_SQL)
-    }
-}
-
-/**
- * 数据库迁移 10→11：新增本地作品归档表（按账号 + 作品 ID 隔离）。
- */
-val MIGRATION_10_11 = object : Migration(10, 11) {
-    override fun migrate(connection: SQLiteConnection) {
-        connection.execSQL(
-            """
-            CREATE TABLE IF NOT EXISTS archived_work (
-              accountKey TEXT NOT NULL,
-              itemId TEXT NOT NULL,
-              archivedAt INTEGER NOT NULL,
-              PRIMARY KEY (accountKey, itemId)
-            )
-            """.trimIndent()
-        )
+        connection.execSQL(CREATE_ARCHIVED_WORK_TABLE_SQL)
     }
 }
 
@@ -238,5 +220,14 @@ private const val CREATE_ECO_FEE_RECORD_TABLE_SQL = """
       playPlanIncome REAL,
       updatedAt INTEGER NOT NULL,
       PRIMARY KEY (accountKey, dataMonth)
+    )
+"""
+
+private const val CREATE_ARCHIVED_WORK_TABLE_SQL = """
+    CREATE TABLE IF NOT EXISTS archived_work (
+      accountKey TEXT NOT NULL,
+      itemId TEXT NOT NULL,
+      archivedAt INTEGER NOT NULL,
+      PRIMARY KEY (accountKey, itemId)
     )
 """
