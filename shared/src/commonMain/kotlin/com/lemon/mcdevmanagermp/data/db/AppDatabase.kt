@@ -8,17 +8,25 @@ import androidx.room.migration.Migration
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.execSQL
 import com.lemon.mcdevmanagermp.data.db.dao.AccountDao
+import com.lemon.mcdevmanagermp.data.db.dao.ArchivedWorkDao
 import com.lemon.mcdevmanagermp.data.db.dao.DayDetailConfigDao
 import com.lemon.mcdevmanagermp.data.db.dao.EcoFeeRecordDao
 import com.lemon.mcdevmanagermp.data.db.dao.PromotionTemplateDao
 import com.lemon.mcdevmanagermp.data.db.entity.AccountEntity
+import com.lemon.mcdevmanagermp.data.db.entity.ArchivedWorkEntity
 import com.lemon.mcdevmanagermp.data.db.entity.DayDetailConfigEntity
 import com.lemon.mcdevmanagermp.data.db.entity.EcoFeeRecordEntity
 import com.lemon.mcdevmanagermp.data.db.entity.PromotionTemplateEntity
 
 @Database(
-    entities = [AccountEntity::class, PromotionTemplateEntity::class, DayDetailConfigEntity::class, EcoFeeRecordEntity::class],
-    version = 10,
+    entities = [
+        AccountEntity::class,
+        PromotionTemplateEntity::class,
+        DayDetailConfigEntity::class,
+        EcoFeeRecordEntity::class,
+        ArchivedWorkEntity::class
+    ],
+    version = 11,
     exportSchema = false
 )
 @ConstructedBy(AppDatabaseConstructor::class)
@@ -27,6 +35,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun promotionTemplateDao(): PromotionTemplateDao
     abstract fun dayDetailConfigDao(): DayDetailConfigDao
     abstract fun ecoFeeRecordDao(): EcoFeeRecordDao
+    abstract fun archivedWorkDao(): ArchivedWorkDao
 }
 
 expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
@@ -42,7 +51,8 @@ internal fun RoomDatabase.Builder<AppDatabase>.addAppDatabaseMigrations() = addM
     MIGRATION_6_7,
     MIGRATION_7_8,
     MIGRATION_8_9,
-    MIGRATION_9_10
+    MIGRATION_9_10,
+    MIGRATION_10_11
 )
 
 val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -196,6 +206,24 @@ val MIGRATION_9_10 = object : Migration(9, 10) {
     override fun migrate(connection: SQLiteConnection) {
         connection.execSQL("DROP TABLE IF EXISTS eco_fee_record")
         connection.execSQL(CREATE_ECO_FEE_RECORD_TABLE_SQL)
+    }
+}
+
+/**
+ * 数据库迁移 10→11：新增本地作品归档表（按账号 + 作品 ID 隔离）。
+ */
+val MIGRATION_10_11 = object : Migration(10, 11) {
+    override fun migrate(connection: SQLiteConnection) {
+        connection.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS archived_work (
+              accountKey TEXT NOT NULL,
+              itemId TEXT NOT NULL,
+              archivedAt INTEGER NOT NULL,
+              PRIMARY KEY (accountKey, itemId)
+            )
+            """.trimIndent()
+        )
     }
 }
 

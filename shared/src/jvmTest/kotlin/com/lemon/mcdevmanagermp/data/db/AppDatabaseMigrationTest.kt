@@ -5,6 +5,7 @@ import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.sqlite.execSQL
 import com.lemon.mcdevmanagermp.data.db.entity.AccountEntity
+import com.lemon.mcdevmanagermp.data.db.entity.ArchivedWorkEntity
 import com.lemon.mcdevmanagermp.data.db.entity.EcoFeeRecordEntity
 import kotlinx.coroutines.runBlocking
 import java.nio.file.Files
@@ -47,6 +48,19 @@ class AppDatabaseMigrationTest {
                 )
                 feeDao.upsert(recalculated)
                 assertEquals(recalculated, feeDao.get("test-account", "2026-09"))
+
+                val archiveDao = database.archivedWorkDao()
+                archiveDao.upsertAll(
+                    listOf(
+                        ArchivedWorkEntity(accountKey = "test-account", itemId = "460001", archivedAt = 100),
+                        ArchivedWorkEntity(accountKey = "test-account", itemId = "460002", archivedAt = 200),
+                        ArchivedWorkEntity(accountKey = "other-account", itemId = "460099", archivedAt = 300)
+                    )
+                )
+                assertEquals(listOf("460002", "460001"), archiveDao.getArchivedItemIds("test-account"))
+                assertEquals(listOf("460099"), archiveDao.getArchivedItemIds("other-account"))
+                archiveDao.delete("test-account", "460002")
+                assertEquals(listOf("460001"), archiveDao.getArchivedItemIds("test-account"))
             } finally {
                 database.close()
             }

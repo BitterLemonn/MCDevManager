@@ -169,50 +169,53 @@ private fun hslColor(h: Float, s: Float, l: Float, alpha: Float = 1f): Color {
 fun seedLightColorScheme(seed: Color = DefaultSeedColor): ColorScheme {
     val (h, s, _) = seed.toHsl()
     val neutralHue = h
+    val tertiaryHue = (h + 32f) % 360f
+    val primarySat = min(s, 0.54f)
 
     return lightColorScheme(
-        primary = hslColor(h, s, 0.40f),
+        primary = hslColor(h, primarySat, 0.44f),
         onPrimary = Color.White,
-        primaryContainer = hslColor(h, min(s, 0.70f), 0.90f),
-        onPrimaryContainer = hslColor(h, s, 0.10f),
-        inversePrimary = hslColor(h, min(s, 0.70f), 0.75f),
+        primaryContainer = hslColor(h, min(s, 0.42f), 0.93f),
+        onPrimaryContainer = hslColor(h, min(s, 0.52f), 0.22f),
+        inversePrimary = hslColor(h, min(s, 0.52f), 0.76f),
 
-        secondary = hslColor(h, min(s, 0.24f), 0.40f),
+        secondary = hslColor(h, min(s, 0.24f), 0.44f),
         onSecondary = Color.White,
-        secondaryContainer = hslColor(h, min(s, 0.24f), 0.90f),
-        onSecondaryContainer = hslColor(h, min(s, 0.24f), 0.10f),
+        secondaryContainer = hslColor(h, min(s, 0.26f), 0.925f),
+        onSecondaryContainer = hslColor(h, min(s, 0.32f), 0.22f),
 
-        tertiary = hslColor((h + 60f) % 360f, min(s, 0.40f), 0.40f),
+        tertiary = hslColor(tertiaryHue, min(s, 0.34f), 0.44f),
         onTertiary = Color.White,
-        tertiaryContainer = hslColor((h + 60f) % 360f, min(s, 0.40f), 0.90f),
-        onTertiaryContainer = hslColor((h + 60f) % 360f, min(s, 0.40f), 0.10f),
+        tertiaryContainer = hslColor(tertiaryHue, min(s, 0.32f), 0.925f),
+        onTertiaryContainer = hslColor(tertiaryHue, min(s, 0.38f), 0.22f),
 
-        background = hslColor(neutralHue, min(s, 0.04f), 0.98f),
-        onBackground = hslColor(neutralHue, min(s, 0.04f), 0.10f),
-        surface = hslColor(neutralHue, min(s, 0.04f), 0.99f),
-        onSurface = hslColor(neutralHue, min(s, 0.04f), 0.10f),
-        surfaceVariant = hslColor(neutralHue, min(s, 0.12f), 0.92f),
-        onSurfaceVariant = hslColor(neutralHue, min(s, 0.12f), 0.25f),
-        surfaceTint = hslColor(h, s, 0.40f),
+        // 浅色画布采用清透微染浅灰，配合洁净纯白主卡片（surfaceContainerHigh）拉开现代层次感
+        background = hslColor(neutralHue, min(s, 0.10f), 0.955f),
+        onBackground = hslColor(neutralHue, min(s, 0.10f), 0.13f),
+        surface = hslColor(neutralHue, min(s, 0.08f), 0.975f),
+        onSurface = hslColor(neutralHue, min(s, 0.10f), 0.13f),
+        surfaceVariant = hslColor(neutralHue, min(s, 0.10f), 0.935f),
+        onSurfaceVariant = hslColor(neutralHue, min(s, 0.10f), 0.42f),
+        surfaceTint = hslColor(h, primarySat, 0.44f),
 
-        inverseSurface = hslColor(neutralHue, min(s, 0.12f), 0.15f),
-        inverseOnSurface = hslColor(neutralHue, min(s, 0.04f), 0.95f),
+        inverseSurface = hslColor(neutralHue, min(s, 0.12f), 0.18f),
+        inverseOnSurface = hslColor(neutralHue, min(s, 0.06f), 0.95f),
 
-        surfaceBright = hslColor(neutralHue, min(s, 0.04f), 0.98f),
-        surfaceDim = hslColor(neutralHue, min(s, 0.04f), 0.88f),
-        surfaceContainer = hslColor(neutralHue, min(s, 0.06f), 0.93f),
-        surfaceContainerHigh = hslColor(neutralHue, min(s, 0.06f), 0.90f),
-        surfaceContainerHighest = hslColor(neutralHue, min(s, 0.06f), 0.88f),
-        surfaceContainerLow = hslColor(neutralHue, min(s, 0.06f), 0.96f),
+        surfaceBright = Color.White,
+        surfaceDim = hslColor(neutralHue, min(s, 0.10f), 0.91f),
         surfaceContainerLowest = Color.White,
+        surfaceContainerLow = hslColor(neutralHue, min(s, 0.08f), 0.965f),
+        surfaceContainer = hslColor(neutralHue, min(s, 0.06f), 0.985f),
+        surfaceContainerHigh = Color.White,
+        surfaceContainerHighest = hslColor(neutralHue, min(s, 0.10f), 0.945f),
 
         error = Color(0xFFBA1A1A),
         onError = Color.White,
         errorContainer = Color(0xFFFFDAD6),
         onErrorContainer = Color(0xFF410002),
 
-        outline = hslColor(neutralHue, min(s, 0.08f), 0.45f),
-        outlineVariant = hslColor(neutralHue, min(s, 0.08f), 0.75f),
+        outline = hslColor(neutralHue, min(s, 0.10f), 0.58f),
+        outlineVariant = hslColor(neutralHue, min(s, 0.10f), 0.87f),
         scrim = Color.Black,
     )
 }
@@ -220,31 +223,32 @@ fun seedLightColorScheme(seed: Color = DefaultSeedColor): ColorScheme {
 fun seedDarkColorScheme(seed: Color = DefaultSeedColor): ColorScheme {
     val (h, s, _) = seed.toHsl()
     val neutralHue = h
+    val tertiaryHue = (h + 32f) % 360f
 
     return darkColorScheme(
-        primary = hslColor(h, min(s, 0.70f), 0.75f),
-        onPrimary = hslColor(h, s, 0.15f),
-        primaryContainer = hslColor(h, s, 0.30f),
-        onPrimaryContainer = hslColor(h, min(s, 0.70f), 0.90f),
-        inversePrimary = hslColor(h, s, 0.40f),
+        primary = hslColor(h, min(s, 0.56f), 0.74f),
+        onPrimary = hslColor(h, min(s, 0.56f), 0.16f),
+        primaryContainer = hslColor(h, min(s, 0.44f), 0.28f),
+        onPrimaryContainer = hslColor(h, min(s, 0.55f), 0.90f),
+        inversePrimary = hslColor(h, min(s, 0.54f), 0.44f),
 
-        secondary = hslColor(h, min(s, 0.24f), 0.75f),
-        onSecondary = hslColor(h, min(s, 0.24f), 0.15f),
-        secondaryContainer = hslColor(h, min(s, 0.24f), 0.30f),
+        secondary = hslColor(h, min(s, 0.24f), 0.74f),
+        onSecondary = hslColor(h, min(s, 0.24f), 0.16f),
+        secondaryContainer = hslColor(h, min(s, 0.24f), 0.28f),
         onSecondaryContainer = hslColor(h, min(s, 0.24f), 0.90f),
 
-        tertiary = hslColor((h + 60f) % 360f, min(s, 0.40f), 0.75f),
-        onTertiary = hslColor((h + 60f) % 360f, min(s, 0.40f), 0.15f),
-        tertiaryContainer = hslColor((h + 60f) % 360f, min(s, 0.40f), 0.30f),
-        onTertiaryContainer = hslColor((h + 60f) % 360f, min(s, 0.40f), 0.90f),
+        tertiary = hslColor(tertiaryHue, min(s, 0.34f), 0.74f),
+        onTertiary = hslColor(tertiaryHue, min(s, 0.34f), 0.16f),
+        tertiaryContainer = hslColor(tertiaryHue, min(s, 0.30f), 0.28f),
+        onTertiaryContainer = hslColor(tertiaryHue, min(s, 0.36f), 0.90f),
 
         background = hslColor(neutralHue, min(s, 0.06f), 0.08f),
         onBackground = hslColor(neutralHue, min(s, 0.04f), 0.90f),
         surface = hslColor(neutralHue, min(s, 0.06f), 0.10f),
         onSurface = hslColor(neutralHue, min(s, 0.04f), 0.90f),
         surfaceVariant = hslColor(neutralHue, min(s, 0.10f), 0.18f),
-        onSurfaceVariant = hslColor(neutralHue, min(s, 0.10f), 0.75f),
-        surfaceTint = hslColor(h, min(s, 0.70f), 0.75f),
+        onSurfaceVariant = hslColor(neutralHue, min(s, 0.10f), 0.74f),
+        surfaceTint = hslColor(h, min(s, 0.56f), 0.74f),
 
         inverseSurface = hslColor(neutralHue, min(s, 0.04f), 0.90f),
         inverseOnSurface = hslColor(neutralHue, min(s, 0.06f), 0.15f),
@@ -262,7 +266,7 @@ fun seedDarkColorScheme(seed: Color = DefaultSeedColor): ColorScheme {
         errorContainer = Color(0xFF93000A),
         onErrorContainer = Color(0xFFFFDAD6),
 
-        outline = hslColor(neutralHue, min(s, 0.06f), 0.50f),
+        outline = hslColor(neutralHue, min(s, 0.06f), 0.48f),
         outlineVariant = hslColor(neutralHue, min(s, 0.08f), 0.28f),
         scrim = Color.Black,
     )
@@ -273,35 +277,35 @@ fun seedDarkColorScheme(seed: Color = DefaultSeedColor): ColorScheme {
 // ============================================================
 
 fun lightExtendedColors() = ExtendedColors(
-    textColor = Color(0xFF1C1B1F),
-    success = Color(0xFF16A34A),
-    warning = Color(0xFFF59E0B),
-    danger = Color(0xFFDC2626),
-    info = Color(0xFF0EA5E9),
-    vip = Color(0xFFD97706),
-    gold = Color(0xFFEAB308),
-    online = Color(0xFF22C55E),
-    offline = Color(0xFF9CA3AF),
-    rarity = Color(0xFF8B5CF6),
-    gameQuality = Color(0xFFF97316),
-    divider = Color(0xFFE5E7EB),
-    disabled = Color(0xFFD1D5DB),
-    shimmer = Color(0xFFF3F4F6),
+    textColor = Color(0xFF1E1F24),
+    success = Color(0xFF2F7D57),
+    warning = Color(0xFFB5761A),
+    danger = Color(0xFFBA1A1A),
+    info = Color(0xFF2B7A9B),
+    vip = Color(0xFFB5761A),
+    gold = Color(0xFFC29024),
+    online = Color(0xFF2F855A),
+    offline = Color(0xFF8C929C),
+    rarity = Color(0xFF755BB4),
+    gameQuality = Color(0xFFC96A34),
+    divider = Color(0xFFE5E7EE),
+    disabled = Color(0xFFC7CBD4),
+    shimmer = Color(0xFFECEEF3),
 )
 
 fun darkExtendedColors() = ExtendedColors(
-    textColor = Color(0xFFE6E1E5),
-    success = Color(0xFF4ADE80),
-    warning = Color(0xFFFBBF24),
-    danger = Color(0xFFF87171),
-    info = Color(0xFF38BDF8),
-    vip = Color(0xFFF59E0B),
-    gold = Color(0xFFFACC15),
-    online = Color(0xFF4ADE80),
-    offline = Color(0xFF6B7280),
-    rarity = Color(0xFFA78BFA),
-    gameQuality = Color(0xFFFB923C),
-    divider = Color(0xFF374151),
-    disabled = Color(0xFF4B5563),
-    shimmer = Color(0xFF374151),
+    textColor = Color(0xFFE6E4EA),
+    success = Color(0xFF6BBF92),
+    warning = Color(0xFFD9A654),
+    danger = Color(0xFFFFB4AB),
+    info = Color(0xFF6FB1D1),
+    vip = Color(0xFFD9A654),
+    gold = Color(0xFFDFB864),
+    online = Color(0xFF6BBF92),
+    offline = Color(0xFF7B818C),
+    rarity = Color(0xFFA792D6),
+    gameQuality = Color(0xFFE09468),
+    divider = Color(0xFF333640),
+    disabled = Color(0xFF4B4F5A),
+    shimmer = Color(0xFF333640),
 )

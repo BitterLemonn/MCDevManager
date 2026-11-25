@@ -205,8 +205,8 @@ private fun WorkListPage(
         ) {
             WorkItem(
                 icon = IconPack.Mod,
-                title = "上架管理",
-                subtitle = "管理作品上架与审核状态",
+                title = "资源管理",
+                subtitle = "管理作品上架、审核与本地归档",
                 onClick = onNavigateToWorkManage
             )
 
