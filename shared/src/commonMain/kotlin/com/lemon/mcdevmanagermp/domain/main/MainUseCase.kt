@@ -5,6 +5,7 @@ import com.lemon.mcdevmanagermp.data.consts.CookiesExpiredException
 import com.lemon.mcdevmanagermp.data.consts.LoginException
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceTypeEnum
 import com.lemon.mcdevmanagermp.data.repository.EcoFeeRecordRepository
+import com.lemon.mcdevmanagermp.data.repository.isEcoFeeReverseSupported
 import com.lemon.mcdevmanagermp.data.repository.parseMonthKey
 import com.lemon.mcdevmanagermp.data.vo.netease.analyze.ResAnalyzeData
 import com.lemon.mcdevmanagermp.data.vo.netease.income.IncomeVO
@@ -148,6 +149,7 @@ class MainUseCase internal constructor(
         if (accountKey.isBlank()) return emptyList()
         val pending = settlements.mapNotNull { settlement ->
             val month = parseMonthKey(settlement.dataMonth) ?: return@mapNotNull null
+            if (!isEcoFeeReverseSupported(month)) return@mapNotNull null
             if (ecoFeeRecordRepository.isRated(accountKey, month)) null else month to settlement
         }
         if (pending.isEmpty()) return emptyList()

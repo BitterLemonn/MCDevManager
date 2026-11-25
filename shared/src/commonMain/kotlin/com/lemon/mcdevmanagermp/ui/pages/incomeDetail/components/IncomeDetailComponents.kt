@@ -1,6 +1,5 @@
 package com.lemon.mcdevmanagermp.ui.pages.incomeDetail.components
 
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -14,6 +13,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -31,18 +32,22 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Analytics
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Summarize
 import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -67,6 +72,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.lemon.mcdevmanagermp.data.db.entity.EcoFeeRecordEntity
+import com.lemon.mcdevmanagermp.data.repository.isEcoFeeReverseSupported
 import com.lemon.mcdevmanagermp.data.repository.monthKey
 import com.lemon.mcdevmanagermp.data.repository.parseMonthKey
 import com.lemon.mcdevmanagermp.data.repository.reverseInputIncome
@@ -83,8 +89,9 @@ import com.lemon.mcdevmanagermp.ui.components.formatDisplayMonth
 import com.lemon.mcdevmanagermp.ui.components.resolveColors
 import com.lemon.mcdevmanagermp.ui.components.tabularNumbers
 import com.lemon.mcdevmanagermp.ui.pages.income.components.statusBadgeTone
-import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.ModuleSortMode
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
+import com.lemon.mcdevmanagermp.utils.ActualModuleIncomeItem
+import com.lemon.mcdevmanagermp.utils.ActualModuleIncomeSummary
 import com.lemon.mcdevmanagermp.utils.ECO_FEE_RATE
 import com.lemon.mcdevmanagermp.utils.ModuleIncomeDetail
 import com.lemon.mcdevmanagermp.utils.ProfitData
@@ -159,12 +166,6 @@ internal fun MonthNavigatorBar(
     val centerInteraction = remember { MutableInteractionSource() }
     val isCenterHovered by centerInteraction.collectIsHoveredAsState()
 
-    val (badgeText, badgeTone) = when {
-        isSettlementLoading -> "核对账单…" to FinanceBadgeTone.NEUTRAL
-        settlement != null -> settlement.status to statusBadgeTone(settlement.status)
-        else -> "预估中 · 未出账" to FinanceBadgeTone.NEUTRAL
-    }
-
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
@@ -208,12 +209,14 @@ internal fun MonthNavigatorBar(
                     fontWeight = FontWeight.Bold,
                     color = colors.onSurface
                 )
-                Spacer(Modifier.width(8.dp))
-                FinanceStatusBadge(
-                    text = badgeText,
-                    tone = badgeTone,
-                    showDot = settlement != null
-                )
+                if (!isSettlementLoading && settlement != null) {
+                    Spacer(Modifier.width(8.dp))
+                    FinanceStatusBadge(
+                        text = settlement.status,
+                        tone = statusBadgeTone(settlement.status),
+                        showDot = true
+                    )
+                }
             }
 
             IconButton(
@@ -358,16 +361,10 @@ internal fun ProfitHeroSummaryCard(
                         )
                     }
                     if (!showTaxEstimate) {
-                        FinanceStatusBadge(
+                        Text(
                             text = "企业 · 自行开票缴税",
-                            containerColor = colors.onPrimaryContainer.copy(alpha = 0.14f),
-                            contentColor = colors.onPrimaryContainer
-                        )
-                    } else if (profitData.subsidyPercent > 0.0) {
-                        FinanceStatusBadge(
-                            text = "返还 ${(profitData.subsidyPercent * 100).toInt()}%",
-                            containerColor = colors.onPrimaryContainer.copy(alpha = 0.14f),
-                            contentColor = colors.onPrimaryContainer
+                            style = MaterialTheme.typography.labelSmall,
+                            color = colors.onPrimaryContainer.copy(alpha = 0.72f)
                         )
                     }
                 }
@@ -501,16 +498,16 @@ internal fun ProfitHeroSummaryCard(
                     }
                 }
 
-                // 2x2 核心财务指标块
+                // 2x2 核心财务指标块：同行使用 IntrinsicSize.Min 同步高度
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         FinanceMetricTile(
                             label = "月总流水",
                             value = (profitData.sumProfit / 100.0).formatCurrency(),
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f).fillMaxHeight()
                         )
                         FinanceMetricTile(
                             label = "开发者分成",
@@ -518,20 +515,17 @@ internal fun ProfitHeroSummaryCard(
                             subLabel = if (totalShareReturn > 0.0) {
                                 "含返还 ${totalShareReturn.formatCurrency()}"
                             } else null,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f).fillMaxHeight()
                         )
                     }
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         FinanceMetricTile(
                             label = "模组激励合计",
                             value = subsidyTotal.formatCurrency(),
-                            subLabel = if (profitData.subsidyProfit.isNotEmpty()) {
-                                "${profitData.subsidyProfit.size} 个模组达标"
-                            } else null,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f).fillMaxHeight()
                         )
                         FinanceMetricTile(
                             label = "流水激励",
@@ -539,7 +533,7 @@ internal fun ProfitHeroSummaryCard(
                             subLabel = if (profitData.subsidyPercent > 0.0) {
                                 "分成返还 ${(profitData.subsidyPercent * 100).toInt()}%"
                             } else null,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f).fillMaxHeight()
                         )
                     }
                 }
@@ -559,6 +553,7 @@ private data class CompositionSegment(
  */
 @Composable
 internal fun EcoFeeReverseCard(
+    selectedMonth: ProfitMonth,
     profitData: ProfitData,
     settlement: IncomeVO?,
     isSettlementLoading: Boolean,
@@ -568,20 +563,10 @@ internal fun EcoFeeReverseCard(
     modifier: Modifier = Modifier
 ) {
     val colors = LocalAppColors.current
-    val ecoFeeRate = remember(profitData, settlement, dataReady) {
-        if (!dataReady || !profitData.isFlowComplete || settlement == null) null
+    val isSupportedMonth = isEcoFeeReverseSupported(selectedMonth)
+    val ecoFeeRate = remember(selectedMonth, profitData, settlement, dataReady) {
+        if (!isSupportedMonth || !dataReady || !profitData.isFlowComplete || settlement == null) null
         else profitData.reverseEcoFeeRate(settlement.reverseInputIncome)
-    }
-
-    val (badgeText, badgeTone) = when {
-        !dataReady -> "等待数据" to FinanceBadgeTone.NEUTRAL
-        !profitData.isFlowComplete -> "数据不完整" to FinanceBadgeTone.TERTIARY
-        settlementError != null -> "获取失败" to FinanceBadgeTone.ERROR
-        isSettlementLoading -> "核对中" to FinanceBadgeTone.NEUTRAL
-        settlement == null -> "未出账" to FinanceBadgeTone.NEUTRAL
-        ecoFeeRate == null -> "无流水" to FinanceBadgeTone.NEUTRAL
-        ecoFeeRate !in 0.0..1.0 -> "需核对" to FinanceBadgeTone.TERTIARY
-        else -> "已反推" to FinanceBadgeTone.SECONDARY
     }
 
     Card(
@@ -594,28 +579,28 @@ internal fun EcoFeeReverseCard(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Analytics,
-                        contentDescription = null,
-                        tint = colors.primary,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Text(
-                        text = "实际收益反推生态费",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = colors.onSurface
-                    )
-                }
-                FinanceStatusBadge(text = badgeText, tone = badgeTone)
+                Icon(
+                    imageVector = Icons.Filled.Analytics,
+                    contentDescription = null,
+                    tint = colors.primary,
+                    modifier = Modifier.size(18.dp)
+                )
+                Text(
+                    text = "实际收益反推生态费",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = colors.onSurface
+                )
+            }
+
+            if (!isSupportedMonth) {
+                InlineInfoBox(
+                    message = "2026 年 1 月以前采用旧版结算模式，不进行生态费反推"
+                )
+                return@Card
             }
 
             if (!dataReady) return@Card
@@ -680,12 +665,13 @@ internal fun EcoFeeReverseCard(
 
                     // 顶部实际费率 vs 预估基准对比（纯色 M3 Container）
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Column(
                             modifier = Modifier
                                 .weight(1f)
+                                .fillMaxHeight()
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(colors.primaryContainer)
                                 .padding(12.dp),
@@ -726,7 +712,7 @@ internal fun EcoFeeReverseCard(
                             label = "实际生态费",
                             value = actualFeeAmount.formatCurrency(),
                             subLabel = "预估基准 ${(ECO_FEE_RATE * 100).formatDecimal(0)}%",
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f).fillMaxHeight()
                         )
                     }
 
@@ -958,9 +944,10 @@ internal fun EcoFeeHistoryCard(
                 }
 
                 if (avgRate != null) {
-                    FinanceStatusBadge(
+                    Text(
                         text = "均值 ${(avgRate * 100).formatDecimal(2)}%",
-                        tone = FinanceBadgeTone.SECONDARY
+                        style = MaterialTheme.typography.labelMedium.tabularNumbers(),
+                        color = colors.onSurfaceVariant
                     )
                 }
             }
@@ -1175,78 +1162,288 @@ private fun EcoFeeTrendChart(
 }
 
 /**
- * 模组收益区标题栏：展示模组数与 M3 风格排序切换胶囊（secondaryContainer 选中态）。
+ * 将已出账月份的实际按模组收益小结格式化为可复制对账文本。
+ */
+internal fun formatActualModuleSummaryText(
+    month: ProfitMonth,
+    summary: ActualModuleIncomeSummary
+): String = buildString {
+    appendLine("${month.year}年${month.month}月 实际收益按模组小结")
+    appendLine("实际生态费率：${(summary.actualEcoFeeRate * 100).formatDecimal(2)}%")
+    appendLine("--------------------------------")
+    summary.items.forEachIndexed { index, item ->
+        val sharePct = "${(item.incomeShare * 100).formatDecimal(1)}%"
+        val parts = mutableListOf("分成 ${item.actualDeveloperShare.formatCurrency()}")
+        if (item.subsidyAmount > 0.0) {
+            parts.add("激励 ${item.subsidyAmount.formatCurrency()}")
+        }
+        appendLine("${index + 1}. ${item.moduleName}：${item.actualTotalIncome.formatCurrency()}（$sharePct，${parts.joinToString(" + ")}）")
+    }
+    appendLine("--------------------------------")
+    appendLine("模组实际合计：${summary.modulesTotalIncome.formatCurrency()}")
+    if (summary.profitSubsidy > 0.0) {
+        appendLine("流水激励：${summary.profitSubsidy.formatCurrency()}")
+    }
+    if (summary.playPlanIncome > 0.0) {
+        appendLine("畅玩计划收益：${summary.playPlanIncome.formatCurrency()}")
+    }
+    appendLine("结算单税前实际收益：${summary.settlementIncome.formatCurrency()}")
+    append("结算单实收净额：${summary.settlementNetIncome.formatCurrency()}")
+}
+
+/**
+ * 已出账月份的实际按模组划分收益小结卡片：
+ * 基于结算单反推出的实际生态费率，给出各模组真实税前收益、占比、较预估差额以及与结算单闭环对账。
  */
 @Composable
-internal fun ModuleSectionHeader(
-    moduleCount: Int,
-    sortMode: ModuleSortMode,
-    onSelectSortMode: (ModuleSortMode) -> Unit,
+internal fun ActualModuleSummaryCard(
+    summary: ActualModuleIncomeSummary,
+    onCopySummary: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val colors = LocalAppColors.current
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = "模组收益明细",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                color = colors.onSurface
-            )
-            FinanceStatusBadge(
-                text = "$moduleCount",
-                tone = FinanceBadgeTone.SECONDARY
-            )
-        }
 
-        Row(
-            modifier = Modifier
-                .clip(RoundedCornerShape(10.dp))
-                .background(colors.surfaceContainerHigh)
-                .border(1.dp, colors.outlineVariant.copy(alpha = 0.6f), RoundedCornerShape(10.dp))
-                .padding(3.dp),
-            horizontalArrangement = Arrangement.spacedBy(2.dp)
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerHigh)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            ModuleSortMode.entries.forEach { mode ->
-                val selected = sortMode == mode
-                val bg by animateColorAsState(
-                    targetValue = if (selected) colors.secondaryContainer else Color.Transparent,
-                    label = "sort_chip_bg"
-                )
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(7.dp))
-                        .background(bg)
-                        .clickable { onSelectSortMode(mode) }
-                        .padding(horizontal = 10.dp, vertical = 5.dp)
+            // 标题行 + 实际生态费率标 + 一键复制按钮
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.weight(1f)
                 ) {
+                    Icon(
+                        imageVector = Icons.Filled.Summarize,
+                        contentDescription = null,
+                        tint = colors.primary,
+                        modifier = Modifier.size(18.dp)
+                    )
                     Text(
-                        text = mode.label,
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-                        color = if (selected) colors.onSecondaryContainer else colors.onSurfaceVariant
+                        text = "实际收益模组小结",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = colors.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
+
+                Spacer(Modifier.width(8.dp))
+
+                OutlinedButton(
+                    onClick = onCopySummary,
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                    modifier = Modifier.heightIn(min = 32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.ContentCopy,
+                        contentDescription = "复制小结",
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        text = "复制",
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                }
+            }
+
+            // 三列核心对账指标
+            Row(
+                modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FinanceMetricTile(
+                    label = "模组实际合计",
+                    value = summary.modulesTotalIncome.formatCurrency(),
+                    labelColor = colors.onPrimaryContainer.copy(alpha = 0.8f),
+                    valueColor = colors.onPrimaryContainer,
+                    containerColor = colors.primaryContainer,
+                    modifier = Modifier.weight(1f).fillMaxHeight()
+                )
+                FinanceMetricTile(
+                    label = "结算税前实际",
+                    value = summary.settlementIncome.formatCurrency(),
+                    modifier = Modifier.weight(1f).fillMaxHeight()
+                )
+                FinanceMetricTile(
+                    label = "结算实收净额",
+                    value = summary.settlementNetIncome.formatCurrency(),
+                    modifier = Modifier.weight(1f).fillMaxHeight()
+                )
+            }
+
+            // 按模组划分的实际收益清单
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(colors.surfaceContainerHighest)
+                    .padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                summary.items.forEachIndexed { index, item ->
+                    val rank = index + 1
+                    val rankTone = when (rank) {
+                        1 -> FinanceBadgeTone.PRIMARY
+                        2 -> FinanceBadgeTone.SECONDARY
+                        3 -> FinanceBadgeTone.TERTIARY
+                        else -> FinanceBadgeTone.NEUTRAL
+                    }
+                    val rankColors = rankTone.resolveColors()
+
+                    Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(rankColors.container),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "$rank",
+                                    style = MaterialTheme.typography.labelSmall.tabularNumbers(),
+                                    fontWeight = FontWeight.Bold,
+                                    color = rankColors.content
+                                )
+                            }
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = item.moduleName,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = colors.onSurface,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                val subParts = buildString {
+                                    append("占比 ${(item.incomeShare * 100).formatDecimal(1)}%")
+                                    append(" · 分成 ${item.actualDeveloperShare.formatCurrency()}")
+                                    if (item.subsidyAmount > 0.0) {
+                                        append(" + 激励 ${item.subsidyAmount.formatCurrency()}")
+                                    }
+                                }
+                                Text(
+                                    text = subParts,
+                                    style = MaterialTheme.typography.labelSmall.tabularNumbers(),
+                                    color = colors.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+
+                            Column(horizontalAlignment = Alignment.End) {
+                                Text(
+                                    text = item.actualTotalIncome.formatCurrency(),
+                                    style = MaterialTheme.typography.bodyMedium.tabularNumbers(),
+                                    fontWeight = FontWeight.Bold,
+                                    color = colors.primary
+                                )
+                                val delta = item.deltaFromEstimate
+                                if (kotlin.math.abs(delta) >= 0.005) {
+                                    Text(
+                                        text = "较预估 ${delta.formatCurrency(showPlusSign = true)}",
+                                        style = MaterialTheme.typography.labelSmall.tabularNumbers(),
+                                        color = if (delta >= 0.0) colors.onSurfaceVariant else colors.tertiary
+                                    )
+                                }
+                            }
+                        }
+
+                        // 实际收益占比进度条
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(4.dp)
+                                .clip(RoundedCornerShape(2.dp))
+                                .background(colors.surfaceContainerHigh)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(item.incomeShare.toFloat().coerceAtLeast(0.02f))
+                                    .fillMaxHeight()
+                                    .clip(RoundedCornerShape(2.dp))
+                                    .background(if (rank == 1) colors.primary else colors.secondary)
+                            )
+                        }
+                    }
+                }
+
+                // 账号级附加项与闭环对账合计
+                if (summary.profitSubsidy > 0.0 || summary.playPlanIncome > 0.0) {
+                    HorizontalDivider(color = colors.outlineVariant.copy(alpha = 0.6f))
+                    if (summary.profitSubsidy > 0.0) {
+                        FinanceKeyValueRow(
+                            label = "流水激励",
+                            value = summary.profitSubsidy.formatCurrency(showPlusSign = true),
+                            valueColor = colors.onSurface
+                        )
+                    }
+                    if (summary.playPlanIncome > 0.0) {
+                        FinanceKeyValueRow(
+                            label = "畅玩计划收益",
+                            value = summary.playPlanIncome.formatCurrency(showPlusSign = true),
+                            valueColor = colors.onSurface
+                        )
+                    }
+                }
+
+                HorizontalDivider(color = colors.outlineVariant.copy(alpha = 0.6f))
+                FinanceKeyValueRow(
+                    label = "税前实际合计",
+                    value = summary.settlementIncome.formatCurrency(),
+                    valueColor = colors.primary,
+                    bold = true
+                )
             }
         }
     }
 }
 
 /**
- * 单个模组收益卡片：排名徽章严格映射 M3 primary/secondary/tertiary/neutral 容器色。
+ * 模组收益区标题栏。
+ */
+@Composable
+internal fun ModuleSectionHeader(
+    modifier: Modifier = Modifier
+) {
+    val colors = LocalAppColors.current
+    Text(
+        text = "模组收益明细",
+        style = MaterialTheme.typography.titleSmall,
+        fontWeight = FontWeight.SemiBold,
+        color = colors.onSurface,
+        modifier = modifier.fillMaxWidth()
+    )
+}
+
+/**
+ * 单个模组收益卡片：已出账时自动按实际生态费率展示真实分成与小计，并附带预估对照。
  */
 @Composable
 internal fun ModuleIncomeCard(
     rank: Int,
     module: ModuleIncomeDetail,
     totalFlowIncome: Double,
+    actualItem: ActualModuleIncomeItem? = null,
     modifier: Modifier = Modifier
 ) {
     val colors = LocalAppColors.current
@@ -1270,7 +1467,7 @@ internal fun ModuleIncomeCard(
             modifier = Modifier.fillMaxWidth().padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // 顶部：排名 + 模组名 + 小计金额
+            // 顶部：排名 + 模组名 + 小计金额（已出账时展示实际小计及较预估差额）
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -1301,12 +1498,21 @@ internal fun ModuleIncomeCard(
                     modifier = Modifier.weight(1f)
                 )
 
-                Text(
-                    text = module.totalIncome.formatCurrency(),
-                    style = MaterialTheme.typography.titleSmall.tabularNumbers(),
-                    fontWeight = FontWeight.Bold,
-                    color = colors.primary
-                )
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = module.totalIncome.formatCurrency(),
+                        style = MaterialTheme.typography.titleSmall.tabularNumbers(),
+                        fontWeight = FontWeight.Bold,
+                        color = colors.primary
+                    )
+                    if (actualItem != null && kotlin.math.abs(actualItem.deltaFromEstimate) >= 0.005) {
+                        Text(
+                            text = "预估 ${actualItem.estimatedTotalIncome.formatCurrency()}",
+                            style = MaterialTheme.typography.labelSmall.tabularNumbers(),
+                            color = colors.onSurfaceVariant
+                        )
+                    }
+                }
             }
 
             // 流水占比进度条
@@ -1346,20 +1552,20 @@ internal fun ModuleIncomeCard(
 
             // 关键数据双列块
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 FinanceMetricTile(
                     label = "流水收益",
                     value = module.flowIncome.formatCurrency(),
                     containerColor = colors.surfaceContainerHighest,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f).fillMaxHeight()
                 )
                 FinanceMetricTile(
-                    label = "开发者分成",
+                    label = if (actualItem != null) "实际开发者分成" else "开发者分成",
                     value = module.developerShare.formatCurrency(),
                     containerColor = colors.surfaceContainerHighest,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f).fillMaxHeight()
                 )
             }
 
@@ -1375,7 +1581,7 @@ internal fun ModuleIncomeCard(
                 ) {
                     if (module.shareReturn > 0.0) {
                         FinanceKeyValueRow(
-                            label = "其中分成返还",
+                            label = if (actualItem != null) "其中实际分成返还" else "其中分成返还",
                             value = module.shareReturn.formatCurrency(),
                             valueColor = colors.tertiary
                         )

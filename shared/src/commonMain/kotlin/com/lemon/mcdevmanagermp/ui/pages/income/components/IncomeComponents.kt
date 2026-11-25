@@ -19,9 +19,11 @@ import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -205,12 +207,6 @@ internal fun IncomeHeroSummaryCard(
                             overflow = TextOverflow.Ellipsis
                         )
                     }
-
-                    FinanceStatusBadge(
-                        text = if (state.selectedPlatform == "pe") "PE 平台" else "PC 平台",
-                        containerColor = colors.onPrimaryContainer.copy(alpha = 0.14f),
-                        contentColor = colors.onPrimaryContainer
-                    )
                 }
             }
 
@@ -222,7 +218,7 @@ internal fun IncomeHeroSummaryCard(
             ) {
                 // 三列核心状态统计，点击可快速筛选对应状态
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     ClickableSummaryTile(
@@ -240,7 +236,7 @@ internal fun IncomeHeroSummaryCard(
                                 }
                             )
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f).fillMaxHeight()
                     )
                     ClickableSummaryTile(
                         label = "结算中",
@@ -257,7 +253,7 @@ internal fun IncomeHeroSummaryCard(
                                 }
                             )
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f).fillMaxHeight()
                     )
                     ClickableSummaryTile(
                         label = "已打款",
@@ -274,7 +270,7 @@ internal fun IncomeHeroSummaryCard(
                                 }
                             )
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f).fillMaxHeight()
                     )
                 }
 
@@ -737,9 +733,10 @@ internal fun ExpandableIncomeRecordCard(
                         color = colors.onSurface
                     )
                     if (ecoFeeRate != null) {
-                        FinanceStatusBadge(
+                        Text(
                             text = "生态费 ${(ecoFeeRate * 100).formatDecimal(2)}%",
-                            tone = FinanceBadgeTone.NEUTRAL
+                            style = MaterialTheme.typography.labelSmall.tabularNumbers(),
+                            color = colors.onSurfaceVariant
                         )
                     }
                     Spacer(Modifier.weight(1f))
@@ -758,20 +755,20 @@ internal fun ExpandableIncomeRecordCard(
 
                 // 主金额对比行
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     FinanceMetricTile(
                         label = "当月税前收益",
                         value = data.income.formatCurrencyString(),
                         valueColor = if (data.status == "未结算") colors.primary else colors.onSurface,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f).fillMaxHeight()
                     )
                     FinanceMetricTile(
                         label = "实际到手净额",
                         value = data.monthlyNetIncome.formatCurrencyString(),
                         valueColor = colors.onSurface,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f).fillMaxHeight()
                     )
                 }
 
@@ -1007,21 +1004,12 @@ internal fun IncomeDetailPane(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text(
-                                    text = "${formatDisplayMonth(selectedIncome.dataMonth)} 结算单",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold,
-                                    color = colors.onSurface
-                                )
-                                FinanceStatusBadge(
-                                    text = selectedIncome.platform.uppercase(),
-                                    tone = FinanceBadgeTone.NEUTRAL
-                                )
-                            }
+                            Text(
+                                text = "${formatDisplayMonth(selectedIncome.dataMonth)} 结算单",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = colors.onSurface
+                            )
                             if (selectedIncome.opTime.isNotBlank()) {
                                 Text(
                                     text = "更新时间：${selectedIncome.opTime}",
@@ -1040,7 +1028,7 @@ internal fun IncomeDetailPane(
 
                     // 三列核心数字卡片：首列采用纯色 primaryContainer + onPrimaryContainer
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         FinanceMetricTile(
@@ -1049,17 +1037,17 @@ internal fun IncomeDetailPane(
                             labelColor = colors.onPrimaryContainer.copy(alpha = 0.8f),
                             valueColor = colors.onPrimaryContainer,
                             containerColor = colors.primaryContainer,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f).fillMaxHeight()
                         )
                         FinanceMetricTile(
                             label = "实际到手净额",
                             value = selectedIncome.monthlyNetIncome.formatCurrencyString(),
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f).fillMaxHeight()
                         )
                         FinanceMetricTile(
                             label = "累计可提取",
                             value = selectedIncome.availableIncome.formatCurrencyString(),
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f).fillMaxHeight()
                         )
                     }
 
@@ -1113,26 +1101,29 @@ internal fun IncomeDetailPane(
                 }
 
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     FinanceMetricTile(
-                        label = "未结算 (${summary.unsettledCount}笔)",
+                        label = "未结算",
                         value = summary.unsettledTotal.formatCurrency(),
+                        subLabel = "${summary.unsettledCount} 笔",
                         valueColor = colors.primary,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f).fillMaxHeight()
                     )
                     FinanceMetricTile(
-                        label = "结算中 (${summary.processingCount}笔)",
+                        label = "结算中",
                         value = summary.processingTotal.formatCurrency(),
+                        subLabel = "${summary.processingCount} 笔",
                         valueColor = colors.tertiary,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f).fillMaxHeight()
                     )
                     FinanceMetricTile(
-                        label = "已打款实收 (${summary.settledCount}笔)",
+                        label = "已打款实收",
                         value = summary.settledNetTotal.formatCurrency(),
+                        subLabel = "${summary.settledCount} 笔",
                         valueColor = colors.onSurface,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f).fillMaxHeight()
                     )
                 }
             }
@@ -1372,13 +1363,13 @@ internal fun ApplyIncomeDetailDialog(
 
                 // 双列金额汇总块：税后实得采用纯色 primaryContainer
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     FinanceMetricTile(
                         label = "总可结算收益",
                         value = first.availableIncome.formatCurrencyString(),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f).fillMaxHeight()
                     )
                     FinanceMetricTile(
                         label = "总税后收益",
@@ -1386,7 +1377,7 @@ internal fun ApplyIncomeDetailDialog(
                         labelColor = colors.onPrimaryContainer.copy(alpha = 0.8f),
                         valueColor = colors.onPrimaryContainer,
                         containerColor = colors.primaryContainer,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f).fillMaxHeight()
                     )
                 }
 

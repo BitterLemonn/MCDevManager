@@ -16,18 +16,23 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.lemon.mcdevmanagermp.domain.main.ProfitMonth
+import com.lemon.mcdevmanagermp.data.repository.isEcoFeeReverseSupported
 import com.lemon.mcdevmanagermp.domain.main.profitMonthWindow
 import com.lemon.mcdevmanagermp.platform.BackHandler
+import com.lemon.mcdevmanagermp.platform.copyTextToClipboard
 import com.lemon.mcdevmanagermp.ui.components.AppScaffold
 import com.lemon.mcdevmanagermp.ui.components.LocalSnackbarHostState
 import com.lemon.mcdevmanagermp.ui.components.LocalToastScope
 import com.lemon.mcdevmanagermp.ui.components.LocalWindowWidthSizeClass
 import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.components.ProfitMonthPickerDialog
+import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.components.formatActualModuleSummaryText
 import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.layout.IncomeDetailCompactLayout
 import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.layout.IncomeDetailExpandedLayout
 import com.lemon.mcdevmanagermp.ui.pages.main.MainViewModel
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
+import com.lemon.mcdevmanagermp.utils.ActualModuleIncomeSummary
+import com.lemon.mcdevmanagermp.utils.ECO_FEE_RATE
+import com.lemon.mcdevmanagermp.utils.computeActualModuleSummary
 import com.lemon.mcdevmanagermp.utils.toModuleIncomeDetails
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
@@ -64,12 +69,28 @@ fun IncomeDetailPage(initialMonthOffset: Int = 0, onBack: () -> Unit) {
         monthWindow.current
     }
 
-    val sortedModules = remember(state.profitData, state.moduleSortMode) {
-        val base = state.profitData.toModuleIncomeDetails()
-        when (state.moduleSortMode) {
-            ModuleSortMode.BY_FLOW -> base.sortedByDescending { it.flowIncome }
-            ModuleSortMode.BY_TOTAL -> base.sortedByDescending { it.totalIncome }
-        }
+    val estimatedModules = remember(state.profitData) {
+        state.profitData.toModuleIncomeDetails(ECO_FEE_RATE)
+    }
+    val actualSummary = remember(
+        state.selectedMonth,
+        state.profitData,
+        state.settlement,
+        state.isLoading,
+        state.errorMessage
+    ) {
+        if (!isEcoFeeReverseSupported(state.selectedMonth)) return@remember null
+        val settlement = state.settlement ?: return@remember null
+        if (state.isLoading || state.errorMessage != null) return@remember null
+        state.profitData.computeActualModuleSummary(
+            settlementIncome = settlement.income.toDoubleOrNull() ?: return@remember null,
+            playPlanIncome = settlement.playPlanIncome.toDoubleOrNull() ?: 0.0,
+            settlementNetIncome = settlement.monthlyNetIncome.toDoubleOrNull() ?: 0.0
+        )
+    }
+    val sortedModules = remember(state.profitData, actualSummary) {
+        val rate = actualSummary?.actualEcoFeeRate ?: ECO_FEE_RATE
+        state.profitData.toModuleIncomeDetails(rate)
     }
     val ratedMonthKeys = remember(state.ecoFeeHistory) {
         state.ecoFeeHistory.mapTo(mutableSetOf()) { it.dataMonth }
@@ -81,8 +102,15 @@ fun IncomeDetailPage(initialMonthOffset: Int = 0, onBack: () -> Unit) {
 
     val snackbarHostState = LocalSnackbarHostState.current
     val toastScope = LocalToastScope.current
+    val onCopyActualSummary: (ActualModuleIncomeSummary) -> Unit = { summary ->
+        copyTextToClipboard(formatActualModuleSummaryText(state.selectedMonth, summary))
+        toastScope.launch {
+            snackbarHostState.showSnackbar("已复制实际收益模组小结")
+        }
+    }
+
     LaunchedEffect(state.selectedMonth) {
-        if (state.selectedMonth < ProfitMonth(2026, 1)) {
+        if (!isEcoFeeReverseSupported(state.selectedMonth)) {
             toastScope.launch {
                 snackbarHostState.showSnackbar("2026.1以前的收益算法与现在不一致，数据可能产生偏差")
             }
@@ -99,7 +127,9 @@ fun IncomeDetailPage(initialMonthOffset: Int = 0, onBack: () -> Unit) {
             when (widthSizeClass) {
                 WindowWidthSizeClass.Compact, WindowWidthSizeClass.Medium -> IncomeDetailCompactLayout(
                     state = state,
+                    estimatedModules = estimatedModules,
                     sortedModules = sortedModules,
+                    actualSummary = actualSummary,
                     maxSelectableMonth = maxSelectableMonth,
                     moduleColumns = if (widthSizeClass == WindowWidthSizeClass.Medium) 2 else 1,
                     statusBarTop = statusBarTop,
@@ -107,19 +137,21 @@ fun IncomeDetailPage(initialMonthOffset: Int = 0, onBack: () -> Unit) {
                     onBack = onBack,
                     onRefresh = viewModel::retry,
                     onSelectMonth = viewModel::selectMonth,
-                    onSelectSortMode = viewModel::setModuleSortMode,
+                    onCopyActualSummary = onCopyActualSummary,
                     onOpenMonthPicker = { showMonthPicker = true }
                 )
 
                 else -> IncomeDetailExpandedLayout(
                     state = state,
+                    estimatedModules = estimatedModules,
                     sortedModules = sortedModules,
+                    actualSummary = actualSummary,
                     maxSelectableMonth = maxSelectableMonth,
                     navBarBottom = navBarBottom,
                     onBack = onBack,
                     onRefresh = viewModel::retry,
                     onSelectMonth = viewModel::selectMonth,
-                    onSelectSortMode = viewModel::setModuleSortMode,
+                    onCopyActualSummary = onCopyActualSummary,
                     onOpenMonthPicker = { showMonthPicker = true }
                 )
             }

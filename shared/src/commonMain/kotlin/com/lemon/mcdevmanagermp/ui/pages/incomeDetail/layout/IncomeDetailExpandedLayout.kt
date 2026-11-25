@@ -2,6 +2,7 @@ package com.lemon.mcdevmanagermp.ui.pages.incomeDetail.layout
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,10 +22,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.lemon.mcdevmanagermp.data.repository.isEcoFeeReverseSupported
 import com.lemon.mcdevmanagermp.domain.main.ProfitMonth
 import com.lemon.mcdevmanagermp.ui.components.FinanceSkeletonCard
 import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.IncomeDetailState
-import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.ModuleSortMode
+import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.components.ActualModuleSummaryCard
 import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.components.AlgorithmVersionNoticeBanner
 import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.components.EcoFeeHistoryCard
 import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.components.EcoFeeReverseCard
@@ -36,6 +38,7 @@ import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.components.ModuleSectionHe
 import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.components.MonthNavigatorBar
 import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.components.ProfitHeroSummaryCard
 import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
+import com.lemon.mcdevmanagermp.utils.ActualModuleIncomeSummary
 import com.lemon.mcdevmanagermp.utils.ModuleIncomeDetail
 
 /**
@@ -46,19 +49,24 @@ import com.lemon.mcdevmanagermp.utils.ModuleIncomeDetail
 @Composable
 internal fun IncomeDetailExpandedLayout(
     state: IncomeDetailState,
+    estimatedModules: List<ModuleIncomeDetail>,
     sortedModules: List<ModuleIncomeDetail>,
+    actualSummary: ActualModuleIncomeSummary?,
     maxSelectableMonth: ProfitMonth,
     navBarBottom: Dp,
     onBack: () -> Unit,
     onRefresh: () -> Unit,
     onSelectMonth: (ProfitMonth) -> Unit,
-    onSelectSortMode: (ModuleSortMode) -> Unit,
+    onCopyActualSummary: (ActualModuleIncomeSummary) -> Unit,
     onOpenMonthPicker: () -> Unit
 ) {
     val colors = LocalAppColors.current
     val totalFlowIncome = state.profitData.sumProfit / 100.0
     val dataReady = !state.isLoading && state.errorMessage == null
     val moduleRows = remember(sortedModules) { sortedModules.chunked(2) }
+    val actualByName = remember(actualSummary) {
+        actualSummary?.items?.associateBy { it.moduleName }.orEmpty()
+    }
 
     Column(
         modifier = Modifier
@@ -97,7 +105,7 @@ internal fun IncomeDetailExpandedLayout(
                     onOpenPicker = onOpenMonthPicker
                 )
 
-                if (state.selectedMonth < ProfitMonth(2026, 1)) {
+                if (!isEcoFeeReverseSupported(state.selectedMonth)) {
                     AlgorithmVersionNoticeBanner()
                 }
 
@@ -111,11 +119,12 @@ internal fun IncomeDetailExpandedLayout(
                 } else {
                     ProfitHeroSummaryCard(
                         profitData = state.profitData,
-                        modules = sortedModules,
+                        modules = estimatedModules,
                         showTaxEstimate = !state.isEnterprise
                     )
 
                     EcoFeeReverseCard(
+                        selectedMonth = state.selectedMonth,
                         profitData = state.profitData,
                         settlement = state.settlement,
                         isSettlementLoading = state.isSettlementLoading,
@@ -140,18 +149,13 @@ internal fun IncomeDetailExpandedLayout(
                 thickness = 1.dp
             )
 
-            // 右侧模组收益明细双列网格
+            // 右侧实际模组小结与模组收益明细双列网格
             Column(
                 modifier = Modifier.weight(1f).fillMaxHeight(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                ModuleSectionHeader(
-                    moduleCount = sortedModules.size,
-                    sortMode = state.moduleSortMode,
-                    onSelectSortMode = onSelectSortMode
-                )
-
                 if (state.isLoading) {
+                    ModuleSectionHeader()
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         repeat(3) {
                             Row(
@@ -163,32 +167,52 @@ internal fun IncomeDetailExpandedLayout(
                             }
                         }
                     }
-                } else if (sortedModules.isEmpty()) {
-                    EmptyModuleStateCard()
                 } else {
                     LazyColumn(
                         modifier = Modifier.fillMaxWidth().weight(1f),
                         contentPadding = PaddingValues(bottom = 12.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        itemsIndexed(
-                            items = moduleRows,
-                            key = { _, row -> row.joinToString("|") { it.moduleName } }
-                        ) { rowIndex, rowModules ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
-                            ) {
-                                rowModules.forEachIndexed { colIndex, module ->
-                                    ModuleIncomeCard(
-                                        rank = rowIndex * 2 + colIndex + 1,
-                                        module = module,
-                                        totalFlowIncome = totalFlowIncome,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                }
-                                if (rowModules.size == 1) {
-                                    Spacer(Modifier.weight(1f))
+                        if (actualSummary != null) {
+                            item(key = "actual_module_summary") {
+                                ActualModuleSummaryCard(
+                                    summary = actualSummary,
+                                    onCopySummary = { onCopyActualSummary(actualSummary) }
+                                )
+                            }
+                        }
+
+                        item(key = "module_section_header") {
+                            ModuleSectionHeader(
+                                modifier = Modifier.padding(top = if (actualSummary != null) 4.dp else 0.dp)
+                            )
+                        }
+
+                        if (sortedModules.isEmpty()) {
+                            item(key = "empty_modules") {
+                                EmptyModuleStateCard()
+                            }
+                        } else {
+                            itemsIndexed(
+                                items = moduleRows,
+                                key = { _, row -> row.joinToString("|") { it.moduleName } }
+                            ) { rowIndex, rowModules ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    rowModules.forEachIndexed { colIndex, module ->
+                                        ModuleIncomeCard(
+                                            rank = rowIndex * 2 + colIndex + 1,
+                                            module = module,
+                                            totalFlowIncome = totalFlowIncome,
+                                            actualItem = actualByName[module.moduleName],
+                                            modifier = Modifier.weight(1f).fillMaxHeight()
+                                        )
+                                    }
+                                    if (rowModules.size == 1) {
+                                        Spacer(Modifier.weight(1f))
+                                    }
                                 }
                             }
                         }

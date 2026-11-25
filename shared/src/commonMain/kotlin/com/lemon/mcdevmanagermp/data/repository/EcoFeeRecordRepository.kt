@@ -33,6 +33,13 @@ internal fun parseMonthKey(dataMonth: String): ProfitMonth? {
     return ProfitMonth(year, month)
 }
 
+/** 现行分成与生态费结算模式的起始月份；早于此月份的结算模式不同，不进行生态费反推 */
+internal val ECO_FEE_REVERSE_START_MONTH = ProfitMonth(2026, 1)
+
+/** 指定月份是否适用于现行生态费反推模型 */
+internal fun isEcoFeeReverseSupported(month: ProfitMonth): Boolean =
+    month >= ECO_FEE_REVERSE_START_MONTH
+
 /**
  * 结算单税前收益换算为反推生态费的输入口径：结算单 income 已包含畅玩计划收益，
  * 而预估公式（分成 + 模组激励 + 流水激励）不包含，需剔除后再反推。
@@ -54,7 +61,7 @@ internal class EcoFeeRecordRepository {
      * 已反推出费率的月份不覆盖费率结果，仅刷新快照与时间。
      */
     suspend fun saveSnapshot(accountKey: String, month: ProfitMonth, profitData: ProfitData) {
-        if (accountKey.isBlank() || !profitData.isFlowComplete) return
+        if (accountKey.isBlank() || !isEcoFeeReverseSupported(month) || !profitData.isFlowComplete) return
         if (profitData.developerProfit <= 0.0) return
         val dataMonth = monthKey(month)
         val existing = AppContext.database.ecoFeeRecordDao().get(accountKey, dataMonth)
@@ -85,7 +92,7 @@ internal class EcoFeeRecordRepository {
         profitData: ProfitData,
         settlement: IncomeVO
     ): Boolean {
-        if (accountKey.isBlank() || !profitData.isFlowComplete) return false
+        if (accountKey.isBlank() || !isEcoFeeReverseSupported(month) || !profitData.isFlowComplete) return false
         val dataMonth = monthKey(month)
         val existing = AppContext.database.ecoFeeRecordDao().get(accountKey, dataMonth)
         val snapshot = existing?.profitDataJson?.let { decodeProfitData(it) } ?: profitData
@@ -116,9 +123,10 @@ internal class EcoFeeRecordRepository {
     suspend fun isRated(accountKey: String, month: ProfitMonth): Boolean =
         AppContext.database.ecoFeeRecordDao().get(accountKey, monthKey(month))?.ecoFeeRate != null
 
-    /** 已反推出费率的历史记录，按月份倒序 */
+    /** 已反推出费率的历史记录，按月份倒序，过滤不支持反推的早期月份 */
     suspend fun getRated(accountKey: String): List<EcoFeeRecordEntity> =
         AppContext.database.ecoFeeRecordDao().getRatedByAccount(accountKey)
+            .filter { record -> parseMonthKey(record.dataMonth)?.let(::isEcoFeeReverseSupported) == true }
 
     private fun decodeProfitData(json: String): ProfitData? = try {
         JSONConverter.decodeFromString(ProfitData.serializer(), json)

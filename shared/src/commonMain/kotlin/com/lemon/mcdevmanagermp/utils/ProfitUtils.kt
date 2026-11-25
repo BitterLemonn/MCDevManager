@@ -36,6 +36,29 @@ data class ModuleIncomeDetail(
     val totalIncome: Double
 )
 
+data class ActualModuleIncomeItem(
+    val moduleName: String,
+    val flowIncome: Double,
+    val actualDeveloperShare: Double,
+    val actualShareReturn: Double,
+    val subsidyAmount: Double,
+    val actualTotalIncome: Double,
+    val estimatedTotalIncome: Double,
+    val incomeShare: Double
+) {
+    val deltaFromEstimate: Double get() = actualTotalIncome - estimatedTotalIncome
+}
+
+data class ActualModuleIncomeSummary(
+    val actualEcoFeeRate: Double,
+    val settlementIncome: Double,
+    val playPlanIncome: Double,
+    val profitSubsidy: Double,
+    val modulesTotalIncome: Double,
+    val settlementNetIncome: Double,
+    val items: List<ActualModuleIncomeItem>
+)
+
 /** 预估使用的生态费率：流水先扣除该比例，剩余部分再按分成比例结算给开发者 */
 const val ECO_FEE_RATE = 0.3
 
@@ -45,14 +68,14 @@ private fun getSharedProfit(profit: Double): Double = when {
     else -> 0.55
 }
 
-fun ProfitData.toModuleIncomeDetails(): List<ModuleIncomeDetail> {
+fun ProfitData.toModuleIncomeDetails(ecoFeeRate: Double = ECO_FEE_RATE): List<ModuleIncomeDetail> {
     if (subsidyPercent == 0.0 && moduleDiamonds.isEmpty()) return emptyList()
     return moduleDiamonds
         .filter { (_, revenue) -> revenue > 0 }
         .map { (name, revenue) ->
             val sharedProfit = getSharedProfit(revenue)
-            val shareReturnDiamonds = revenue * (1 - ECO_FEE_RATE) * (1 - sharedProfit) * subsidyPercent
-            val shareRmb = getDeveloperProfit(revenue, subsidyPercent) / 100.0
+            val shareReturnDiamonds = revenue * (1 - ecoFeeRate) * (1 - sharedProfit) * subsidyPercent
+            val shareRmb = getDeveloperProfit(revenue, subsidyPercent, ecoFeeRate) / 100.0
             val subsidy = subsidyProfit[name] ?: 0.0
             ModuleIncomeDetail(
                 moduleName = name,
@@ -149,13 +172,13 @@ fun getTaxMoney(totalProfit: Double): Double {
     }
 }
 
-fun getDeveloperProfit(profit: Double, subsidyPercent: Double): Double {
-    val sharedProfit = when {
-        profit < 1_000_000 -> 0.5
-        profit < 10_000_000 -> 0.525
-        else -> 0.55
-    }
-    return profit * (1 - ECO_FEE_RATE) * (sharedProfit + (1 - sharedProfit) * subsidyPercent)
+fun getDeveloperProfit(
+    profit: Double,
+    subsidyPercent: Double,
+    ecoFeeRate: Double = ECO_FEE_RATE
+): Double {
+    val sharedProfit = getSharedProfit(profit)
+    return profit * (1 - ecoFeeRate) * (sharedProfit + (1 - sharedProfit) * subsidyPercent)
 }
 
 /**
@@ -177,4 +200,50 @@ fun ProfitData.reverseEcoFeeRate(actualIncome: Double): Double? {
     if (shareWithoutFee <= 0.0) return null
     val fixedSubsidy = subsidyProfit.values.sum() + profitSubsidy
     return 1 - (actualIncome - fixedSubsidy) / shareWithoutFee
+}
+
+/**
+ * 针对已实际出账的月份，基于反推出的实际生态费率按模组拆分实际税前收益。
+ * 所有模组实际小计之和 + 流水激励 + 畅玩计划收益等于结算单实际税前收益 [settlementIncome]。
+ *
+ * 流水不完整、无流水或反推费率超出 0~1 有效范围时返回 null。
+ */
+fun ProfitData.computeActualModuleSummary(
+    settlementIncome: Double,
+    playPlanIncome: Double,
+    settlementNetIncome: Double
+): ActualModuleIncomeSummary? {
+    val reverseInput = settlementIncome - playPlanIncome
+    val actualRate = reverseEcoFeeRate(reverseInput) ?: return null
+    if (actualRate !in 0.0..1.0) return null
+
+    val estimatedByName = toModuleIncomeDetails(ECO_FEE_RATE).associateBy { it.moduleName }
+    val actualModules = toModuleIncomeDetails(actualRate)
+    if (actualModules.isEmpty()) return null
+
+    val modulesTotal = actualModules.sumOf { it.totalIncome }
+    val items = actualModules.map { actual ->
+        val estimatedTotal = estimatedByName[actual.moduleName]?.totalIncome ?: actual.totalIncome
+        val share = if (modulesTotal > 0.0) (actual.totalIncome / modulesTotal).coerceIn(0.0, 1.0) else 0.0
+        ActualModuleIncomeItem(
+            moduleName = actual.moduleName,
+            flowIncome = actual.flowIncome,
+            actualDeveloperShare = actual.developerShare,
+            actualShareReturn = actual.shareReturn,
+            subsidyAmount = actual.subsidyAmount,
+            actualTotalIncome = actual.totalIncome,
+            estimatedTotalIncome = estimatedTotal,
+            incomeShare = share
+        )
+    }.sortedByDescending { it.actualTotalIncome }
+
+    return ActualModuleIncomeSummary(
+        actualEcoFeeRate = actualRate,
+        settlementIncome = settlementIncome,
+        playPlanIncome = playPlanIncome,
+        profitSubsidy = profitSubsidy,
+        modulesTotalIncome = modulesTotal,
+        settlementNetIncome = settlementNetIncome,
+        items = items
+    )
 }

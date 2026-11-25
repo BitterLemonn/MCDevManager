@@ -3,8 +3,10 @@ package com.lemon.mcdevmanagermp.ui.pages.incomeDetail.layout
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,10 +22,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.lemon.mcdevmanagermp.data.repository.isEcoFeeReverseSupported
 import com.lemon.mcdevmanagermp.domain.main.ProfitMonth
 import com.lemon.mcdevmanagermp.ui.components.FinanceSkeletonCard
 import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.IncomeDetailState
-import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.ModuleSortMode
+import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.components.ActualModuleSummaryCard
 import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.components.AlgorithmVersionNoticeBanner
 import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.components.EcoFeeHistoryCard
 import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.components.EcoFeeReverseCard
@@ -34,6 +37,7 @@ import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.components.ModuleIncomeCar
 import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.components.ModuleSectionHeader
 import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.components.MonthNavigatorBar
 import com.lemon.mcdevmanagermp.ui.pages.incomeDetail.components.ProfitHeroSummaryCard
+import com.lemon.mcdevmanagermp.utils.ActualModuleIncomeSummary
 import com.lemon.mcdevmanagermp.utils.ModuleIncomeDetail
 
 /**
@@ -43,7 +47,9 @@ import com.lemon.mcdevmanagermp.utils.ModuleIncomeDetail
 @Composable
 internal fun IncomeDetailCompactLayout(
     state: IncomeDetailState,
+    estimatedModules: List<ModuleIncomeDetail>,
     sortedModules: List<ModuleIncomeDetail>,
+    actualSummary: ActualModuleIncomeSummary?,
     maxSelectableMonth: ProfitMonth,
     moduleColumns: Int,
     statusBarTop: Dp,
@@ -51,7 +57,7 @@ internal fun IncomeDetailCompactLayout(
     onBack: () -> Unit,
     onRefresh: () -> Unit,
     onSelectMonth: (ProfitMonth) -> Unit,
-    onSelectSortMode: (ModuleSortMode) -> Unit,
+    onCopyActualSummary: (ActualModuleIncomeSummary) -> Unit,
     onOpenMonthPicker: () -> Unit
 ) {
     val scrollState = rememberScrollState()
@@ -60,6 +66,9 @@ internal fun IncomeDetailCompactLayout(
     }
     val totalFlowIncome = state.profitData.sumProfit / 100.0
     val dataReady = !state.isLoading && state.errorMessage == null
+    val actualByName = remember(actualSummary) {
+        actualSummary?.items?.associateBy { it.moduleName }.orEmpty()
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Box(
@@ -86,7 +95,7 @@ internal fun IncomeDetailCompactLayout(
                     onOpenPicker = onOpenMonthPicker
                 )
 
-                if (state.selectedMonth < ProfitMonth(2026, 1)) {
+                if (!isEcoFeeReverseSupported(state.selectedMonth)) {
                     AlgorithmVersionNoticeBanner()
                 }
 
@@ -100,11 +109,12 @@ internal fun IncomeDetailCompactLayout(
                 } else {
                     ProfitHeroSummaryCard(
                         profitData = state.profitData,
-                        modules = sortedModules,
+                        modules = estimatedModules,
                         showTaxEstimate = !state.isEnterprise
                     )
 
                     EcoFeeReverseCard(
+                        selectedMonth = state.selectedMonth,
                         profitData = state.profitData,
                         settlement = state.settlement,
                         isSettlementLoading = state.isSettlementLoading,
@@ -112,6 +122,13 @@ internal fun IncomeDetailCompactLayout(
                         dataReady = dataReady,
                         onRetry = onRefresh
                     )
+
+                    if (actualSummary != null) {
+                        ActualModuleSummaryCard(
+                            summary = actualSummary,
+                            onCopySummary = { onCopyActualSummary(actualSummary) }
+                        )
+                    }
 
                     EcoFeeHistoryCard(
                         history = state.ecoFeeHistory,
@@ -121,11 +138,7 @@ internal fun IncomeDetailCompactLayout(
 
                     Spacer(Modifier.height(2.dp))
 
-                    ModuleSectionHeader(
-                        moduleCount = sortedModules.size,
-                        sortMode = state.moduleSortMode,
-                        onSelectSortMode = onSelectSortMode
-                    )
+                    ModuleSectionHeader()
 
                     if (sortedModules.isEmpty()) {
                         EmptyModuleStateCard()
@@ -135,7 +148,8 @@ internal fun IncomeDetailCompactLayout(
                                 ModuleIncomeCard(
                                     rank = index + 1,
                                     module = module,
-                                    totalFlowIncome = totalFlowIncome
+                                    totalFlowIncome = totalFlowIncome,
+                                    actualItem = actualByName[module.moduleName]
                                 )
                             }
                         }
@@ -143,7 +157,7 @@ internal fun IncomeDetailCompactLayout(
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             sortedModules.chunked(moduleColumns).forEachIndexed { rowIndex, rowModules ->
                                 Row(
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
                                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                                 ) {
                                     rowModules.forEachIndexed { colIndex, module ->
@@ -151,7 +165,8 @@ internal fun IncomeDetailCompactLayout(
                                             rank = rowIndex * moduleColumns + colIndex + 1,
                                             module = module,
                                             totalFlowIncome = totalFlowIncome,
-                                            modifier = Modifier.weight(1f)
+                                            actualItem = actualByName[module.moduleName],
+                                            modifier = Modifier.weight(1f).fillMaxHeight()
                                         )
                                     }
                                     repeat(moduleColumns - rowModules.size) {
