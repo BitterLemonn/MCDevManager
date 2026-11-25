@@ -10,6 +10,7 @@ import com.lemon.mcdevmanagermp.data.repository.EcoFeeRecordRepository
 import com.lemon.mcdevmanagermp.data.repository.IncomeRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.UserRepositoryImpl
+import com.lemon.mcdevmanagermp.data.repository.isEcoFeeReverseSupported
 import com.lemon.mcdevmanagermp.data.repository.monthKey
 import com.lemon.mcdevmanagermp.data.repository.normalizeMonthKey
 import com.lemon.mcdevmanagermp.data.vo.netease.income.IncomeVO
@@ -25,7 +26,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 
@@ -168,7 +168,7 @@ internal class IncomeDetailViewModel(
 
     private fun load(month: ProfitMonth, force: Boolean = false) {
         val cached = if (force) null else cache[month]
-        // 用 copy 而非重建 state，保留与月份无关的 isEnterprise
+        // 用 copy 而非重建 state，保留与月份无关的 isEnterprise 与排序偏好
         if (cached != null) {
             _state.update {
                 it.copy(selectedMonth = month, profitData = cached, isLoading = false, errorMessage = null)
@@ -183,8 +183,9 @@ internal class IncomeDetailViewModel(
         viewModelScope.launch {
             try {
                 val accountKey = AppContext.userInfo?.nickname
+                val canReverse = isEcoFeeReverseSupported(month)
                 // 已截止月份优先使用周期截止后保存的快照，出账后反推以其为准
-                val snapshot = if (accountKey != null && !force && isMonthClosed(month)) {
+                val snapshot = if (accountKey != null && !force && canReverse && isMonthClosed(month)) {
                     ecoFeeRecordRepository.getSnapshot(accountKey, month)
                 } else {
                     null
@@ -195,7 +196,7 @@ internal class IncomeDetailViewModel(
                     _state.update { it.copy(profitData = data, isLoading = false) }
                 }
                 // 网络拉取的已截止月份保存快照；快照来源无需重复保存
-                if (snapshot == null && accountKey != null && isMonthClosed(month)) {
+                if (snapshot == null && accountKey != null && canReverse && isMonthClosed(month)) {
                     ecoFeeRecordRepository.saveSnapshot(accountKey, month, data)
                 }
                 trySaveEcoFeeRecord()
@@ -218,6 +219,7 @@ internal class IncomeDetailViewModel(
         val settlement = _state.value.settlement ?: return
         val accountKey = AppContext.userInfo?.nickname ?: return
         val month = _state.value.selectedMonth
+        if (!isEcoFeeReverseSupported(month)) return
         val profitData = _state.value.profitData
         if (!profitData.isFlowComplete) return
         viewModelScope.launch {

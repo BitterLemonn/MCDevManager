@@ -2,160 +2,137 @@ package com.lemon.mcdevmanagermp.ui.pages.work.workmanage.layout
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.lemon.mcdevmanagermp.data.consts.enums.WorkItemActionEnum
-import com.lemon.mcdevmanagermp.ui.components.CollapsingTopBar
+import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
+import com.lemon.mcdevmanagermp.ui.components.FinanceSkeletonCard
 import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.WorkManageAction
+import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.WorkManageScope
 import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.WorkManageState
-import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.layout.component.WorkManageActionDialog
 import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.layout.component.WorkManageCard
-import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.layout.component.WorkManagePendingOp
-import com.lemon.mcdevmanagermp.ui.theme.LocalAppColors
+import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.layout.component.WorkManageControlBar
+import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.layout.component.WorkManageEmptyStateCard
+import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.layout.component.WorkManageOverviewCard
+import com.lemon.mcdevmanagermp.ui.pages.work.workmanage.layout.component.WorkManageTopBar
 
+/**
+ * Medium (600~840dp) 资源管理布局：
+ * 概览卡与控制栏跨满两列，下方作品卡片以双列等宽网格排布。
+ */
 @Composable
 internal fun WorkManageMediumLayout(
     state: WorkManageState,
     onAction: (WorkManageAction) -> Unit,
     onBack: () -> Unit,
-    onNavigateToDetail: (String) -> Unit = {},
-    onNavigateToViewDetail: (String) -> Unit = {}
+    onAddWork: () -> Unit,
+    onCardAction: (ResourceData, WorkItemActionEnum) -> Unit,
+    onToggleArchive: (ResourceData) -> Unit,
+    onOpenAddArchive: () -> Unit,
+    statusBarTop: Dp,
+    navBarBottom: Dp
 ) {
-    val colors = LocalAppColors.current
     val gridState = rememberLazyGridState()
-    var pending by remember { mutableStateOf<WorkManagePendingOp?>(null) }
-
-    val scrollAlpha = remember {
+    val collapseFraction by remember {
         derivedStateOf {
             if (gridState.firstVisibleItemIndex > 0) 1f
-            else (gridState.firstVisibleItemScrollOffset / 100f).coerceIn(0f, 1f)
+            else (gridState.firstVisibleItemScrollOffset / 120f).coerceIn(0f, 1f)
         }
     }
+    val filteredItems = state.filteredItems
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        CollapsingTopBar(
-            title = "上架管理",
-            collapseFraction = scrollAlpha.value,
-            onBack = onBack,
-            actions = {
-                IconButton(onClick = { onNavigateToDetail("") }) {
-                    Icon(
-                        imageVector = Icons.Filled.Add,
-                        contentDescription = "新增项目",
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-                IconButton(onClick = { onAction(WorkManageAction.RefreshData) }) {
-                    Icon(
-                        imageVector = Icons.Filled.Refresh,
-                        contentDescription = "刷新",
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            }
-        )
-
-        when {
-            state.isLoading && state.items.isEmpty() -> Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(36.dp),
-                    color = colors.primary,
-                    strokeWidth = 3.dp
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            state = gridState,
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                end = 16.dp,
+                top = statusBarTop + 60.dp,
+                bottom = navBarBottom + 20.dp
+            ),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            item(key = "overview", span = { GridItemSpan(maxLineSpan) }) {
+                WorkManageOverviewCard(
+                    state = state,
+                    onSelectFilter = { onAction(WorkManageAction.SelectStatusFilter(it)) },
+                    onOpenAddArchive = onOpenAddArchive
                 )
             }
 
-            state.items.isEmpty() && !state.isLoading -> Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(text = "📦", style = MaterialTheme.typography.displayMedium)
-                    Text(
-                        text = "暂无作品",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = colors.onSurfaceVariant.copy(alpha = 0.6f)
-                    )
-                }
+            item(key = "control_bar", span = { GridItemSpan(maxLineSpan) }) {
+                WorkManageControlBar(
+                    state = state,
+                    onSelectScope = { onAction(WorkManageAction.SelectScope(it)) },
+                    onSelectFilter = { onAction(WorkManageAction.SelectStatusFilter(it)) },
+                    onQueryChange = { onAction(WorkManageAction.UpdateSearchQuery(it)) },
+                    onOpenAddArchive = onOpenAddArchive
+                )
             }
 
-            else -> LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                state = gridState,
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(state.items, key = { it.itemId }) { item ->
-                    WorkManageCard(item) { action ->
-                        when (action) {
-                            WorkItemActionEnum.UPDATE -> onNavigateToDetail(item.itemId)
-                            WorkItemActionEnum.VIEW_DETAIL ->
-                                onNavigateToViewDetail(item.itemId)
-                            WorkItemActionEnum.SUBMIT_SELF_TEST ->
-                                pending = WorkManagePendingOp.SubmitSelfTest(item)
-                            WorkItemActionEnum.ADJUST_PRICE ->
-                                pending = WorkManagePendingOp.AdjustPrice(item)
-                            WorkItemActionEnum.APPOINT_ONLINE ->
-                                pending = WorkManagePendingOp.AppointOnline(item)
+            when {
+                state.isLoading && state.items.isEmpty() -> {
+                    items(4, key = { "skeleton_$it" }) {
+                        FinanceSkeletonCard(lineCount = 3)
+                    }
+                }
 
-                            WorkItemActionEnum.VIEW_FEEDBACK ->
-                                onAction(WorkManageAction.LoadFeedback(item))
-                            else -> pending = WorkManagePendingOp.Confirm(item, action)
-                        }
+                filteredItems.isEmpty() -> {
+                    item(key = "empty", span = { GridItemSpan(maxLineSpan) }) {
+                        WorkManageEmptyStateCard(
+                            state = state,
+                            onClearFilters = { onAction(WorkManageAction.ClearFilters) },
+                            onOpenAddArchive = onOpenAddArchive,
+                            onSwitchToArchived = {
+                                onAction(WorkManageAction.SelectScope(WorkManageScope.ARCHIVED))
+                            },
+                            onAddWork = onAddWork
+                        )
+                    }
+                }
+
+                else -> {
+                    items(filteredItems, key = { it.itemId }) { item ->
+                        WorkManageCard(
+                            item = item,
+                            isArchived = item.itemId in state.archivedItemIds,
+                            onActionClick = { action -> onCardAction(item, action) },
+                            onToggleArchive = { onToggleArchive(item) }
+                        )
                     }
                 }
             }
-        }
-    }
 
-    WorkManageActionDialog(
-        pending = pending,
-        onConfirmAction = { item, action ->
-            onAction(WorkManageAction.PerformAction(item, action))
-            pending = null
-        },
-        onSubmitSelfTest = { item, passCheck ->
-            onAction(WorkManageAction.SubmitSelfTest(item, passCheck))
-            pending = null
-        },
-        onAdjustPrice = { item, newPrice ->
-            onAction(WorkManageAction.AdjustPrice(item, newPrice))
-            pending = null
-        },
-        onAppointOnline = { item, time ->
-            onAction(WorkManageAction.AppointOnline(item, time))
-            pending = null
-        },
-        onDismiss = { pending = null }
-    )
+            item(key = "bottom_spacer", span = { GridItemSpan(maxLineSpan) }) {
+                Spacer(Modifier.height(4.dp))
+            }
+        }
+
+        WorkManageTopBar(
+            collapseFraction = collapseFraction,
+            isRefreshing = state.isLoading || state.isRefreshing,
+            canAddArchive = state.summary.activeCount > 0,
+            onBack = onBack,
+            onAddWork = onAddWork,
+            onOpenAddArchive = onOpenAddArchive,
+            onRefresh = { onAction(WorkManageAction.RefreshData) }
+        )
+    }
 }

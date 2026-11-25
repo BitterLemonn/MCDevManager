@@ -1,12 +1,15 @@
 package com.lemon.mcdevmanagermp.ui.pages.work.workmanage
 
 import androidx.lifecycle.viewModelScope
+import com.lemon.mcdevmanagermp.data.common.AppContext
 import com.lemon.mcdevmanagermp.data.common.NetworkState
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceRankEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.PriceTypeEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.WorkItemActionEnum
 import com.lemon.mcdevmanagermp.data.consts.enums.WorkItemStatusEnum
 import com.lemon.mcdevmanagermp.data.dto.netease.work.ChangePriceDTO
+import com.lemon.mcdevmanagermp.data.repository.ArchivedWorkRepository
+import com.lemon.mcdevmanagermp.data.repository.ArchivedWorkRepositoryImpl
 import com.lemon.mcdevmanagermp.data.repository.ResourceRepositoryImpl
 import com.lemon.mcdevmanagermp.data.vo.netease.resource.ResourceData
 import com.lemon.mcdevmanagermp.data.vo.netease.work.ReviewFeedbackVO
@@ -15,8 +18,9 @@ import com.lemon.mcdevmanagermp.domain.work.WorkManageUseCase
 import com.lemon.mcdevmanagermp.ui.base.BaseViewModel
 import kotlinx.coroutines.launch
 
-class WorkManageViewModel :
-    BaseViewModel<WorkManageState, WorkManageAction, WorkManageEffect>(WorkManageState()) {
+class WorkManageViewModel(
+    private val archivedWorkRepository: ArchivedWorkRepository = ArchivedWorkRepositoryImpl.INSTANCE
+) : BaseViewModel<WorkManageState, WorkManageAction, WorkManageEffect>(WorkManageState()) {
 
     private val workManageUseCase = WorkManageUseCase(
         getResourceListUseCase = GetResourceListUseCase(ResourceRepositoryImpl.INSTANCE),
@@ -27,6 +31,16 @@ class WorkManageViewModel :
         when (action) {
             WorkManageAction.LoadData -> loadWorks()
             WorkManageAction.RefreshData -> refreshWorks()
+            is WorkManageAction.SelectScope -> selectScope(action.scope)
+            is WorkManageAction.SelectStatusFilter -> selectStatusFilter(action.filter)
+            is WorkManageAction.UpdateSearchQuery -> setState { copy(searchQuery = action.query) }
+            WorkManageAction.ClearFilters -> setState {
+                copy(statusFilter = WorkStatusFilter.ALL, searchQuery = "")
+            }
+
+            is WorkManageAction.ArchiveItem -> archiveItem(action.item)
+            is WorkManageAction.UnarchiveItem -> unarchiveItem(action.item)
+            is WorkManageAction.ArchiveItems -> archiveItems(action.itemIds)
             is WorkManageAction.PerformAction -> performAction(action.item, action.action)
             is WorkManageAction.SubmitSelfTest -> submitSelfTest(action.item, action.passCheck)
             is WorkManageAction.AdjustPrice -> adjustPrice(action.item, action.newPrice)
@@ -36,17 +50,47 @@ class WorkManageViewModel :
         }
     }
 
+    private fun resolveAccountKey(): String = AppContext.userInfo?.nickname?.trim().orEmpty()
+
+    private fun selectScope(scope: WorkManageScope) {
+        if (state.value.scope == scope) return
+        setState { copy(scope = scope, statusFilter = WorkStatusFilter.ALL) }
+    }
+
+    private fun selectStatusFilter(filter: WorkStatusFilter) {
+        setState {
+            val nextFilter = if (statusFilter == filter && filter != WorkStatusFilter.ALL) {
+                WorkStatusFilter.ALL
+            } else {
+                filter
+            }
+            copy(statusFilter = nextFilter)
+        }
+    }
+
     private fun loadWorks() {
         if (state.value.isLoading) return
         viewModelScope.launch {
             setState { copy(isLoading = true) }
+            val archivedIds = loadArchivedIdsSafely()
             when (val result = workManageUseCase.getWorkList()) {
                 is NetworkState.Success -> setState {
-                    copy(isLoading = false, isRefreshing = false, items = result.data ?: emptyList())
+                    copy(
+                        isLoading = false,
+                        isRefreshing = false,
+                        items = result.data ?: emptyList(),
+                        archivedItemIds = archivedIds
+                    )
                 }
 
                 is NetworkState.Error -> {
-                    setState { copy(isLoading = false, isRefreshing = false) }
+                    setState {
+                        copy(
+                            isLoading = false,
+                            isRefreshing = false,
+                            archivedItemIds = archivedIds
+                        )
+                    }
                     handleError(
                         result,
                         onNeedReLogin = { WorkManageEffect.NeedReLogin },
@@ -61,13 +105,25 @@ class WorkManageViewModel :
         if (state.value.isRefreshing) return
         viewModelScope.launch {
             setState { copy(isRefreshing = true) }
+            val archivedIds = loadArchivedIdsSafely()
             when (val result = workManageUseCase.getWorkList()) {
                 is NetworkState.Success -> setState {
-                    copy(isRefreshing = false, isLoading = false, items = result.data ?: emptyList())
+                    copy(
+                        isRefreshing = false,
+                        isLoading = false,
+                        items = result.data ?: emptyList(),
+                        archivedItemIds = archivedIds
+                    )
                 }
 
                 is NetworkState.Error -> {
-                    setState { copy(isRefreshing = false, isLoading = false) }
+                    setState {
+                        copy(
+                            isRefreshing = false,
+                            isLoading = false,
+                            archivedItemIds = archivedIds
+                        )
+                    }
                     handleError(
                         result,
                         onNeedReLogin = { WorkManageEffect.NeedReLogin },
@@ -75,6 +131,54 @@ class WorkManageViewModel :
                     )
                 }
             }
+        }
+    }
+
+    private suspend fun loadArchivedIdsSafely(): Set<String> {
+        val accountKey = resolveAccountKey()
+        if (accountKey.isBlank()) return state.value.archivedItemIds
+        return runCatching {
+            archivedWorkRepository.getArchivedItemIds(accountKey)
+        }.getOrElse { state.value.archivedItemIds }
+    }
+
+    private fun archiveItem(item: ResourceData) {
+        val itemId = item.itemId.trim()
+        if (itemId.isEmpty()) return
+        if (itemId in state.value.archivedItemIds) return
+        setState { copy(archivedItemIds = archivedItemIds + itemId) }
+        val accountKey = resolveAccountKey()
+        viewModelScope.launch {
+            runCatching { archivedWorkRepository.archive(accountKey, itemId) }
+            val name = item.itemName.ifBlank { "未命名作品" }
+            sendEffect(WorkManageEffect.ShowToast("已归档《$name》"))
+        }
+    }
+
+    private fun unarchiveItem(item: ResourceData) {
+        val itemId = item.itemId.trim()
+        if (itemId.isEmpty()) return
+        if (itemId !in state.value.archivedItemIds) return
+        setState { copy(archivedItemIds = archivedItemIds - itemId) }
+        val accountKey = resolveAccountKey()
+        viewModelScope.launch {
+            runCatching { archivedWorkRepository.unarchive(accountKey, itemId) }
+            val name = item.itemName.ifBlank { "未命名作品" }
+            sendEffect(WorkManageEffect.ShowToast("已将《$name》移出归档"))
+        }
+    }
+
+    private fun archiveItems(itemIds: Set<String>) {
+        val validIds = itemIds
+            .map { it.trim() }
+            .filter { it.isNotEmpty() && it !in state.value.archivedItemIds }
+            .toSet()
+        if (validIds.isEmpty()) return
+        setState { copy(archivedItemIds = archivedItemIds + validIds) }
+        val accountKey = resolveAccountKey()
+        viewModelScope.launch {
+            runCatching { archivedWorkRepository.archiveAll(accountKey, validIds) }
+            sendEffect(WorkManageEffect.ShowToast("已将 ${validIds.size} 个作品加入归档"))
         }
     }
 
@@ -109,6 +213,11 @@ class WorkManageViewModel :
             setState { copy(isPerforming = false, performingMessage = "") }
             when (result) {
                 is NetworkState.Success -> {
+                    if (action == WorkItemActionEnum.DELETE && itemId in state.value.archivedItemIds) {
+                        val accountKey = resolveAccountKey()
+                        runCatching { archivedWorkRepository.unarchive(accountKey, itemId) }
+                        setState { copy(archivedItemIds = archivedItemIds - itemId) }
+                    }
                     sendEffect(WorkManageEffect.ShowToast("已${action.label}"))
                     refreshWorks()
                 }

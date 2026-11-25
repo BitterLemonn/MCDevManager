@@ -1,6 +1,7 @@
 package com.lemon.mcdevmanagermp
 
 import com.lemon.mcdevmanagermp.data.common.JSONConverter
+import com.lemon.mcdevmanagermp.data.repository.isEcoFeeReverseSupported
 import com.lemon.mcdevmanagermp.data.repository.monthKey
 import com.lemon.mcdevmanagermp.data.repository.normalizeMonthKey
 import com.lemon.mcdevmanagermp.data.repository.parseMonthKey
@@ -12,6 +13,7 @@ import com.lemon.mcdevmanagermp.domain.main.isMonthClosed
 import com.lemon.mcdevmanagermp.utils.ECO_FEE_RATE
 import com.lemon.mcdevmanagermp.utils.ProfitData
 import com.lemon.mcdevmanagermp.utils.calculateProfit
+import com.lemon.mcdevmanagermp.utils.computeActualModuleSummary
 import com.lemon.mcdevmanagermp.utils.reverseEcoFeeRate
 import kotlinx.datetime.LocalDate
 import kotlin.math.abs
@@ -116,5 +118,60 @@ class EcoFeeReverseTest {
         assertFalse(individual.isEnterprise)
         assertFalse(missing.isEnterprise)
         assertEquals("company_owned", company.payType)
+    }
+
+    @Test
+    fun actualModuleSummaryReconcilesExactlyWithSettlementIncome() {
+        val fixedSubsidy = profit.subsidyProfit.values.sum() + profit.profitSubsidy
+        val shareWithoutFee = profit.developerProfit / (1 - ECO_FEE_RATE) / 100.0
+        val playPlan = 320.50
+        // 模拟真实生态费率为 22% 时的结算单税前收益（含畅玩计划）
+        val settlementIncome = shareWithoutFee * (1 - 0.22) + fixedSubsidy + playPlan
+        val settlementNet = settlementIncome - 1200.0
+
+        val summary = profit.computeActualModuleSummary(
+            settlementIncome = settlementIncome,
+            playPlanIncome = playPlan,
+            settlementNetIncome = settlementNet
+        )
+
+        assertTrue(summary != null)
+        assertClose(0.22, summary.actualEcoFeeRate)
+        assertEquals(3, summary.items.size)
+        // 所有模组实际小计之和 + 流水激励 + 畅玩计划 严格等于结算单实际税前收益
+        assertClose(settlementIncome, summary.modulesTotalIncome + summary.profitSubsidy + summary.playPlanIncome)
+        // 各模组占比之和为 1
+        assertClose(1.0, summary.items.sumOf { it.incomeShare })
+        // 生态费率低于 30% 时，每个有流水模组的实际小计都应高于预估小计
+        assertTrue(summary.items.all { it.deltaFromEstimate > 0.0 })
+        // 列表按实际小计降序排列
+        assertEquals(summary.items.sortedByDescending { it.actualTotalIncome }, summary.items)
+    }
+
+    @Test
+    fun actualModuleSummaryReturnsNullWhenRateInvalidOrIncomplete() {
+        assertNull(
+            profit.copy(isFlowComplete = false).computeActualModuleSummary(
+                settlementIncome = profit.totalProfit,
+                playPlanIncome = 0.0,
+                settlementNetIncome = profit.totalProfit
+            )
+        )
+        // 超出合理区间（实际收益高于零生态费上限）
+        assertNull(
+            profit.computeActualModuleSummary(
+                settlementIncome = profit.totalProfit * 5.0,
+                playPlanIncome = 0.0,
+                settlementNetIncome = profit.totalProfit * 5.0
+            )
+        )
+    }
+
+    @Test
+    fun ecoFeeReverseIsOnlySupportedFrom2026JanOnward() {
+        assertFalse(isEcoFeeReverseSupported(ProfitMonth(2025, 12)))
+        assertFalse(isEcoFeeReverseSupported(ProfitMonth(2024, 6)))
+        assertTrue(isEcoFeeReverseSupported(ProfitMonth(2026, 1)))
+        assertTrue(isEcoFeeReverseSupported(ProfitMonth(2026, 10)))
     }
 }

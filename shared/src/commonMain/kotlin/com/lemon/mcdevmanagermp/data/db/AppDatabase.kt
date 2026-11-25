@@ -8,17 +8,25 @@ import androidx.room.migration.Migration
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.execSQL
 import com.lemon.mcdevmanagermp.data.db.dao.AccountDao
+import com.lemon.mcdevmanagermp.data.db.dao.ArchivedWorkDao
 import com.lemon.mcdevmanagermp.data.db.dao.DayDetailConfigDao
 import com.lemon.mcdevmanagermp.data.db.dao.EcoFeeRecordDao
 import com.lemon.mcdevmanagermp.data.db.dao.PromotionTemplateDao
 import com.lemon.mcdevmanagermp.data.db.entity.AccountEntity
+import com.lemon.mcdevmanagermp.data.db.entity.ArchivedWorkEntity
 import com.lemon.mcdevmanagermp.data.db.entity.DayDetailConfigEntity
 import com.lemon.mcdevmanagermp.data.db.entity.EcoFeeRecordEntity
 import com.lemon.mcdevmanagermp.data.db.entity.PromotionTemplateEntity
 
 @Database(
-    entities = [AccountEntity::class, PromotionTemplateEntity::class, DayDetailConfigEntity::class, EcoFeeRecordEntity::class],
-    version = 9,
+    entities = [
+        AccountEntity::class,
+        PromotionTemplateEntity::class,
+        DayDetailConfigEntity::class,
+        EcoFeeRecordEntity::class,
+        ArchivedWorkEntity::class
+    ],
+    version = 10,
     exportSchema = false
 )
 @ConstructedBy(AppDatabaseConstructor::class)
@@ -27,11 +35,24 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun promotionTemplateDao(): PromotionTemplateDao
     abstract fun dayDetailConfigDao(): DayDetailConfigDao
     abstract fun ecoFeeRecordDao(): EcoFeeRecordDao
+    abstract fun archivedWorkDao(): ArchivedWorkDao
 }
 
 expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
     override fun initialize(): AppDatabase
 }
+
+internal fun RoomDatabase.Builder<AppDatabase>.addAppDatabaseMigrations() = addMigrations(
+    MIGRATION_1_2,
+    MIGRATION_2_3,
+    MIGRATION_3_4,
+    MIGRATION_4_5,
+    MIGRATION_5_6,
+    MIGRATION_6_7,
+    MIGRATION_7_8,
+    MIGRATION_8_9,
+    MIGRATION_9_10
+)
 
 val MIGRATION_1_2 = object : Migration(1, 2) {
     override fun migrate(connection: SQLiteConnection) {
@@ -174,6 +195,20 @@ val MIGRATION_8_9 = object : Migration(8, 9) {
     }
 }
 
+/**
+ * 数据库迁移 9→10：
+ * 1. 重建 eco_fee_record 表：9 版本把绿宝石计价模组的商品流水按钻石流水计入了反推分母，
+ *    旧记录全部作废，快照与费率由后续登录按正确口径重新生成。
+ * 2. 新增本地作品归档表 archived_work（按账号 + 作品 ID 隔离）。
+ */
+val MIGRATION_9_10 = object : Migration(9, 10) {
+    override fun migrate(connection: SQLiteConnection) {
+        connection.execSQL("DROP TABLE IF EXISTS eco_fee_record")
+        connection.execSQL(CREATE_ECO_FEE_RECORD_TABLE_SQL)
+        connection.execSQL(CREATE_ARCHIVED_WORK_TABLE_SQL)
+    }
+}
+
 private const val CREATE_ECO_FEE_RECORD_TABLE_SQL = """
     CREATE TABLE IF NOT EXISTS eco_fee_record (
       accountKey TEXT NOT NULL,
@@ -185,5 +220,14 @@ private const val CREATE_ECO_FEE_RECORD_TABLE_SQL = """
       playPlanIncome REAL,
       updatedAt INTEGER NOT NULL,
       PRIMARY KEY (accountKey, dataMonth)
+    )
+"""
+
+private const val CREATE_ARCHIVED_WORK_TABLE_SQL = """
+    CREATE TABLE IF NOT EXISTS archived_work (
+      accountKey TEXT NOT NULL,
+      itemId TEXT NOT NULL,
+      archivedAt INTEGER NOT NULL,
+      PRIMARY KEY (accountKey, itemId)
     )
 """
