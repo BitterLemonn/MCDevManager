@@ -25,9 +25,16 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
+
+/**
+ * 模组收益明细排序方式。
+ */
+internal enum class ModuleSortMode(val label: String) {
+    BY_FLOW("按流水"),
+    BY_TOTAL("按小计")
+}
 
 internal data class IncomeDetailState(
     val selectedMonth: ProfitMonth,
@@ -41,7 +48,8 @@ internal data class IncomeDetailState(
     val isSettlementLoading: Boolean = true,
     val settlementError: String? = null,
     /** 已反推出费率的历史生态费记录，按月份倒序 */
-    val ecoFeeHistory: List<EcoFeeRecordEntity> = emptyList()
+    val ecoFeeHistory: List<EcoFeeRecordEntity> = emptyList(),
+    val moduleSortMode: ModuleSortMode = ModuleSortMode.BY_FLOW
 )
 
 /**
@@ -114,6 +122,10 @@ internal class IncomeDetailViewModel(
         if (settlementCache != null) matchSettlement()
     }
 
+    fun setModuleSortMode(mode: ModuleSortMode) {
+        _state.update { it.copy(moduleSortMode = mode) }
+    }
+
     fun retry() {
         // 快照可能与登录时的最新数据不一致，重试时跳过快照强制走网络
         load(_state.value.selectedMonth, force = true)
@@ -168,7 +180,7 @@ internal class IncomeDetailViewModel(
 
     private fun load(month: ProfitMonth, force: Boolean = false) {
         val cached = if (force) null else cache[month]
-        // 用 copy 而非重建 state，保留与月份无关的 isEnterprise
+        // 用 copy 而非重建 state，保留与月份无关的 isEnterprise 与排序偏好
         if (cached != null) {
             _state.update {
                 it.copy(selectedMonth = month, profitData = cached, isLoading = false, errorMessage = null)
