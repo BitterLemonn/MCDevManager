@@ -1,8 +1,16 @@
 {
   "repository": "BitterLemonn/MCDevManager",
   "includePrereleases": false,
-  "scannedReleases": 32,
+  "scannedReleases": 33,
   "included": [
+    {
+      "tag": "v1.2.11",
+      "asset": "MCDevManagerMP-V1.2.11-ios-arm64.ipa",
+      "assetId": 794097121,
+      "version": "1.2.11",
+      "buildVersion": "28",
+      "sha256": "2bcc41c768a9ccf22361e20ddb986759cce1c52e4bb2cf7fcc485ff76b3dffcd"
+    },
     {
       "tag": "v1.2.10",
       "asset": "MCDevManagerMP-V1.2.10-ios-arm64.ipa",

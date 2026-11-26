@@ -12,6 +12,14 @@
       "category": "developer",
       "versions": [
         {
+          "downloadURL": "https://github.com/BitterLemonn/MCDevManager/releases/download/v1.2.11/MCDevManagerMP-V1.2.11-ios-arm64.ipa",
+          "version": "1.2.11",
+          "buildVersion": "28",
+          "minOSVersion": "18.2",
+          "size": 35382972,
+          "date": "2026-11-26T03:08:05Z"
+        },
+        {
           "downloadURL": "https://github.com/BitterLemonn/MCDevManager/releases/download/v1.2.10/MCDevManagerMP-V1.2.10-ios-arm64.ipa",
           "version": "1.2.10",
           "buildVersion": "27",
