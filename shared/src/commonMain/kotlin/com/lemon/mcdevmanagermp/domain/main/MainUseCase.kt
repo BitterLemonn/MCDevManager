@@ -150,7 +150,7 @@ class MainUseCase internal constructor(
         val pending = settlements.mapNotNull { settlement ->
             val month = parseMonthKey(settlement.dataMonth) ?: return@mapNotNull null
             if (!isEcoFeeReverseSupported(month)) return@mapNotNull null
-            if (ecoFeeRecordRepository.isRated(accountKey, month)) null else month to settlement
+            if (ecoFeeRecordRepository.matchesSettlement(accountKey, month, settlement)) null else month to settlement
         }
         if (pending.isEmpty()) return emptyList()
 
