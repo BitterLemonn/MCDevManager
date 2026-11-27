@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
@@ -42,6 +43,21 @@ internal data class IncomeDetailState(
     val settlementError: String? = null,
     /** 已反推出费率的历史生态费记录，按月份倒序 */
     val ecoFeeHistory: List<EcoFeeRecordEntity> = emptyList()
+)
+
+/** 月份、流水和账单必须作为一个整体切换，避免缓存命中时跨月写入。 */
+internal fun IncomeDetailState.selectPeriod(
+    month: ProfitMonth,
+    data: ProfitData?,
+    bills: List<IncomeVO>?
+): IncomeDetailState = copy(
+    selectedMonth = month,
+    profitData = data ?: ProfitData(),
+    isLoading = data == null,
+    errorMessage = null,
+    settlement = bills?.singleOrNull { it.platform == "pe" && normalizeMonthKey(it.dataMonth) == monthKey(month) },
+    isSettlementLoading = bills == null,
+    settlementError = null
 )
 
 /**
@@ -65,6 +81,10 @@ internal class IncomeDetailViewModel(
         getResourceListUseCase = GetResourceListUseCase(ResourceRepositoryImpl.INSTANCE)
     )
     private val cache = mutableMapOf<ProfitMonth, ProfitData>()
+    private val accountKey = AppContext.userInfo?.nickname
+    private var flowRequest = 0L
+    private var settlementRequest = 0L
+    private var historyRequest = 0L
 
     /** pe 平台全量结算列表缓存，切月份时本地匹配，避免重复请求 */
     private var settlementCache: List<IncomeVO>? = null
@@ -110,12 +130,11 @@ internal class IncomeDetailViewModel(
     fun selectMonth(month: ProfitMonth) {
         if (month == _state.value.selectedMonth) return
         load(month)
-        // 结算列表已缓存时仅本地匹配，不重复请求
-        if (settlementCache != null) matchSettlement()
     }
 
     fun retry() {
         // 快照可能与登录时的最新数据不一致，重试时跳过快照强制走网络
+        settlementCache = null
         load(_state.value.selectedMonth, force = true)
         loadSettlement(force = true)
     }
@@ -131,9 +150,12 @@ internal class IncomeDetailViewModel(
             return
         }
 
-        _state.update { it.copy(isSettlementLoading = true, settlementError = null) }
+        val request = ++settlementRequest
+        _state.update { it.copy(isSettlementLoading = true, settlementError = null, settlement = null) }
         viewModelScope.launch {
-            when (val result = incomeRepository.getIncome("pe")) {
+            val result = incomeRepository.getIncome("pe")
+            if (request != settlementRequest || AppContext.userInfo?.nickname != accountKey) return@launch
+            when (result) {
                 is NetworkState.Success -> {
                     settlementCache = result.data?.incomes.orEmpty()
                     matchSettlement()
@@ -158,7 +180,7 @@ internal class IncomeDetailViewModel(
         val month = _state.value.selectedMonth
         _state.update {
             it.copy(
-                settlement = list.firstOrNull { income -> normalizeMonthKey(income.dataMonth) == monthKey(month) },
+                settlement = list.singleOrNull { income -> income.platform == "pe" && normalizeMonthKey(income.dataMonth) == monthKey(month) },
                 isSettlementLoading = false,
                 settlementError = null
             )
@@ -167,22 +189,22 @@ internal class IncomeDetailViewModel(
     }
 
     private fun load(month: ProfitMonth, force: Boolean = false) {
+        val request = ++flowRequest
         val cached = if (force) null else cache[month]
         // 用 copy 而非重建 state，保留与月份无关的 isEnterprise 与排序偏好
         if (cached != null) {
             _state.update {
-                it.copy(selectedMonth = month, profitData = cached, isLoading = false, errorMessage = null)
+                it.selectPeriod(month, cached, settlementCache)
             }
             trySaveEcoFeeRecord()
             return
         }
 
         _state.update {
-            it.copy(selectedMonth = month, profitData = ProfitData(), isLoading = true, errorMessage = null)
+            it.selectPeriod(month, null, settlementCache)
         }
         viewModelScope.launch {
             try {
-                val accountKey = AppContext.userInfo?.nickname
                 val canReverse = isEcoFeeReverseSupported(month)
                 // 已截止月份优先使用周期截止后保存的快照，出账后反推以其为准
                 val snapshot = if (accountKey != null && !force && canReverse && isMonthClosed(month)) {
@@ -191,6 +213,7 @@ internal class IncomeDetailViewModel(
                     null
                 }
                 val data = snapshot ?: mainUseCase.computeMonthProfit(month.year, month.month)
+                if (request != flowRequest || AppContext.userInfo?.nickname != accountKey) return@launch
                 cache[month] = data
                 if (_state.value.selectedMonth == month) {
                     _state.update { it.copy(profitData = data, isLoading = false) }
@@ -201,8 +224,9 @@ internal class IncomeDetailViewModel(
                 }
                 trySaveEcoFeeRecord()
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 Logger.e("收益详情加载失败", e)
-                if (_state.value.selectedMonth == month) {
+                if (request == flowRequest && _state.value.selectedMonth == month) {
                     _state.update {
                         it.copy(isLoading = false, errorMessage = "收益加载失败，请重试")
                     }
@@ -216,16 +240,19 @@ internal class IncomeDetailViewModel(
      * 同月重复触发时按主键覆盖，保留最新一次反推结果。
      */
     private fun trySaveEcoFeeRecord() {
-        val settlement = _state.value.settlement ?: return
-        val accountKey = AppContext.userInfo?.nickname ?: return
-        val month = _state.value.selectedMonth
+        val current = _state.value
+        if (current.isLoading || current.isSettlementLoading || current.errorMessage != null) return
+        val settlement = current.settlement ?: return
+        val accountKey = accountKey ?: return
+        if (AppContext.userInfo?.nickname != accountKey) return
+        val month = current.selectedMonth
+        if (settlement.platform != "pe" || normalizeMonthKey(settlement.dataMonth) != monthKey(month)) return
         if (!isEcoFeeReverseSupported(month)) return
-        val profitData = _state.value.profitData
+        val profitData = current.profitData
         if (!profitData.isFlowComplete) return
         viewModelScope.launch {
             try {
-                ecoFeeRecordRepository.saveReverseResult(accountKey, month, profitData, settlement)
-                loadEcoFeeHistory()
+                if (ecoFeeRecordRepository.saveReverseResult(accountKey, month, profitData, settlement)) loadEcoFeeHistory()
             } catch (e: Exception) {
                 Logger.e("保存生态费记录失败", e)
             }
@@ -233,10 +260,12 @@ internal class IncomeDetailViewModel(
     }
 
     private fun loadEcoFeeHistory() {
-        val accountKey = AppContext.userInfo?.nickname ?: return
+        val accountKey = accountKey ?: return
+        val request = ++historyRequest
         viewModelScope.launch {
             try {
                 val history = ecoFeeRecordRepository.getRated(accountKey)
+                if (request != historyRequest || AppContext.userInfo?.nickname != accountKey) return@launch
                 _state.update { it.copy(ecoFeeHistory = history) }
             } catch (e: Exception) {
                 Logger.e("加载生态费历史失败", e)

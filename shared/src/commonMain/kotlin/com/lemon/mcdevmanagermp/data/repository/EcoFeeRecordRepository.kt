@@ -3,10 +3,15 @@ package com.lemon.mcdevmanagermp.data.repository
 import com.lemon.mcdevmanagermp.data.common.AppContext
 import com.lemon.mcdevmanagermp.data.common.JSONConverter
 import com.lemon.mcdevmanagermp.data.db.entity.EcoFeeRecordEntity
+import com.lemon.mcdevmanagermp.data.db.dao.EcoFeeRecordDao
 import com.lemon.mcdevmanagermp.data.vo.netease.income.IncomeVO
 import com.lemon.mcdevmanagermp.domain.main.ProfitMonth
 import com.lemon.mcdevmanagermp.utils.ProfitData
 import com.lemon.mcdevmanagermp.utils.reverseEcoFeeRate
+import com.lemon.mcdevmanagermp.utils.Logger
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlin.math.abs
 import kotlin.time.Clock
 
 /**
@@ -51,7 +56,10 @@ internal val IncomeVO.reverseInputIncome: Double
  * 每月生态费记录存取：计算周期截止后保存该月预估数据快照，
  * 结算单出账后用快照反推生态费，历史记录供收益结算界面展示费率。
  */
-internal class EcoFeeRecordRepository {
+internal class EcoFeeRecordRepository(
+    private val daoProvider: () -> EcoFeeRecordDao = { AppContext.database.ecoFeeRecordDao() }
+) {
+    private val writeMutex = Mutex()
     companion object {
         val INSTANCE by lazy { EcoFeeRecordRepository() }
     }
@@ -60,12 +68,12 @@ internal class EcoFeeRecordRepository {
      * 计算周期截止后保存该月预估数据快照（要求流水完整，无流水亦无意义）。
      * 已反推出费率的月份不覆盖费率结果，仅刷新快照与时间。
      */
-    suspend fun saveSnapshot(accountKey: String, month: ProfitMonth, profitData: ProfitData) {
-        if (accountKey.isBlank() || !isEcoFeeReverseSupported(month) || !profitData.isFlowComplete) return
-        if (profitData.developerProfit <= 0.0) return
+    suspend fun saveSnapshot(accountKey: String, month: ProfitMonth, profitData: ProfitData) = writeMutex.withLock {
+        if (accountKey.isBlank() || !isEcoFeeReverseSupported(month) || !profitData.isFlowComplete) return@withLock
+        if (profitData.developerProfit <= 0.0) return@withLock
         val dataMonth = monthKey(month)
-        val existing = AppContext.database.ecoFeeRecordDao().get(accountKey, dataMonth)
-        AppContext.database.ecoFeeRecordDao().upsert(
+        val existing = daoProvider().get(accountKey, dataMonth)
+        daoProvider().upsert(
             EcoFeeRecordEntity(
                 accountKey = accountKey,
                 dataMonth = dataMonth,
@@ -91,14 +99,18 @@ internal class EcoFeeRecordRepository {
         month: ProfitMonth,
         profitData: ProfitData,
         settlement: IncomeVO
-    ): Boolean {
-        if (accountKey.isBlank() || !isEcoFeeReverseSupported(month) || !profitData.isFlowComplete) return false
+    ): Boolean = writeMutex.withLock {
+        if (accountKey.isBlank() || !isEcoFeeReverseSupported(month) || !profitData.isFlowComplete) return@withLock false
         val dataMonth = monthKey(month)
-        val existing = AppContext.database.ecoFeeRecordDao().get(accountKey, dataMonth)
+        if (settlement.platform != "pe" || normalizeMonthKey(settlement.dataMonth) != dataMonth) {
+            Logger.i("拒绝跨月生态费写入：target=$dataMonth, bill=${normalizeMonthKey(settlement.dataMonth)}, platform=${settlement.platform}")
+            return@withLock false
+        }
+        val existing = daoProvider().get(accountKey, dataMonth)
         val snapshot = existing?.profitDataJson?.let { decodeProfitData(it) } ?: profitData
-        val ecoFeeRate = snapshot.reverseEcoFeeRate(settlement.reverseInputIncome) ?: return false
-        if (ecoFeeRate !in 0.0..1.0) return false
-        AppContext.database.ecoFeeRecordDao().upsert(
+        val ecoFeeRate = snapshot.reverseEcoFeeRate(settlement.reverseInputIncome) ?: return@withLock false
+        if (ecoFeeRate !in 0.0..1.0) return@withLock false
+        daoProvider().upsert(
             EcoFeeRecordEntity(
                 accountKey = accountKey,
                 dataMonth = dataMonth,
@@ -110,22 +122,34 @@ internal class EcoFeeRecordRepository {
                 updatedAt = Clock.System.now().toEpochMilliseconds()
             )
         )
-        return true
+        true
     }
 
     /** 读取某月已保存的预估快照；未保存时返回 null */
     suspend fun getSnapshot(accountKey: String, month: ProfitMonth): ProfitData? {
-        val record = AppContext.database.ecoFeeRecordDao().get(accountKey, monthKey(month)) ?: return null
+        val record = daoProvider().get(accountKey, monthKey(month)) ?: return null
         return decodeProfitData(record.profitDataJson)
     }
 
     /** 某月是否已反推出费率 */
     suspend fun isRated(accountKey: String, month: ProfitMonth): Boolean =
-        AppContext.database.ecoFeeRecordDao().get(accountKey, monthKey(month))?.ecoFeeRate != null
+        daoProvider().get(accountKey, monthKey(month))?.ecoFeeRate != null
+
+    /** 有费率不等于记录正确：旧版串月记录必须能被同月账单自动校正。 */
+    suspend fun matchesSettlement(accountKey: String, month: ProfitMonth, settlement: IncomeVO): Boolean {
+        if (settlement.platform != "pe" || normalizeMonthKey(settlement.dataMonth) != monthKey(month)) return false
+        val record = daoProvider().get(accountKey, monthKey(month)) ?: return false
+        val snapshot = decodeProfitData(record.profitDataJson) ?: return false
+        val expected = snapshot.reverseEcoFeeRate(settlement.reverseInputIncome) ?: return false
+        val stored = record.ecoFeeRate ?: return false
+        return expected.isFinite() && expected in 0.0..1.0 && stored.isFinite() &&
+            abs(expected - stored) < 1e-10 && record.actualIncome == settlement.reverseInputIncome &&
+            record.playPlanIncome == (settlement.playPlanIncome.toDoubleOrNull() ?: 0.0)
+    }
 
     /** 已反推出费率的历史记录，按月份倒序，过滤不支持反推的早期月份 */
     suspend fun getRated(accountKey: String): List<EcoFeeRecordEntity> =
-        AppContext.database.ecoFeeRecordDao().getRatedByAccount(accountKey)
+        daoProvider().getRatedByAccount(accountKey)
             .filter { record -> parseMonthKey(record.dataMonth)?.let(::isEcoFeeReverseSupported) == true }
 
     private fun decodeProfitData(json: String): ProfitData? = try {
